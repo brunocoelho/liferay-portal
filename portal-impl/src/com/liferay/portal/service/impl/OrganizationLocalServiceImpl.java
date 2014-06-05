@@ -35,6 +35,7 @@ import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.SetUtil;
@@ -522,17 +523,17 @@ public class OrganizationLocalServiceImpl
 			long groupId, long userId)
 		throws PortalException, SystemException {
 
-		List<Long> groupOrganizationIds =
+		long[] groupOrganizationIds =
 			groupPersistence.getOrganizationPrimaryKeys(groupId);
 
-		if (groupOrganizationIds.isEmpty()) {
+		if (groupOrganizationIds.length == 0) {
 			return Collections.emptyList();
 		}
 
-		List<Long> userOrganizationIds =
-			userPersistence.getOrganizationPrimaryKeys(userId);
+		long[] userOrganizationIds = userPersistence.getOrganizationPrimaryKeys(
+			userId);
 
-		if (userOrganizationIds.isEmpty()) {
+		if (userOrganizationIds.length == 0) {
 			return Collections.emptyList();
 		}
 
@@ -854,6 +855,38 @@ public class OrganizationLocalServiceImpl
 		return subsetOrganizations;
 	}
 
+	@Override
+	public long[] getUserOrganizationIds(
+			long userId, boolean includeAdministrative)
+		throws PortalException, SystemException {
+
+		if (!includeAdministrative) {
+			return userPersistence.getOrganizationPrimaryKeys(userId);
+		}
+
+		Set<Long> organizationIds = SetUtil.fromArray(
+			userPersistence.getOrganizationPrimaryKeys(userId));
+
+		List<UserGroupRole> userGroupRoles =
+			userGroupRoleLocalService.getUserGroupRoles(userId);
+
+		for (UserGroupRole userGroupRole : userGroupRoles) {
+			Role role = userGroupRole.getRole();
+
+			String roleName = role.getName();
+
+			if (roleName.equals(RoleConstants.ORGANIZATION_ADMINISTRATOR) ||
+				roleName.equals(RoleConstants.ORGANIZATION_OWNER)) {
+
+				Group group = userGroupRole.getGroup();
+
+				organizationIds.add(group.getOrganizationId());
+			}
+		}
+
+		return ArrayUtil.toLongArray(organizationIds);
+	}
+
 	/**
 	 * Returns all the organizations associated with the user. If
 	 * includeAdministrative is <code>true</code>, the result includes those
@@ -877,7 +910,8 @@ public class OrganizationLocalServiceImpl
 			return getUserOrganizations(userId);
 		}
 
-		Set<Organization> organizations = new HashSet<Organization>();
+		Set<Organization> organizations = new HashSet<Organization>(
+			getUserOrganizations(userId));
 
 		List<UserGroupRole> userGroupRoles =
 			userGroupRoleLocalService.getUserGroupRoles(userId);
@@ -899,8 +933,6 @@ public class OrganizationLocalServiceImpl
 				organizations.add(organization);
 			}
 		}
-
-		organizations.addAll(getUserOrganizations(userId));
 
 		return new ArrayList<Organization>(organizations);
 	}
@@ -1447,7 +1479,8 @@ public class OrganizationLocalServiceImpl
 		throws SystemException {
 
 		if (!PropsValues.ORGANIZATIONS_INDEXER_ENABLED ||
-			!PropsValues.ORGANIZATIONS_SEARCH_WITH_INDEX) {
+			!PropsValues.ORGANIZATIONS_SEARCH_WITH_INDEX ||
+			isUseCustomSQL(params)) {
 
 			String parentOrganizationIdComparator = StringPool.EQUAL;
 
@@ -1538,7 +1571,8 @@ public class OrganizationLocalServiceImpl
 		throws SystemException {
 
 		if (!PropsValues.ORGANIZATIONS_INDEXER_ENABLED ||
-			!PropsValues.ORGANIZATIONS_SEARCH_WITH_INDEX) {
+			!PropsValues.ORGANIZATIONS_SEARCH_WITH_INDEX ||
+			isUseCustomSQL(params)) {
 
 			String parentOrganizationIdComparator = StringPool.EQUAL;
 
@@ -2153,6 +2187,14 @@ public class OrganizationLocalServiceImpl
 		else {
 			return false;
 		}
+	}
+
+	protected boolean isUseCustomSQL(LinkedHashMap<String, Object> params) {
+		if (MapUtil.isEmpty(params)) {
+			return false;
+		}
+
+		return true;
 	}
 
 	protected void validate(

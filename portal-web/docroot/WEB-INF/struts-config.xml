@@ -287,7 +287,9 @@
 			<forward name="portlet.asset_publisher.view" path="portlet.asset_publisher.view" />
 		</action>
 
-		<action path="/asset_publisher/view_content" forward="portlet.asset_publisher.view_content" />
+		<action path="/asset_publisher/view_content" type="com.liferay.portlet.assetpublisher.action.ViewContentAction">
+			<forward name="portlet.asset_publisher.view_content" path="portlet.asset_publisher.view_content" />
+		</action>
 
 		<!-- Asset Tag Admin -->
 
@@ -914,6 +916,11 @@
 		<action path="/journal/select_folder" type="com.liferay.portlet.journal.action.EditFolderAction">
 			<forward name="portlet.journal.edit_folder" path="portlet.journal.select_folder" />
 			<forward name="portlet.journal.error" path="portlet.journal.error" />
+		</action>
+
+		<action path="/journal/select_version" type="com.liferay.portlet.journal.action.ViewAction">
+			<forward name="portlet.journal.error" path="portlet.journal.error" />
+			<forward name="portlet.journal.view" path="portlet.journal.select_version" />
 		</action>
 
 		<action path="/journal/view" type="com.liferay.portlet.journal.action.ViewAction">
@@ -1660,6 +1667,12 @@
 		<action path="/recent_documents/get_file" type="com.liferay.portlet.documentlibrary.action.GetFileAction" />
 
 		<action path="/recent_documents/view" forward="portlet.recent_documents.view" />
+
+		<!-- Related Assets -->
+
+		<action path="/related_assets/view_content" type="com.liferay.portlet.relatedassets.action.ViewContentAction">
+			<forward name="portlet.asset_publisher.view_content" path="portlet.asset_publisher.view_content" />
+		</action>
 
 		<!-- Requests -->
 

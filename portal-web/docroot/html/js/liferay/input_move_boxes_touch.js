@@ -83,7 +83,7 @@ AUI.add(
 						function(event) {
 							event.preventDefault();
 						},
-						SELECTOR_SORT_LIST_ACTIVE + SELECTOR_TITLE
+						SELECTOR_SORT_LIST_ACTIVE + ' ' + SELECTOR_TITLE
 					);
 
 					instance._sortableContainer.delegate(
@@ -216,7 +216,7 @@ AUI.add(
 					var data = [];
 
 					options.each(
-						function(item, index, collection) {
+						function(item, index) {
 							data.push(
 								{
 									name: item.html(),

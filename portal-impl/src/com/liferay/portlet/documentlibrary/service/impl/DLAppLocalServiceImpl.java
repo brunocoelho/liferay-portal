@@ -14,6 +14,7 @@
 
 package com.liferay.portlet.documentlibrary.service.impl;
 
+import com.liferay.portal.InvalidRepositoryException;
 import com.liferay.portal.NoSuchGroupException;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -34,6 +35,7 @@ import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.Repository;
+import com.liferay.portal.repository.liferayrepository.LiferayLocalRepository;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFolder;
 import com.liferay.portal.service.ServiceContext;
 import com.liferay.portlet.documentlibrary.NoSuchFileEntryException;
@@ -368,8 +370,12 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 
 		LocalRepository localRepository = getLocalRepository(repositoryId);
 
-		return localRepository.addFolder(
+		Folder folder = localRepository.addFolder(
 			userId, parentFolderId, name, description, serviceContext);
+
+		dlAppHelperLocalService.addFolder(userId, folder, serviceContext);
+
+		return folder;
 	}
 
 	/**
@@ -511,13 +517,13 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 			localRepository.getRepositoryFileEntries(
 				folderId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 
-		Folder folder = getFolder(folderId);
-
-		localRepository.deleteFolder(folderId);
-
 		for (FileEntry fileEntry : fileEntries) {
 			dlAppHelperLocalService.deleteFileEntry(fileEntry);
 		}
+
+		Folder folder = getFolder(folderId);
+
+		localRepository.deleteFolder(folderId);
 
 		dlAppHelperLocalService.deleteFolder(folder);
 	}
@@ -769,6 +775,27 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 		}
 	}
 
+	@Override
+	public FileEntry moveFileEntryFromTrash(
+			long userId, long fileEntryId, long newFolderId,
+			ServiceContext serviceContext)
+		throws PortalException, SystemException {
+
+		LocalRepository localRepository = getFileEntryLocalRepository(
+			fileEntryId);
+
+		if (!(localRepository instanceof LiferayLocalRepository)) {
+			throw new InvalidRepositoryException(
+				"Repository " + localRepository.getRepositoryId() +
+					" does not support trash operations");
+		}
+
+		FileEntry fileEntry = localRepository.getFileEntry(fileEntryId);
+
+		return dlAppHelperLocalService.moveFileEntryFromTrash(
+			userId, fileEntry, newFolderId, serviceContext);
+	}
+
 	/**
 	 * Moves the file entry with the primary key to the trash portlet.
 	 *
@@ -816,22 +843,28 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 				}
 			}
 
+			Folder folder = null;
+
 			if (sourceLocalRepository.getRepositoryId() ==
 					destinationLocalRepository.getRepositoryId()) {
 
 				// Move file entries within repository
 
-				Folder folder = sourceLocalRepository.moveFolder(
+				folder = sourceLocalRepository.moveFolder(
 					userId, folderId, parentFolderId, serviceContext);
+			}
+			else {
 
-				return folder;
+				// Move file entries between repositories
+
+				folder = moveFolders(
+					userId, folderId, parentFolderId, sourceLocalRepository,
+					destinationLocalRepository, serviceContext);
 			}
 
-			// Move file entries between repositories
+			dlAppHelperLocalService.moveFolder(folder);
 
-			return moveFolders(
-				userId, folderId, parentFolderId, sourceLocalRepository,
-				destinationLocalRepository, serviceContext);
+			return folder;
 		}
 		finally {
 			SystemEventHierarchyEntryThreadLocal.pop(Folder.class);
@@ -1308,8 +1341,13 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 
 		LocalRepository localRepository = getFolderLocalRepository(folderId);
 
-		return localRepository.updateFolder(
+		Folder folder = localRepository.updateFolder(
 			folderId, parentFolderId, name, description, serviceContext);
+
+		dlAppHelperLocalService.updateFolder(
+			serviceContext.getUserId(), folder, serviceContext);
+
+		return folder;
 	}
 
 	protected FileEntry copyFileEntry(
@@ -1515,6 +1553,9 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 		Folder destinationFolder = destinationLocalRepository.addFolder(
 			userId, parentFolderId, sourceFolder.getName(),
 			sourceFolder.getDescription(), serviceContext);
+
+		dlAppHelperLocalService.addFolder(
+			userId, destinationFolder, serviceContext);
 
 		List<Object> foldersAndFileEntriesAndFileShortcuts =
 			dlAppService.getFoldersAndFileEntriesAndFileShortcuts(

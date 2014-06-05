@@ -287,8 +287,6 @@ public interface PropsKeys {
 
 	public static final String BLOGS_LINKBACK_EXCERPT_LENGTH = "blogs.linkback.excerpt.length";
 
-	public static final String BLOGS_LINKBACK_JOB_INTERVAL = "blogs.linkback.job.interval";
-
 	public static final String BLOGS_PAGE_ABSTRACT_LENGTH = "blogs.page.abstract.length";
 
 	public static final String BLOGS_PING_GOOGLE_ENABLED = "blogs.ping.google.enabled";
@@ -344,6 +342,8 @@ public interface PropsKeys {
 	public static final String BREADCRUMB_DISPLAY_STYLE_DEFAULT = "breadcrumb.display.style.default";
 
 	public static final String BREADCRUMB_DISPLAY_STYLE_OPTIONS = "breadcrumb.display.style.options";
+
+	public static final String BREADCRUMB_DISPLAY_TEMPLATES_CONFIG = "breadcrumb.display.templates.config";
 
 	public static final String BREADCRUMB_SHOW_GUEST_GROUP = "breadcrumb.show.guest.group";
 
@@ -657,6 +657,8 @@ public interface PropsKeys {
 
 	public static final String DISCUSSION_THREAD_VIEW = "discussion.thread.view";
 
+	public static final String DL_ACTIONS_VISIBLE = "dl.actions.visible";
+
 	public static final String DL_CHAR_BLACKLIST = "dl.char.blacklist";
 
 	public static final String DL_CHAR_LAST_BLACKLIST = "dl.char.last.blacklist";
@@ -791,6 +793,8 @@ public interface PropsKeys {
 
 	public static final String DL_FOLDER_COLUMNS = "dl.folder.columns";
 
+	public static final String DL_FOLDER_MENU_VISIBLE = "dl.folder.menu.visible";
+
 	public static final String DL_FOLDERS_SEARCH_VISIBLE = "dl.folders.search.visible";
 
 	public static final String DL_NAME_BLACKLIST = "dl.name.blacklist";
@@ -844,6 +848,8 @@ public interface PropsKeys {
 	public static final String DL_STORE_S3_TEMP_DIR_CLEAN_UP_FREQUENCY = "dl.store.s3.temp.dir.clean.up.frequency";
 
 	public static final String DL_SUBFOLDERS_VISIBLE = "dl.subfolders.visible";
+
+	public static final String DL_TABS_VISIBLE = "dl.tabs.visible";
 
 	public static final String DOCKBAR_ADD_PORTLETS = "dockbar.add.portlets";
 
@@ -916,8 +922,6 @@ public interface PropsKeys {
 	public static final String FACEBOOK_CONNECT_OAUTH_TOKEN_URL = "facebook.connect.oauth.token.url";
 
 	public static final String FACEBOOK_CONNECT_VERIFIED_ACCOUNT_REQUIRED = "facebook.connect.verified.account.required";
-
-	public static final String FIELD_ALL_USERS_EDITABLE_ROLES = "field.all.users.editable.roles";
 
 	public static final String FIELD_EDITABLE_DOMAINS = "field.editable.domains";
 
@@ -1715,6 +1719,8 @@ public interface PropsKeys {
 
 	public static final String MESSAGE_BOARDS_SUBSCRIBE_BY_DEFAULT = "message.boards.subscribe.by.default";
 
+	public static final String MESSAGE_BOARDS_THREAD_AS_QUESTION_BY_DEFAULT = "message.boards.thread.as.question.by.default";
+
 	public static final String MESSAGE_BOARDS_THREAD_PREVIOUS_AND_NEXT_NAVIGATION_ENABLED = "message.boards.thread.previous.and.next.navigation.enabled";
 
 	public static final String MESSAGE_BOARDS_THREAD_PRIORITIES = "message.boards.thread.priorities";
@@ -2341,11 +2347,17 @@ public interface PropsKeys {
 
 	public static final String SHOPPING_ITEM_SHOW_AVAILABILITY = "shopping.item.show.availability";
 
+	public static final String SHOPPING_MIN_ORDER = "shopping.min.order";
+
 	public static final String SHOPPING_ORDER_COMMENTS_ENABLED = "shopping.order.comments.enabled";
+
+	public static final String SHOPPING_PAYPAL_EMAIL_ADDRESS = "shopping.paypal.email.address";
 
 	public static final String SHOPPING_SHIPPING = "shopping.shipping";
 
 	public static final String SHOPPING_SHIPPING_FORMULA = "shopping.shipping.formula";
+
+	public static final String SHOPPING_TAX_RATE = "shopping.tax.rate";
 
 	public static final String SHOPPING_TAX_STATE = "shopping.tax.state";
 
@@ -2480,6 +2492,8 @@ public interface PropsKeys {
 	public static final String STRIP_JS_LANGUAGE_ATTRIBUTE_SUPPORT_ENABLED = "strip.js.language.attribute.support.enabled";
 
 	public static final String STRIP_MIME_TYPES = "strip.mime.types";
+
+	public static final String STRUTS_PORTLET_IGNORED_PARAMETERS_REGEXP = "struts.portlet.ignored.parameters.regexp";
 
 	public static final String STRUTS_PORTLET_REQUEST_PROCESSOR = "struts.portlet.request.processor";
 
@@ -2724,6 +2738,8 @@ public interface PropsKeys {
 	public static final String WIDGET_SERVLET_MAPPING = "widget.servlet.mapping";
 
 	public static final String WIKI_COMMENT_RATINGS_ENABLED = "wiki.comment.ratings.enabled";
+
+	public static final String WIKI_DISPLAY_STYLE = "wiki.display.style";
 
 	public static final String WIKI_DISPLAY_TEMPLATES_CONFIG = "wiki.display.templates.config";
 

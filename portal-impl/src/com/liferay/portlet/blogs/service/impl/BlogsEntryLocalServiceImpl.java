@@ -107,7 +107,6 @@ import net.htmlparser.jericho.StartTag;
  */
 public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 
-	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public BlogsEntry addEntry(
 			long userId, String title, String description, String content,
@@ -1022,7 +1021,6 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 			AssetLinkConstants.TYPE_RELATED);
 	}
 
-	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public BlogsEntry updateEntry(
 			long userId, long entryId, String title, String description,
@@ -1412,14 +1410,14 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 			return;
 		}
 
-		BlogsSettings blogsSettings = BlogsUtil.getBlogsSettings(
+		BlogsSettings blogsSettings = BlogsSettings.getInstance(
 			entry.getGroupId());
 
 		if (serviceContext.isCommandAdd() &&
-			blogsSettings.getEmailEntryAddedEnabled()) {
+			blogsSettings.isEmailEntryAddedEnabled()) {
 		}
 		else if (serviceContext.isCommandUpdate() &&
-				 blogsSettings.getEmailEntryUpdatedEnabled()) {
+				 blogsSettings.isEmailEntryUpdatedEnabled()) {
 		}
 		else {
 			return;

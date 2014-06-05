@@ -87,27 +87,9 @@ if (Validator.isNotNull(target)) {
 			/>
 
 			<liferay-ui:search-container-column-text
-				buffer="buffer"
 				name="parent-organization"
-			>
-
-				<%
-				String parentOrganizationName = StringPool.BLANK;
-
-				if (organization.getParentOrganizationId() > 0) {
-					try {
-						Organization parentOrganization = OrganizationLocalServiceUtil.getOrganization(organization.getParentOrganizationId());
-
-						parentOrganizationName = parentOrganization.getName();
-					}
-					catch (Exception e) {
-					}
-				}
-
-				buffer.append(HtmlUtil.escape(parentOrganizationName));
-				%>
-
-			</liferay-ui:search-container-column-text>
+				value="<%= HtmlUtil.escape(organization.getParentOrganizationName()) %>"
+			/>
 
 			<liferay-ui:search-container-column-text
 				name="type"
@@ -144,8 +126,8 @@ if (Validator.isNotNull(target)) {
 					boolean disabled = false;
 
 					if (selUser != null) {
-						for (Organization curOrganization : selUser.getOrganizations()) {
-							if (curOrganization.getOrganizationId() == organization.getOrganizationId()) {
+						for (long curOrganizationId : selUser.getOrganizationIds()) {
+							if (curOrganizationId == organization.getOrganizationId()) {
 								disabled = true;
 
 								break;

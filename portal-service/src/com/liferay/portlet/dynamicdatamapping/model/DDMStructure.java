@@ -43,6 +43,9 @@ public interface DDMStructure extends DDMStructureModel, PersistedModel {
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException;
 
+	public com.liferay.portlet.dynamicdatamapping.model.DDMForm getDDMForm()
+		throws com.liferay.portal.kernel.exception.PortalException;
+
 	public com.liferay.portal.kernel.xml.Document getDocument();
 
 	public java.lang.String getFieldDataType(java.lang.String fieldName)
@@ -145,6 +148,12 @@ public interface DDMStructure extends DDMStructureModel, PersistedModel {
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException;
 
+	public java.lang.String getUnambiguousName(
+		java.util.List<com.liferay.portlet.dynamicdatamapping.model.DDMStructure> structures,
+		long groupId, java.util.Locale locale)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException;
+
 	/**
 	* Returns the WebDAV URL to access the structure.
 	*
@@ -184,4 +193,7 @@ public interface DDMStructure extends DDMStructureModel, PersistedModel {
 
 	public void setLocalizedTransientFieldsMap(
 		java.util.Map<java.lang.String, java.util.Map<java.lang.String, java.util.Map<java.lang.String, java.lang.String>>> localizedTransientFieldsMap);
+
+	public void updateDDMForm(
+		com.liferay.portlet.dynamicdatamapping.model.DDMForm ddmForm);
 }

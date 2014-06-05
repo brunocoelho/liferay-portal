@@ -77,6 +77,7 @@ import com.liferay.portal.kernel.util.KeyValuePair;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
@@ -139,6 +140,8 @@ import com.liferay.portal.util.PrefsPropsUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.util.SubscriptionSender;
 import com.liferay.portlet.messageboards.model.MBMessage;
+import com.liferay.portlet.social.model.SocialRelation;
+import com.liferay.portlet.social.model.SocialRelationConstants;
 import com.liferay.portlet.usersadmin.util.UsersAdminUtil;
 import com.liferay.util.Encryptor;
 import com.liferay.util.EncryptorException;
@@ -2203,7 +2206,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 */
 	@Override
 	public long[] getGroupUserIds(long groupId) throws SystemException {
-		return getUserIds(getGroupUsers(groupId));
+		return groupPersistence.getUserPrimaryKeys(groupId);
 	}
 
 	/**
@@ -2297,7 +2300,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	public long[] getOrganizationUserIds(long organizationId)
 		throws SystemException {
 
-		return getUserIds(getOrganizationUsers(organizationId));
+		return organizationPersistence.getUserPrimaryKeys(organizationId);
 	}
 
 	/**
@@ -2335,7 +2338,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 */
 	@Override
 	public long[] getRoleUserIds(long roleId) throws SystemException {
-		return getUserIds(getRoleUsers(roleId));
+		return rolePersistence.getUserPrimaryKeys(roleId);
 	}
 
 	/**
@@ -2376,34 +2379,31 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 * result set.
 	 * </p>
 	 *
-	 * @param  userId the primary key of the user
-	 * @param  type the type of social relation. The possible types can be found
-	 *         in {@link
-	 *         com.liferay.portlet.social.model.SocialRelationConstants}.
-	 * @param  start the lower bound of the range of users
-	 * @param  end the upper bound of the range of users (not inclusive)
-	 * @param  obc the comparator to order the users by (optionally
-	 *         <code>null</code>)
-	 * @return the ordered range of users with a social relation of the type
-	 *         with the user
-	 * @throws PortalException if a user with the primary key could not be found
-	 * @throws SystemException if a system exception occurred
+	 * @param      userId the primary key of the user
+	 * @param      socialRelationType the type of social relation. The possible
+	 *             types can be found in {@link
+	 *             com.liferay.portlet.social.model.SocialRelationConstants}.
+	 * @param      start the lower bound of the range of users
+	 * @param      end the upper bound of the range of users (not inclusive)
+	 * @param      obc the comparator to order the users by (optionally
+	 *             <code>null</code>)
+	 * @return     the ordered range of users with a social relation of the type
+	 *             with the user
+	 * @throws     PortalException if a user with the primary key could not be
+	 *             found
+	 * @throws     SystemException if a system exception occurred
+	 * @deprecated As of 7.0.0, replaced by {@link #getSocialUsers(long, int,
+	 *             String, int, int, OrderByComparator)}
 	 */
+	@Deprecated
 	@Override
 	public List<User> getSocialUsers(
-			long userId, int type, int start, int end, OrderByComparator obc)
+			long userId, int socialRelationType, int start, int end,
+			OrderByComparator obc)
 		throws PortalException, SystemException {
 
-		User user = userPersistence.findByPrimaryKey(userId);
-
-		LinkedHashMap<String, Object> params =
-			new LinkedHashMap<String, Object>();
-
-		params.put("socialRelationType", new Long[] {userId, new Long(type)});
-
-		return search(
-			user.getCompanyId(), null, WorkflowConstants.STATUS_APPROVED,
-			params, start, end, obc);
+		return getSocialUsers(
+			userId, socialRelationType, StringPool.EQUAL, start, end, obc);
 	}
 
 	/**
@@ -2420,30 +2420,86 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 * result set.
 	 * </p>
 	 *
-	 * @param  userId the primary key of the user
-	 * @param  start the lower bound of the range of users
-	 * @param  end the upper bound of the range of users (not inclusive)
-	 * @param  obc the comparator to order the users by (optionally
-	 *         <code>null</code>)
-	 * @return the ordered range of users with a social relation with the user
-	 * @throws PortalException if a user with the primary key could not be found
-	 * @throws SystemException if a system exception occurred
+	 * @param      userId the primary key of the user
+	 * @param      start the lower bound of the range of users
+	 * @param      end the upper bound of the range of users (not inclusive)
+	 * @param      obc the comparator to order the users by (optionally
+	 *             <code>null</code>)
+	 * @return     the ordered range of users with a social relation with the
+	 *             user
+	 * @throws     PortalException if a user with the primary key could not be
+	 *             found
+	 * @throws     SystemException if a system exception occurred
+	 * @deprecated As of 7.0.0, replaced by {@link #getSocialUsers(long, int,
+	 *             boolean, int, int, OrderByComparator)}
 	 */
+	@Deprecated
 	@Override
 	public List<User> getSocialUsers(
 			long userId, int start, int end, OrderByComparator obc)
 		throws PortalException, SystemException {
 
+		return getSocialUsers(
+			userId, SocialRelationConstants.TYPE_UNI_ENEMY,
+			StringPool.NOT_EQUAL, start, end, obc);
+	}
+
+	@Override
+	public List<User> getSocialUsers(
+			long userId, int socialRelationType,
+			String socialRelationTypeComparator, int start, int end,
+			OrderByComparator obc)
+		throws PortalException, SystemException {
+
+		if (!socialRelationTypeComparator.equals(StringPool.EQUAL) &&
+			!socialRelationTypeComparator.equals(StringPool.NOT_EQUAL)) {
+
+			throw new IllegalArgumentException(
+				"Invalid social relation type comparator " +
+					socialRelationTypeComparator);
+		}
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS)) {
+			List<SocialRelation> socialRelations =
+				socialRelationPersistence.findByU1_T(
+					userId, socialRelationType);
+
+			if (socialRelationTypeComparator.equals(StringPool.NOT_EQUAL)) {
+				socialRelations = ListUtil.remove(
+					socialRelationPersistence.findByUserId1(userId),
+					socialRelations);
+			}
+
+			List<User> users = new ArrayList<User>();
+
+			for (SocialRelation socialRelation : socialRelations) {
+				User user = userPersistence.findByPrimaryKey(
+					socialRelation.getUserId2());
+
+				if (user.isDefaultUser() ||
+					(user.getStatus() != WorkflowConstants.STATUS_APPROVED)) {
+
+					continue;
+				}
+
+				if (!users.contains(user)) {
+					users.add(user);
+				}
+			}
+
+			if (obc != null) {
+				users = ListUtil.sort(users, obc);
+			}
+
+			return users;
+		}
+
 		User user = userPersistence.findByPrimaryKey(userId);
 
-		LinkedHashMap<String, Object> params =
-			new LinkedHashMap<String, Object>();
-
-		params.put("socialRelation", new Long[] {userId});
-
-		return search(
-			user.getCompanyId(), null, WorkflowConstants.STATUS_APPROVED,
-			params, start, end, obc);
+		return userFinder.findBySocialUsers(
+			user.getCompanyId(), userId, socialRelationType,
+			socialRelationTypeComparator, WorkflowConstants.STATUS_APPROVED,
+			start, end, obc);
 	}
 
 	/**
@@ -2462,8 +2518,8 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 *
 	 * @param  userId1 the primary key of the first user
 	 * @param  userId2 the primary key of the second user
-	 * @param  type the type of social relation. The possible types can be found
-	 *         in {@link
+	 * @param  socialRelationType the type of social relation. The possible
+	 *         types can be found in {@link
 	 *         com.liferay.portlet.social.model.SocialRelationConstants}.
 	 * @param  start the lower bound of the range of users
 	 * @param  end the upper bound of the range of users (not inclusive)
@@ -2476,8 +2532,8 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 */
 	@Override
 	public List<User> getSocialUsers(
-			long userId1, long userId2, int type, int start, int end,
-			OrderByComparator obc)
+			long userId1, long userId2, int socialRelationType, int start,
+			int end, OrderByComparator obc)
 		throws PortalException, SystemException {
 
 		User user1 = userPersistence.findByPrimaryKey(userId1);
@@ -2487,7 +2543,8 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 
 		params.put(
 			"socialMutualRelationType",
-			new Long[] {userId1, new Long(type), userId2, new Long(type)});
+			new Long[] {userId1, new Long(socialRelationType), userId2,
+			new Long(socialRelationType)});
 
 		return search(
 			user1.getCompanyId(), null, WorkflowConstants.STATUS_APPROVED,
@@ -2540,54 +2597,79 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	/**
 	 * Returns the number of users with a social relation with the user.
 	 *
-	 * @param  userId the primary key of the user
-	 * @return the number of users with a social relation with the user
-	 * @throws PortalException if a user with the primary key could not be found
-	 * @throws SystemException if a system exception occurred
+	 * @param      userId the primary key of the user
+	 * @return     the number of users with a social relation with the user
+	 * @throws     PortalException if a user with the primary key could not be
+	 *             found
+	 * @throws     SystemException if a system exception occurred
+	 * @deprecated As of 7.0.0, replaced by {@link #getSocialUsersCount(long,
+	 *             int, String)}
 	 */
+	@Deprecated
 	@Override
 	public int getSocialUsersCount(long userId)
 		throws PortalException, SystemException {
 
-		User user = userPersistence.findByPrimaryKey(userId);
-
-		LinkedHashMap<String, Object> params =
-			new LinkedHashMap<String, Object>();
-
-		params.put("socialRelation", new Long[] {userId});
-
-		return searchCount(
-			user.getCompanyId(), null, WorkflowConstants.STATUS_APPROVED,
-			params);
+		return getSocialUsersCount(
+			userId, SocialRelationConstants.TYPE_UNI_ENEMY,
+			StringPool.NOT_EQUAL);
 	}
 
 	/**
 	 * Returns the number of users with a social relation of the type with the
 	 * user.
 	 *
+	 * @param      userId the primary key of the user
+	 * @param      socialRelationType the type of social relation. The possible
+	 *             types can be found in {@link
+	 *             com.liferay.portlet.social.model.SocialRelationConstants}.
+	 * @return     the number of users with a social relation of the type with
+	 *             the user
+	 * @throws     PortalException if a user with the primary key could not be
+	 *             found
+	 * @throws     SystemException if a system exception occurred
+	 * @deprecated As of 7.0.0, replaced by {@link #getSocialUsersCount(long,
+	 *             int, String)}
+	 */
+	@Deprecated
+	@Override
+	public int getSocialUsersCount(long userId, int socialRelationType)
+		throws PortalException, SystemException {
+
+		return getSocialUsersCount(
+			userId, socialRelationType, StringPool.EQUAL);
+	}
+
+	/**
+	 * Returns the number of users with a social relation with the user.
+	 *
 	 * @param  userId the primary key of the user
-	 * @param  type the type of social relation. The possible types can be found
-	 *         in {@link
+	 * @param  socialRelationType the type of social relation. The possible
+	 *         types can be found in {@link
 	 *         com.liferay.portlet.social.model.SocialRelationConstants}.
-	 * @return the number of users with a social relation of the type with the
-	 *         user
+	 * @return the number of users with a social relation with the user
 	 * @throws PortalException if a user with the primary key could not be found
 	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
-	public int getSocialUsersCount(long userId, int type)
+	public int getSocialUsersCount(
+			long userId, int socialRelationType,
+			String socialRelationTypeComparator)
 		throws PortalException, SystemException {
 
 		User user = userPersistence.findByPrimaryKey(userId);
 
-		LinkedHashMap<String, Object> params =
-			new LinkedHashMap<String, Object>();
+		if (!socialRelationTypeComparator.equals(StringPool.EQUAL) &&
+			!socialRelationTypeComparator.equals(StringPool.NOT_EQUAL)) {
 
-		params.put("socialRelationType", new Long[] {userId, new Long(type)});
+			throw new IllegalArgumentException(
+				"Invalid social relation type comparator " +
+					socialRelationTypeComparator);
+		}
 
-		return searchCount(
-			user.getCompanyId(), null, WorkflowConstants.STATUS_APPROVED,
-			params);
+		return userFinder.countBySocialUsers(
+			user.getCompanyId(), user.getUserId(), socialRelationType,
+			socialRelationTypeComparator, WorkflowConstants.STATUS_APPROVED);
 	}
 
 	/**
@@ -2622,8 +2704,8 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 *
 	 * @param  userId1 the primary key of the first user
 	 * @param  userId2 the primary key of the second user
-	 * @param  type the type of social relation. The possible types can be found
-	 *         in {@link
+	 * @param  socialRelationType the type of social relation. The possible
+	 *         types can be found in {@link
 	 *         com.liferay.portlet.social.model.SocialRelationConstants}.
 	 * @return the number of users with a mutual social relation of the type
 	 *         with the user
@@ -2631,7 +2713,8 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
-	public int getSocialUsersCount(long userId1, long userId2, int type)
+	public int getSocialUsersCount(
+			long userId1, long userId2, int socialRelationType)
 		throws PortalException, SystemException {
 
 		User user1 = userPersistence.findByPrimaryKey(userId1);
@@ -2641,7 +2724,8 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 
 		params.put(
 			"socialMutualRelationType",
-			new Long[] {userId1, new Long(type), userId2, new Long(type)});
+			new Long[] {userId1, new Long(socialRelationType), userId2,
+			new Long(socialRelationType)});
 
 		return searchCount(
 			user1.getCompanyId(), null, WorkflowConstants.STATUS_APPROVED,
@@ -3310,7 +3394,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		throws SystemException {
 
 		if (!PropsValues.USERS_INDEXER_ENABLED ||
-			!PropsValues.USERS_SEARCH_WITH_INDEX) {
+			!PropsValues.USERS_SEARCH_WITH_INDEX || isUseCustomSQL(params)) {
 
 			return userFinder.countByKeywords(
 				companyId, keywords, status, params);
@@ -3399,7 +3483,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		throws SystemException {
 
 		if (!PropsValues.USERS_INDEXER_ENABLED ||
-			!PropsValues.USERS_SEARCH_WITH_INDEX) {
+			!PropsValues.USERS_SEARCH_WITH_INDEX || isUseCustomSQL(params)) {
 
 			return userFinder.countByC_FN_MN_LN_SN_EA_S(
 				companyId, firstName, middleName, lastName, screenName,
@@ -6016,16 +6100,31 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		return StringUtil.lowerCase(StringUtil.trim(login));
 	}
 
-	protected long[] getUserIds(List<User> users) {
-		long[] userIds = new long[users.size()];
-
-		for (int i = 0; i < users.size(); i++) {
-			User user = users.get(i);
-
-			userIds[i] = user.getUserId();
+	protected boolean isUseCustomSQL(LinkedHashMap<String, Object> params) {
+		if (MapUtil.isEmpty(params)) {
+			return false;
 		}
 
-		return userIds;
+		for (String key : params.keySet()) {
+			if (!key.equals("inherit") &&
+				!key.equals("usersGroups") &&
+				!key.equals("usersOrgs") &&
+				!key.equals("usersOrgsCount") &&
+				!key.equals("usersRoles") &&
+				!key.equals("usersTeams") &&
+				!key.equals("usersUserGroups")) {
+
+				return true;
+			}
+		}
+
+		Boolean inherit = (Boolean)params.get("inherit");
+
+		if ((inherit != null) && inherit) {
+			return true;
+		}
+
+		return false;
 	}
 
 	protected void notifyUser(
@@ -6175,15 +6274,9 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 			return;
 		}
 
-		List<Group> oldGroups = userPersistence.getGroups(userId);
+		long[] oldGroupIds = getGroupPrimaryKeys(userId);
 
-		Set<Long> oldGroupIds = new HashSet<Long>(oldGroups.size());
-
-		for (Group oldGroup : oldGroups) {
-			long oldGroupId = oldGroup.getGroupId();
-
-			oldGroupIds.add(oldGroupId);
-
+		for (long oldGroupId : oldGroupIds) {
 			if (!ArrayUtil.contains(newGroupIds, oldGroupId)) {
 				unsetGroupUsers(
 					oldGroupId, new long[] {userId}, serviceContext);
@@ -6191,7 +6284,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		}
 
 		for (long newGroupId : newGroupIds) {
-			if (!oldGroupIds.contains(newGroupId)) {
+			if (!ArrayUtil.contains(oldGroupIds, newGroupId)) {
 				addGroupUsers(newGroupId, new long[] {userId});
 			}
 		}
@@ -6214,24 +6307,16 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 			return;
 		}
 
-		List<Organization> oldOrganizations = userPersistence.getOrganizations(
-			userId);
+		long[] oldOrganizationIds = getOrganizationPrimaryKeys(userId);
 
-		Set<Long> oldOrganizationIds = new HashSet<Long>(
-			oldOrganizations.size());
-
-		for (Organization oldOrganization : oldOrganizations) {
-			long oldOrganizationId = oldOrganization.getOrganizationId();
-
-			oldOrganizationIds.add(oldOrganizationId);
-
+		for (long oldOrganizationId : oldOrganizationIds) {
 			if (!ArrayUtil.contains(newOrganizationIds, oldOrganizationId)) {
 				unsetOrganizationUsers(oldOrganizationId, new long[] {userId});
 			}
 		}
 
 		for (long newOrganizationId : newOrganizationIds) {
-			if (!oldOrganizationIds.contains(newOrganizationId)) {
+			if (!ArrayUtil.contains(oldOrganizationIds, newOrganizationId)) {
 				addOrganizationUsers(newOrganizationId, new long[] {userId});
 			}
 		}
@@ -6280,18 +6365,13 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 			organizationIds = user.getOrganizationIds();
 		}
 
-		long[] organizationGroupIds = new long[organizationIds.length];
-
-		for (int i = 0; i < organizationIds.length; i++) {
-			long organizationId = organizationIds[i];
-
+		for (long organizationId : organizationIds) {
 			Organization organization =
 				organizationPersistence.findByPrimaryKey(organizationId);
 
-			organizationGroupIds[i] = organization.getGroupId();
+			validGroupIds = ArrayUtil.append(
+				validGroupIds, organization.getGroupId());
 		}
-
-		validGroupIds = ArrayUtil.append(validGroupIds, organizationGroupIds);
 
 		Arrays.sort(validGroupIds);
 

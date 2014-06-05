@@ -1003,6 +1003,12 @@ public interface Portal {
 	public List<BreadcrumbEntry> getPortletBreadcrumbList(
 		HttpServletRequest request);
 
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link
+	 *             com.liferay.portal.kernel.servlet.taglib.ui.BreadcrumbUtil#getPortletBreadcrumbEntries(
+	 *             HttpServletRequest)}
+	 */
+	@Deprecated
 	public List<BreadcrumbEntry> getPortletBreadcrumbs(
 		HttpServletRequest request);
 

@@ -95,10 +95,12 @@ import com.liferay.portal.webserver.WebServerServletTokenUtil;
 import com.liferay.portlet.asset.model.AssetEntry;
 import com.liferay.portlet.asset.model.AssetLink;
 import com.liferay.portlet.asset.model.AssetLinkConstants;
-import com.liferay.portlet.dynamicdatamapping.NoSuchStructureException;
 import com.liferay.portlet.dynamicdatamapping.NoSuchTemplateException;
 import com.liferay.portlet.dynamicdatamapping.StorageFieldNameException;
 import com.liferay.portlet.dynamicdatamapping.StorageFieldRequiredException;
+import com.liferay.portlet.dynamicdatamapping.StructureXsdException;
+import com.liferay.portlet.dynamicdatamapping.model.DDMForm;
+import com.liferay.portlet.dynamicdatamapping.model.DDMFormField;
 import com.liferay.portlet.dynamicdatamapping.model.DDMStructure;
 import com.liferay.portlet.dynamicdatamapping.model.DDMTemplate;
 import com.liferay.portlet.dynamicdatamapping.storage.FieldConstants;
@@ -118,7 +120,6 @@ import com.liferay.portlet.journal.ArticleVersionException;
 import com.liferay.portlet.journal.DuplicateArticleIdException;
 import com.liferay.portlet.journal.InvalidDDMStructureException;
 import com.liferay.portlet.journal.NoSuchArticleException;
-import com.liferay.portlet.journal.StructureXsdException;
 import com.liferay.portlet.journal.model.JournalArticle;
 import com.liferay.portlet.journal.model.JournalArticleConstants;
 import com.liferay.portlet.journal.model.JournalArticleDisplay;
@@ -350,18 +351,7 @@ public class JournalArticleLocalServiceImpl
 
 		JournalArticle article = journalArticlePersistence.create(id);
 
-		Locale locale = LocaleUtil.getSiteDefault();
-
-		String defaultLanguageId = ParamUtil.getString(
-			serviceContext, "defaultLanguageId");
-
-		if (Validator.isNull(defaultLanguageId)) {
-			defaultLanguageId = LocalizationUtil.getDefaultLanguageId(content);
-		}
-
-		if (Validator.isNotNull(defaultLanguageId)) {
-			locale = LocaleUtil.fromLanguageId(defaultLanguageId);
-		}
+		Locale locale = getArticleDefaultLocale(content, serviceContext);
 
 		String title = titleMap.get(locale);
 
@@ -445,7 +435,8 @@ public class JournalArticleLocalServiceImpl
 		if (classNameLocalService.getClassNameId(DDMStructure.class) ==
 				classNameId) {
 
-			updateDDMStructureXSD(classPK, content, serviceContext);
+			updateDDMStructurePredefinedValues(
+				classPK, content, serviceContext);
 		}
 
 		// Message boards
@@ -2381,6 +2372,16 @@ public class JournalArticleLocalServiceImpl
 	}
 
 	@Override
+	public List<JournalArticle> getArticles(
+			long groupId, String articleId, int start, int end,
+			OrderByComparator orderByComparator)
+		throws SystemException {
+
+		return journalArticlePersistence.findByG_A(
+			groupId, articleId, start, end, orderByComparator);
+	}
+
+	@Override
 	public List<JournalArticle> getArticlesByResourcePrimKey(
 			long resourcePrimKey)
 		throws SystemException {
@@ -2436,6 +2437,13 @@ public class JournalArticleLocalServiceImpl
 
 		return journalArticlePersistence.countByG_F_ST(
 			groupId, folderId, status);
+	}
+
+	@Override
+	public int getArticlesCount(long groupId, String articleId)
+		throws SystemException {
+
+		return journalArticlePersistence.countByG_A(groupId, articleId);
 	}
 
 	/**
@@ -4804,18 +4812,7 @@ public class JournalArticleLocalServiceImpl
 			article.setSmallImageId(latestArticle.getSmallImageId());
 		}
 
-		Locale locale = LocaleUtil.getSiteDefault();
-
-		String defaultLanguageId = ParamUtil.getString(
-			serviceContext, "defaultLanguageId");
-
-		if (Validator.isNull(defaultLanguageId)) {
-			defaultLanguageId = LocalizationUtil.getDefaultLanguageId(content);
-		}
-
-		if (Validator.isNotNull(defaultLanguageId)) {
-			locale = LocaleUtil.fromLanguageId(defaultLanguageId);
-		}
+		Locale locale = getArticleDefaultLocale(content, serviceContext);
 
 		String title = titleMap.get(locale);
 
@@ -4882,7 +4879,7 @@ public class JournalArticleLocalServiceImpl
 		if (classNameLocalService.getClassNameId(DDMStructure.class) ==
 				article.getClassNameId()) {
 
-			updateDDMStructureXSD(
+			updateDDMStructurePredefinedValues(
 				article.getClassPK(), content, serviceContext);
 		}
 
@@ -5040,6 +5037,8 @@ public class JournalArticleLocalServiceImpl
 
 		User user = userPersistence.findByPrimaryKey(oldArticle.getUserId());
 
+		Locale defaultLocale = getArticleDefaultLocale(content, serviceContext);
+
 		if (incrementVersion) {
 			double newVersion = MathUtil.format(oldVersion + 0.1, 1, 1);
 
@@ -5058,7 +5057,7 @@ public class JournalArticleLocalServiceImpl
 			article.setClassPK(oldArticle.getClassPK());
 			article.setArticleId(articleId);
 			article.setVersion(newVersion);
-			article.setTitleMap(oldArticle.getTitleMap());
+			article.setTitleMap(oldArticle.getTitleMap(), defaultLocale);
 			article.setUrlTitle(
 				getUniqueUrlTitle(
 					id, articleId, title, oldArticle.getUrlTitle(),
@@ -5092,7 +5091,7 @@ public class JournalArticleLocalServiceImpl
 
 		titleMap.put(locale, title);
 
-		article.setTitleMap(titleMap);
+		article.setTitleMap(titleMap, defaultLocale);
 
 		Map<Locale, String> descriptionMap = article.getDescriptionMap();
 
@@ -5789,107 +5788,79 @@ public class JournalArticleLocalServiceImpl
 		}
 	}
 
-	protected void checkStructure(Document contentDocument, Element root)
+	protected void checkStructure(Document contentDocument, DDMForm ddmForm)
 		throws PortalException {
 
-		for (Element el : root.elements()) {
-			checkStructureField(el, contentDocument);
-
-			checkStructure(contentDocument, el);
+		for (DDMFormField ddmFormField : ddmForm.getDDMFormFields()) {
+			checkStructureField(ddmFormField, contentDocument.getRootElement());
 		}
 	}
 
 	protected void checkStructure(JournalArticle article)
 		throws PortalException, SystemException {
 
-		Group companyGroup = groupLocalService.getCompanyGroup(
-			article.getCompanyId());
-
-		DDMStructure structure = null;
+		DDMStructure ddmStructure = article.getDDMStructure();
 
 		try {
-			structure = ddmStructurePersistence.findByG_C_S(
-				PortalUtil.getSiteGroupId(article.getGroupId()),
-				classNameLocalService.getClassNameId(JournalArticle.class),
-				article.getStructureId());
-		}
-		catch (NoSuchStructureException nsse) {
-			structure = ddmStructurePersistence.findByG_C_S(
-				companyGroup.getGroupId(),
-				classNameLocalService.getClassNameId(JournalArticle.class),
-				article.getStructureId());
-		}
-
-		try {
-			Document xsdDocument = SAXReaderUtil.read(structure.getXsd());
-
-			checkStructure(article.getDocument(), xsdDocument.getRootElement());
-		}
-		catch (DocumentException de) {
-			throw new SystemException(de);
+			checkStructure(article, ddmStructure);
 		}
 		catch (StructureXsdException sxsde) {
-			long groupId = article.getGroupId();
-			String articleId = article.getArticleId();
-			double version = article.getVersion();
-
 			if (_log.isWarnEnabled()) {
-				_log.warn(
-					"Article {groupId=" + groupId + ", articleId=" +
-						articleId + ", version=" + version +
-							"} has content that does not match its " +
-								"structure: " + sxsde.getMessage());
+				StringBundler sb = new StringBundler(8);
+
+				sb.append("Article {groupId=");
+				sb.append(article.getGroupId());
+				sb.append(", articleId=");
+				sb.append(article.getArticleId());
+				sb.append(", version=");
+				sb.append(article.getVersion());
+				sb.append("} has content that does not match its structure: ");
+				sb.append(sxsde.getMessage());
+
+				_log.warn(sb.toString());
 			}
 		}
 	}
 
-	protected void checkStructureField(Element el, Document contentDocument)
+	protected void checkStructure(
+			JournalArticle article, DDMStructure ddmStructure)
 		throws PortalException {
 
-		StringBuilder elPath = new StringBuilder();
+		checkStructure(article.getDocument(), ddmStructure.getDDMForm());
+	}
 
-		elPath.append(el.attributeValue("name"));
+	protected void checkStructureField(
+			DDMFormField ddmFormField, Element contentElement)
+		throws PortalException {
 
-		Element elParent = el.getParent();
+		String fieldName = ddmFormField.getName();
 
-		while (true) {
-			if ((elParent == null) || elParent.getName().equals("root")) {
+		boolean hasField = false;
+
+		for (Element childElement : contentElement.elements()) {
+			if (fieldName.equals(
+					childElement.attributeValue("name", StringPool.BLANK))) {
+
+				hasField = true;
+
+				for (DDMFormField childDDMFormField :
+						ddmFormField.getNestedDDMFormFields()) {
+
+					checkStructureField(childDDMFormField, childElement);
+				}
+
 				break;
 			}
-
-			elPath.insert(
-				0, elParent.attributeValue("name") + StringPool.COMMA);
-
-			elParent = elParent.getParent();
 		}
 
-		String[] elPathNames = StringUtil.split(elPath.toString());
+		if (!hasField) {
+			String contentElementType = contentElement.attributeValue(
+				"type", StringPool.BLANK);
 
-		Element contentEl = contentDocument.getRootElement();
+			if (!contentElementType.equals("list") &&
+				!contentElementType.equals("multi-list")) {
 
-		for (String _elPathName : elPathNames) {
-			boolean foundEl = false;
-
-			for (Element tempEl : contentEl.elements()) {
-				if (_elPathName.equals(
-						tempEl.attributeValue("name", StringPool.BLANK))) {
-
-					contentEl = tempEl;
-					foundEl = true;
-
-					break;
-				}
-			}
-
-			if (!foundEl) {
-				String elType = contentEl.attributeValue(
-					"type", StringPool.BLANK);
-
-				if (!elType.equals("list") && !elType.equals("multi-list")) {
-					throw new StructureXsdException(elPath.toString());
-				}
-
-				break;
+				throw new StructureXsdException(fieldName);
 			}
 		}
 	}
@@ -6194,6 +6165,23 @@ public class JournalArticleLocalServiceImpl
 				dynamicContent.setText(StringPool.BLANK);
 			}
 		}
+	}
+
+	protected Locale getArticleDefaultLocale(
+		String content, ServiceContext serviceContext) {
+
+		String defaultLanguageId = ParamUtil.getString(
+			serviceContext, "defaultLanguageId");
+
+		if (Validator.isNull(defaultLanguageId)) {
+			defaultLanguageId = LocalizationUtil.getDefaultLanguageId(content);
+		}
+
+		if (Validator.isNotNull(defaultLanguageId)) {
+			return LocaleUtil.fromLanguageId(defaultLanguageId);
+		}
+
+		return LocaleUtil.getSiteDefault();
 	}
 
 	protected List<ObjectValuePair<Long, Integer>> getArticleVersionStatuses(
@@ -6683,7 +6671,7 @@ public class JournalArticleLocalServiceImpl
 			serviceContext, workflowContext);
 	}
 
-	protected void updateDDMStructureXSD(
+	protected void updateDDMStructurePredefinedValues(
 			long ddmStructureId, String content, ServiceContext serviceContext)
 		throws PortalException, SystemException {
 

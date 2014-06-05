@@ -297,11 +297,9 @@ public class DDMStructureWrapper implements DDMStructure,
 	* Returns the user uuid of this d d m structure.
 	*
 	* @return the user uuid of this d d m structure
-	* @throws SystemException if a system exception occurred
 	*/
 	@Override
-	public java.lang.String getUserUuid()
-		throws com.liferay.portal.kernel.exception.SystemException {
+	public java.lang.String getUserUuid() {
 		return _ddmStructure.getUserUuid();
 	}
 
@@ -915,8 +913,7 @@ public class DDMStructureWrapper implements DDMStructure,
 	}
 
 	@Override
-	public void persist()
-		throws com.liferay.portal.kernel.exception.SystemException {
+	public void persist() {
 		_ddmStructure.persist();
 	}
 
@@ -933,6 +930,12 @@ public class DDMStructureWrapper implements DDMStructure,
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
 		return _ddmStructure.getCompleteXsd();
+	}
+
+	@Override
+	public com.liferay.portlet.dynamicdatamapping.model.DDMForm getDDMForm()
+		throws com.liferay.portal.kernel.exception.PortalException {
+		return _ddmStructure.getDDMForm();
 	}
 
 	@Override
@@ -1113,6 +1116,15 @@ public class DDMStructureWrapper implements DDMStructure,
 		return _ddmStructure.getTransientFieldsMap(locale);
 	}
 
+	@Override
+	public java.lang.String getUnambiguousName(
+		java.util.List<com.liferay.portlet.dynamicdatamapping.model.DDMStructure> structures,
+		long groupId, java.util.Locale locale)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		return _ddmStructure.getUnambiguousName(structures, groupId, locale);
+	}
+
 	/**
 	* Returns the WebDAV URL to access the structure.
 	*
@@ -1178,6 +1190,12 @@ public class DDMStructureWrapper implements DDMStructure,
 	public void setLocalizedTransientFieldsMap(
 		java.util.Map<java.lang.String, java.util.Map<java.lang.String, java.util.Map<java.lang.String, java.lang.String>>> localizedTransientFieldsMap) {
 		_ddmStructure.setLocalizedTransientFieldsMap(localizedTransientFieldsMap);
+	}
+
+	@Override
+	public void updateDDMForm(
+		com.liferay.portlet.dynamicdatamapping.model.DDMForm ddmForm) {
+		_ddmStructure.updateDDMForm(ddmForm);
 	}
 
 	@Override

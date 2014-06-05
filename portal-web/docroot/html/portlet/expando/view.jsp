@@ -55,24 +55,17 @@ Collections.sort(customAttributesDisplays, new CustomAttributesDisplayComparator
 		</portlet:renderURL>
 
 		<liferay-ui:search-container-column-text
-			buffer="buffer"
 			href="<%= rowURL %>"
 			name="resource"
 		>
-
-			<%
-			buffer.append("<img alt=\"");
-			buffer.append(LanguageUtil.get(locale, "icon"));
-			buffer.append("\" class=\"custom-attribute-icon\" src=\"");
-			buffer.append(customAttributesDisplay.getIconPath(themeDisplay));
-			buffer.append("\">");
-			buffer.append(ResourceActionsUtil.getModelResource(locale, customAttributesDisplay.getClassName()));
-			%>
-
+			<liferay-ui:icon
+		   		iconCssClass="<%= customAttributesDisplay.getIconCssClass() %>"
+				label="<%= true %>"
+				message="<%= ResourceActionsUtil.getModelResource(locale, customAttributesDisplay.getClassName()) %>"
+			/>
 		</liferay-ui:search-container-column-text>
 
 		<liferay-ui:search-container-column-text
-			buffer="buffer"
 			href="<%= rowURL %>"
 			name="custom-fields"
 		>
@@ -82,23 +75,22 @@ Collections.sort(customAttributesDisplays, new CustomAttributesDisplayComparator
 
 			List<String> attributeNames = Collections.list(expandoBridge.getAttributeNames());
 
-			for (int i = 0; i < attributeNames.size(); i++) {
-				if (i > 0) {
-					buffer.append(", ");
-				}
+			String[] localizedNames = new String[attributeNames.size()];
 
-				String name = attributeNames.get(i);
+			int i = 0;
 
+			for (String name : attributeNames) {
 				String localizedName = LanguageUtil.get(pageContext, name);
 
 				if (name.equals(localizedName)) {
 					localizedName = TextFormatter.format(name, TextFormatter.J);
 				}
 
-				buffer.append(HtmlUtil.escape(localizedName));
+				localizedNames[i++] = HtmlUtil.escape(localizedName);
 			}
 			%>
 
+			<%= StringUtil.merge(localizedNames, StringPool.COMMA_AND_SPACE) %>
 		</liferay-ui:search-container-column-text>
 
 		<liferay-ui:search-container-column-jsp

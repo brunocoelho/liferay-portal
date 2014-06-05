@@ -464,8 +464,7 @@ public interface User extends UserModel, PersistedModel {
 			com.liferay.portal.kernel.exception.SystemException;
 
 	public boolean hasOrganization()
-		throws com.liferay.portal.kernel.exception.PortalException,
-			com.liferay.portal.kernel.exception.SystemException;
+		throws com.liferay.portal.kernel.exception.SystemException;
 
 	public boolean hasPrivateLayouts()
 		throws com.liferay.portal.kernel.exception.PortalException,

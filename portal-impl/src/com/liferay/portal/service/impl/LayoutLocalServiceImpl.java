@@ -80,7 +80,7 @@ import com.liferay.portal.util.PortalUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.util.comparator.LayoutComparator;
 import com.liferay.portal.util.comparator.LayoutPriorityComparator;
-import com.liferay.portlet.documentlibrary.store.DLStoreUtil;
+import com.liferay.portlet.documentlibrary.util.DLValidatorUtil;
 import com.liferay.portlet.dynamicdatalists.RecordSetDuplicateRecordSetKeyException;
 import com.liferay.portlet.dynamicdatamapping.StructureDuplicateStructureKeyException;
 import com.liferay.portlet.mobiledevicerules.model.MDRRuleGroupInstance;
@@ -910,7 +910,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 			long userId, ExportImportConfiguration exportImportConfiguration)
 		throws PortalException, SystemException {
 
-		if (!DLStoreUtil.isValidName(exportImportConfiguration.getName())) {
+		if (!DLValidatorUtil.isValidName(exportImportConfiguration.getName())) {
 			throw new LARFileNameException(exportImportConfiguration.getName());
 		}
 
@@ -1547,17 +1547,16 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 			return count;
 		}
 
-		List<UserGroup> userGroups = userPersistence.getUserGroups(
+		long[] userGroupIds = userPersistence.getUserGroupPrimaryKeys(
 			group.getClassPK());
 
-		if (!userGroups.isEmpty()) {
+		if (userGroupIds.length != 0) {
 			long userGroupClassNameId = classNameLocalService.getClassNameId(
 				UserGroup.class);
 
-			for (UserGroup userGroup : userGroups) {
+			for (long userGroupId : userGroupIds) {
 				Group userGroupGroup = groupPersistence.findByC_C_C(
-					group.getCompanyId(), userGroupClassNameId,
-					userGroup.getUserGroupId());
+					group.getCompanyId(), userGroupClassNameId, userGroupId);
 
 				layoutSet = layoutSetPersistence.findByG_P(
 					userGroupGroup.getGroupId(), privateLayout);
@@ -1720,17 +1719,16 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 			return false;
 		}
 
-		List<UserGroup> userGroups = userPersistence.getUserGroups(
+		long[] userGroupIds = userPersistence.getUserGroupPrimaryKeys(
 			group.getClassPK());
 
-		if (!userGroups.isEmpty()) {
+		if (userGroupIds.length != 0) {
 			long userGroupClassNameId = classNameLocalService.getClassNameId(
 				UserGroup.class);
 
-			for (UserGroup userGroup : userGroups) {
+			for (long userGroupId : userGroupIds) {
 				Group userGroupGroup = groupPersistence.findByC_C_C(
-					group.getCompanyId(), userGroupClassNameId,
-					userGroup.getUserGroupId());
+					group.getCompanyId(), userGroupClassNameId, userGroupId);
 
 				layoutSet = layoutSetPersistence.findByG_P(
 					userGroupGroup.getGroupId(), privateLayout);

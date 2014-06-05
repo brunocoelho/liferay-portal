@@ -348,8 +348,7 @@ public class PortletWrapper implements Portlet, ModelWrapper<Portlet> {
 	}
 
 	@Override
-	public void persist()
-		throws com.liferay.portal.kernel.exception.SystemException {
+	public void persist() {
 		_portlet.persist();
 	}
 
@@ -1507,6 +1506,18 @@ public class PortletWrapper implements Portlet, ModelWrapper<Portlet> {
 	}
 
 	/**
+	* Returns <code>true</code> if the portlet uses Social Interactions
+	* Configuration
+	*
+	* @return <code>true</code> if the portlet uses Social Interactions
+	Configuration
+	*/
+	@Override
+	public boolean getSocialInteractionsConfiguration() {
+		return _portlet.getSocialInteractionsConfiguration();
+	}
+
+	/**
 	* Returns the name of the social request interpreter class of the portlet.
 	*
 	* @return the name of the social request interpreter class of the portlet
@@ -1854,7 +1865,7 @@ public class PortletWrapper implements Portlet, ModelWrapper<Portlet> {
 	* @return the workflow handler instances of the portlet
 	*/
 	@Override
-	public java.util.List<com.liferay.portal.kernel.workflow.WorkflowHandler> getWorkflowHandlerInstances() {
+	public java.util.List<com.liferay.portal.kernel.workflow.WorkflowHandler<?>> getWorkflowHandlerInstances() {
 		return _portlet.getWorkflowHandlerInstances();
 	}
 
@@ -2225,6 +2236,18 @@ public class PortletWrapper implements Portlet, ModelWrapper<Portlet> {
 	@Override
 	public boolean isShowPortletInactive() {
 		return _portlet.isShowPortletInactive();
+	}
+
+	/**
+	* Returns <code>true</code> if the portlet uses Social Interactions
+	* Configuration
+	*
+	* @return <code>true</code> if the portlet uses Social Interactions
+	Configuration
+	*/
+	@Override
+	public boolean isSocialInteractionsConfiguration() {
+		return _portlet.isSocialInteractionsConfiguration();
 	}
 
 	/**
@@ -3198,6 +3221,12 @@ public class PortletWrapper implements Portlet, ModelWrapper<Portlet> {
 		_portlet.setSocialActivityInterpreterClasses(socialActivityInterpreterClasses);
 	}
 
+	@Override
+	public void setSocialInteractionsConfiguration(
+		boolean socialInteractionsConfiguration) {
+		_portlet.setSocialInteractionsConfiguration(socialInteractionsConfiguration);
+	}
+
 	/**
 	* Sets the name of the social request interpreter class of the portlet.
 	*
@@ -3289,16 +3318,6 @@ public class PortletWrapper implements Portlet, ModelWrapper<Portlet> {
 	@Override
 	public void setTemplateHandlerClass(java.lang.String templateHandlerClass) {
 		_portlet.setTemplateHandlerClass(templateHandlerClass);
-	}
-
-	/**
-	* Sets the timestamp of the portlet.
-	*
-	* @param timestamp the timestamp of the portlet
-	*/
-	@Override
-	public void setTimestamp(long timestamp) {
-		_portlet.setTimestamp(timestamp);
 	}
 
 	/**

@@ -269,11 +269,9 @@ public class AssetVocabularyWrapper implements AssetVocabulary,
 	* Returns the user uuid of this asset vocabulary.
 	*
 	* @return the user uuid of this asset vocabulary
-	* @throws SystemException if a system exception occurred
 	*/
 	@Override
-	public java.lang.String getUserUuid()
-		throws com.liferay.portal.kernel.exception.SystemException {
+	public java.lang.String getUserUuid() {
 		return _assetVocabulary.getUserUuid();
 	}
 
@@ -792,8 +790,7 @@ public class AssetVocabularyWrapper implements AssetVocabulary,
 	}
 
 	@Override
-	public void persist()
-		throws com.liferay.portal.kernel.exception.SystemException {
+	public void persist() {
 		_assetVocabulary.persist();
 	}
 
@@ -804,8 +801,51 @@ public class AssetVocabularyWrapper implements AssetVocabulary,
 	}
 
 	@Override
+	public long[] getRequiredClassNameIds() {
+		return _assetVocabulary.getRequiredClassNameIds();
+	}
+
+	@Override
+	public long[] getSelectedClassNameIds() {
+		return _assetVocabulary.getSelectedClassNameIds();
+	}
+
+	/**
+	* @deprecated As of 7.0.0, with no direct replacement
+	*/
+	@Deprecated
+	@Override
 	public com.liferay.portal.kernel.util.UnicodeProperties getSettingsProperties() {
 		return _assetVocabulary.getSettingsProperties();
+	}
+
+	@Override
+	public java.lang.String getUnambiguousTitle(
+		java.util.List<com.liferay.portlet.asset.model.AssetVocabulary> vocabularies,
+		long groupId, java.util.Locale locale)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		return _assetVocabulary.getUnambiguousTitle(vocabularies, groupId,
+			locale);
+	}
+
+	@Override
+	public boolean hasMoreThanOneCategorySelected(long[] categoryIds)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _assetVocabulary.hasMoreThanOneCategorySelected(categoryIds);
+	}
+
+	@Override
+	public boolean isAssociatedToAssetRendererFactory(long classNameId) {
+		return _assetVocabulary.isAssociatedToAssetRendererFactory(classNameId);
+	}
+
+	@Override
+	public boolean isMissingRequiredCategory(long classNameId,
+		long[] categoryIds)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _assetVocabulary.isMissingRequiredCategory(classNameId,
+			categoryIds);
 	}
 
 	@Override
@@ -818,6 +858,10 @@ public class AssetVocabularyWrapper implements AssetVocabulary,
 		return _assetVocabulary.isRequired(classNameId);
 	}
 
+	/**
+	* @deprecated As of 7.0.0, with no direct replacement
+	*/
+	@Deprecated
 	@Override
 	public void setSettingsProperties(
 		com.liferay.portal.kernel.util.UnicodeProperties settingsProperties) {

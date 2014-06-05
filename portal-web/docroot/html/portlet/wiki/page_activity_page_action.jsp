@@ -30,7 +30,7 @@ WikiPage wikiPage = (WikiPage)request.getAttribute(WebKeys.WIKI_PAGE);
 WikiPage socialActivityPage = WikiPageLocalServiceUtil.getPage(wikiPage.getNodeId(), wikiPage.getTitle(), version);
 %>
 
-<liferay-ui:icon-menu>
+<liferay-ui:icon-menu icon="<%= StringPool.BLANK %>" message="<%= StringPool.BLANK %>">
 	<c:if test="<%= (version != wikiPage.getVersion()) && (socialActivityPage.isApproved()) && (WikiPagePermission.contains(permissionChecker, wikiPage, ActionKeys.UPDATE)) %>">
 		<portlet:actionURL var="revertURL">
 			<portlet:param name="struts_action" value="/wiki/edit_page" />
@@ -42,7 +42,7 @@ WikiPage socialActivityPage = WikiPageLocalServiceUtil.getPage(wikiPage.getNodeI
 		</portlet:actionURL>
 
 		<liferay-ui:icon
-			image="undo"
+			iconCssClass="icon-undo"
 			message='<%= LanguageUtil.get(pageContext, "restore-version") + " " + String.valueOf(version) %>'
 			url="<%= revertURL %>"
 		/>
@@ -65,7 +65,7 @@ WikiPage socialActivityPage = WikiPageLocalServiceUtil.getPage(wikiPage.getNodeI
 	<liferay-ui:icon
 		cssClass="compare-to-link"
 		data="<%= data %>"
-		image="copy"
+		iconCssClass="icon-copy"
 		label="<%= true %>"
 		message="compare-to"
 		url="javascript:;"

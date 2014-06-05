@@ -66,8 +66,8 @@ long[] pooledActorsIds = WorkflowTaskManagerUtil.getPooledActorsIds(company.getC
 
 			<liferay-ui:icon
 				cssClass='<%= "workflow-task-" + randomId + " task-change-status-link" %>'
+				iconCssClass="icon-random"
 				id='<%= randomId + HtmlUtil.escapeAttribute(transitionName) + "taskChangeStatusLink" %>'
-				image="../aui/random"
 				message="<%= message %>"
 				method="get"
 				url="<%= editURL %>"
@@ -91,8 +91,8 @@ long[] pooledActorsIds = WorkflowTaskManagerUtil.getPooledActorsIds(company.getC
 
 		<liferay-ui:icon
 			cssClass='<%= "workflow-task-" + randomId + " task-assign-to-me-link" %>'
+			iconCssClass="icon-user"
 			id='<%= randomId + "taskAssignToMeLink" %>'
-			image="assign"
 			message="assign-to-me"
 			method="get"
 			url="<%= assignToMeURL %>"
@@ -110,8 +110,8 @@ long[] pooledActorsIds = WorkflowTaskManagerUtil.getPooledActorsIds(company.getC
 
 		<liferay-ui:icon
 			cssClass='<%= "workflow-task-" + randomId + " task-assign-link" %>'
+			iconCssClass="icon-user"
 			id='<%= randomId + "taskAssignLink" %>'
-			image="assign"
 			message="assign-to-..."
 			method="get"
 			url="<%= assignURL %>"
@@ -128,8 +128,8 @@ long[] pooledActorsIds = WorkflowTaskManagerUtil.getPooledActorsIds(company.getC
 
 		<liferay-ui:icon
 			cssClass='<%= "workflow-task-" + randomId + " task-due-date-link" %>'
+			iconCssClass="icon-calendar"
 			id='<%= randomId + "taskDueDateLink" %>'
-			image="time"
 			message="update-due-date"
 			method="get"
 			url="<%= updateDueDateURL %>"

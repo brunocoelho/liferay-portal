@@ -342,12 +342,14 @@
 					<then>
 						<var name="key_pageName" value="${pageName}" />
 
-						<execute action="SOUserBar#click" locator-key1="DASHBOARD" />
+						<execute macro="SOUserBar#gotoDashboardPG" />
 
 						<execute action="SODashboard#click" locator-key1="NAVIGATION_PAGE" />
 					</then>
 					<else>
 						<var name="key_pageName" value="${pageName}" />
+
+						<execute action="SOActivities#assertElementPresent" locator-key1="ACTIVITIES_PORTLET_LOADED" />
 
 						<execute action="SOSiteHome#click" locator-key1="NAVIGATION_PAGE" />
 					</else>
@@ -476,6 +478,10 @@
 				<execute action="Home#assertElementNotPresent" locator-key1="PAGE_DELETE" />
 			</then>
 		</while>
+	</command>
+
+	<command name="viewChildPG">
+		<execute action="Home#assertTextEquals" locator-key1="BREADCRUMB_3" value1="${childPageName}" />
 	</command>
 
 	<command name="viewCustomLogoPG">

@@ -244,7 +244,7 @@ public class OrganizationFinderImpl
 			sql = StringUtil.replace(
 				sql, "[$PARENT_ORGANIZATION_ID_COMPARATOR$]",
 				parentOrganizationIdComparator.equals(StringPool.EQUAL) ?
-				StringPool.EQUAL : StringPool.NOT_EQUAL);
+					StringPool.EQUAL : StringPool.NOT_EQUAL);
 			sql = CustomSQLUtil.replaceAndOperator(sql, andOperator);
 
 			SQLQuery q = session.createSynchronizedSQLQuery(sql);
@@ -472,7 +472,7 @@ public class OrganizationFinderImpl
 		sql = StringUtil.replace(
 			sql, "[$PARENT_ORGANIZATION_ID_COMPARATOR$]",
 			parentOrganizationIdComparator.equals(StringPool.EQUAL) ?
-			StringPool.EQUAL : StringPool.NOT_EQUAL);
+				StringPool.EQUAL : StringPool.NOT_EQUAL);
 
 		if (regionId == null) {
 			sql = StringUtil.replace(sql, _REGION_ID_SQL, StringPool.BLANK);

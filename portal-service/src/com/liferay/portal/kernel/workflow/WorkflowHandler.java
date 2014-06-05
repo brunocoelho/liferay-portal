@@ -40,7 +40,7 @@ import javax.portlet.RenderResponse;
  * @author Juan Fernández
  * @author Julio Camarero
  */
-public interface WorkflowHandler {
+public interface WorkflowHandler<T> {
 
 	public AssetRenderer getAssetRenderer(long classPK)
 		throws PortalException, SystemException;
@@ -48,6 +48,8 @@ public interface WorkflowHandler {
 	public AssetRendererFactory getAssetRendererFactory();
 
 	public String getClassName();
+
+	public String getIconCssClass();
 
 	public String getIconPath(LiferayPortletRequest liferayPortletRequest);
 
@@ -98,12 +100,11 @@ public interface WorkflowHandler {
 		RenderResponse renderResponse, String template);
 
 	public void startWorkflowInstance(
-			long companyId, long groupId, long userId, long classPK,
-			Object model, Map<String, Serializable> workflowContext)
+			long companyId, long groupId, long userId, long classPK, T model,
+			Map<String, Serializable> workflowContext)
 		throws PortalException, SystemException;
 
-	public Object updateStatus(
-			int status, Map<String, Serializable> workflowContext)
+	public T updateStatus(int status, Map<String, Serializable> workflowContext)
 		throws PortalException, SystemException;
 
 }

@@ -319,7 +319,7 @@ public class ShoppingOrderLocalServiceImpl
 		Map<ShoppingCartItem, Integer> items = cart.getItems();
 		Date now = new Date();
 
-		ShoppingSettings shoppingSettings = ShoppingUtil.getShoppingSettings(
+		ShoppingSettings shoppingSettings = ShoppingSettings.getInstance(
 			cart.getGroupId());
 
 		if (!ShoppingUtil.meetsMinOrder(shoppingSettings, items)) {
@@ -439,14 +439,14 @@ public class ShoppingOrderLocalServiceImpl
 			ServiceContext serviceContext)
 		throws PortalException, SystemException {
 
-		ShoppingSettings shoppingSettings = ShoppingUtil.getShoppingSettings(
+		ShoppingSettings shoppingSettings = ShoppingSettings.getInstance(
 			order.getGroupId());
 
 		if (emailType.equals("confirmation") &&
-			shoppingSettings.getEmailOrderConfirmationEnabled()) {
+			shoppingSettings.isEmailOrderConfirmationEnabled()) {
 		}
 		else if (emailType.equals("shipping") &&
-				 shoppingSettings.getEmailOrderShippingEnabled()) {
+				 shoppingSettings.isEmailOrderShippingEnabled()) {
 		}
 		else {
 			return;
@@ -531,7 +531,7 @@ public class ShoppingOrderLocalServiceImpl
 		ShoppingOrder order = shoppingOrderPersistence.findByPrimaryKey(
 			orderId);
 
-		ShoppingSettings shoppingSettings = ShoppingUtil.getShoppingSettings(
+		ShoppingSettings shoppingSettings = ShoppingSettings.getInstance(
 			order.getGroupId());
 
 		validate(

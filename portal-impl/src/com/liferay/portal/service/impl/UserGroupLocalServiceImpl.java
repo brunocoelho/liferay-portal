@@ -33,6 +33,7 @@ import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.CharPool;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringPool;
@@ -438,17 +439,17 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 	public List<UserGroup> getGroupUserUserGroups(long groupId, long userId)
 		throws PortalException, SystemException {
 
-		List<Long> groupUserGroupIds = groupPersistence.getUserGroupPrimaryKeys(
+		long[] groupUserGroupIds = groupPersistence.getUserGroupPrimaryKeys(
 			groupId);
 
-		if (groupUserGroupIds.isEmpty()) {
+		if (groupUserGroupIds.length == 0) {
 			return Collections.emptyList();
 		}
 
-		List<Long> userUserGroupIds = userPersistence.getUserGroupPrimaryKeys(
+		long[] userUserGroupIds = userPersistence.getUserGroupPrimaryKeys(
 			userId);
 
-		if (userUserGroupIds.isEmpty()) {
+		if (userUserGroupIds.length == 0) {
 			return Collections.emptyList();
 		}
 
@@ -737,7 +738,8 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 		throws SystemException {
 
 		if (!PropsValues.USER_GROUPS_INDEXER_ENABLED ||
-			!PropsValues.USER_GROUPS_SEARCH_WITH_INDEX) {
+			!PropsValues.USER_GROUPS_SEARCH_WITH_INDEX ||
+			isUseCustomSQL(params)) {
 
 			return userGroupFinder.countByKeywords(companyId, keywords, params);
 		}
@@ -798,7 +800,8 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 		throws SystemException {
 
 		if (!PropsValues.USER_GROUPS_INDEXER_ENABLED ||
-			!PropsValues.USER_GROUPS_SEARCH_WITH_INDEX) {
+			!PropsValues.USER_GROUPS_SEARCH_WITH_INDEX ||
+			isUseCustomSQL(params)) {
 
 			return userGroupFinder.countByC_N_D(
 				companyId, name, description, params, andOperator);
@@ -1160,6 +1163,14 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 			layoutLocalService.importLayouts(
 				userId, groupId, false, parameterMap, publicLayoutsFile);
 		}
+	}
+
+	protected boolean isUseCustomSQL(LinkedHashMap<String, Object> params) {
+		if (MapUtil.isEmpty(params)) {
+			return false;
+		}
+
+		return true;
 	}
 
 	protected void validate(long userGroupId, long companyId, String name)

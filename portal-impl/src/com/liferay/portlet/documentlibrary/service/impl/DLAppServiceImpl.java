@@ -357,8 +357,12 @@ public class DLAppServiceImpl extends DLAppServiceBaseImpl {
 
 		Repository repository = getRepository(repositoryId);
 
-		return repository.addFolder(
+		Folder folder = repository.addFolder(
 			parentFolderId, name, description, serviceContext);
+
+		dlAppHelperLocalService.addFolder(getUserId(), folder, serviceContext);
+
+		return folder;
 	}
 
 	/**
@@ -698,6 +702,9 @@ public class DLAppServiceImpl extends DLAppServiceBaseImpl {
 
 		Folder destFolder = repository.addFolder(
 			parentFolderId, name, description, serviceContext);
+
+		dlAppHelperLocalService.addFolder(
+			getUserId(), destFolder, serviceContext);
 
 		copyFolder(repository, srcFolder, destFolder, serviceContext);
 
@@ -2393,22 +2400,28 @@ public class DLAppServiceImpl extends DLAppServiceBaseImpl {
 			}
 		}
 
+		Folder folder = null;
+
 		if (fromRepository.getRepositoryId() ==
 				toRepository.getRepositoryId()) {
 
 			// Move file entries within repository
 
-			Folder folder = fromRepository.moveFolder(
+			folder = fromRepository.moveFolder(
 				folderId, parentFolderId, serviceContext);
+		}
+		else {
 
-			return folder;
+			// Move file entries between repositories
+
+			folder = moveFolders(
+				folderId, parentFolderId, fromRepository, toRepository,
+				serviceContext);
 		}
 
-		// Move file entries between repositories
+		dlAppHelperLocalService.moveFolder(folder);
 
-		return moveFolders(
-			folderId, parentFolderId, fromRepository, toRepository,
-			serviceContext);
+		return folder;
 	}
 
 	/**
@@ -3180,8 +3193,13 @@ public class DLAppServiceImpl extends DLAppServiceBaseImpl {
 			repository = getFolderRepository(folderId);
 		}
 
-		return repository.updateFolder(
+		Folder folder = repository.updateFolder(
 			folderId, name, description, serviceContext);
+
+		dlAppHelperLocalService.updateFolder(
+			getUserId(), folder, serviceContext);
+
+		return folder;
 	}
 
 	/**
@@ -3342,6 +3360,9 @@ public class DLAppServiceImpl extends DLAppServiceBaseImpl {
 				Folder destSubfolder = repository.addFolder(
 					curDestFolder.getFolderId(), srcSubfolder.getName(),
 					srcSubfolder.getDescription(), serviceContext);
+
+				dlAppHelperLocalService.addFolder(
+					getUserId(), destSubfolder, serviceContext);
 
 				folders.offer(new Folder[] {srcSubfolder, destSubfolder});
 			}
@@ -3505,6 +3526,9 @@ public class DLAppServiceImpl extends DLAppServiceBaseImpl {
 		Folder newFolder = toRepository.addFolder(
 			parentFolderId, folder.getName(), folder.getDescription(),
 			serviceContext);
+
+		dlAppHelperLocalService.addFolder(
+			getUserId(), newFolder, serviceContext);
 
 		List<Object> foldersAndFileEntriesAndFileShortcuts =
 			getFoldersAndFileEntriesAndFileShortcuts(

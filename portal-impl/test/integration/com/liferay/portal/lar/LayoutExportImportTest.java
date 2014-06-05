@@ -21,7 +21,6 @@ import com.liferay.portal.kernel.lar.PortletDataHandlerControl;
 import com.liferay.portal.kernel.lar.PortletDataHandlerKeys;
 import com.liferay.portal.kernel.staging.StagingConstants;
 import com.liferay.portal.kernel.test.ExecutionTestListeners;
-import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.model.Company;
@@ -40,9 +39,9 @@ import com.liferay.portal.service.ServiceContextThreadLocal;
 import com.liferay.portal.service.StagingLocalServiceUtil;
 import com.liferay.portal.test.LiferayIntegrationJUnitTestRunner;
 import com.liferay.portal.test.MainServletExecutionTestListener;
+import com.liferay.portal.test.ResetDatabaseExecutionTestListener;
 import com.liferay.portal.test.Sync;
 import com.liferay.portal.test.SynchronousDestinationExecutionTestListener;
-import com.liferay.portal.test.TransactionalCallbackAwareExecutionTestListener;
 import com.liferay.portal.util.PortletKeys;
 import com.liferay.portal.util.test.GroupTestUtil;
 import com.liferay.portal.util.test.LayoutTestUtil;
@@ -67,8 +66,8 @@ import org.junit.runner.RunWith;
 @ExecutionTestListeners(
 	listeners = {
 		MainServletExecutionTestListener.class,
-		SynchronousDestinationExecutionTestListener.class,
-		TransactionalCallbackAwareExecutionTestListener.class
+		ResetDatabaseExecutionTestListener.class,
+		SynchronousDestinationExecutionTestListener.class
 	})
 @RunWith(LiferayIntegrationJUnitTestRunner.class)
 @Sync
@@ -118,7 +117,6 @@ public class LayoutExportImportTest extends BaseExportImportTestCase {
 	}
 
 	@Test
-	@Transactional
 	public void testExportImportCompanyGroupInvalidLARType() throws Exception {
 
 		// Import a layout set to a company layout set
@@ -163,7 +161,6 @@ public class LayoutExportImportTest extends BaseExportImportTestCase {
 	}
 
 	@Test
-	@Transactional
 	public void testExportImportLayoutPrototypeInvalidLARType()
 		throws Exception {
 
@@ -216,7 +213,6 @@ public class LayoutExportImportTest extends BaseExportImportTestCase {
 	}
 
 	@Test
-	@Transactional
 	public void testExportImportLayoutSetInvalidLARType() throws Exception {
 
 		// Import a layout set to a layout prototype
@@ -253,7 +249,6 @@ public class LayoutExportImportTest extends BaseExportImportTestCase {
 	}
 
 	@Test
-	@Transactional
 	public void testExportImportLayoutSetPrototypeInvalidLARType()
 		throws Exception {
 
@@ -298,6 +293,69 @@ public class LayoutExportImportTest extends BaseExportImportTestCase {
 		testAvailableLocales(
 			new Locale[] {LocaleUtil.US, LocaleUtil.SPAIN},
 			new Locale[] {LocaleUtil.US, LocaleUtil.GERMANY}, true);
+	}
+
+	@Test
+	public void testExportImportLayoutsPriorities() throws Exception {
+		Layout layout1 = LayoutTestUtil.addLayout(
+			group.getGroupId(), RandomTestUtil.randomString());
+		Layout layout2 = LayoutTestUtil.addLayout(
+			group.getGroupId(), RandomTestUtil.randomString());
+		Layout layout3 = LayoutTestUtil.addLayout(
+			group.getGroupId(), RandomTestUtil.randomString());
+
+		int priority = layout1.getPriority();
+
+		layout1.setPriority(layout3.getPriority());
+		layout3.setPriority(priority);
+
+		layout1 = LayoutLocalServiceUtil.updateLayout(layout1);
+		layout3 = LayoutLocalServiceUtil.updateLayout(layout3);
+
+		long[] layoutIds = new long[] {
+			layout1.getLayoutId(), layout2.getLayoutId()
+		};
+
+		exportImportLayouts(layoutIds, getImportParameterMap());
+
+		Layout importedLayout1 =
+			LayoutLocalServiceUtil.fetchLayoutByUuidAndGroupId(
+				layout1.getUuid(), importedGroup.getGroupId(), false);
+
+		Assert.assertNotEquals(
+			layout1.getPriority(), importedLayout1.getPriority());
+
+		Layout importedLayout2 =
+			LayoutLocalServiceUtil.fetchLayoutByUuidAndGroupId(
+				layout2.getUuid(), importedGroup.getGroupId(), false);
+
+		Assert.assertNotEquals(
+			layout2.getPriority(), importedLayout2.getPriority());
+
+		layoutIds = new long[0];
+
+		exportImportLayouts(layoutIds, getImportParameterMap());
+
+		importedLayout1 =
+			LayoutLocalServiceUtil.fetchLayoutByUuidAndGroupId(
+				layout1.getUuid(), importedGroup.getGroupId(), false);
+
+		Assert.assertEquals(
+			layout1.getPriority(), importedLayout1.getPriority());
+
+		importedLayout2 =
+			LayoutLocalServiceUtil.fetchLayoutByUuidAndGroupId(
+				layout2.getUuid(), importedGroup.getGroupId(), false);
+
+		Assert.assertEquals(
+			layout2.getPriority(), importedLayout2.getPriority());
+
+		Layout importedLayout3 =
+			LayoutLocalServiceUtil.fetchLayoutByUuidAndGroupId(
+				layout3.getUuid(), importedGroup.getGroupId(), false);
+
+		Assert.assertEquals(
+			layout3.getPriority(), importedLayout3.getPriority());
 	}
 
 	@Test

@@ -23,7 +23,9 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PredicateFilter;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringBundler;
@@ -38,14 +40,18 @@ import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.kernel.xml.XPath;
 import com.liferay.portal.model.CacheField;
 import com.liferay.portal.model.Group;
+import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.dynamicdatamapping.StructureFieldException;
+import com.liferay.portlet.dynamicdatamapping.model.DDMForm;
 import com.liferay.portlet.dynamicdatamapping.model.DDMStructure;
 import com.liferay.portlet.dynamicdatamapping.model.DDMTemplate;
 import com.liferay.portlet.dynamicdatamapping.service.DDMStructureLocalServiceUtil;
 import com.liferay.portlet.dynamicdatamapping.service.DDMTemplateLocalServiceUtil;
+import com.liferay.portlet.dynamicdatamapping.util.DDMFormXSDDeserializerUtil;
+import com.liferay.portlet.dynamicdatamapping.util.DDMFormXSDSerializerUtil;
 import com.liferay.portlet.dynamicdatamapping.util.DDMXMLUtil;
 
 import java.util.ArrayList;
@@ -105,6 +111,11 @@ public class DDMStructureImpl extends DDMStructureBaseImpl {
 			DDMStructureLocalServiceUtil.getStructure(getParentStructureId());
 
 		return _mergeXsds(getXsd(), parentStructure.getCompleteXsd());
+	}
+
+	@Override
+	public DDMForm getDDMForm() throws PortalException {
+		return DDMFormXSDDeserializerUtil.deserialize(getXsd());
 	}
 
 	@Override
@@ -414,6 +425,43 @@ public class DDMStructureImpl extends DDMStructureBaseImpl {
 		return fieldsMap;
 	}
 
+	@Override
+	public String getUnambiguousName(
+			List<DDMStructure> structures, long groupId, final Locale locale)
+		throws PortalException, SystemException {
+
+		if (getGroupId() == groupId ) {
+			return getName(locale);
+		}
+
+		boolean hasAmbiguousName = ListUtil.exists(
+			structures,
+			new PredicateFilter<DDMStructure>() {
+
+				@Override
+				public boolean filter(DDMStructure structure) {
+					String name = structure.getName(locale);
+
+					if (name.equals(getName(locale)) &&
+						(structure.getStructureId() != getStructureId())) {
+
+						return true;
+					}
+
+					return false;
+				}
+
+			});
+
+		if (hasAmbiguousName) {
+			Group group = GroupLocalServiceUtil.getGroup(getGroupId());
+
+			return group.getUnambiguousName(getName(locale), locale);
+		}
+
+		return getName(locale);
+	}
+
 	/**
 	 * Returns the WebDAV URL to access the structure.
 	 *
@@ -466,7 +514,7 @@ public class DDMStructureImpl extends DDMStructureBaseImpl {
 
 		boolean hasField = fieldsMap.containsKey(fieldName);
 
-		while (!hasField && (getParentStructureId() > 0)) {
+		if (!hasField && (getParentStructureId() > 0)) {
 			DDMStructure parentStructure =
 				DDMStructureLocalServiceUtil.getStructure(
 					getParentStructureId());
@@ -560,6 +608,11 @@ public class DDMStructureImpl extends DDMStructureBaseImpl {
 		_localizedFieldsMap = null;
 		_localizedPersistentFieldsMap = null;
 		_localizedTransientFieldsMap = null;
+	}
+
+	@Override
+	public void updateDDMForm(DDMForm ddmForm) {
+		setXsd(DDMFormXSDSerializerUtil.serialize(ddmForm));
 	}
 
 	private Map<String, String> _getField(Element element, String locale) {

@@ -187,6 +187,8 @@ public interface LiferaySelenium extends Selenium {
 
 	public void saveScreenshotAndSource() throws Exception;
 
+	public void scrollWebElementIntoView(String locator) throws Exception;
+
 	public void selectAndWait(String selectLocator, String optionLocator);
 
 	public void sendActionDescriptionLogger(String description);
@@ -219,6 +221,19 @@ public interface LiferaySelenium extends Selenium {
 	public void sikuliAssertElementPresent(String image) throws Exception;
 
 	public void sikuliClick(String image) throws Exception;
+
+	public void sikuliDragAndDrop(String image, String coordString)
+		throws Exception;
+
+	public void sikuliLeftMouseDown() throws Exception;
+
+	public void sikuliLeftMouseUp() throws Exception;
+
+	public void sikuliMouseMove(String image) throws Exception;
+
+	public void sikuliRightMouseDown() throws Exception;
+
+	public void sikuliRightMouseUp() throws Exception;
 
 	public void sikuliType(String image, String value) throws Exception;
 

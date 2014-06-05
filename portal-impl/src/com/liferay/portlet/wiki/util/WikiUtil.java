@@ -29,9 +29,6 @@ import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
-import com.liferay.portal.kernel.settings.ParameterMapSettings;
-import com.liferay.portal.kernel.settings.Settings;
-import com.liferay.portal.kernel.settings.SettingsFactoryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
@@ -48,6 +45,7 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.Company;
 import com.liferay.portal.security.permission.ActionKeys;
 import com.liferay.portal.security.permission.PermissionChecker;
+import com.liferay.portal.theme.PortletDisplay;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portal.util.PropsUtil;
@@ -59,7 +57,7 @@ import com.liferay.portlet.messageboards.model.MBMessage;
 import com.liferay.portlet.messageboards.service.MBMessageLocalServiceUtil;
 import com.liferay.portlet.wiki.PageContentException;
 import com.liferay.portlet.wiki.WikiFormatException;
-import com.liferay.portlet.wiki.WikiSettings;
+import com.liferay.portlet.wiki.WikiPortletInstanceSettings;
 import com.liferay.portlet.wiki.engines.WikiEngine;
 import com.liferay.portlet.wiki.model.WikiNode;
 import com.liferay.portlet.wiki.model.WikiPage;
@@ -91,7 +89,6 @@ import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.PageContext;
 
 /**
@@ -197,14 +194,12 @@ public class WikiUtil {
 			double targetVersion, PageContext pageContext)
 		throws SystemException {
 
-		List<WikiPage> intermediatePages = new ArrayList<WikiPage>();
-
 		double previousVersion = 0;
 		double nextVersion = 0;
 
 		List<WikiPage> pages = WikiPageLocalServiceUtil.getPages(
 			nodeId, title, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-			new PageVersionComparator());
+			new PageVersionComparator(true));
 
 		for (WikiPage page : pages) {
 			if ((page.getVersion() < sourceVersion) &&
@@ -218,17 +213,11 @@ public class WikiUtil {
 
 				nextVersion = page.getVersion();
 			}
-
-			if ((page.getVersion() > sourceVersion) &&
-				(page.getVersion() <= targetVersion)) {
-
-				intermediatePages.add(page);
-			}
 		}
 
 		List<DiffVersion> diffVersions = new ArrayList<DiffVersion>();
 
-		for (WikiPage page : intermediatePages) {
+		for (WikiPage page : pages) {
 			String extraInfo = StringPool.BLANK;
 
 			if (page.isMinorEdit()) {
@@ -236,8 +225,8 @@ public class WikiUtil {
 			}
 
 			DiffVersion diffVersion = new DiffVersion(
-				page.getUserId(), page.getVersion(), page.getSummary(),
-				extraInfo);
+				page.getUserId(), page.getVersion(), page.getModifiedDate(),
+				page.getSummary(), extraInfo);
 
 			diffVersions.add(diffVersion);
 		}
@@ -451,14 +440,18 @@ public class WikiUtil {
 
 		List<WikiNode> nodes = WikiNodeLocalServiceUtil.getNodes(groupId);
 
-		WikiSettings wikiSettings = WikiUtil.getWikiSettings(
-			themeDisplay.getScopeGroupId());
+		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
 
-		String[] visibleNodeNames = wikiSettings.getVisibleNodes();
+		WikiPortletInstanceSettings wikiPortletInstanceSettings =
+			WikiPortletInstanceSettings.getInstance(
+				themeDisplay.getLayout(), portletDisplay.getId());
+
+		String[] visibleNodeNames =
+			wikiPortletInstanceSettings.getVisibleNodes();
 
 		nodes = orderNodes(nodes, visibleNodeNames);
 
-		String[] hiddenNodes = wikiSettings.getHiddenNodes();
+		String[] hiddenNodes = wikiPortletInstanceSettings.getHiddenNodes();
 		Arrays.sort(hiddenNodes);
 
 		for (WikiNode node : nodes) {
@@ -586,28 +579,6 @@ public class WikiUtil {
 		}
 
 		return orderByComparator;
-	}
-
-	public static WikiSettings getWikiSettings(long groupId)
-		throws PortalException, SystemException {
-
-		Settings settings = SettingsFactoryUtil.getGroupServiceSettings(
-			groupId, WikiConstants.SERVICE_NAME);
-
-		return new WikiSettings(settings);
-	}
-
-	public static WikiSettings getWikiSettings(
-			long groupId, HttpServletRequest request)
-		throws PortalException, SystemException {
-
-		Settings settings = SettingsFactoryUtil.getGroupServiceSettings(
-			groupId, WikiConstants.SERVICE_NAME);
-
-		ParameterMapSettings parameterMapSettings = new ParameterMapSettings(
-			request.getParameterMap(), settings);
-
-		return new WikiSettings(parameterMapSettings);
 	}
 
 	public static List<WikiNode> orderNodes(

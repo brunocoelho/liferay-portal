@@ -321,6 +321,11 @@ public class VerifyJournal extends VerifyProcess {
 
 			JournalArticleLocalServiceUtil.updateJournalArticle(article);
 		}
+		catch (Exception e) {
+			_log.error(
+				"Unable to check the structure for article " + article.getId(),
+				e);
+		}
 	}
 
 	protected void verifySearch() throws Exception {

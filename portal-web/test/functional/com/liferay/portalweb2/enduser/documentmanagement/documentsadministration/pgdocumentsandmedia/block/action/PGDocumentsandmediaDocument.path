@@ -49,6 +49,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>CONFIRMATION</td>
+	<td></td>
+	<td></td>
+</tr>
+<tr>
 	<td></td>
 	<td></td>
 	<td></td>
@@ -156,18 +161,18 @@
 	<td></td>
 </tr>
 <tr>
+	<td>DOCUMENT_INFO_WORKFLOW_STATUS</td>
+	<td>//span[@class='workflow-status']/strong</td>
+	<td></td>
+</tr>
+<tr>
 	<td>DOCUMENT_INFO_LAST_UPDATED_BY</td>
-	<td>//div[@class='lfr-asset-icon lfr-asset-author' and contains(.,'Last Updated by Test Test')]</td>
+	<td>//div[contains(@class,'lfr-asset-icon') and contains(.,'Last Updated by Test Test')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>DOCUMENT_INFO_DATE</td>
-	<td>//div[contains(@class,'lfr-asset-icon') and contains(@class,'lfr-asset-date')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>DOCUMENT_INFO_WORKFLOW_STATUS</td>
-	<td>//span[@class='workflow-status workflow-status-icon']</td>
+	<td>//div[contains(@class,'lfr-asset-icon') and contains(@class,'icon-calendar')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -356,6 +361,11 @@
 <tr>
 	<td>COMMENTS_UNSUBSCRIBE_FROM_COMMENTS</td>
 	<td>link=Unsubscribe from Comments</td>
+	<td></td>
+</tr>
+<tr>
+	<td>COMMENTS_AUTHOR</td>
+	<td>//div[contains(@class,'lfr-discussion') and contains(.,'${key_commentBody}')]//span[@class='user-name']</td>
 	<td></td>
 </tr>
 <tr>

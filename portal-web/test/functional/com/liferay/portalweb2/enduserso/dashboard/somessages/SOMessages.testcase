@@ -235,7 +235,8 @@
 		<execute action="SOMessages#assertTextNotPresent" value1="Message Subject" />
 		<execute action="SOMessages#assertTextNotPresent" value1="Message Body" />
 
-		<execute action="SOUserBar#click" locator-key1="DASHBOARD" />
+		<execute macro="SOUserBar#gotoDashboardPG" />
+
 		<execute action="SOUserBar#assertElementPresent" locator-key1="NOTIFICATION" />
 		<execute action="SOUserBar#assertClick" locator-key1="NOTIFICATION_MENU_COUNT" value1="1" />
 		<execute action="SOMessages#assertTextNotPresent" value1="${senderName} sent you a message." />
@@ -455,6 +456,7 @@
 		<execute action="SOMessages#check" locator-key1="MESSAGE_CHECKBOX" />
 		<execute action="SOMessages#assertClick" locator-key1="MARK_AS_UNREAD_BUTTON" value1="Mark as Unread" />
 		<execute action="SOMessages#confirm" locator-key1="CONFIRMATION" value1="Are you sure you want to mark the selected messages as unread?" />
+		<execute action="SOMessages#pause" locator1="1000" />
 		<execute action="SOMessages#assertElementPresent" locator-key1="MESSAGE_UNREAD" />
 	</command>
 
@@ -510,6 +512,7 @@
 
 		<execute action="SOMessagesMessage#assertClick" locator-key1="MARK_AS_UNREAD_BUTTON" value1="Mark as Unread" />
 		<execute action="SOMessagesMessage#confirm" locator-key1="CONFIRMATION" value1="Are you sure you want to mark the message as unread?" />
+		<execute action="SOMessages#pause" locator1="1000" />
 
 		<var name="key_messageBody" value="${messageBody}" />
 
@@ -618,6 +621,7 @@
 		<execute action="SOMessages#check" locator-key1="SELECT_ALL_CHECKBOX" />
 		<execute action="SOMessages#assertClick" locator-key1="MARK_AS_UNREAD_BUTTON" value1="Mark as Unread" />
 		<execute action="SOMessages#confirm" locator-key1="CONFIRMATION" value1="Are you sure you want to mark the selected messages as unread?" />
+		<execute action="SOMessages#pause" locator1="1000" />
 
 		<var name="key_messageBody" value="${messageBody1}" />
 
@@ -1213,7 +1217,7 @@
 		</execute>
 	</command>
 
-	<command known-issues="SOS-2258" name="SendMessageMultipleUsers" priority="5">
+	<command name="SendMessageMultipleUsers" priority="5">
 		<var name="messageBody" value="Message Body" />
 		<var name="messageReplyBody1" value="Message Reply1 Body" />
 		<var name="messageReplyBody2" value="Message Reply2 Body" />
@@ -1289,7 +1293,7 @@
 		</execute>
 
 		<execute macro="SOMessages#viewMessage">
-			<var name="connectionName" value="${adminName} , ${userName2} , ${userName3}" />
+			<var name="connectionNameList" value="${adminName},${userName2},${userName3}" />
 			<var name="messageBody" value="${messageBody}" />
 			<var name="messageSubject" value="${messageSubject}" />
 			<var name="senderName" value="${adminName}" />
@@ -1305,7 +1309,7 @@
 		</execute>
 
 		<execute macro="SOMessages#viewReplyMessage">
-			<var name="connectionName" value="${adminName} , ${userName2} , ${userName3}" />
+			<var name="connectionNameList" value="${adminName},${userName2},${userName3}" />
 			<var name="messageBody" value="${messageBody}" />
 			<var name="messageReplyBody" value="${messageReplyBody1}" />
 			<var name="messageSubject" value="${messageSubject}" />
@@ -1324,7 +1328,7 @@
 		</execute>
 
 		<execute macro="SOMessages#viewReplyMessage">
-			<var name="connectionName" value="${userName1} , ${adminName} , ${userName3}" />
+			<var name="connectionNameList" value="${userName1},${adminName},${userName3}" />
 			<var name="messageBody" value="${messageBody}" />
 			<var name="messageReplyBody" value="${messageReplyBody1}" />
 			<var name="messageSubject" value="${messageSubject}" />
@@ -1342,7 +1346,7 @@
 		</execute>
 
 		<execute macro="SOMessages#viewReplyMessage">
-			<var name="connectionName" value="${userName1} , ${adminName} , ${userName3}" />
+			<var name="connectionNameList" value="${userName1},${adminName},${userName3}" />
 			<var name="messageBody" value="${messageBody}" />
 			<var name="messageReplyBody" value="${messageReplyBody2}" />
 			<var name="messageSubject" value="${messageSubject}" />
@@ -1361,7 +1365,7 @@
 		</execute>
 
 		<execute macro="SOMessages#viewReplyMessage">
-			<var name="connectionName" value="${userName2} , ${userName1} , ${adminName}" />
+			<var name="connectionNameList" value="${userName2},${userName1},${adminName}" />
 			<var name="messageBody" value="${messageBody}" />
 			<var name="messageReplyBody" value="${messageReplyBody1}" />
 			<var name="messageReplyBodyListView" value="${messageReplyBody2}" />
@@ -1376,7 +1380,7 @@
 		</execute>
 
 		<execute macro="SOMessages#viewReplyMessage">
-			<var name="connectionName" value="${userName2} , ${userName1} , ${adminName}" />
+			<var name="connectionNameList" value="${userName2},${userName1},${adminName}" />
 			<var name="messageBody" value="${messageBody}" />
 			<var name="messageReplyBody" value="${messageReplyBody2}" />
 			<var name="messageSubject" value="${messageSubject}" />
@@ -1394,7 +1398,7 @@
 		</execute>
 
 		<execute macro="SOMessages#viewReplyMessage">
-			<var name="connectionName" value="${userName2} , ${userName1} , ${adminName}" />
+			<var name="connectionNameList" value="${userName2},${userName1},${adminName}" />
 			<var name="messageBody" value="${messageBody}" />
 			<var name="messageReplyBody" value="${messageReplyBody3}" />
 			<var name="messageSubject" value="${messageSubject}" />
@@ -1413,7 +1417,7 @@
 		</execute>
 
 		<execute macro="SOMessages#viewReplyMessage">
-			<var name="connectionName" value="${userName3} , ${userName2} , ${userName1}" />
+			<var name="connectionNameList" value="${userName3},${userName2},${userName1}" />
 			<var name="messageBody" value="${messageBody}" />
 			<var name="messageReplyBody" value="${messageReplyBody1}" />
 			<var name="messageReplyBodyListView" value="${messageReplyBody3}" />
@@ -1428,7 +1432,7 @@
 		</execute>
 
 		<execute macro="SOMessages#viewReplyMessage">
-			<var name="connectionName" value="${userName3} , ${userName2} , ${userName1}" />
+			<var name="connectionNameList" value="${userName3},${userName2},${userName1}" />
 			<var name="messageBody" value="${messageBody}" />
 			<var name="messageReplyBody" value="${messageReplyBody2}" />
 			<var name="messageReplyBodyListView" value="${messageReplyBody3}" />
@@ -1443,7 +1447,7 @@
 		</execute>
 
 		<execute macro="SOMessages#viewReplyMessage">
-			<var name="connectionName" value="${userName3} , ${userName2} , ${userName1}" />
+			<var name="connectionNameList" value="${userName3},${userName2},${userName1}" />
 			<var name="messageBody" value="${messageBody}" />
 			<var name="messageReplyBody" value="${messageReplyBody3}" />
 			<var name="messageReplyBodyListView" value="${messageReplyBody3}" />

@@ -32,6 +32,7 @@ import com.liferay.portal.kernel.scheduler.SchedulerEntry;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.OpenSearch;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
+import com.liferay.portal.kernel.servlet.ServletContextUtil;
 import com.liferay.portal.kernel.servlet.URLEncoder;
 import com.liferay.portal.kernel.template.TemplateHandler;
 import com.liferay.portal.kernel.trash.TrashHandler;
@@ -143,20 +144,20 @@ public class PortletImpl extends PortletBaseImpl {
 	 */
 	public PortletImpl(
 		String portletId, Portlet rootPortlet, PluginPackage pluginPackage,
-		PluginSetting pluginSetting, long companyId, long timestamp,
-		String icon, String virtualPath, String strutsPath,
-		String parentStrutsPath, String portletName, String displayName,
-		String portletClass, String configurationActionClass,
-		List<String> indexerClasses, String openSearchClass,
-		List<SchedulerEntry> schedulerEntries, String portletURLClass,
-		String friendlyURLMapperClass, String friendlyURLMapping,
-		String friendlyURLRoutes, String urlEncoderClass,
-		String portletDataHandlerClass,
+		PluginSetting pluginSetting, long companyId, String icon,
+		String virtualPath, String strutsPath, String parentStrutsPath,
+		String portletName, String displayName, String portletClass,
+		String configurationActionClass, List<String> indexerClasses,
+		String openSearchClass, List<SchedulerEntry> schedulerEntries,
+		String portletURLClass, String friendlyURLMapperClass,
+		String friendlyURLMapping, String friendlyURLRoutes,
+		String urlEncoderClass, String portletDataHandlerClass,
 		List<String> stagedModelDataHandlerClasses, String templateHandlerClass,
 		String portletLayoutListenerClass, String pollerProcessorClass,
 		String popMessageListenerClass,
 		List<String> socialActivityInterpreterClasses,
 		String socialRequestInterpreterClass,
+		boolean socialInteractionsConfiguration,
 		String userNotificationDefinitions,
 		List<String> userNotificationHandlerClasses, String webDAVStorageToken,
 		String webDAVStorageClass, String xmlRpcMethodClass,
@@ -199,7 +200,6 @@ public class PortletImpl extends PortletBaseImpl {
 		_pluginPackage = pluginPackage;
 		_defaultPluginSetting = pluginSetting;
 		setCompanyId(companyId);
-		_timestamp = timestamp;
 		_icon = icon;
 		_virtualPath = virtualPath;
 		_strutsPath = strutsPath;
@@ -224,6 +224,7 @@ public class PortletImpl extends PortletBaseImpl {
 		_popMessageListenerClass = popMessageListenerClass;
 		_socialActivityInterpreterClasses = socialActivityInterpreterClasses;
 		_socialRequestInterpreterClass = socialRequestInterpreterClass;
+		_socialInteractionsConfiguration = socialInteractionsConfiguration;
 		_userNotificationHandlerClasses = userNotificationHandlerClasses;
 		_userNotificationDefinitions = userNotificationDefinitions;
 		_webDAVStorageToken = webDAVStorageToken;
@@ -360,8 +361,8 @@ public class PortletImpl extends PortletBaseImpl {
 	public Object clone() {
 		Portlet portlet = new PortletImpl(
 			getPortletId(), getRootPortlet(), getPluginPackage(),
-			getDefaultPluginSetting(), getCompanyId(), getTimestamp(),
-			getIcon(), getVirtualPath(), getStrutsPath(), getParentStrutsPath(),
+			getDefaultPluginSetting(), getCompanyId(), getIcon(),
+			getVirtualPath(), getStrutsPath(), getParentStrutsPath(),
 			getPortletName(), getDisplayName(), getPortletClass(),
 			getConfigurationActionClass(), getIndexerClasses(),
 			getOpenSearchClass(), getSchedulerEntries(), getPortletURLClass(),
@@ -372,6 +373,7 @@ public class PortletImpl extends PortletBaseImpl {
 			getPollerProcessorClass(), getPopMessageListenerClass(),
 			getSocialActivityInterpreterClasses(),
 			getSocialRequestInterpreterClass(),
+			getSocialInteractionsConfiguration(),
 			getUserNotificationDefinitions(),
 			getUserNotificationHandlerClasses(), getWebDAVStorageToken(),
 			getWebDAVStorageClass(), getXmlRpcMethodClass(),
@@ -1720,6 +1722,18 @@ public class PortletImpl extends PortletBaseImpl {
 	}
 
 	/**
+	 * Returns <code>true</code> if the portlet uses Social Interactions
+	 * Configuration
+	 *
+	 * @return <code>true</code> if the portlet uses Social Interactions
+	 *         Configuration
+	 */
+	@Override
+	public boolean getSocialInteractionsConfiguration() {
+		return _socialInteractionsConfiguration;
+	}
+
+	/**
 	 * Returns the name of the social request interpreter class of the portlet.
 	 *
 	 * @return the name of the social request interpreter class of the portlet
@@ -1908,6 +1922,14 @@ public class PortletImpl extends PortletBaseImpl {
 	 */
 	@Override
 	public long getTimestamp() {
+		if (_timestamp == null) {
+			ServletContext servletContext = ServletContextPool.get(
+				getContextName());
+
+			_timestamp = ServletContextUtil.getLastModified(
+				servletContext, StringPool.SLASH, true);
+		}
+
 		return _timestamp;
 	}
 
@@ -2139,7 +2161,7 @@ public class PortletImpl extends PortletBaseImpl {
 	 * @return the workflow handler instances of the portlet
 	 */
 	@Override
-	public List<WorkflowHandler> getWorkflowHandlerInstances() {
+	public List<WorkflowHandler<?>> getWorkflowHandlerInstances() {
 		if (_workflowHandlerClasses.isEmpty()) {
 			return null;
 		}
@@ -2598,6 +2620,18 @@ public class PortletImpl extends PortletBaseImpl {
 	@Override
 	public boolean isShowPortletInactive() {
 		return _showPortletInactive;
+	}
+
+	/**
+	 * Returns <code>true</code> if the portlet uses Social Interactions
+	 * Configuration
+	 *
+	 * @return <code>true</code> if the portlet uses Social Interactions
+	 *         Configuration
+	 */
+	@Override
+	public boolean isSocialInteractionsConfiguration() {
+		return _socialInteractionsConfiguration;
 	}
 
 	/**
@@ -3623,6 +3657,13 @@ public class PortletImpl extends PortletBaseImpl {
 		_socialActivityInterpreterClasses = socialActivityInterpreterClasses;
 	}
 
+	@Override
+	public void setSocialInteractionsConfiguration(
+		boolean socialInteractionsConfiguration) {
+
+		_socialInteractionsConfiguration = socialInteractionsConfiguration;
+	}
+
 	/**
 	 * Sets the name of the social request interpreter class of the portlet.
 	 *
@@ -3721,16 +3762,6 @@ public class PortletImpl extends PortletBaseImpl {
 	@Override
 	public void setTemplateHandlerClass(String templateHandlerClass) {
 		_templateHandlerClass = templateHandlerClass;
-	}
-
-	/**
-	 * Sets the timestamp of the portlet.
-	 *
-	 * @param timestamp the timestamp of the portlet
-	 */
-	@Override
-	public void setTimestamp(long timestamp) {
-		_timestamp = timestamp;
 	}
 
 	/**
@@ -4350,6 +4381,11 @@ public class PortletImpl extends PortletBaseImpl {
 	private List<String> _socialActivityInterpreterClasses;
 
 	/**
+	 * <code>True</code> if the portlet uses Social Interactions Configuration.
+	 */
+	private boolean _socialInteractionsConfiguration;
+
+	/**
 	 * The name of the social request interpreter class of the portlet.
 	 */
 	private String _socialRequestInterpreterClass;
@@ -4396,7 +4432,7 @@ public class PortletImpl extends PortletBaseImpl {
 	/**
 	 * The timestamp of the portlet.
 	 */
-	private long _timestamp;
+	private Long _timestamp;
 
 	/**
 	 * The names of the classes that represents trash handlers associated with

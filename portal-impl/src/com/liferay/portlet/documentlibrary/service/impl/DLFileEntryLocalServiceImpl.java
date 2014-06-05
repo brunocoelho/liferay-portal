@@ -2364,15 +2364,6 @@ public class DLFileEntryLocalServiceImpl
 					serviceContext.getModifiedDate(now));
 			}
 
-			// App helper
-
-			dlAppHelperLocalService.updateAsset(
-				userId, new LiferayFileEntry(dlFileEntry),
-				new LiferayFileVersion(dlFileVersion),
-				serviceContext.getAssetCategoryIds(),
-				serviceContext.getAssetTagNames(),
-				serviceContext.getAssetLinkEntryIds());
-
 			// File
 
 			if ((file != null) || (is != null)) {
@@ -2556,9 +2547,13 @@ public class DLFileEntryLocalServiceImpl
 				DLStoreUtil.validate(
 					sourceFileName, extension, sourceFileName, true, file);
 			}
-			else {
+			else if (is != null) {
 				DLStoreUtil.validate(
 					sourceFileName, extension, sourceFileName, true, is);
+			}
+			else {
+				DLStoreUtil.validate(
+					sourceFileName, extension, sourceFileName, true);
 			}
 		}
 

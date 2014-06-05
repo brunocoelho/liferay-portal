@@ -68,6 +68,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -630,12 +631,9 @@ public class StagingLocalServiceImpl extends StagingLocalServiceBaseImpl {
 			GroupServiceHttp.disableStaging(httpPrincipal, remoteGroupId);
 		}
 		catch (NoSuchGroupException nsge) {
-			RemoteExportException ree = new RemoteExportException(
-				RemoteExportException.NO_GROUP);
-
-			ree.setGroupId(remoteGroupId);
-
-			throw ree;
+			if (_log.isWarnEnabled()) {
+				_log.warn("Remote live group was already deleted", nsge);
+			}
 		}
 		catch (PrincipalException pe) {
 			RemoteExportException ree = new RemoteExportException(
@@ -803,7 +801,9 @@ public class StagingLocalServiceImpl extends StagingLocalServiceBaseImpl {
 			return;
 		}
 
-		Set<String> parameterNames = serviceContext.getAttributes().keySet();
+		Map<String, Serializable> attributes = serviceContext.getAttributes();
+
+		Set<String> parameterNames = attributes.keySet();
 
 		for (String parameterName : parameterNames) {
 			if (parameterName.startsWith(StagingConstants.STAGED_PORTLET) &&

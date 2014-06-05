@@ -17,7 +17,7 @@
 <%@ include file="/html/portlet/shopping/init.jsp" %>
 
 <%
-shoppingSettings = ShoppingUtil.getShoppingSettings(themeDisplay.getSiteGroupId(), request);
+shoppingSettings = ShoppingSettings.getInstance(themeDisplay.getSiteGroupId(), request.getParameterMap());
 %>
 
 <liferay-portlet:actionURL portletConfiguration="true" var="configurationActionURL">
@@ -225,7 +225,7 @@ shoppingSettings = ShoppingUtil.getShoppingSettings(themeDisplay.getSiteGroupId(
 			<liferay-ui:email-notification-settings
 				emailBody="<%= shoppingSettings.getEmailOrderConfirmationBodyXml() %>"
 				emailDefinitionTerms="<%= emailDefinitionTerms %>"
-				emailEnabled="<%= shoppingSettings.getEmailOrderConfirmationEnabled() %>"
+				emailEnabled="<%= shoppingSettings.isEmailOrderConfirmationEnabled() %>"
 				emailParam="emailOrderConfirmation"
 				emailSubject="<%= shoppingSettings.getEmailOrderConfirmationSubjectXml() %>"
 			/>
@@ -235,7 +235,7 @@ shoppingSettings = ShoppingUtil.getShoppingSettings(themeDisplay.getSiteGroupId(
 			<liferay-ui:email-notification-settings
 				emailBody="<%= shoppingSettings.getEmailOrderShippingBodyXml() %>"
 				emailDefinitionTerms="<%= emailDefinitionTerms %>"
-				emailEnabled="<%= shoppingSettings.getEmailOrderShippingEnabled() %>"
+				emailEnabled="<%= shoppingSettings.isEmailOrderShippingEnabled() %>"
 				emailParam="emailOrderShipping"
 				emailSubject="<%= shoppingSettings.getEmailOrderShippingSubjectXml() %>"
 			/>

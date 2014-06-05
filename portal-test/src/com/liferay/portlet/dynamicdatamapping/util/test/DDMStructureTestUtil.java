@@ -14,16 +14,22 @@
 
 package com.liferay.portlet.dynamicdatamapping.util.test;
 
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.xml.Attribute;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
+import com.liferay.portal.kernel.xml.Node;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
+import com.liferay.portal.kernel.xml.XPath;
 import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.util.PortalUtil;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.util.test.ServiceContextTestUtil;
 import com.liferay.portal.util.test.TestPropsValues;
 import com.liferay.portlet.dynamicdatamapping.model.DDMStructure;
@@ -31,6 +37,7 @@ import com.liferay.portlet.dynamicdatamapping.model.DDMStructureConstants;
 import com.liferay.portlet.dynamicdatamapping.service.DDMStructureLocalServiceUtil;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -76,14 +83,16 @@ public class DDMStructureTestUtil {
 
 		nameMap.put(defaultLocale, "Test Structure");
 
+		String ddlStorageType = GetterUtil.getString(
+			PropsUtil.get(PropsKeys.DYNAMIC_DATA_LISTS_STORAGE_TYPE));
+
 		serviceContext.setAddGroupPermissions(true);
 		serviceContext.setAddGuestPermissions(true);
 
 		return DDMStructureLocalServiceUtil.addStructure(
 			TestPropsValues.getUserId(), groupId, parentStructureId,
 			PortalUtil.getClassNameId(className), null, nameMap, null, xsd,
-			PropsValues.DYNAMIC_DATA_LISTS_STORAGE_TYPE,
-			DDMStructureConstants.TYPE_DEFAULT, serviceContext);
+			ddlStorageType, DDMStructureConstants.TYPE_DEFAULT, serviceContext);
 	}
 
 	public static DDMStructure addStructure(
@@ -257,6 +266,29 @@ public class DDMStructureTestUtil {
 		return document.asXML();
 	}
 
+	public static Map<String, Map<String, String>> getXSDMap(String xsd)
+		throws Exception {
+
+		Map<String, Map<String, String>> map =
+			new HashMap<String, Map<String, String>>();
+
+		Document document = SAXReaderUtil.read(xsd);
+
+		XPath xPathSelector = SAXReaderUtil.createXPath("//dynamic-element");
+
+		List<Node> nodes = xPathSelector.selectNodes(document);
+
+		for (Node node : nodes) {
+			Element dynamicElementElement = (Element)node;
+
+			String elementName = getElementName(dynamicElementElement);
+
+			map.put(elementName, getElementMap(dynamicElementElement));
+		}
+
+		return map;
+	}
+
 	protected static Document createDocumentContent(
 		String availableLocales, String defaultLocale) {
 
@@ -285,6 +317,64 @@ public class DDMStructureTestUtil {
 			"default-locale", LocaleUtil.toLanguageId(defaultLocale));
 
 		return document;
+	}
+
+	protected static Map<String, String> getElementMap(Element element) {
+		Map<String, String> elementMap = new HashMap<String, String>();
+
+		// Attributes
+
+		for (Attribute attribute : element.attributes()) {
+			elementMap.put(attribute.getName(), attribute.getValue());
+		}
+
+		// Metadata
+
+		for (Element metadadataElement : element.elements("meta-data")) {
+			String metadataLanguageId = metadadataElement.attributeValue(
+				"locale");
+
+			for (Element entryElement : metadadataElement.elements("entry")) {
+				String entryName = entryElement.attributeValue("name");
+
+				elementMap.put(
+					entryName.concat(metadataLanguageId),
+					entryElement.getText());
+			}
+		}
+
+		return elementMap;
+	}
+
+	protected static String getElementName(Element element) {
+		StringBuilder sb = new StringBuilder();
+
+		sb.append(element.attributeValue("name"));
+
+		Element parentElement = element.getParent();
+
+		while (true) {
+			if ((parentElement == null) ||
+				parentElement.getName().equals("root")) {
+
+				break;
+			}
+
+			sb.insert(
+				0, parentElement.attributeValue("name") + StringPool.SLASH);
+
+			parentElement = parentElement.getParent();
+		}
+
+		String type = element.attributeValue("type");
+
+		if (Validator.equals(type, "option")) {
+			sb.append(StringPool.SLASH);
+
+			sb.append(element.attributeValue("value"));
+		}
+
+		return sb.toString();
 	}
 
 }

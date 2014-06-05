@@ -182,6 +182,11 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 				DDLRecord.class.getName(), recordVersion.getPrimaryKey());
 		}
 
+		// Asset
+
+		assetEntryLocalService.deleteEntry(
+			DDLRecord.class.getName(), record.getRecordId());
+
 		return record;
 	}
 

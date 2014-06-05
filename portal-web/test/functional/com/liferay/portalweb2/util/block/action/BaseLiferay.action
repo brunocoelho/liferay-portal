@@ -307,6 +307,12 @@
 		</default>
 	</command>
 
+	<command name="scrollWebElementIntoView">
+		<default>
+			<execute function="ScrollWebElementIntoView#scrollWebElementIntoView" />
+		</default>
+	</command>
+
 	<command name="select">
 		<default>
 			<execute function="Select#select" />
@@ -352,6 +358,52 @@
 			<description message="Click on the ${locator1}." />
 
 			<execute function="SikuliClick#sikuliClick" />
+		</default>
+	</command>
+
+	<command name="sikuliDragAndDrop">
+		<default>
+			<execute function="SikuliDragAndDrop#sikuliDragAndDrop" />
+		</default>
+	</command>
+
+	<command name="sikuliLeftMouseDown">
+		<default>
+			<description message="Push left mouse button down." />
+
+			<execute function="SikuliLeftMouseDown#sikuliLeftMouseDown" />
+		</default>
+	</command>
+
+	<command name="sikuliLeftMouseUp">
+		<default>
+			<description message="Lift left mouse button up." />
+
+			<execute function="SikuliLeftMouseUp#sikuliLeftMouseUp" />
+		</default>
+	</command>
+
+	<command name="sikuliMouseMove">
+		<default>
+			<description message="Mouse over the ${locator1}." />
+
+			<execute function="SikuliMouseMove#sikuliMouseMove" />
+		</default>
+	</command>
+
+	<command name="sikuliRightMouseDown">
+		<default>
+			<description message="Push right mouse button down." />
+
+			<execute function="SikuliRightMouseDown#sikuliRightMouseDown" />
+		</default>
+	</command>
+
+	<command name="sikuliRightMouseUp">
+		<default>
+			<description message="Lift right mouse button up." />
+
+			<execute function="SikuliRightMouseUp#sikuliRightMouseUp" />
 		</default>
 	</command>
 

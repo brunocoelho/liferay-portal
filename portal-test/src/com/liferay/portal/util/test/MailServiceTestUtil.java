@@ -19,7 +19,9 @@ import com.dumbster.smtp.ServerOptions;
 import com.dumbster.smtp.SmtpServer;
 import com.dumbster.smtp.SmtpServerFactory;
 
-import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +31,10 @@ import java.util.List;
  * @author José Manuel Navarro
  */
 public class MailServiceTestUtil {
+
+	public static void clearMessages() {
+		_smtpServer.clearMessages();
+	}
 
 	public static int getInboxSize() {
 		return _smtpServer.getEmailCount();
@@ -68,7 +74,9 @@ public class MailServiceTestUtil {
 		}
 
 		ServerOptions opts = new ServerOptions();
-		opts.port = PropsValues.MAIL_SESSION_MAIL_SMTP_PORT;
+
+		opts.port = GetterUtil.getInteger(
+			PropsUtil.get(PropsKeys.MAIL_SESSION_MAIL_SMTP_PORT));
 
 		_smtpServer = SmtpServerFactory.startServer(opts);
 	}

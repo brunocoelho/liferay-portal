@@ -17,13 +17,14 @@
 
 	<propertycopy from="browser.${browser.type}.version" name="browser.version" />
 
-	<propertycopy from="database.${database.type}.version" name="database.version" />
+	<propertycopy from="database.${database.type}.version.build" name="database.version.build" />
 
-	<propertycopy from="database.${database.type}.${database.version}.host" name="database.host" />
-	<propertycopy from="database.${database.type}.${database.version}.password" name="database.password" />
-	<propertycopy from="database.${database.type}.${database.version}.schema" name="database.schema" />
-	<propertycopy from="database.${database.type}.${database.version}.username" name="database.username" />
-	<propertycopy from="database.${database.type}.${database.version}.url" name="database.url" />
+	<propertycopy from="database.${database.type}${database.version.build}.host" name="database.host" />
+	<propertycopy from="database.${database.type}${database.version.build}.password" name="database.password" />
+	<propertycopy from="database.${database.type}${database.version.build}.schema" name="database.schema" />
+	<propertycopy from="database.${database.type}${database.version.build}.username" name="database.username" />
+	<propertycopy from="database.${database.type}${database.version.build}.url" name="database.url" />
+	<propertycopy from="database.${database.type}${database.version.build}.version" name="database.version" />
 
 	<propertycopy from="java.jdk.${java.jdk.type}.version" name="java.jdk.version" />
 
@@ -173,8 +174,18 @@
 				replace="\1"
 			/>
 
+			<propertyregex
+				defaultValue="${app.server.major.version}"
+				global="true"
+				input="${app.server.major.version}"
+				override="true"
+				property="app.server.major.version.build"
+				regexp="\."
+				replace=""
+			/>
+
 			<propertycopy
-				from="env.option.app.server.${app.server.type}.${app.server.major.version}"
+				from="env.option.app.server.${app.server.type}${app.server.major.version.build}"
 				name="env.option.app.server"
 				override="true"
 			/>
@@ -191,8 +202,18 @@
 				replace="\1"
 			/>
 
+			<propertyregex
+				defaultValue="${browser.major.version}"
+				global="true"
+				input="${browser.major.version}"
+				override="true"
+				property="browser.major.version.build"
+				regexp="\."
+				replace=""
+			/>
+
 			<propertycopy
-				from="env.option.browser.${browser.type}.${browser.major.version}"
+				from="env.option.browser.${browser.type}${browser.major.version.build}"
 				name="env.option.browser"
 				override="true"
 			/>
@@ -209,8 +230,18 @@
 				replace="\1"
 			/>
 
+			<propertyregex
+				defaultValue="${database.major.version}"
+				global="true"
+				input="${database.major.version}"
+				override="true"
+				property="database.major.version.build"
+				regexp="\."
+				replace=""
+			/>
+
 			<propertycopy
-				from="env.option.database.${database.type}.${database.major.version}"
+				from="env.option.database.${database.type}${database.major.version.build}"
 				name="env.option.database"
 				override="true"
 			/>
@@ -243,8 +274,18 @@
 
 	<macrodef name="record-env-operating-system">
 		<sequential>
+			<propertyregex
+				defaultValue="${operating.system.version}"
+				global="true"
+				input="${operating.system.version}"
+				override="true"
+				property="operating.system.version.build"
+				regexp="\."
+				replace=""
+			/>
+
 			<propertycopy
-				from="env.option.operating.system.${operating.system.type}.${operating.system.version}"
+				from="env.option.operating.system.${operating.system.type}${operating.system.version.build}"
 				name="env.option.operating.system"
 				override="true"
 			/>
@@ -687,12 +728,14 @@ create database lportal2 character set utf8;</echo>
 					/>
 				</delete>
 
-				<copy todir="${todir}">
-					<fileset
-						dir="${jdbc.drivers.optional.dir}/db2/8.1.18"
-						includes="${jdbc.db2.driver}"
-					/>
-				</copy>
+				<for list="${jdbc.db2.driver}" param="jdbc.driver">
+					<sequential>
+						<get
+							dest="${todir}"
+							src="${test.jdbc.drivers.url}/db2/8.1.18/@{jdbc.driver}"
+						/>
+					</sequential>
+				</for>
 			</then>
 			<elseif>
 				<and>
@@ -1147,6 +1190,22 @@ create database lportal2 character set utf8;</echo>
 
 		<propertycopy from="mobile.device.resolution[${mobile.device.type}]" name="mobile.device.resolution" />
 		<propertycopy from="mobile.device.user.agent[${mobile.device.type}]" name="mobile.device.user.agent" />
+	</target>
+
+	<target name="kill-spi">
+		<if>
+			<os family="unix" />
+			<then>
+				<execute>
+					kill -9 pgrep -n java
+				</execute>
+			</then>
+			<else>
+				<execute>
+					taskkill.exe /F /FI "imagename eq java.exe" /FI "memusage lt 700000" /FI "memusage gt 600000"
+				</execute>
+			</else>
+		</if>
 	</target>
 
 	<target name="merge-jenkins-test-results">
@@ -1791,10 +1850,19 @@ tck.url=true</echo>
 		</if>
 
 		<if>
-			<isset property="ignore.error" />
+			<isset property="ignore.errors" />
 			<then>
 				<echo file="portal-web/test/test-portal-web-ext.properties" append="true">
-					ignore.error=${ignore.error}
+					ignore.errors=${ignore.errors}
+				</echo>
+			</then>
+		</if>
+
+		<if>
+			<isset property="ignore.errors.delimiter" />
+			<then>
+				<echo file="portal-web/test/test-portal-web-ext.properties" append="true">
+					ignore.errors.delimiter=${ignore.errors.delimiter}
 				</echo>
 			</then>
 		</if>
@@ -1991,6 +2059,18 @@ tck.url=true</echo>
 		</if>
 	</target>
 
+	<target name="prepare-so-plugins">
+		<property file="${lp.plugins.dir}/portlets/so-portlet/docroot/WEB-INF/liferay-releng.properties" />
+
+		<property name="plugins.includes" value="so-portlet,${dependent-apps}" />
+
+		<ant dir="${lp.plugins.dir}" target="clean" />
+
+		<ant dir="${lp.plugins.dir}" target="compile" />
+
+		<ant antfile="build-test-plugins.xml" target="deploy-simple-server-plugins" />
+	</target>
+
 	<target name="prepare-test-build">
 		<antcall target="record-git-commit-portal" inheritAll="false" />
 
@@ -2131,30 +2211,6 @@ tck.url=true</echo>
 		</if>
 
 		<if>
-			<equals arg1="${test.build.bundle.tcat}" arg2="true" />
-			<then>
-				<echo file="${lp.plugins.dir}/build.${user.name}.properties">app.server.tomcat.dir=${app.server.parent.dir}/tomcat-7.0.39
-
-plugins.includes=marketplace-portlet</echo>
-
-				<if>
-					<isset property="test.build.portal.war.url" />
-					<then>
-						<get
-							dest="dist/liferay-portal-${lp.version}.war"
-							src="${test.build.portal.war.url}"
-						/>
-					</then>
-					<else>
-						<ant antfile="build-dist.xml" target="zip-portal-war" inheritAll="false" />
-					</else>
-				</if>
-
-				<ant antfile="build-dist.xml" target="build-dist-tcat" inheritAll="false" />
-			</then>
-		</if>
-
-		<if>
 			<matches pattern="http" string="${test.build.bundle.tomcat.zip.url}" />
 			<then>
 				<antcall target="prepare-test-bundle">
@@ -2167,6 +2223,8 @@ plugins.includes=marketplace-portlet</echo>
 				<ant antfile="build-dist.xml" target="build-dist-tomcat" inheritAll="false" />
 			</else>
 		</if>
+
+		<antcall target="prepare-test-build-tomcat-dependents" inheritAll="false" />
 
 		<if>
 			<and>
@@ -2230,23 +2288,57 @@ plugins.includes=marketplace-portlet</echo>
 		<antcall target="record-test-package-names" inheritAll="false" />
 	</target>
 
+	<target name="prepare-test-build-tomcat-dependents">
+		<if>
+			<equals arg1="${test.build.bundle.tcat}" arg2="true" />
+			<then>
+				<echo file="${lp.plugins.dir}/build.${user.name}.properties">app.server.tomcat.dir=${app.server.parent.dir}/tomcat-7.0.39
+
+plugins.includes=marketplace-portlet</echo>
+
+				<if>
+					<isset property="test.build.portal.war.url" />
+					<then>
+						<mkdir dir="dist" />
+
+						<get
+							dest="dist/liferay-portal-${lp.version}.war"
+							src="${test.build.portal.war.url}"
+						/>
+					</then>
+					<else>
+						<ant antfile="build-dist.xml" target="zip-portal-war" inheritAll="false" />
+					</else>
+				</if>
+
+				<ant antfile="build-dist.xml" target="build-dist-tcat" inheritAll="false" />
+
+				<delete dir="dist" />
+
+				<delete file="${lp.plugins.dir}/build.${user.name}.properties" />
+			</then>
+		</if>
+	</target>
+
 	<target name="prepare-test-bundle">
 		<if>
 			<equals arg1="${app.server.type}" arg2="tcserver" />
 			<then>
 				<ant antfile="build-dist.xml" target="unzip-tcserver" inheritAll="false" />
 
+				<mkdir dir="dist" />
+
 				<get
-					dest="liferay-portal.war"
+					dest="dist/liferay-portal-${lp.version}.war"
 					src="${test.build.portal.war.url}"
 				/>
 
 				<unzip
 					dest="${app.server.tcserver.portal.dir}"
-					src="liferay-portal.war"
+					src="dist/liferay-portal-${lp.version}.war"
 				/>
 
-				<delete file="liferay-portal.war" />
+				<delete dir="dist" />
 
 				<get
 					dest="liferay-portal-dependencies.zip"
@@ -2285,17 +2377,19 @@ plugins.includes=marketplace-portlet</echo>
 				<then>
 					<ant antfile="build-dist.xml" target="unzip-weblogic" inheritAll="false" />
 
+					<mkdir dir="dist" />
+
 					<get
-						dest="liferay-portal.war"
+						dest="dist/liferay-portal-${lp.version}.war"
 						src="${test.build.portal.war.url}"
 					/>
 
 					<unzip
 						dest="${app.server.weblogic.portal.dir}"
-						src="liferay-portal.war"
+						src="dist/liferay-portal-${lp.version}.war"
 					/>
 
-					<delete file="liferay-portal.war" />
+					<delete dir="dist" />
 
 					<get
 						dest="liferay-portal-dependencies.zip"
@@ -2341,6 +2435,8 @@ plugins.includes=marketplace-portlet</echo>
 						type="regexp"
 					/>
 				</unzip>
+
+				<delete file="${tstamp.value}.zip" />
 
 				<chmod perm="a+x">
 					<fileset dir="${test.app.server.bin.dir}">
@@ -2460,13 +2556,22 @@ custom.sql.function.isnotnull=CONVERT(VARCHAR,?) IS NOT NULL</echo>
 				</if>
 
 				<if>
-					<equals arg1="${database.type}" arg2="hsql" />
+					<equals arg1="${database.type}" arg2="db2" />
 					<then>
-						<delete dir="${liferay.home}/data" includeemptydirs="true" />
-
-						<copy file="sql/${database.name}.properties" tofile="${liferay.home}/data/hsql/${database.name}.properties" />
-						<copy file="sql/${database.name}.script" tofile="${liferay.home}/data/hsql/${database.name}.script" />
+						<exec executable="${db2.executable}">
+							<arg value="-fcreate.sql" />
+							<arg value="-t" />
+						</exec>
 					</then>
+					<elseif>
+						<equals arg1="${database.type}" arg2="hsql" />
+						<then>
+							<delete dir="${liferay.home}/data" includeemptydirs="true" />
+
+							<copy file="sql/${database.name}.properties" tofile="${liferay.home}/data/hsql/${database.name}.properties" />
+							<copy file="sql/${database.name}.script" tofile="${liferay.home}/data/hsql/${database.name}.script" />
+						</then>
+					</elseif>
 					<elseif>
 						<equals arg1="${database.type}" arg2="mysql" />
 						<then>

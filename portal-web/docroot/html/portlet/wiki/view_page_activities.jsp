@@ -109,21 +109,21 @@ iteratorURL.setParameter("title", wikiPage.getTitle());
 						<c:choose>
 							<c:when test="<%= socialActivity.getType() == SocialActivityConstants.TYPE_ADD_ATTACHMENT %>">
 								<liferay-ui:icon
-									image="clip"
+									iconCssClass="icon-paperclip"
 									label="<%= true %>"
 									message='<%= LanguageUtil.format(pageContext, "x-added-the-attachment-x", new Object[] {HtmlUtil.escape(socialActivityUser.getFullName()), attachmentTitle}, false) %>'
 								/>
 							</c:when>
 							<c:when test="<%= socialActivity.getType() == SocialActivityConstants.TYPE_MOVE_ATTACHMENT_TO_TRASH %>">
 								<liferay-ui:icon
-									image="delete_attachment"
+									iconCssClass="icon-remove"
 									label="<%= true %>"
 									message='<%= LanguageUtil.format(pageContext, "x-removed-the-attachment-x", new Object[] {HtmlUtil.escape(socialActivityUser.getFullName()), attachmentTitle}, false) %>'
 								/>
 							</c:when>
 							<c:when test="<%= socialActivity.getType() == SocialActivityConstants.TYPE_RESTORE_ATTACHMENT_FROM_TRASH %>">
 								<liferay-ui:icon
-									image="undo"
+									iconCssClass="icon-undo"
 									label="<%= true %>"
 									message='<%= LanguageUtil.format(pageContext, "x-restored-the-attachment-x", new Object[] {HtmlUtil.escape(socialActivityUser.getFullName()), attachmentTitle}, false) %>'
 								/>
@@ -167,7 +167,7 @@ iteratorURL.setParameter("title", wikiPage.getTitle());
 						<c:choose>
 							<c:when test="<%= socialActivity.getType() == SocialActivityConstants.TYPE_MOVE_TO_TRASH %>">
 								<liferay-ui:icon
-									image="trash"
+									iconCssClass="icon-trash"
 									label="<%= true %>"
 									message='<%= LanguageUtil.format(pageContext, "activity-wiki-page-move-to-trash", new Object[] {StringPool.BLANK, HtmlUtil.escape(socialActivityUser.getFullName()), socialActivityWikiPage.getTitle()}, false) %>'
 								/>
@@ -178,7 +178,7 @@ iteratorURL.setParameter("title", wikiPage.getTitle());
 								</liferay-util:buffer>
 
 								<liferay-ui:icon
-									image="undo"
+									iconCssClass="icon-undo"
 									label="<%= true %>"
 									message='<%= LanguageUtil.format(pageContext, "activity-wiki-page-restore-from-trash", new Object[] {StringPool.BLANK, HtmlUtil.escape(socialActivityUser.getFullName()), pageTitleLink}, false) %>'
 								/>
@@ -189,7 +189,7 @@ iteratorURL.setParameter("title", wikiPage.getTitle());
 								</liferay-util:buffer>
 
 								<liferay-ui:icon
-									image="add_article"
+									iconCssClass="icon-plus"
 									label="<%= true %>"
 									message='<%= LanguageUtil.format(pageContext, "x-added-the-page-x", new Object[] {HtmlUtil.escape(socialActivityUser.getFullName()), pageTitleLink}, false) %>'
 								/>
@@ -206,7 +206,7 @@ iteratorURL.setParameter("title", wikiPage.getTitle());
 								</liferay-util:buffer>
 
 								<liferay-ui:icon
-									image="edit"
+									iconCssClass="icon-edit"
 									label="<%= true %>"
 									message='<%= LanguageUtil.format(pageContext, "x-updated-the-page-to-version-x", new Object[] {HtmlUtil.escape(socialActivityUser.getFullName()), pageTitleLink}, false) %>'
 								/>
@@ -259,43 +259,20 @@ iteratorURL.setParameter("title", wikiPage.getTitle());
 	/>
 </div>
 
-<%
-PortletURL compareVersionsURL = renderResponse.createRenderURL();
-
-compareVersionsURL.setParameter("struts_action", "/wiki/compare_versions");
-%>
-
-<aui:form action="<%= compareVersionsURL %>" method="post" name="compareVersionsForm" onSubmit="event.preventDefault();">
-	<aui:input name="tabs3" type="hidden" value="activities" />
-	<aui:input name="backURL" type="hidden" value="<%= currentURL %>" />
-	<aui:input name="nodeId" type="hidden" value="<%= node.getNodeId() %>" />
-	<aui:input name="title" type="hidden" value="<%= wikiPage.getTitle() %>" />
-	<aui:input name="sourceVersion" type="hidden" value="" />
-	<aui:input name="targetVersion" type="hidden" value="" />
-	<aui:input name="type" type="hidden" value="html" />
-</aui:form>
-
 <aui:script use="aui-base,escape">
 	A.getBody().delegate(
 		'click',
 		function(event) {
-			Liferay.Util.selectEntity(
+			Liferay.Util.openWindow(
 				{
 					dialog: {
 						constrain: true,
 						modal: true,
-						width: 680
+						width: 1024
 					},
-					eventName: '<portlet:namespace />selectVersion',
-					id: '<portlet:namespace />selectVersion' + event.currentTarget.attr('id'),
-					title: '<liferay-ui:message key="select-version" />',
+					id: '<portlet:namespace />compareVersions' + event.currentTarget.attr('id'),
+					title: '<liferay-ui:message key="compare-versions" />',
 					uri: event.currentTarget.attr('data-uri')
-				},
-				function(event) {
-					document.<portlet:namespace />compareVersionsForm.<portlet:namespace />sourceVersion.value = event.sourceversion;
-					document.<portlet:namespace />compareVersionsForm.<portlet:namespace />targetVersion.value = event.targetversion;
-
-					submitForm(document.<portlet:namespace />compareVersionsForm);
 				}
 			);
 		},

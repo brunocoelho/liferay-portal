@@ -338,8 +338,6 @@ public class WebKeys implements com.liferay.portal.kernel.util.WebKeys {
 
 	public static final String PORTLET_AJAX_RENDER = "PORTLET_AJAX_RENDER";
 
-	public static final String PORTLET_BREADCRUMBS = "LIFERAY_SHARED_PORTLET_BREADCRUMBS";
-
 	public static final String PORTLET_CATEGORY = "PORTLET_CATEGORY";
 
 	public static final String PORTLET_CATEGORY_INDEX = "PORTLET_CATEGORY_INDEX";

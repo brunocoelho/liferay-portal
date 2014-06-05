@@ -46,7 +46,6 @@ import com.liferay.portal.model.ResourceConstants;
 import com.liferay.portal.model.SystemEventConstants;
 import com.liferay.portal.model.User;
 import com.liferay.portal.model.WorkflowDefinitionLink;
-import com.liferay.portal.repository.liferayrepository.model.LiferayFolder;
 import com.liferay.portal.service.ServiceContext;
 import com.liferay.portlet.documentlibrary.DuplicateFileException;
 import com.liferay.portlet.documentlibrary.DuplicateFolderNameException;
@@ -61,6 +60,7 @@ import com.liferay.portlet.documentlibrary.model.DLFolderConstants;
 import com.liferay.portlet.documentlibrary.model.impl.DLFolderImpl;
 import com.liferay.portlet.documentlibrary.service.base.DLFolderLocalServiceBaseImpl;
 import com.liferay.portlet.documentlibrary.store.DLStoreUtil;
+import com.liferay.portlet.documentlibrary.util.DLValidatorUtil;
 import com.liferay.portlet.documentlibrary.util.comparator.FolderIdComparator;
 
 import java.io.Serializable;
@@ -141,11 +141,6 @@ public class DLFolderLocalServiceImpl extends DLFolderLocalServiceBaseImpl {
 		if (parentFolderId != DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 			dlFolderLocalService.updateLastPostDate(parentFolderId, now);
 		}
-
-		// App helper
-
-		dlAppHelperLocalService.addFolder(
-			userId, new LiferayFolder(dlFolder), serviceContext);
 
 		return dlFolder;
 	}
@@ -784,8 +779,6 @@ public class DLFolderLocalServiceImpl extends DLFolderLocalServiceBaseImpl {
 
 			dlFolderPersistence.update(dlFolder);
 
-			dlAppHelperLocalService.moveFolder(new LiferayFolder(dlFolder));
-
 			return dlFolder;
 		}
 		finally {
@@ -1013,11 +1006,6 @@ public class DLFolderLocalServiceImpl extends DLFolderLocalServiceBaseImpl {
 					serviceContext);
 			}
 
-			// App helper
-
-			dlAppHelperLocalService.updateFolder(
-				userId, new LiferayFolder(dlFolder), serviceContext);
-
 			return dlFolder;
 		}
 		finally {
@@ -1201,7 +1189,7 @@ public class DLFolderLocalServiceImpl extends DLFolderLocalServiceBaseImpl {
 
 		validateFolderName(name);
 
-		DLStoreUtil.validateDirectoryName(name);
+		DLValidatorUtil.validateDirectoryName(name);
 
 		try {
 			dlFileEntryLocalService.getFileEntry(groupId, parentFolderId, name);
