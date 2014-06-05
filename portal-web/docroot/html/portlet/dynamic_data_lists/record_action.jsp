@@ -48,7 +48,7 @@ if (hasUpdatePermission) {
 		</portlet:renderURL>
 
 		<liferay-ui:icon
-			image="view"
+			iconCssClass="icon-search"
 			message="view[action]"
 			url="<%= viewRecordURL %>"
 		/>
@@ -64,7 +64,8 @@ if (hasUpdatePermission) {
 		</portlet:renderURL>
 
 		<liferay-ui:icon
-			image="edit"
+			iconCssClass="icon-edit"
+			message="edit"
 			url="<%= editRecordURL %>"
 		/>
 	</c:if>

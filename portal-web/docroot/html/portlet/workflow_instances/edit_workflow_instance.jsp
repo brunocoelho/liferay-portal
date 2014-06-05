@@ -75,12 +75,16 @@ request.setAttribute(WebKeys.WORKFLOW_ASSET_PREVIEW, Boolean.TRUE);
 		<aui:row>
 			<aui:col width="<%= 60 %>">
 				<div class="lfr-asset-status">
+					<aui:icon image="info-sign" />
+
 					<aui:input name="state" type="resource" value="<%= LanguageUtil.get(pageContext, workflowInstance.getState()) %>" />
 				</div>
 			</aui:col>
 
 			<aui:col width="<%= 33 %>">
 				<div class="lfr-asset-date">
+					<aui:icon image="calendar" />
+
 					<aui:input name="endDate" type="resource" value='<%= (workflowInstance.getEndDate() == null) ? LanguageUtil.get(pageContext, "never") : dateFormatDateTime.format(workflowInstance.getEndDate()) %>' />
 				</div>
 			</aui:col>
@@ -93,7 +97,7 @@ request.setAttribute(WebKeys.WORKFLOW_ASSET_PREVIEW, Boolean.TRUE);
 					<div class="task-content-actions">
 						<liferay-ui:icon-list>
 							<c:if test="<%= assetRenderer.hasViewPermission(permissionChecker) %>">
-								<liferay-ui:icon image="view" message="view[action]" method="get" url="<%= viewFullContentURL.toString() %>" />
+								<liferay-ui:icon iconCssClass="icon-search" message="view[action]" method="get" url="<%= viewFullContentURL.toString() %>" />
 							</c:if>
 						</liferay-ui:icon-list>
 					</div>
@@ -237,7 +241,7 @@ request.setAttribute(WebKeys.WORKFLOW_ASSET_PREVIEW, Boolean.TRUE);
 			<liferay-ui:icon
 				cssClass="lfr-asset-avatar"
 				image="../file_system/large/task"
-				message="download"
+				message=""
 			/>
 
 			<div class="lfr-asset-name">
