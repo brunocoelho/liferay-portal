@@ -34,7 +34,7 @@ long formDDMTemplateId = GetterUtil.getLong((String)row.getParameter("formDDMTem
 	</liferay-portlet:renderURL>
 
 	<liferay-ui:icon
-		image="view"
+		iconCssClass="icon-search"
 		message="view[action]"
 		url="<%= viewRecordVersionURL %>"
 	/>
@@ -48,7 +48,7 @@ long formDDMTemplateId = GetterUtil.getLong((String)row.getParameter("formDDMTem
 	</portlet:actionURL>
 
 	<liferay-ui:icon
-		image="undo"
+		iconCssClass="icon-undo"
 		message="revert"
 		url="<%= revertURL %>"
 	/>

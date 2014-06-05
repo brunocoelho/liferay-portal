@@ -30,9 +30,25 @@ for (WorkflowLog workflowLog : workflowLogs) {
 	}
 %>
 
-	<div class="task-activity task-type-<%= workflowLog.getType() %>">
+	<div class="task-activity">
 		<div class="task-activity-date">
-			<%= dateFormatDateTime.format(workflowLog.getCreateDate()) %>
+			<aui:icon image="calendar" />
+
+			<span class="task-activity-date-label"><%= dateFormatDateTime.format(workflowLog.getCreateDate()) %></span>
+		</div>
+
+		<div class="task-type">
+			<c:choose>
+				<c:when test="<%= workflowLog.getType() == 1 %>">
+					<aui:icon image="user" />
+				</c:when>
+				<c:when test="<%= workflowLog.getType() == 2 %>">
+					<aui:icon image="time" />
+				</c:when>
+				<c:when test="<%= workflowLog.getType() == 3 %>">
+					<aui:icon image="edit" />
+				</c:when>
+			</c:choose>
 		</div>
 
 		<c:choose>
