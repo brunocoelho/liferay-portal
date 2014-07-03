@@ -179,40 +179,6 @@ for (Locale availableLocale : LanguageUtil.getAvailableLocales(themeDisplay.getS
 	};
 
 	var reloadFormBuilderData = function(content) {
-		getLoadingMask().toggle(true);
-
-		if (!Lang.isValue(content)) {
-			content = window.<portlet:namespace />getContentDefinition();
-		}
-
-		content = xmlFormatter.minify(content);
-
-		A.io.request(
-			themeDisplay.getPathMain() + '/dynamic_data_mapping/get_structure_json',
-			{
-				data: {
-					xsd: content
-				},
-				dataType: 'JSON',
-				on: {
-					failure: function(message) {
-						displayMessage(MESSAGE_FAILURE, '<%= UnicodeLanguageUtil.get(request, "your-request-failed-to-complete") %>');
-					},
-					success: function(event) {
-						var responseData = this.get('responseData');
-
-						if (Lang.isArray(responseData)) {
-							formBuilder.set('fields', responseData);
-						}
-						else if (Lang.isObject(responseData)) {
-							displayMessage(MESSAGE_FAILURE, responseData.exception);
-						}
-
-						getLoadingMask().toggle(false);
-					}
-				}
-			}
-		);
 	};
 
 	var setEditorSize = function() {
