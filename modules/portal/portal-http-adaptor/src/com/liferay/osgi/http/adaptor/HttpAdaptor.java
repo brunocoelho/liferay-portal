@@ -111,7 +111,7 @@ public class HttpAdaptor {
 	private class AdaptorServlet extends HttpServiceServlet {
 
 		@Override
-		public void init(ServletConfig servletConfig) throws ServletException {
+		public void init(ServletConfig servletConfig) {
 			_servletConfig = servletConfig;
 		}
 
