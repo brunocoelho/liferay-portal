@@ -12,7 +12,7 @@
  * details.
  */
 
-package com.liferay.portal.jsonws.tracker.internal;
+package com.liferay.portal.json.web.service.tracker.internal;
 
 import com.liferay.portal.kernel.jsonwebservice.JSONWebServiceActionsManager;
 
@@ -30,8 +30,8 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 /**
  * @author Miguel Pastor
  */
-@Component(immediate = true, service = JsonWSServiceTracker.class)
-public class JsonWSServiceTracker
+@Component(immediate = true, service = JSONWebServiceTracker.class)
+public class JSONWebServiceTracker
 	implements ServiceTrackerCustomizer<Object, Object> {
 
 	@Activate
