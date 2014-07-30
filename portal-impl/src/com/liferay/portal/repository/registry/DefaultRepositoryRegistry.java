@@ -89,10 +89,10 @@ public class DefaultRepositoryRegistry
 	@Override
 	public <S extends RepositoryEventType, T extends RepositoryModel<T>>
 		void registerRepositoryEventListener(
-			Class<S> eventTypeClass, Class<T> modelClass,
+			Class<S> repositoryEventTypeClass, Class<T> modelClass,
 			RepositoryEventListener<S, T> repositoryEventListener) {
 
-		Tuple key = new Tuple(eventTypeClass, modelClass);
+		Tuple key = new Tuple(repositoryEventTypeClass, modelClass);
 
 		Collection<RepositoryEventListener<?, ?>> repositoryEventListeners =
 			_repositoryEventListeners.get(key);
@@ -119,14 +119,15 @@ public class DefaultRepositoryRegistry
 
 	@Override
 	public <S extends RepositoryEventType, T extends RepositoryModel<T>>
-		void trigger(Class<S> eventTypeClass, Class<T> modelClass, T payload)
+		void trigger(
+			Class<S> repositoryEventTypeClass, Class<T> modelClass, T payload)
 		throws PortalException {
 
-		Tuple eventKey = new Tuple(eventTypeClass, modelClass);
+		Tuple key = new Tuple(repositoryEventTypeClass, modelClass);
 
 		@SuppressWarnings("rawtypes")
 		Collection<RepositoryEventListener<S, T>> repositoryEventListeners =
-			(Collection)_repositoryEventListeners.get(eventKey);
+			(Collection)_repositoryEventListeners.get(key);
 
 		for (RepositoryEventListener<S, T> repositoryEventListener :
 				repositoryEventListeners) {
