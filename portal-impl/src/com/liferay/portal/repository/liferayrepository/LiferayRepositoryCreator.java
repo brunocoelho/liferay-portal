@@ -94,7 +94,7 @@ public class LiferayRepositoryCreator implements RepositoryCreator {
 			dlFolderId = repository.getDlFolderId();
 		}
 
-		return new long[]{groupId, repositoryId, dlFolderId};
+		return new long[] {groupId, repositoryId, dlFolderId};
 	}
 
 	@BeanReference(type = DLAppHelperLocalService.class)
