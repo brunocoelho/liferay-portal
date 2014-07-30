@@ -170,7 +170,7 @@ public abstract class BaseRepositoryFactory<T> {
 	protected RepositoryConfiguration getRepositoryConfiguration(
 		long classNameId) {
 
-		return _repositoryCatalog.getConfiguration(classNameId);
+		return _repositoryCatalog.getRepositoryConfiguration(classNameId);
 	}
 
 	protected long getRepositoryId(
