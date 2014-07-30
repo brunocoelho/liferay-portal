@@ -42,9 +42,8 @@ public class JSONWebServiceTracker
 
 		try {
 			_serviceTracker = new ServiceTracker<Object, Object>(
-				bundleContext, bundleContext.createFilter(
-					"(json.web.service.path=*)"),
-				this);
+				bundleContext,
+				bundleContext.createFilter("(json.web.service.path=*)"), this);
 
 			_serviceTracker.open();
 		}
