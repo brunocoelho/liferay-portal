@@ -358,17 +358,6 @@ public class PortletTracker
 		collectWindowStates(serviceReference, portletModel);
 	}
 
-	protected void collectResourceBundle(
-		ServiceReference<Portlet> serviceReference,
-		com.liferay.portal.model.Portlet portletModel) {
-
-		String resourceBundle = GetterUtil.getString(
-			serviceReference.getProperty("javax.portlet.resource-bundle"),
-			portletModel.getResourceBundle());
-
-		portletModel.setResourceBundle(resourceBundle);
-	}
-
 	protected void collectLiferayFeatures(
 		ServiceReference<Portlet> serviceReference,
 		com.liferay.portal.model.Portlet portletModel) {
@@ -650,6 +639,17 @@ public class PortletTracker
 		}
 
 		portletModel.setDefaultPreferences(defaultPreferences);
+	}
+
+	protected void collectResourceBundle(
+		ServiceReference<Portlet> serviceReference,
+		com.liferay.portal.model.Portlet portletModel) {
+
+		String resourceBundle = GetterUtil.getString(
+			serviceReference.getProperty("javax.portlet.resource-bundle"),
+			portletModel.getResourceBundle());
+
+		portletModel.setResourceBundle(resourceBundle);
 	}
 
 	protected void collectSecurityRoleRefs(
@@ -955,9 +955,7 @@ public class PortletTracker
 		_servletContext = null;
 	}
 
-	private QName _getQName(
-		String name, String uri, String defaultNamespace) {
-
+	private QName _getQName(String name, String uri, String defaultNamespace) {
 		if (Validator.isNull(name) && Validator.isNull(uri)) {
 			return null;
 		}
