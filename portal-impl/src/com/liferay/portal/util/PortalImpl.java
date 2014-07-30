@@ -8292,6 +8292,31 @@ public class PortalImpl implements Portal {
 		return false;
 	}
 
+	protected boolean isUseGroupVirtualHostName(
+		Group group, boolean privateLayoutSet, ThemeDisplay themeDisplay,
+		boolean canonicalURL) {
+
+		if (!canonicalURL || isValidVirtualHost(themeDisplay.getServerName())) {
+			return false;
+		}
+
+		long refererPlid = themeDisplay.getRefererPlid();
+
+		if (refererPlid > 0) {
+			Layout refererLayout = LayoutLocalServiceUtil.fetchLayout(
+				refererPlid);
+
+			if ((refererLayout != null) &&
+				((refererLayout.getGroupId() != group.getGroupId()) ||
+				 (refererLayout.isPrivateLayout() != privateLayoutSet))) {
+
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	protected boolean isValidVirtualHost(String domain) {
 		for (String virtualHost : PropsValues.VIRTUAL_HOSTS_VALID_HOSTS) {
 			if (StringUtil.equalsIgnoreCase(domain, virtualHost) ||
@@ -8408,31 +8433,6 @@ public class PortalImpl implements Portal {
 		themeDisplay.setI18nLanguageId(i18nLanguageId);
 		themeDisplay.setI18nPath(i18nPath);
 		themeDisplay.setLocale(locale);
-	}
-
-	protected boolean isUseGroupVirtualHostName(
-		Group group, boolean privateLayoutSet, ThemeDisplay themeDisplay,
-		boolean canonicalURL) {
-
-		if (!canonicalURL || isValidVirtualHost(themeDisplay.getServerName())) {
-			return false;
-		}
-
-		long refererPlid = themeDisplay.getRefererPlid();
-
-		if (refererPlid > 0) {
-			Layout refererLayout = LayoutLocalServiceUtil.fetchLayout(
-				refererPlid);
-
-			if ((refererLayout != null) &&
-				((refererLayout.getGroupId() != group.getGroupId()) ||
-				 (refererLayout.isPrivateLayout() != privateLayoutSet))) {
-
-				return false;
-			}
-		}
-
-		return true;
 	}
 
 	private static final String _J_SECURITY_CHECK = "j_security_check";
