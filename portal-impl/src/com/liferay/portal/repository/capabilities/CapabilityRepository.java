@@ -646,6 +646,6 @@ public class CapabilityRepository
 		return getRepository().verifyInheritableLock(folderId, lockUuid);
 	}
 
-	private final RepositoryEventHandler _repositoryEventHandler;
+	private RepositoryEventHandler _repositoryEventHandler;
 
 }
