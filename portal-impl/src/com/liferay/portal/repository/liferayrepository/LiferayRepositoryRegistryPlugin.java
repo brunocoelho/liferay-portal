@@ -30,6 +30,7 @@ import com.liferay.portal.service.ClassNameLocalService;
 public class LiferayRepositoryRegistryPlugin
 	extends BaseRepositoryRegistryPlugin {
 
+	@Override
 	public long getClassNameId() {
 		if (_classNameId == 0) {
 			_classNameId = _classNameLocalService.getClassNameId(
@@ -47,7 +48,7 @@ public class LiferayRepositoryRegistryPlugin
 	@Override
 	public void registerCapabilities(CapabilityRegistry capabilityRegistry) {
 		capabilityRegistry.addExportedCapability(
-			TrashCapability.class, _trashCapability);
+			TrashCapability.class, _liferayTrashCapability);
 	}
 
 	@Override
@@ -61,7 +62,8 @@ public class LiferayRepositoryRegistryPlugin
 	public void registerRepositoryEventListeners(
 		RepositoryEventRegistry repositoryEventRegistry) {
 
-		_trashCapability.registerEventListeners(repositoryEventRegistry);
+		_liferayTrashCapability.registerRepositoryEventListeners(
+			repositoryEventRegistry);
 	}
 
 	public void setRepositoryCreator(RepositoryCreator repositoryCreator) {
@@ -74,7 +76,7 @@ public class LiferayRepositoryRegistryPlugin
 	private ClassNameLocalService _classNameLocalService;
 
 	private RepositoryCreator _repositoryCreator;
-	private LiferayTrashCapability _trashCapability =
+	private LiferayTrashCapability _liferayTrashCapability =
 		new LiferayTrashCapability();
 
 }
