@@ -44,13 +44,15 @@ public class RepositoryCatalogImpl implements RepositoryCatalog {
 	}
 
 	@Override
-	public RepositoryConfiguration getRepositoryConfiguration(long classNameId) {
-		return _repositoryRegistryPlugins.get(classNameId);
+	public Collection<String> getExternalRepositoryClassNames() {
+		return _externalRepositoriesClassNames;
 	}
 
 	@Override
-	public Collection<String> getExternalRepositoryClassNames() {
-		return _externalRepositoriesClassNames;
+	public RepositoryConfiguration getRepositoryConfiguration(
+		long classNameId) {
+
+		return _repositoryRegistryPlugins.get(classNameId);
 	}
 
 	public void loadBuiltinRegistryPlugins() throws PortalException {
@@ -96,8 +98,7 @@ public class RepositoryCatalogImpl implements RepositoryCatalog {
 			ClassName className = _classNameLocalService.getClassName(
 				classNameId);
 
-			_externalRepositoriesClassNames.add(
-				className.getClassName());
+			_externalRepositoriesClassNames.add(className.getClassName());
 		}
 
 		_repositoryRegistryPlugins.put(

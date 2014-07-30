@@ -25,9 +25,9 @@ import java.util.Collection;
  */
 public interface RepositoryCatalog {
 
-	public RepositoryConfiguration getRepositoryConfiguration(long classNameId);
-
 	public Collection<String> getExternalRepositoryClassNames();
+
+	public RepositoryConfiguration getRepositoryConfiguration(long classNameId);
 
 	public void registerLegacyExternalRepositoryFactory(
 			String className,

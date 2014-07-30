@@ -49,17 +49,17 @@ public class DefaultRepositoryRegistry
 	}
 
 	@Override
-	public <S extends Capability, T extends S> void addSupportedCapability(
+	public <S extends Capability, T extends S> void addExportedCapability(
 		Class<S> capabilityClass, T capability) {
+
+		_exportedCapabilities.add(capabilityClass);
 
 		_supportedCapabilities.put(capabilityClass, capability);
 	}
 
 	@Override
-	public <S extends Capability, T extends S> void addExportedCapability(
+	public <S extends Capability, T extends S> void addSupportedCapability(
 		Class<S> capabilityClass, T capability) {
-
-		_exportedCapabilities.add(capabilityClass);
 
 		_supportedCapabilities.put(capabilityClass, capability);
 	}
@@ -136,11 +136,11 @@ public class DefaultRepositoryRegistry
 		}
 	}
 
+	private Set<Class<? extends Capability>> _exportedCapabilities;
+	private RepositoryCreator _repositoryCreator;
 	private Map<Tuple, Collection<RepositoryEventListener<?, ?>>>
 		_repositoryEventListeners =
 			new HashMap<Tuple, Collection<RepositoryEventListener<?, ?>>>();
-	private Set<Class<? extends Capability>> _exportedCapabilities;
-	private RepositoryCreator _repositoryCreator;
 	private Map<Class<? extends Capability>, Capability> _supportedCapabilities;
 
 }
