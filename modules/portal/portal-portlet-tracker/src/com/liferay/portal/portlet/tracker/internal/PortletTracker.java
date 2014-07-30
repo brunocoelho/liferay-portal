@@ -729,8 +729,8 @@ public class PortletTracker
 
 			if (publicRenderParameter == null) {
 				_log.error(
-					"Supported public render parameter references " +
-						"unknown identifier " + identifier);
+					"Supported public render parameter references unknown " +
+						"identifier " + identifier);
 
 				continue;
 			}
@@ -956,19 +956,19 @@ public class PortletTracker
 	}
 
 	private QName _getQName(
-		String name, String qname, String defaultNamespace) {
+		String name, String uri, String defaultNamespace) {
 
-		if (Validator.isNull(name) && Validator.isNull(qname)) {
+		if (Validator.isNull(name) && Validator.isNull(uri)) {
 			return null;
 		}
 
-		if (Validator.isNull(qname)) {
+		if (Validator.isNull(uri)) {
 			return SAXReaderUtil.createQName(
 				name, SAXReaderUtil.createNamespace(defaultNamespace));
 		}
 
 		return SAXReaderUtil.createQName(
-			name, SAXReaderUtil.createNamespace(qname));
+			name, SAXReaderUtil.createNamespace(uri));
 	}
 
 	private static final String _NAMESPACE = "com.liferay.portlet.";
