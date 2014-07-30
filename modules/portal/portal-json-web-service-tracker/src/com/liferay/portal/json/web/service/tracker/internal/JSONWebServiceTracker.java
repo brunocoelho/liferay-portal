@@ -42,20 +42,21 @@ public class JSONWebServiceTracker
 
 		try {
 			_serviceTracker = new ServiceTracker<Object, Object>(
-				bundleContext, bundleContext.createFilter(_JSONWS_PATH_FILTER),
+				bundleContext, bundleContext.createFilter(
+					"(json.web.service.path=*)"),
 				this);
 
 			_serviceTracker.open();
 		}
 		catch (InvalidSyntaxException ise) {
 			throw new RuntimeException(
-				"Unable to activate the JSON WS Tracker", ise);
+				"Unable to activate the Liferay JSON Web Service Tracker", ise);
 		}
 	}
 
 	@Override
 	public Object addingService(ServiceReference<Object> serviceReference) {
-		return _registerJsonWsAction(serviceReference);
+		return registerService(serviceReference);
 	}
 
 	@Deactivate
@@ -69,18 +70,18 @@ public class JSONWebServiceTracker
 
 	@Override
 	public void modifiedService(
-		ServiceReference<Object> serviceReference, Object o) {
+		ServiceReference<Object> serviceReference, Object service) {
 
-		_unregisterJsonWsAction(o);
+		unregisterService(service);
 
-		_registerJsonWsAction(serviceReference);
+		registerService(serviceReference);
 	}
 
 	@Override
 	public void removedService(
-		ServiceReference<Object> serviceReference, Object o) {
+		ServiceReference<Object> serviceReference, Object service) {
 
-		_unregisterJsonWsAction(o);
+		unregisterService(service);
 	}
 
 	@Reference
@@ -90,31 +91,27 @@ public class JSONWebServiceTracker
 		_jsonWebServiceActionsManager = jsonWebServiceActionsManager;
 	}
 
-	private Object _getService(ServiceReference<Object> serviceReference) {
+	protected Object getService(ServiceReference<Object> serviceReference) {
 		BundleContext bundleContext = _componentContext.getBundleContext();
 
 		return bundleContext.getService(serviceReference);
 	}
 
-	private Object _registerJsonWsAction(
+	protected Object registerService(
 		ServiceReference<Object> serviceReference) {
 
-		Object o = _getService(serviceReference);
-		String path = (String)serviceReference.getProperty(_JSONWS_PATH);
+		String path = (String)serviceReference.getProperty(
+			"json.web.service.path");
+		Object service = getService(serviceReference);
 
-		_jsonWebServiceActionsManager.registerService(path, o);
+		_jsonWebServiceActionsManager.registerService(path, service);
 
-		return o;
+		return service;
 	}
 
-	private void _unregisterJsonWsAction(Object o) {
-		_jsonWebServiceActionsManager.unregisterJSONWebServiceActions(o);
+	private void unregisterService(Object service) {
+		_jsonWebServiceActionsManager.unregisterJSONWebServiceActions(service);
 	}
-
-	private static final String _JSONWS_PATH = "jsonws.path";
-
-	private static final String _JSONWS_PATH_FILTER =
-		"(" + _JSONWS_PATH + "=*)";
 
 	private ComponentContext _componentContext;
 	private JSONWebServiceActionsManager _jsonWebServiceActionsManager;
