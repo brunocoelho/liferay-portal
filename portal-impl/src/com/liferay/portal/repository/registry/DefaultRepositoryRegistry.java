@@ -38,8 +38,8 @@ import java.util.Set;
  */
 public class DefaultRepositoryRegistry
 	implements CapabilityRegistry, RepositoryConfiguration,
-		RepositoryCreatorRegistry, RepositoryEventHandler,
-		RepositoryEventRegistry {
+			   RepositoryCreatorRegistry, RepositoryEventHandler,
+			   RepositoryEventRegistry {
 
 	public DefaultRepositoryRegistry() {
 		_exportedCapabilities = new HashSet<Class<? extends Capability>>();
@@ -90,25 +90,28 @@ public class DefaultRepositoryRegistry
 	public <S extends RepositoryEventType, T extends RepositoryModel<T>>
 		void registerRepositoryEventListener(
 			Class<S> eventTypeClass, Class<T> modelClass,
-			RepositoryEventListener<S, T> action) {
+			RepositoryEventListener<S, T> repositoryEventListener) {
 
-		Tuple eventKey = new Tuple(eventTypeClass, modelClass);
+		Tuple key = new Tuple(eventTypeClass, modelClass);
 
-		Collection<RepositoryEventListener<?, ?>> listeners =
-			_eventListenerMap.get(eventKey);
+		Collection<RepositoryEventListener<?, ?>> repositoryEventListeners =
+			_repositoryEventListeners.get(key);
 
-		if (listeners == null) {
-			listeners = new ArrayList<RepositoryEventListener<?, ?>>();
-			_eventListenerMap.put(eventKey, listeners);
+		if (repositoryEventListeners == null) {
+			repositoryEventListeners =
+				new ArrayList<RepositoryEventListener<?, ?>>();
+
+			_repositoryEventListeners.put(key, repositoryEventListeners);
 		}
 
-		listeners.add(action);
+		repositoryEventListeners.add(repositoryEventListener);
 	}
 
 	@Override
 	public void setRepositoryCreator(RepositoryCreator repositoryCreator) {
 		if (_repositoryCreator != null) {
-			throw new IllegalStateException("repository creator already set");
+			throw new IllegalStateException(
+				"Repository creator is already set");
 		}
 
 		_repositoryCreator = repositoryCreator;
@@ -121,16 +124,19 @@ public class DefaultRepositoryRegistry
 
 		Tuple eventKey = new Tuple(eventTypeClass, modelClass);
 
-		Collection<RepositoryEventListener<S, T>> listeners =
-			(Collection)_eventListenerMap.get(eventKey);
+		@SuppressWarnings("rawtypes")
+		Collection<RepositoryEventListener<S, T>> repositoryEventListeners =
+			(Collection)_repositoryEventListeners.get(eventKey);
 
-		for (RepositoryEventListener<S, T> listener : listeners) {
-			listener.execute(payload);
+		for (RepositoryEventListener<S, T> repositoryEventListener :
+				repositoryEventListeners) {
+
+			repositoryEventListener.execute(payload);
 		}
 	}
 
 	private Map<Tuple, Collection<RepositoryEventListener<?, ?>>>
-		_eventListenerMap =
+		_repositoryEventListeners =
 			new HashMap<Tuple, Collection<RepositoryEventListener<?, ?>>>();
 	private Set<Class<? extends Capability>> _exportedCapabilities;
 	private RepositoryCreator _repositoryCreator;
