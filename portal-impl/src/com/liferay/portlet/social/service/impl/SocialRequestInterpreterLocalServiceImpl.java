@@ -261,7 +261,7 @@ public class SocialRequestInterpreterLocalServiceImpl
 		String requestPortletId = getSocialRequestPortletId(request);
 
 		if (Validator.isNull(requestPortletId) ||
-			requestInterpreter.getPortletId().equals(requestPortletId)) {
+			requestPortletId.equals(requestInterpreter.getPortletId())) {
 
 			return true;
 		}
