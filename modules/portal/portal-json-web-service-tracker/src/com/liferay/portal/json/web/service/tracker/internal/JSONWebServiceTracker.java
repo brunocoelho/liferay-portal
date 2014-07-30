@@ -49,7 +49,8 @@ public class JSONWebServiceTracker
 		}
 		catch (InvalidSyntaxException ise) {
 			throw new RuntimeException(
-				"Unable to activate the Liferay JSON Web Service Tracker", ise);
+				"Unable to activate Liferay Portal JSON Web Service Tracker",
+				ise);
 		}
 	}
 

@@ -192,7 +192,8 @@ public class PortletTracker
 					Portlet.class.getName() + "))");
 		}
 		catch (InvalidSyntaxException ise) {
-			throw new RuntimeException(ise);
+			throw new RuntimeException(
+				"Unable to activate Liferay Portal Portlet Tracker", ise);
 		}
 
 		_serviceTracker = new ServiceTracker<Portlet, Portlet>(
