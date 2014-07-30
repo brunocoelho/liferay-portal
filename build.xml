@@ -270,14 +270,14 @@
 			/>
 		</delete>
 
+		<delete dir="${liferay.home}/data/elasticsearch" />
+
 		<delete failonerror="false">
 			<fileset
 				dir="${liferay.home}/data/hsql"
 				includes="${database.name}.*"
 			/>
 		</delete>
-
-		<delete dir="${liferay.home}/data/elasticsearch" />
 
 		<delete dir="${liferay.home}/osgi" />
 
