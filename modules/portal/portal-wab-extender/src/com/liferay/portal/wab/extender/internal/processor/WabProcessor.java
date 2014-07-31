@@ -247,7 +247,7 @@ public class WabProcessor {
 
 		try {
 			for (ZipEntry zipEntry;
-					(zipEntry = zipInputStream.getNextEntry()) != null;
+				(zipEntry = zipInputStream.getNextEntry()) != null;
 						zipInputStream.closeEntry()) {
 
 				String zipEntryName = zipEntry.getName();
@@ -836,6 +836,47 @@ public class WabProcessor {
 		analyzer.setProperty(Constants.REQUIRE_BUNDLE, sb.toString());
 	}
 
+	protected void processServiceBeanPostProcessor(Element rootElement) {
+		boolean exists = false;
+
+		for (Element contextParamElement :
+				rootElement.elements("context-param")) {
+
+			Element paramNameElement = contextParamElement.element(
+				"param-name");
+			String paramName = paramNameElement.getTextTrim();
+
+			if (!paramName.equals("portalContextConfigLocation")) {
+				continue;
+			}
+
+			exists = true;
+
+			Element paramValueElement = contextParamElement.element(
+				"param-value");
+
+			String paramValue = paramValueElement.getTextTrim();
+
+			paramValueElement.setText(
+				paramValue.concat(StringPool.COMMA).concat(_SERVICE_XML));
+		}
+
+		if (exists) {
+			return;
+		}
+
+		Element contextParamElement = rootElement.addElement("context-param");
+
+		Element paramNameElement = contextParamElement.addElement("param-name");
+
+		paramNameElement.setText("portalContextConfigLocation");
+
+		Element paramValueElement = contextParamElement.addElement(
+			"param-value");
+
+		paramValueElement.setText(_SERVICE_XML);
+	}
+
 	protected void processServicePackageName(URI uri, File file) {
 		try {
 			Document document = SAXReaderUtil.read(file);
@@ -978,47 +1019,6 @@ public class WabProcessor {
 		}
 
 		formatDocument(file, document);
-	}
-
-	protected void processServiceBeanPostProcessor(Element rootElement) {
-		boolean exists = false;
-
-		for (Element contextParamElement :
-				rootElement.elements("context-param")) {
-
-			Element paramNameElement = contextParamElement.element(
-				"param-name");
-			String paramName = paramNameElement.getTextTrim();
-
-			if (!paramName.equals("portalContextConfigLocation")) {
-				continue;
-			}
-
-			exists = true;
-
-			Element paramValueElement = contextParamElement.element(
-				"param-value");
-
-			String paramValue = paramValueElement.getTextTrim();
-
-			paramValueElement.setText(
-				paramValue.concat(StringPool.COMMA).concat(_SERVICE_XML));
-		}
-
-		if (exists) {
-			return;
-		}
-
-		Element contextParamElement = rootElement.addElement("context-param");
-
-		Element paramNameElement = contextParamElement.addElement("param-name");
-
-		paramNameElement.setText("portalContextConfigLocation");
-
-		Element paramValueElement = contextParamElement.addElement(
-			"param-value");
-
-		paramValueElement.setText(_SERVICE_XML);
 	}
 
 	protected void processXMLDependencies(

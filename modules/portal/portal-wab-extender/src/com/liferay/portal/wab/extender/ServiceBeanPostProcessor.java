@@ -43,7 +43,7 @@ public class ServiceBeanPostProcessor
 
 	@Override
 	public void onApplicationEvent(ContextClosedEvent contextClosedEvent) {
-		for(ServiceRegistration<?> serviceRegistration :
+		for (ServiceRegistration<?> serviceRegistration :
 				_serviceRegistrations) {
 
 			serviceRegistration.unregister();
