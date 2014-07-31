@@ -125,11 +125,9 @@ public class FieldsToDDMFormValuesConverterTest extends BaseDDMTestCase {
 		testDDMFormFieldValue(
 			"latb", "Joe's Phone 1", "Telefone de Joao 1",
 			joeNestedDDMFormFieldValues.get(0));
-
 		testDDMFormFieldValue(
 			"jewp", "Joe's Phone 2", "Telefone de Joao 2",
 			joeNestedDDMFormFieldValues.get(1));
-
 		testDDMFormFieldValue(
 			"mkar", "Joe's Phone 3", "Telefone de Joao 3",
 			joeNestedDDMFormFieldValues.get(2));
@@ -165,10 +163,8 @@ public class FieldsToDDMFormValuesConverterTest extends BaseDDMTestCase {
 
 		testDDMFormFieldValue(
 			"rztm", "Name 1", "Nome 1", ddmFormFieldValues.get(0));
-
 		testDDMFormFieldValue(
 			"ovho", "Name 2", "Nome 2", ddmFormFieldValues.get(1));
-
 		testDDMFormFieldValue(
 			"iubr", "Name 3", "Nome 3", ddmFormFieldValues.get(2));
 	}
@@ -211,7 +207,6 @@ public class FieldsToDDMFormValuesConverterTest extends BaseDDMTestCase {
 		testDDMFormFieldValue(
 			"rztm", "Title Example", "Titulo Exemplo",
 			ddmFormFieldValues.get(0));
-
 		testDDMFormFieldValue(
 			"ovho", "Content Example", "Conteudo Exemplo",
 			ddmFormFieldValues.get(1));
@@ -241,7 +236,6 @@ public class FieldsToDDMFormValuesConverterTest extends BaseDDMTestCase {
 		Value value = ddmFormFieldValue.getValue();
 
 		Assert.assertEquals(expectedEnValue, value.getString(LocaleUtil.US));
-
 		Assert.assertEquals(
 			expectedPtValue, value.getString(LocaleUtil.BRAZIL));
 	}
