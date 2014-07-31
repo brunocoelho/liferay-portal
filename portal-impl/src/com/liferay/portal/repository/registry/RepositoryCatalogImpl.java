@@ -92,7 +92,7 @@ public class RepositoryCatalogImpl implements RepositoryCatalog {
 			ClassName className = _classNameLocalService.getClassName(
 				classNameId);
 
-			_externalRepositoriesClassNames.add(className.getClassName());
+			_externalRepositoriesClassNames.add(className.getValue());
 		}
 
 		_repositoryConfigurations.put(
