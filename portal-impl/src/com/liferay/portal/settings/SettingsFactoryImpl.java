@@ -184,7 +184,7 @@ public class SettingsFactoryImpl implements SettingsFactory {
 
 		if (_multiValuedKeysMap.get(settingsId) != null) {
 			throw new IllegalStateException(
-				"Multi valued keys could not be overwriten for " + settingsId);
+				"Unable to overwrite multi valued keys for " + settingsId);
 		}
 
 		_fallbackKeysMap.put(settingsId, fallbackKeys);
