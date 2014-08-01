@@ -502,15 +502,6 @@ public class HookHotDeployListener
 			StoreFactory.setInstance(null);
 		}
 
-		if (portalProperties.containsKey(PropsKeys.MEMBERSHIP_POLICY_ROLES)) {
-			RoleMembershipPolicyFactoryImpl roleMembershipPolicyFactoryImpl =
-				(RoleMembershipPolicyFactoryImpl)
-					RoleMembershipPolicyFactoryUtil.
-						getRoleMembershipPolicyFactory();
-
-			roleMembershipPolicyFactoryImpl.setRoleMembershipPolicy(null);
-		}
-
 		Set<String> liferayFilterClassNames =
 			LiferayFilterTracker.getClassNames();
 
@@ -1644,22 +1635,15 @@ public class HookHotDeployListener
 			String roleMembershipPolicyClassName = portalProperties.getProperty(
 				PropsKeys.MEMBERSHIP_POLICY_ROLES);
 
-			RoleMembershipPolicyFactoryImpl roleMembershipPolicyFactoryImpl =
-				(RoleMembershipPolicyFactoryImpl)
-					RoleMembershipPolicyFactoryUtil.
-						getRoleMembershipPolicyFactory();
 
 			RoleMembershipPolicy roleMembershipPolicy =
 				(RoleMembershipPolicy)newInstance(
 					portletClassLoader, RoleMembershipPolicy.class,
 					roleMembershipPolicyClassName);
 
-			roleMembershipPolicyFactoryImpl.setRoleMembershipPolicy(
-				roleMembershipPolicy);
-
-			if (PropsValues.MEMBERSHIP_POLICY_AUTO_VERIFY) {
-				roleMembershipPolicy.verifyPolicy();
-			}
+			registerService(
+				servletContextName, roleMembershipPolicyClassName, 
+				RoleMembershipPolicy.class,	roleMembershipPolicy);
 		}
 
 		if (portalProperties.containsKey(PropsKeys.MEMBERSHIP_POLICY_SITES)) {
