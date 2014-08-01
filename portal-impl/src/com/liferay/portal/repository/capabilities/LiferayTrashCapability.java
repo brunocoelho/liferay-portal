@@ -108,7 +108,7 @@ public class LiferayTrashCapability implements TrashCapability {
 		return DLAppHelperLocalServiceUtil.moveFolderToTrash(userId, folder);
 	}
 
-	public void registerRepositoryEventListeners(
+	public void registerEventListeners(
 		RepositoryEventRegistry repositoryEventRegistry) {
 
 		repositoryEventRegistry.registerRepositoryEventListener(
