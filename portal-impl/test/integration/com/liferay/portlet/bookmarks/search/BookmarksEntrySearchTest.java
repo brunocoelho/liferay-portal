@@ -184,11 +184,11 @@ public class BookmarksEntrySearchTest extends BaseSearchTestCase {
 			ServiceContext serviceContext)
 		throws Exception {
 
-		BookmarksEntry bookmarksEntry = (BookmarksEntry)baseModel;
+		BookmarksEntry entry = (BookmarksEntry)baseModel;
 
-		bookmarksEntry.setName(keywords);
+		entry.setName(keywords);
 
-		return BookmarksTestUtil.updateEntry(bookmarksEntry);
+		return BookmarksTestUtil.updateEntry(entry);
 	}
 
 }

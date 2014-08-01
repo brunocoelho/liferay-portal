@@ -159,12 +159,12 @@ public class AssetVocabularySearchTest extends BaseSearchTestCase {
 			ServiceContext serviceContext)
 		throws Exception {
 
-		AssetVocabulary assetVocabulary = (AssetVocabulary)baseModel;
+		AssetVocabulary vocabulary = (AssetVocabulary)baseModel;
 
-		assetVocabulary.setTitle(keywords);
+		vocabulary.setTitle(keywords);
 
 		return AssetVocabularyLocalServiceUtil.updateAssetVocabulary(
-			assetVocabulary);
+			vocabulary);
 	}
 
 }

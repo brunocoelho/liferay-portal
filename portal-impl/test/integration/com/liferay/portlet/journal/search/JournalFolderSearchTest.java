@@ -169,11 +169,11 @@ public class JournalFolderSearchTest extends BaseSearchTestCase {
 			ServiceContext serviceContext)
 		throws Exception {
 
-		JournalFolder journalFolder = (JournalFolder)baseModel;
+		JournalFolder folder = (JournalFolder)baseModel;
 
-		journalFolder.setName(keywords);
+		folder.setName(keywords);
 
-		return JournalFolderLocalServiceUtil.updateJournalFolder(journalFolder);
+		return JournalFolderLocalServiceUtil.updateJournalFolder(folder);
 	}
 
 }

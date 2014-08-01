@@ -210,11 +210,11 @@ public class MBMessageSearchTest extends BaseSearchTestCase {
 			ServiceContext serviceContext)
 		throws Exception {
 
-		MBMessage mbMessage = (MBMessage)baseModel;
+		MBMessage message = (MBMessage)baseModel;
 
-		mbMessage.setSubject(keywords);
+		message.setSubject(keywords);
 
-		return MBTestUtil.updateMessage(mbMessage, true);
+		return MBTestUtil.updateMessage(message, true);
 	}
 
 }

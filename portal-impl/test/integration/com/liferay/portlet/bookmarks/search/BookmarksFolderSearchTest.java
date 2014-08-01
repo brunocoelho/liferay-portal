@@ -170,12 +170,11 @@ public class BookmarksFolderSearchTest extends BaseSearchTestCase {
 			ServiceContext serviceContext)
 		throws Exception {
 
-		BookmarksFolder bookmarksFolder = (BookmarksFolder)baseModel;
+		BookmarksFolder folder = (BookmarksFolder)baseModel;
 
-		bookmarksFolder.setName(keywords);
+		folder.setName(keywords);
 
-		return BookmarksFolderLocalServiceUtil.updateBookmarksFolder(
-			bookmarksFolder);
+		return BookmarksFolderLocalServiceUtil.updateBookmarksFolder(folder);
 	}
 
 }

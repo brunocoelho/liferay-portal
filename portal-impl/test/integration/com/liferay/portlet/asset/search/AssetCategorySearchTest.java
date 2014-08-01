@@ -172,11 +172,11 @@ public class AssetCategorySearchTest extends BaseSearchTestCase {
 			ServiceContext serviceContext)
 		throws Exception {
 
-		AssetCategory assetCategory = (AssetCategory)baseModel;
+		AssetCategory category = (AssetCategory)baseModel;
 
-		assetCategory.setName(keywords);
+		category.setName(keywords);
 
-		return AssetCategoryLocalServiceUtil.updateAssetCategory(assetCategory);
+		return AssetCategoryLocalServiceUtil.updateAssetCategory(category);
 	}
 
 }

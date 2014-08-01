@@ -152,11 +152,11 @@ public class BlogsEntrySearchTest extends BaseSearchTestCase {
 			ServiceContext serviceContext)
 		throws Exception {
 
-		BlogsEntry blogsEntry = (BlogsEntry)baseModel;
+		BlogsEntry entry = (BlogsEntry)baseModel;
 
-		blogsEntry.setTitle(keywords);
+		entry.setTitle(keywords);
 
-		return BlogsTestUtil.updateEntry(blogsEntry, true);
+		return BlogsTestUtil.updateEntry(entry, true);
 	}
 
 }
