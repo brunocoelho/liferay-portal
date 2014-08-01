@@ -16,16 +16,11 @@ package com.liferay.portal.repository.registry;
 
 import com.liferay.portal.kernel.concurrent.ConcurrentHashSet;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.registry.RepositoryCreator;
 import com.liferay.portal.kernel.repository.registry.RepositoryRegistryPlugin;
-import com.liferay.portal.kernel.util.BasePortalLifecycle;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
-import com.liferay.portal.kernel.util.PortalLifecycle;
 import com.liferay.portal.model.ClassName;
 import com.liferay.portal.repository.external.LegacyExternalRepositoryRegistryPlugin;
-import com.liferay.portal.repository.liferayrepository.LiferayRepositoryRegistryPlugin;
 import com.liferay.portal.repository.util.ExternalRepositoryFactory;
 import com.liferay.portal.repository.util.ExternalRepositoryFactoryImpl;
 import com.liferay.portal.repository.util.ExternalRepositoryFactoryUtil;
@@ -55,11 +50,17 @@ public class RepositoryCatalogImpl implements RepositoryCatalog {
 	}
 
 	public void loadDefaultRepositoryRegistryPlugins() throws PortalException {
-		RepositoryCatalogLifecycle repositoryCatalogLifecycle =
-			new RepositoryCatalogLifecycle();
+		registerRepositoryRegistryPlugin(_liferayRepositoryRegistryPlugin);
 
-		repositoryCatalogLifecycle.registerPortalLifecycle(
-			PortalLifecycle.METHOD_INIT);
+		ClassLoader classLoader = PortalClassLoaderUtil.getClassLoader();
+
+		for (String className : PropsValues.DL_REPOSITORY_IMPL) {
+			ExternalRepositoryFactory externalRepositoryFactory =
+				new ExternalRepositoryFactoryImpl(className, classLoader);
+
+			registerLegacyExternalRepositoryFactory(
+				className, externalRepositoryFactory);
+		}
 	}
 
 	@Override
@@ -152,9 +153,6 @@ public class RepositoryCatalogImpl implements RepositoryCatalog {
 		return defaultRepositoryRegistry;
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
-		RepositoryCatalogImpl.class);
-
 	private ClassNameLocalService _classNameLocalService;
 	private Set<String> _externalRepositoriesClassNames =
 		new ConcurrentHashSet<String>();
@@ -162,55 +160,5 @@ public class RepositoryCatalogImpl implements RepositoryCatalog {
 	private RepositoryRegistryPlugin _liferayRepositoryRegistryPlugin;
 	private Map<Long, RepositoryConfiguration> _repositoryConfigurations =
 		new ConcurrentHashMap<Long, RepositoryConfiguration>();
-
-	private class RepositoryCatalogLifecycle extends BasePortalLifecycle {
-
-		@Override
-		protected void doPortalDestroy() throws Exception {
-		}
-
-		@Override
-		protected void doPortalInit() throws Exception {
-			registerLiferayRepositoryRegistryPlugin();
-
-			registerLegacyRepositoryRegistryPlugin();
-		}
-
-		protected void registerLegacyRepositoryRegistryPlugin() {
-			ClassLoader classLoader = PortalClassLoaderUtil.getClassLoader();
-
-			for (String className : PropsValues.DL_REPOSITORY_IMPL) {
-				try {
-					ExternalRepositoryFactory externalRepositoryFactory =
-						new ExternalRepositoryFactoryImpl(
-							className, classLoader);
-
-					registerLegacyExternalRepositoryFactory(
-						className, externalRepositoryFactory);
-				}
-				catch (PortalException pe) {
-					if (_log.isErrorEnabled()) {
-						_log.error("Unable to register " + className, pe);
-					}
-				}
-			}
-		}
-
-		protected void registerLiferayRepositoryRegistryPlugin() {
-			try {
-				registerRepositoryRegistryPlugin(
-					_liferayRepositoryRegistryPlugin);
-			}
-			catch (PortalException pe) {
-				if (_log.isErrorEnabled()) {
-					_log.error(
-						"Unable to register " +
-							LiferayRepositoryRegistryPlugin.class.getName(),
-						pe);
-				}
-			}
-		}
-
-	}
 
 }
