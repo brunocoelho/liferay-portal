@@ -130,27 +130,24 @@ public class RepositoryCatalogImpl implements RepositoryCatalog {
 
 	@Override
 	public void unregisterRepositoryRegistryPlugin(String className) {
-		_externalRepositoriesClassNames.remove(className);
-
 		long classNameId = _classNameLocalService.getClassNameId(className);
 
 		_repositoryConfigurations.remove(classNameId);
+		_externalRepositoriesClassNames.remove(className);
 	}
 
 	protected RepositoryConfiguration createRepositoryConfiguration(
 		RepositoryRegistryPlugin repositoryRegistryPlugin) {
 
-		DefaultRepositoryRegistry defaultRepositoryRegistry =
+		DefaultRepositoryRegistry repositoryRegistry =
 			new DefaultRepositoryRegistry();
 
-		repositoryRegistryPlugin.registerCapabilities(
-			defaultRepositoryRegistry);
-		repositoryRegistryPlugin.registerRepositoryCreator(
-			defaultRepositoryRegistry);
+		repositoryRegistryPlugin.registerRepositoryCreator(repositoryRegistry);
+		repositoryRegistryPlugin.registerCapabilities(repositoryRegistry);
 		repositoryRegistryPlugin.registerRepositoryEventListeners(
-			defaultRepositoryRegistry);
+			repositoryRegistry);
 
-		return defaultRepositoryRegistry;
+		return repositoryRegistry;
 	}
 
 	private ClassNameLocalService _classNameLocalService;
