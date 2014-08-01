@@ -98,7 +98,6 @@ public class ComboServletStaticURLGeneratorTest extends PowerMockito {
 
 		assertURLs(
 			urls1, _URL_PREFIX + "&%2Fcss%2Fmain.css&%2Fcss%2Fmore.css&t=0");
-
 		assertURLs(
 			urls2, _URL_PREFIX + "&%2Fcss%2Fmore.css&%2Fcss%2Fmain.css&t=0");
 	}
