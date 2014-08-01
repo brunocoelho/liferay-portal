@@ -173,6 +173,7 @@ public class AssetCategorySearchTest extends BaseSearchTestCase {
 		throws Exception {
 
 		AssetCategory assetCategory = (AssetCategory)baseModel;
+
 		assetCategory.setName(keywords);
 
 		return AssetCategoryLocalServiceUtil.updateAssetCategory(assetCategory);
