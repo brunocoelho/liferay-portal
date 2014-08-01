@@ -26,12 +26,6 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ExternalRepositoryFactoryUtil {
 
-	/**
-	 *
-	 * @deprecated As of 7.0.0 replaced by {@link
-	 *             com.liferay.portal.repository.registry.RepositoryCatalogUtil#getExternalRepositoryClassNames()}
-	 */
-	@Deprecated
 	public static String[] getExternalRepositoryClassNames() {
 		Set<String> classNames = externalRepositoryFactories.keySet();
 
