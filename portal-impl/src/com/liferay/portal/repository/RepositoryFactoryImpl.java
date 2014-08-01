@@ -17,8 +17,8 @@ package com.liferay.portal.repository;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.repository.Repository;
 import com.liferay.portal.kernel.repository.RepositoryFactory;
-import com.liferay.portal.kernel.repository.registry.RepositoryCreator;
 import com.liferay.portal.repository.capabilities.CapabilityRepository;
+import com.liferay.portal.repository.liferayrepository.LiferayRepository;
 import com.liferay.portal.service.RepositoryLocalService;
 import com.liferay.portlet.documentlibrary.model.DLFileEntry;
 import com.liferay.portlet.documentlibrary.model.DLFileVersion;
@@ -54,22 +54,35 @@ public class RepositoryFactoryImpl extends BaseRepositoryFactory<Repository>
 		long repositoryId = getRepositoryId(
 			folderId, fileEntryId, fileVersionId);
 
-		return create(repositoryId);
+		Repository repository = create(repositoryId);
+
+		return new CapabilityRepository(
+			repository, getExternalSupportedCapabilities(),
+			getExternalExportedCapabilityClasses());
 	}
 
 	@Override
-	protected Repository createInternalRepository(long repositoryId)
-		throws PortalException {
+	protected Repository createInternalRepositoryInstance(
+		long groupId, long repositoryId, long dlFolderId) {
 
-		RepositoryCreator liferayRepositoryCreator =
-			getLiferayRepositoryCreator();
-
-		Repository repository = liferayRepositoryCreator.createRepository(
-			repositoryId);
+		Repository repository = createLiferayInternalRepository(
+			groupId, repositoryId, dlFolderId);
 
 		return new CapabilityRepository(
 			repository, getInternalSupportedCapabilities(),
 			getInternalExportedCapabilityClasses());
+	}
+
+	protected Repository createLiferayInternalRepository(
+		long groupId, long repositoryId, long dlFolderId) {
+
+		return new LiferayRepository(
+			getRepositoryLocalService(), getRepositoryService(),
+			getDlAppHelperLocalService(), getDlFileEntryLocalService(),
+			getDlFileEntryService(), getDlFileEntryTypeLocalService(),
+			getDlFileVersionLocalService(), getDlFileVersionService(),
+			getDlFolderLocalService(), getDlFolderService(),
+			getResourceLocalService(), groupId, repositoryId, dlFolderId);
 	}
 
 	@Override
