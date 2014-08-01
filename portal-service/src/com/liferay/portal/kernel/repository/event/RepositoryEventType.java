@@ -19,7 +19,6 @@ package com.liferay.portal.kernel.repository.event;
  */
 public interface RepositoryEventType {
 
-	public interface Delete extends RepositoryEventType {
-	}
+	public interface Delete extends RepositoryEventType {}
 
 }

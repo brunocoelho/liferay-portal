@@ -25,7 +25,7 @@ public interface RepositoryEventRegistry {
 
 	public <S extends RepositoryEventType, T extends RepositoryModel<T>>
 		void registerRepositoryEventListener(
-			Class<S> repositoryEventTypeClass, Class<T> modelClass,
-			RepositoryEventListener<S, T> repositoryEventListeners);
+			Class<S> eventTypeClass, Class<T> modelClass,
+			RepositoryEventListener<S, T> action);
 
 }
