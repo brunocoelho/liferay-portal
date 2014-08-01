@@ -232,6 +232,6 @@ public class CapabilityLocalRepository
 			folderId, parentFolderId, title, description, serviceContext);
 	}
 
-	private RepositoryEventHandler _repositoryEventHandler;
+	private final RepositoryEventHandler _repositoryEventHandler;
 
 }
