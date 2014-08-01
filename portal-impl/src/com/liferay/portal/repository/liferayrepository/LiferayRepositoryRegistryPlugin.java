@@ -46,7 +46,7 @@ public class LiferayRepositoryRegistryPlugin
 
 	@Override
 	public void registerCapabilities(CapabilityRegistry capabilityRegistry) {
-		capabilityRegistry.addExportedCapability(
+		capabilityRegistry.addPublicCapability(
 			TrashCapability.class, _trashCapability);
 	}
 
