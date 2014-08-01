@@ -282,7 +282,6 @@ public class DLImpl implements DL {
 		String strutsAction = ParamUtil.getString(request, "struts_action");
 
 		long groupId = ParamUtil.getLong(request, "groupId");
-
 		boolean ignoreRootFolder = ParamUtil.getBoolean(
 			request, "ignoreRootFolder");
 
