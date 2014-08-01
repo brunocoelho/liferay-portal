@@ -25,10 +25,17 @@ public class LegacyExternalRepositoryRegistryPlugin
 	extends BaseRepositoryRegistryPlugin {
 
 	public LegacyExternalRepositoryRegistryPlugin(
-		long classNameId, RepositoryCreator repositoryCreator) {
+		String className, long classNameId,
+		RepositoryCreator repositoryCreator) {
 
+		_className = className;
 		_classNameId = classNameId;
 		_repositoryCreator = repositoryCreator;
+	}
+
+	@Override
+	public String getClassName() {
+		return _className;
 	}
 
 	@Override
@@ -48,6 +55,7 @@ public class LegacyExternalRepositoryRegistryPlugin
 		repositoryCreatorRegistry.setRepositoryCreator(_repositoryCreator);
 	}
 
+	private String _className;
 	private long _classNameId;
 	private RepositoryCreator _repositoryCreator;
 

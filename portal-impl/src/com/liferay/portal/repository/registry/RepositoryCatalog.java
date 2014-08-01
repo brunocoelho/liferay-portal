@@ -14,7 +14,6 @@
 
 package com.liferay.portal.repository.registry;
 
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.repository.registry.RepositoryRegistryPlugin;
 import com.liferay.portal.repository.util.ExternalRepositoryFactory;
 
@@ -30,10 +29,10 @@ public interface RepositoryCatalog {
 	public Collection<String> getExternalRepositoryClassNames();
 
 	public void registerLegacyExternalRepositoryFactory(
-		String className, ExternalRepositoryFactory externalRepositoryFactory) throws PortalException;
+		String className, ExternalRepositoryFactory externalRepositoryFactory);
 
 	public void registerRepositoryRegistryPlugin(
-		RepositoryRegistryPlugin repositoryRegistryPlugin) throws PortalException;
+		RepositoryRegistryPlugin repositoryRegistryPlugin);
 
 	public void unregisterLegacyExternalRepositoryFactory(String className);
 
