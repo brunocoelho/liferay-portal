@@ -6530,10 +6530,18 @@
 		<var name="siteDescription" value="Open Site Description" />
 		<var name="siteName" value="Open Site Name" />
 
-		<execute macro="SOUserBar#viewAddSOSiteNameRequiredMessage">
-			<var name="siteName" value="${siteName}" />
-			<var name="siteType" value="${siteType}" />
-		</execute>
+		<execute action="SOUserBar#selectFrameTop" />
+		<execute action="SOUserBar#click" locator-key1="GO_TO" />
+		<execute action="SOUserBar#click" locator-key1="GO_TO_ADD_SITE_BUTTON" />
+
+		<execute action="SOUserBarAddSite#selectFrameTop" />
+		<execute action="SOUserBarAddSite#type" locator-key1="DESCRIPTION_FIELD" value1="${siteDescription}" />
+
+		<execute action="SOUserBar#sikuliAssertElementPresent" locator-key1="SCREENSHOTS_USERBAR_GO_TO_MENU_ADD_SITE_SITE_NAME_REQUIRED_PNG" />
+
+		<execute action="SOUserBarAddSite#type" locator-key1="NAME_FIELD" value1="${siteName}" />
+		<execute action="SOUserBarAddSite#click" locator-key1="SAVE_BUTTON" />
+		<execute action="SOUserBarAddSite#assertElementNotPresent" locator-key1="SAVE_BUTTON" />
 	</command>
 
 	<command name="ViewSOSitesDirectory" priority="5">
