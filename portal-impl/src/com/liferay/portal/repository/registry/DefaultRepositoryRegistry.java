@@ -15,14 +15,9 @@
 package com.liferay.portal.repository.registry;
 
 import com.liferay.portal.kernel.repository.capabilities.Capability;
-import com.liferay.portal.kernel.repository.event.RepositoryEventHandler;
-import com.liferay.portal.kernel.repository.event.RepositoryEventListener;
-import com.liferay.portal.kernel.repository.event.RepositoryEventType;
-import com.liferay.portal.kernel.repository.model.RepositoryModel;
 import com.liferay.portal.kernel.repository.registry.CapabilityRegistry;
 import com.liferay.portal.kernel.repository.registry.RepositoryCreator;
 import com.liferay.portal.kernel.repository.registry.RepositoryCreatorRegistry;
-import com.liferay.portal.kernel.repository.registry.RepositoryEventRegistry;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -34,7 +29,7 @@ import java.util.Set;
  */
 public class DefaultRepositoryRegistry
 	implements CapabilityRegistry, RepositoryConfiguration,
-		RepositoryCreatorRegistry, RepositoryEventRegistry {
+		RepositoryCreatorRegistry {
 
 	public DefaultRepositoryRegistry() {
 		_publicCapabilities = new HashSet<Class<? extends Capability>>();
@@ -68,24 +63,10 @@ public class DefaultRepositoryRegistry
 	}
 
 	@Override
-	public RepositoryEventHandler getRepositoryEventHandler() {
-		throw new UnsupportedOperationException("not implemented");
-	}
-
-	@Override
 	public Map<Class<? extends Capability>, Capability>
 		getSupportedCapabilities() {
 
 		return _supportedCapabilities;
-	}
-
-	@Override
-	public <S extends RepositoryEventType, T extends RepositoryModel<T>>
-		void registerRepositoryEventListener(
-			Class<S> eventTypeClass, Class<T> modelClass,
-			RepositoryEventListener<S, T> action) {
-
-		throw new UnsupportedOperationException("not implemented");
 	}
 
 	@Override
