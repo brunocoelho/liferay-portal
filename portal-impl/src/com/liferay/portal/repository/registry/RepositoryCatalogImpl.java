@@ -49,7 +49,7 @@ public class RepositoryCatalogImpl implements RepositoryCatalog {
 		return _repositoryConfigurations.get(classNameId);
 	}
 
-	public void loadDefaultRepositoryRegistryPlugins() throws PortalException {
+	public void loadBuiltinRegistryPlugins() throws PortalException {
 		registerRepositoryRegistryPlugin(_liferayRepositoryRegistryPlugin);
 
 		ClassLoader classLoader = PortalClassLoaderUtil.getClassLoader();
