@@ -88,7 +88,7 @@ public class LegacyExternalRepositoryCreator implements RepositoryCreator {
 		}
 		catch (Exception e) {
 			throw new RepositoryException(
-				"Unable to find a valid repository for class name ID " +
+				"There is no valid repository class with class name id " +
 					classNameId,
 				e);
 		}
