@@ -189,7 +189,9 @@ public class RepositoryCatalogImpl implements RepositoryCatalog {
 						className, externalRepositoryFactory);
 				}
 				catch (PortalException pe) {
-					_log.error("Unable to register " + className, pe);
+					if (_log.isErrorEnabled()) {
+						_log.error("Unable to register " + className, pe);
+					}
 				}
 			}
 		}
@@ -200,10 +202,12 @@ public class RepositoryCatalogImpl implements RepositoryCatalog {
 					_liferayRepositoryRegistryPlugin);
 			}
 			catch (PortalException pe) {
-				_log.error(
-					"Unable to register " +
-						LiferayRepositoryRegistryPlugin.class.getName(),
-					pe);
+				if (_log.isErrorEnabled()) {
+					_log.error(
+						"Unable to register " +
+							LiferayRepositoryRegistryPlugin.class.getName(),
+						pe);
+				}
 			}
 		}
 
