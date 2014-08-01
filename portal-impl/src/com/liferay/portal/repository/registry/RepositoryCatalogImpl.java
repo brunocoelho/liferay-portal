@@ -54,11 +54,11 @@ public class RepositoryCatalogImpl implements RepositoryCatalog {
 		return _repositoryConfigurations.get(classNameId);
 	}
 
-	public void loadDefaultRepositoryRegistryPlugins() {
-		RepositoryCatalogPortalLifecycle repositoryCatalogPortalLifecycle =
-			new RepositoryCatalogPortalLifecycle();
+	public void loadDefaultRepositoryRegistryPlugins() throws PortalException {
+		RepositoryCatalogLifecycle repositoryCatalogLifecycle =
+			new RepositoryCatalogLifecycle();
 
-		repositoryCatalogPortalLifecycle.registerPortalLifecycle(
+		repositoryCatalogLifecycle.registerPortalLifecycle(
 			PortalLifecycle.METHOD_INIT);
 	}
 
@@ -163,7 +163,7 @@ public class RepositoryCatalogImpl implements RepositoryCatalog {
 	private Map<Long, RepositoryConfiguration> _repositoryConfigurations =
 		new ConcurrentHashMap<Long, RepositoryConfiguration>();
 
-	private class RepositoryCatalogPortalLifecycle extends BasePortalLifecycle {
+	private class RepositoryCatalogLifecycle extends BasePortalLifecycle {
 
 		@Override
 		protected void doPortalDestroy() throws Exception {
