@@ -114,6 +114,7 @@ public class LiferayTrashCapability implements TrashCapability {
 		repositoryEventRegistry.registerRepositoryEventListener(
 			RepositoryEventType.Delete.class, FileEntry.class,
 			new DeleteFileEntryRepositoryEventListener());
+
 		repositoryEventRegistry.registerRepositoryEventListener(
 			RepositoryEventType.Delete.class, Folder.class,
 			new DeleteFolderRepositoryEventListener());
