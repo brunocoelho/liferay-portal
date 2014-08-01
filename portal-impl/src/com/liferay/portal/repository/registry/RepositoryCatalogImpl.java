@@ -46,7 +46,7 @@ public class RepositoryCatalogImpl implements RepositoryCatalog {
 	public RepositoryConfiguration getRepositoryConfiguration(
 		long classNameId) {
 
-		return _repositoryConfigurations.get(classNameId);
+		return _repositoryRegistryPlugins.get(classNameId);
 	}
 
 	public void loadBuiltinRegistryPlugins() throws PortalException {
@@ -95,7 +95,7 @@ public class RepositoryCatalogImpl implements RepositoryCatalog {
 			_externalRepositoriesClassNames.add(className.getClassName());
 		}
 
-		_repositoryConfigurations.put(
+		_repositoryRegistryPlugins.put(
 			repositoryRegistryPlugin.getClassNameId(),
 			createRepositoryConfiguration(repositoryRegistryPlugin));
 	}
@@ -125,14 +125,14 @@ public class RepositoryCatalogImpl implements RepositoryCatalog {
 
 		long classNameId = _classNameLocalService.getClassNameId(className);
 
-		_repositoryConfigurations.remove(classNameId);
+		_repositoryRegistryPlugins.remove(classNameId);
 	}
 
 	@Override
 	public void unregisterRepositoryRegistryPlugin(String className) {
 		long classNameId = _classNameLocalService.getClassNameId(className);
 
-		_repositoryConfigurations.remove(classNameId);
+		_repositoryRegistryPlugins.remove(classNameId);
 		_externalRepositoriesClassNames.remove(className);
 	}
 
@@ -155,7 +155,7 @@ public class RepositoryCatalogImpl implements RepositoryCatalog {
 		new ConcurrentHashSet<String>();
 	private RepositoryCreator _legacyExternalRepositoryCreator;
 	private RepositoryRegistryPlugin _liferayRepositoryRegistryPlugin;
-	private Map<Long, RepositoryConfiguration> _repositoryConfigurations =
+	private Map<Long, RepositoryConfiguration> _repositoryRegistryPlugins =
 		new ConcurrentHashMap<Long, RepositoryConfiguration>();
 
 }
