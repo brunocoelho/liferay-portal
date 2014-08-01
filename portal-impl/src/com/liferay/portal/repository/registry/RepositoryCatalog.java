@@ -14,7 +14,6 @@
 
 package com.liferay.portal.repository.registry;
 
-import com.liferay.portal.kernel.repository.registry.RepositoryRegistryPlugin;
 import com.liferay.portal.repository.util.ExternalRepositoryFactory;
 
 import java.util.Collection;
@@ -31,11 +30,6 @@ public interface RepositoryCatalog {
 	public void registerLegacyExternalRepositoryFactory(
 		String className, ExternalRepositoryFactory externalRepositoryFactory);
 
-	public void registerRepositoryRegistryPlugin(
-		RepositoryRegistryPlugin repositoryRegistryPlugin);
-
 	public void unregisterLegacyExternalRepositoryFactory(String className);
-
-	public void unregisterRepositoryRegistryPlugin(String className);
 
 }

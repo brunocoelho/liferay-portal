@@ -14,7 +14,6 @@
 
 package com.liferay.portal.repository.registry;
 
-import com.liferay.portal.kernel.concurrent.ConcurrentHashSet;
 import com.liferay.portal.kernel.repository.registry.RepositoryCreator;
 import com.liferay.portal.kernel.repository.registry.RepositoryRegistryPlugin;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
@@ -25,9 +24,9 @@ import com.liferay.portal.repository.util.ExternalRepositoryFactoryUtil;
 import com.liferay.portal.service.ClassNameLocalService;
 import com.liferay.portal.util.PropsValues;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -36,7 +35,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RepositoryCatalogImpl implements RepositoryCatalog {
 
 	public RepositoryCatalogImpl() {
-		_externalRepositoriesClassNames = new ConcurrentHashSet<String>();
 		_repositoryRegistryPlugins =
 			new ConcurrentHashMap<Long, RepositoryConfiguration>();
 	}
@@ -48,11 +46,14 @@ public class RepositoryCatalogImpl implements RepositoryCatalog {
 
 	@Override
 	public Collection<String> getExternalRepositoryClassNames() {
-		return _externalRepositoriesClassNames;
+		return Arrays.asList(
+			ExternalRepositoryFactoryUtil.getExternalRepositoryClassNames());
 	}
 
 	public void loadBuiltinRegistryPlugins() {
-		registerRepositoryRegistryPlugin(_liferayRepositoryRegistryPlugin);
+		_repositoryRegistryPlugins.put(
+			_liferayRepositoryRegistryPlugin.getClassNameId(),
+			createRepositoryConfiguration(_liferayRepositoryRegistryPlugin));
 
 		ClassLoader classLoader = PortalClassLoaderUtil.getClassLoader();
 
@@ -76,19 +77,7 @@ public class RepositoryCatalogImpl implements RepositoryCatalog {
 
 		RepositoryRegistryPlugin repositoryRegistryPlugin =
 			new ExternalRepositoryRegistryPlugin(
-				className, classNameId, _externalRepositoryCreator);
-
-		registerRepositoryRegistryPlugin(repositoryRegistryPlugin);
-	}
-
-	@Override
-	public void registerRepositoryRegistryPlugin(
-		RepositoryRegistryPlugin repositoryRegistryPlugin) {
-
-		if (repositoryRegistryPlugin.isExternalRepository()) {
-			_externalRepositoriesClassNames.add(
-				repositoryRegistryPlugin.getClassName());
-		}
+				classNameId, _externalRepositoryCreator);
 
 		_repositoryRegistryPlugins.put(
 			repositoryRegistryPlugin.getClassNameId(),
@@ -123,14 +112,6 @@ public class RepositoryCatalogImpl implements RepositoryCatalog {
 		_repositoryRegistryPlugins.remove(classNameId);
 	}
 
-	@Override
-	public void unregisterRepositoryRegistryPlugin(String className) {
-		long classNameId = _classNameLocalService.getClassNameId(className);
-
-		_repositoryRegistryPlugins.remove(classNameId);
-		_externalRepositoriesClassNames.remove(className);
-	}
-
 	protected RepositoryConfiguration createRepositoryConfiguration(
 		RepositoryRegistryPlugin repositoryRegistryPlugin) {
 
@@ -146,7 +127,6 @@ public class RepositoryCatalogImpl implements RepositoryCatalog {
 	}
 
 	private ClassNameLocalService _classNameLocalService;
-	private Set<String> _externalRepositoriesClassNames;
 	private RepositoryCreator _externalRepositoryCreator;
 	private RepositoryRegistryPlugin _liferayRepositoryRegistryPlugin;
 	private Map<Long, RepositoryConfiguration> _repositoryRegistryPlugins;
