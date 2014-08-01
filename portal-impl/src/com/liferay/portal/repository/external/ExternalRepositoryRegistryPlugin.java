@@ -21,10 +21,10 @@ import com.liferay.portal.kernel.repository.registry.RepositoryCreatorRegistry;
 /**
  * @author Adolfo Pérez
  */
-public class LegacyExternalRepositoryRegistryPlugin
+public class ExternalRepositoryRegistryPlugin
 	extends BaseRepositoryRegistryPlugin {
 
-	public LegacyExternalRepositoryRegistryPlugin(
+	public ExternalRepositoryRegistryPlugin(
 		String className, long classNameId,
 		RepositoryCreator repositoryCreator) {
 

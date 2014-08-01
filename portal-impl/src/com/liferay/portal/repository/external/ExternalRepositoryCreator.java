@@ -41,7 +41,7 @@ import com.liferay.portlet.documentlibrary.service.DLAppHelperLocalService;
 /**
  * @author Adolfo Pérez
  */
-public class LegacyExternalRepositoryCreator implements RepositoryCreator {
+public class ExternalRepositoryCreator implements RepositoryCreator {
 
 	@Override
 	public LocalRepository createLocalRepository(long repositoryId)
