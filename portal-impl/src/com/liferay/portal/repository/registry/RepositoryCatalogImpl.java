@@ -37,6 +37,12 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class RepositoryCatalogImpl implements RepositoryCatalog {
 
+	public RepositoryCatalogImpl() {
+		_externalRepositoriesClassNames = new ConcurrentHashSet<String>();
+		_repositoryRegistryPlugins =
+			new ConcurrentHashMap<Long, RepositoryConfiguration>();
+	}
+
 	@Override
 	public Collection<String> getExternalRepositoryClassNames() {
 		return _externalRepositoriesClassNames;
@@ -151,11 +157,9 @@ public class RepositoryCatalogImpl implements RepositoryCatalog {
 	}
 
 	private ClassNameLocalService _classNameLocalService;
-	private Set<String> _externalRepositoriesClassNames =
-		new ConcurrentHashSet<String>();
+	private Set<String> _externalRepositoriesClassNames;
 	private RepositoryCreator _legacyExternalRepositoryCreator;
 	private RepositoryRegistryPlugin _liferayRepositoryRegistryPlugin;
-	private Map<Long, RepositoryConfiguration> _repositoryRegistryPlugins =
-		new ConcurrentHashMap<Long, RepositoryConfiguration>();
+	private Map<Long, RepositoryConfiguration> _repositoryRegistryPlugins;
 
 }
