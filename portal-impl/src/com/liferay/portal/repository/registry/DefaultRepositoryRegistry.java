@@ -14,7 +14,6 @@
 
 package com.liferay.portal.repository.registry;
 
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.repository.capabilities.Capability;
 import com.liferay.portal.kernel.repository.event.RepositoryEventHandler;
 import com.liferay.portal.kernel.repository.event.RepositoryEventListener;
@@ -24,10 +23,7 @@ import com.liferay.portal.kernel.repository.registry.CapabilityRegistry;
 import com.liferay.portal.kernel.repository.registry.RepositoryCreator;
 import com.liferay.portal.kernel.repository.registry.RepositoryCreatorRegistry;
 import com.liferay.portal.kernel.repository.registry.RepositoryEventRegistry;
-import com.liferay.portal.kernel.util.Tuple;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -38,8 +34,7 @@ import java.util.Set;
  */
 public class DefaultRepositoryRegistry
 	implements CapabilityRegistry, RepositoryConfiguration,
-		RepositoryCreatorRegistry, RepositoryEventHandler,
-		RepositoryEventRegistry {
+		RepositoryCreatorRegistry, RepositoryEventRegistry {
 
 	public DefaultRepositoryRegistry() {
 		_publicCapabilities = new HashSet<Class<? extends Capability>>();
@@ -74,7 +69,7 @@ public class DefaultRepositoryRegistry
 
 	@Override
 	public RepositoryEventHandler getRepositoryEventHandler() {
-		return this;
+		throw new UnsupportedOperationException("not implemented");
 	}
 
 	@Override
@@ -90,17 +85,7 @@ public class DefaultRepositoryRegistry
 			Class<S> eventTypeClass, Class<T> modelClass,
 			RepositoryEventListener<S, T> action) {
 
-		Tuple eventKey = new Tuple(eventTypeClass, modelClass);
-
-		Collection<RepositoryEventListener<?, ?>> listeners =
-			_eventListenerMap.get(eventKey);
-
-		if (listeners == null) {
-			listeners = new ArrayList<RepositoryEventListener<?, ?>>();
-			_eventListenerMap.put(eventKey, listeners);
-		}
-
-		listeners.add(action);
+		throw new UnsupportedOperationException("not implemented");
 	}
 
 	@Override
@@ -112,24 +97,6 @@ public class DefaultRepositoryRegistry
 		_repositoryCreator = repositoryCreator;
 	}
 
-	@Override
-	public <S extends RepositoryEventType, T extends RepositoryModel<T>>
-		void trigger(Class<S> eventTypeClass, Class<T> modelClass, T payload)
-		throws PortalException {
-
-		Tuple eventKey = new Tuple(eventTypeClass, modelClass);
-
-		Collection<RepositoryEventListener<S, T>> listeners =
-			(Collection)_eventListenerMap.get(eventKey);
-
-		for (RepositoryEventListener<S, T> listener : listeners) {
-			listener.execute(payload);
-		}
-	}
-
-	private Map<Tuple, Collection<RepositoryEventListener<?, ?>>>
-		_eventListenerMap =
-			new HashMap<Tuple, Collection<RepositoryEventListener<?, ?>>>();
 	private Set<Class<? extends Capability>> _publicCapabilities;
 	private RepositoryCreator _repositoryCreator;
 	private Map<Class<? extends Capability>, Capability> _supportedCapabilities;
