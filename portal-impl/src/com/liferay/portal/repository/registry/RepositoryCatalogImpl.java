@@ -44,7 +44,7 @@ public class RepositoryCatalogImpl implements RepositoryCatalog {
 	}
 
 	@Override
-	public RepositoryConfiguration getRepositoryConfiguration(long classNameId) {
+	public RepositoryConfiguration getConfiguration(long classNameId) {
 		return _repositoryRegistryPlugins.get(classNameId);
 	}
 

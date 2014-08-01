@@ -25,18 +25,15 @@ import java.util.Collection;
  */
 public interface RepositoryCatalog {
 
-	public RepositoryConfiguration getRepositoryConfiguration(long classNameId);
+	public RepositoryConfiguration getConfiguration(long classNameId);
 
 	public Collection<String> getExternalRepositoryClassNames();
 
 	public void registerLegacyExternalRepositoryFactory(
-			String className,
-			ExternalRepositoryFactory externalRepositoryFactory)
-		throws PortalException;
+		String className, ExternalRepositoryFactory externalRepositoryFactory) throws PortalException;
 
 	public void registerRepositoryRegistryPlugin(
-			RepositoryRegistryPlugin repositoryRegistryPlugin)
-		throws PortalException;
+		RepositoryRegistryPlugin repositoryRegistryPlugin) throws PortalException;
 
 	public void unregisterLegacyExternalRepositoryFactory(String className);
 
