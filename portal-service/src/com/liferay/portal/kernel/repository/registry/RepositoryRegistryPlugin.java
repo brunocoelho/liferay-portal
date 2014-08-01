@@ -19,8 +19,6 @@ package com.liferay.portal.kernel.repository.registry;
  */
 public interface RepositoryRegistryPlugin {
 
-	public long getClassNameId();
-
 	public void registerCapabilities(CapabilityRegistry capabilityRegistry);
 
 	public void registerRepositoryCreator(
