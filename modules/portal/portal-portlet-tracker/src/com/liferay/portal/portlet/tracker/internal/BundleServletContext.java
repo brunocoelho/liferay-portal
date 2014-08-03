@@ -80,10 +80,7 @@ public class BundleServletContext {
 			try {
 				return url.openStream();
 			}
-			catch (IOException e) {
-
-				// ignore
-
+			catch (IOException ioe) {
 			}
 		}
 
