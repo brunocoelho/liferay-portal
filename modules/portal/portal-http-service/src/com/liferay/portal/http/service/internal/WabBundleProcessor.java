@@ -59,8 +59,6 @@ public class WabBundleProcessor {
 		BundleWiring bundleWiring = _bundle.adapt(BundleWiring.class);
 
 		_bundleClassLoader = bundleWiring.getClassLoader();
-
-		_webXMLDefinitionLoader = new WebXMLDefinitionLoader();
 	}
 
 	public void destroy() throws Exception {
@@ -295,6 +293,7 @@ public class WabBundleProcessor {
 	private ServletContextHelper _servletContextHelper;
 	private String _servletContextName;
 	private WebXMLDefinition _webXML;
-	private WebXMLDefinitionLoader _webXMLDefinitionLoader;
+	private WebXMLDefinitionLoader _webXMLDefinitionLoader =
+		new WebXMLDefinitionLoader();
 
 }
