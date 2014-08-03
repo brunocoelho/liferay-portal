@@ -16,9 +16,6 @@ package com.liferay.portal.http.service.internal;
 import javax.servlet.http.HttpServlet;
 
 /**
- * This class is simply a placeholder for registring default resource handling
- * with the http service.
- *
  * @author Raymond Augé
  */
 public class WabResourceServlet extends HttpServlet {
