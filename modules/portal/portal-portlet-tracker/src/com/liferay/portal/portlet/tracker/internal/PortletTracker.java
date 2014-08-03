@@ -283,8 +283,8 @@ public class PortletTracker
 		com.liferay.portal.model.Portlet portletModel = new PortletImpl(
 			CompanyConstants.SYSTEM, portletId);
 
-		portletModel.setPortletApp(bundlePortletApp);
 		portletModel.setPluginPackage(bundlePortletApp.getPluginPackage());
+		portletModel.setPortletApp(bundlePortletApp);
 		portletModel.setRoleMappers(bundlePortletApp.getRoleMappers());
 
 		return portletModel;
