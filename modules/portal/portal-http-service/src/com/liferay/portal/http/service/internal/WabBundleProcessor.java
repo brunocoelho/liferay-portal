@@ -92,7 +92,9 @@ public class WabBundleProcessor {
 			currentThread.setContextClassLoader(_bundleClassLoader);
 
 			readConfiguration(_bundle);
+
 			initContext();
+
 			Exception e = initListeners();
 
 			if (e != null) {
