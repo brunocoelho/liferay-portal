@@ -1209,7 +1209,7 @@ public class PortletTracker
 	private class ServiceRegistrations {
 
 		private ServiceRegistration<?> _bundlePortletAppServiceRegistration;
-		private int _counter = 0;
+		private int _counter;
 		private ServiceRegistration<?> _jspServletServiceRegistration;
 		private ServiceRegistration<?>
 			_staticResourcesServletServiceRegistration;
