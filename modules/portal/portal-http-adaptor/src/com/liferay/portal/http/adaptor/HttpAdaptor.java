@@ -14,6 +14,7 @@
 
 package com.liferay.portal.http.adaptor;
 
+import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
@@ -44,7 +45,7 @@ public class HttpAdaptor {
 	protected void activate(ComponentContext componentContext) {
 		BundleContext bundleContext = componentContext.getBundleContext();
 
-		Hashtable<String, Object> properties = new Hashtable<String, Object>();
+		Dictionary<String, Object> properties = new Hashtable<String, Object>();
 
 		properties.put("bean.id", HttpServlet.class.getName());
 		properties.put("original.bean", Boolean.TRUE.toString());
