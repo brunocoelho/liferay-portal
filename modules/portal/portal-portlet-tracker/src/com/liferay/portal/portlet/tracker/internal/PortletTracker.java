@@ -328,7 +328,9 @@ public class PortletTracker
 		Bundle bundle, com.liferay.portal.model.Portlet portletModel,
 		ServiceRegistrations serviceRegistrations) {
 
-		if (serviceRegistrations._staticResourcesServletServiceRegistration != null) {
+		if (serviceRegistrations.
+				_staticResourcesServletServiceRegistration != null) {
+
 			return;
 		}
 
@@ -374,12 +376,16 @@ public class PortletTracker
 			serviceRegistrations._jspServletServiceRegistration.unregister();
 		}
 
-		if (serviceRegistrations._staticResourcesServletServiceRegistration != null) {
-			serviceRegistrations._staticResourcesServletServiceRegistration.unregister();
+		if (serviceRegistrations.
+				_staticResourcesServletServiceRegistration != null) {
+
+			serviceRegistrations.
+				_staticResourcesServletServiceRegistration.unregister();
 		}
 
 		if (serviceRegistrations._bundlePortletAppServiceRegistration != null) {
-			serviceRegistrations._bundlePortletAppServiceRegistration.unregister();
+			serviceRegistrations.
+				_bundlePortletAppServiceRegistration.unregister();
 		}
 	}
 
@@ -912,34 +918,6 @@ public class PortletTracker
 		portletModel.setWindowStates(windowStates);
 	}
 
-	protected void createJspServlet(
-		PortletApp portletApp, BundleContext bundleContext,
-		ServiceRegistrations serviceRegistrations) {
-
-		Dictionary<String, Object> properties = new Hashtable<String, Object>();
-
-		properties.put(
-			HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
-			portletApp.getServletContextName());
-		properties.put(
-			HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_NAME, "jsp");
-		properties.put(
-			HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "*.jsp");
-		properties.put(
-			"servlet.init.compilerClassName",
-			"com.liferay.portal.servlet.jsp.compiler.compiler.JspCompiler");
-		properties.put("servlet.init.httpMethods", "GET,POST,HEAD");
-		properties.put("servlet.init.keepgenerated", "true");
-		properties.put("servlet.init.logVerbosityLevel", "DEBUG");
-
-		ServiceRegistration<?> serviceRegistration =
-			bundleContext.registerService(
-				Servlet.class, new JspServlet(), properties);
-
-		serviceRegistrations._jspServletServiceRegistration =
-			serviceRegistration;
-	}
-
 	protected BundlePortletApp createBundlePortletApp(
 		Bundle bundle, ClassLoader classLoader,
 		ServiceRegistrations serviceRegistrations) {
@@ -989,6 +967,34 @@ public class PortletTracker
 			serviceRegistration;
 
 		return bundlePortletApp;
+	}
+
+	protected void createJspServlet(
+		PortletApp portletApp, BundleContext bundleContext,
+		ServiceRegistrations serviceRegistrations) {
+
+		Dictionary<String, Object> properties = new Hashtable<String, Object>();
+
+		properties.put(
+			HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
+			portletApp.getServletContextName());
+		properties.put(
+			HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_NAME, "jsp");
+		properties.put(
+			HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "*.jsp");
+		properties.put(
+			"servlet.init.compilerClassName",
+			"com.liferay.portal.servlet.jsp.compiler.compiler.JspCompiler");
+		properties.put("servlet.init.httpMethods", "GET,POST,HEAD");
+		properties.put("servlet.init.keepgenerated", "true");
+		properties.put("servlet.init.logVerbosityLevel", "DEBUG");
+
+		ServiceRegistration<?> serviceRegistration =
+			bundleContext.registerService(
+				Servlet.class, new JspServlet(), properties);
+
+		serviceRegistrations._jspServletServiceRegistration =
+			serviceRegistration;
 	}
 
 	protected void createStaticResourceServlet(
@@ -1207,7 +1213,8 @@ public class PortletTracker
 		private ServiceRegistration<?> _bundlePortletAppServiceRegistration;
 		private int _counter = 0;
 		private ServiceRegistration<?> _jspServletServiceRegistration;
-		private ServiceRegistration<?> _staticResourcesServletServiceRegistration;
+		private ServiceRegistration<?>
+			_staticResourcesServletServiceRegistration;
 
 	}
 
