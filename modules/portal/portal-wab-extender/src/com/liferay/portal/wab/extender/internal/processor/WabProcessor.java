@@ -248,9 +248,7 @@ public class WabProcessor {
 		try {
 			for (ZipEntry zipEntry;
 				(zipEntry = zipInputStream.getNextEntry()) != null;
-						zipInputStream.closeEntry()) {
-
-				String zipEntryName = zipEntry.getName();
+					zipInputStream.closeEntry()) {
 
 				if (zipEntry.isDirectory()) {
 					File newFile = new File(webInfClasses, zipEntry.getName());
