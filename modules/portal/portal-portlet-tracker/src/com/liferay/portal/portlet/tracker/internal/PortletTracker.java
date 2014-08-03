@@ -230,7 +230,7 @@ public class PortletTracker
 
 		serviceRegistrations._counter++;
 
-		BundlePortletApp bundlePortletApp = createOrGetPortletApp(
+		BundlePortletApp bundlePortletApp = createBundlePortletApp(
 			bundle, classLoader, serviceRegistrations);
 
 		com.liferay.portal.model.Portlet portletModel = buildPortletModel(
@@ -328,7 +328,7 @@ public class PortletTracker
 		Bundle bundle, com.liferay.portal.model.Portlet portletModel,
 		ServiceRegistrations serviceRegistrations) {
 
-		if (serviceRegistrations._resourceServiceRegistration != null) {
+		if (serviceRegistrations._staticResourcesServletServiceRegistration != null) {
 			return;
 		}
 
@@ -370,16 +370,16 @@ public class PortletTracker
 
 		serviceRegistrations = _serviceRegistrations.remove(bundle);
 
-		if (serviceRegistrations._jspServiceRegistration != null) {
-			serviceRegistrations._jspServiceRegistration.unregister();
+		if (serviceRegistrations._jspServletServiceRegistration != null) {
+			serviceRegistrations._jspServletServiceRegistration.unregister();
 		}
 
-		if (serviceRegistrations._resourceServiceRegistration != null) {
-			serviceRegistrations._resourceServiceRegistration.unregister();
+		if (serviceRegistrations._staticResourcesServletServiceRegistration != null) {
+			serviceRegistrations._staticResourcesServletServiceRegistration.unregister();
 		}
 
-		if (serviceRegistrations._contextServiceRegistration != null) {
-			serviceRegistrations._contextServiceRegistration.unregister();
+		if (serviceRegistrations._bundlePortletAppServiceRegistration != null) {
+			serviceRegistrations._bundlePortletAppServiceRegistration.unregister();
 		}
 	}
 
@@ -936,18 +936,20 @@ public class PortletTracker
 			bundleContext.registerService(
 				Servlet.class, new JspServlet(), properties);
 
-		serviceRegistrations._jspServiceRegistration = serviceRegistration;
+		serviceRegistrations._jspServletServiceRegistration =
+			serviceRegistration;
 	}
 
-	protected BundlePortletApp createOrGetPortletApp(
+	protected BundlePortletApp createBundlePortletApp(
 		Bundle bundle, ClassLoader classLoader,
 		ServiceRegistrations serviceRegistrations) {
 
 		BundleContext bundleContext = bundle.getBundleContext();
 
-		if (serviceRegistrations._contextServiceRegistration != null) {
+		if (serviceRegistrations._bundlePortletAppServiceRegistration != null) {
 			ServiceReference<?> serviceReference =
-				serviceRegistrations._contextServiceRegistration.getReference();
+				serviceRegistrations.
+					_bundlePortletAppServiceRegistration.getReference();
 
 			return (BundlePortletApp)bundleContext.getService(serviceReference);
 		}
@@ -983,7 +985,8 @@ public class PortletTracker
 			bundleContext.registerService(
 				ServletContextHelper.class, bundlePortletApp, properties);
 
-		serviceRegistrations._contextServiceRegistration = serviceRegistration;
+		serviceRegistrations._bundlePortletAppServiceRegistration =
+			serviceRegistration;
 
 		return bundlePortletApp;
 	}
@@ -1007,7 +1010,8 @@ public class PortletTracker
 			bundleContext.registerService(
 				Servlet.class, new HttpServlet() {}, properties);
 
-		serviceRegistrations._resourceServiceRegistration = serviceRegistration;
+		serviceRegistrations._staticResourcesServletServiceRegistration =
+			serviceRegistration;
 	}
 
 	@Deactivate
@@ -1200,10 +1204,10 @@ public class PortletTracker
 
 	private class ServiceRegistrations {
 
-		private ServiceRegistration<?> _contextServiceRegistration;
+		private ServiceRegistration<?> _bundlePortletAppServiceRegistration;
 		private int _counter = 0;
-		private ServiceRegistration<?> _jspServiceRegistration;
-		private ServiceRegistration<?> _resourceServiceRegistration;
+		private ServiceRegistration<?> _jspServletServiceRegistration;
+		private ServiceRegistration<?> _staticResourcesServletServiceRegistration;
 
 	}
 
