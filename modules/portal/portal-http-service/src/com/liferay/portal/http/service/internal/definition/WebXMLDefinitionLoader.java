@@ -180,14 +180,14 @@ public class WebXMLDefinitionLoader {
 				continue;
 			}
 
-			Filter filter = (Filter)clazz.newInstance();
-
 			FilterDefinition filterDefinition = new FilterDefinition();
 
 			boolean asyncSupported = GetterUtil.getBoolean(
 				filterElement.elementText("async-supported"));
 
 			filterDefinition.setAsyncSupported(asyncSupported);
+
+			Filter filter = (Filter)clazz.newInstance();
 
 			filterDefinition.setFilter(filter);
 
@@ -217,6 +217,8 @@ public class WebXMLDefinitionLoader {
 
 					filterDefinition.setDispatchers(dispatchers);
 
+					filterDefinition.setPriority(i);
+
 					List<String> servletNames = getServletNames(
 						filterMappingElement);
 
@@ -226,8 +228,6 @@ public class WebXMLDefinitionLoader {
 						filterMappingElement);
 
 					filterDefinition.setURLPatterns(urlPatterns);
-
-					filterDefinition.setPriority(i);
 				}
 			}
 
@@ -236,12 +236,10 @@ public class WebXMLDefinitionLoader {
 	}
 
 	protected void readListeners(
-			Bundle bundle, Element rootElement, WebXMLDefinition webXML)
+			Bundle bundle, Element element, WebXMLDefinition webXML)
 		throws IllegalAccessException, InstantiationException {
 
-		List<Element> listenerElements = rootElement.elements("listener");
-
-		for (Element listenerElement : listenerElements) {
+		for (Element listenerElement : element.elements("listener")) {
 			ListenerDefinition listenerDefinition = new ListenerDefinition();
 
 			String listenerClassName = listenerElement.elementText(
@@ -268,20 +266,15 @@ public class WebXMLDefinitionLoader {
 	}
 
 	protected void readServlets(
-			Bundle bundle, Element rootElement, WebXMLDefinition webXML)
+			Bundle bundle, Element element, WebXMLDefinition webXML)
 		throws IllegalAccessException, InstantiationException {
 
-		List<Element> servletElements = rootElement.elements("servlet");
-
-		List<Element> servletMappingElements = rootElement.elements(
-			"servlet-mapping");
-
-		List<Element> errorPageElements = rootElement.elements("error-page");
+		List<Element> errorPageElements = element.elements("error-page");
 
 		Map<String, String> errorPageLocationMappings = getErrorPages(
 			errorPageElements);
 
-		for (Element servletElement : servletElements) {
+		for (Element servletElement : element.elements("servlet")) {
 			String servletClassName = servletElement.elementText(
 				"servlet-class");
 
@@ -303,20 +296,20 @@ public class WebXMLDefinitionLoader {
 				continue;
 			}
 
-			Servlet servlet = (Servlet)servletClass.newInstance();
-
 			ServletDefinition servletDefinition = new ServletDefinition();
-
-			servletDefinition.setServlet(servlet);
-
-			String servletName = servletElement.elementText("servlet-name");
-
-			servletDefinition.setName(servletName);
 
 			boolean asyncSupported = GetterUtil.getBoolean(
 				servletElement.elementText("async-supported"));
 
 			servletDefinition.setAsyncSupported(asyncSupported);
+
+			String servletName = servletElement.elementText("servlet-name");
+
+			servletDefinition.setName(servletName);
+
+			Servlet servlet = (Servlet)servletClass.newInstance();
+
+			servletDefinition.setServlet(servlet);
 
 			List<Element> initParamElements = servletElement.elements(
 				"init-param");
@@ -330,7 +323,9 @@ public class WebXMLDefinitionLoader {
 
 			List<String> errorPages = new ArrayList<String>();
 
-			for (Element servletMappingElement : servletMappingElements) {
+			for (Element servletMappingElement :
+					element.elements("servlet-mapping")) {
+
 				String servletMappingElementServletName =
 					servletMappingElement.elementText("servlet-name");
 
