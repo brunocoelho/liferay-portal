@@ -859,7 +859,8 @@ public class WabProcessor {
 			String paramValue = paramValueElement.getTextTrim();
 
 			paramValueElement.setText(
-				paramValue.concat(StringPool.COMMA).concat(_SERVICE_XML));
+				paramValue + StringPool.COMMA +
+					_SERVICE_BEAN_POST_PROCESSOR_SPRING_XML);
 		}
 
 		if (exists) {
@@ -875,7 +876,7 @@ public class WabProcessor {
 		Element paramValueElement = contextParamElement.addElement(
 			"param-value");
 
-		paramValueElement.setText(_SERVICE_XML);
+		paramValueElement.setText(_SERVICE_BEAN_POST_PROCESSOR_SPRING_XML);
 	}
 
 	protected void processServicePackageName(URI uri, File file) {
@@ -908,10 +909,10 @@ public class WabProcessor {
 			Class<?> clazz = getClass();
 
 			FileUtil.write(
-				new File(metaInfDir, "servicebeanpostprocessor-spring.xml"),
+				new File(metaInfDir, "service-bean-post-processor-spring.xml"),
 				clazz.getResourceAsStream(
 					"/com/liferay/portal/wab/extender/internal/dependencies" +
-						"/servicebeanpostprocessor-spring.xml"));
+						"/service-bean-post-processor-spring.xml"));
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -1230,7 +1231,7 @@ public class WabProcessor {
 		}
 	}
 
-	private static final String _SERVICE_XML =
+	private static final String _SERVICE_BEAN_POST_PROCESSOR_SPRING_XML =
 		"/WEB-INF/classes/META-INF/servicebeanpostprocessor-spring.xml";
 
 	private static Log _log = LogFactoryUtil.getLog(WabProcessor.class);
