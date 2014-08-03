@@ -91,19 +91,20 @@ public class HttpAdaptor {
 
 		try {
 			_httpServiceServlet.init(servletConfig);
-	
-			Dictionary<String, Object> properties =
-				new Hashtable<String, Object>();
-	
-			properties.put("bean.id", HttpServlet.class.getName());
-			properties.put("original.bean", Boolean.TRUE.toString());
-
-			_serviceRegistration = bundleContext.registerService(
-				classNames, _httpServiceServlet, properties);
 		}
 		catch (ServletException se) {
 			_servletContext.log(se.getMessage(), se);
+
+			return;
 		}
+
+		Dictionary<String, Object> properties = new Hashtable<String, Object>();
+
+		properties.put("bean.id", HttpServlet.class.getName());
+		properties.put("original.bean", Boolean.TRUE.toString());
+
+		_serviceRegistration = bundleContext.registerService(
+			classNames, _httpServiceServlet, properties);
 	}
 
 	@Deactivate
