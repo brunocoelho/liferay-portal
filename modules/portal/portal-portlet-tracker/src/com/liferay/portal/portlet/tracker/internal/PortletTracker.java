@@ -228,7 +228,7 @@ public class PortletTracker
 		ServiceRegistrations serviceRegistrations = getServiceRegistrations(
 			bundle);
 
-		serviceRegistrations.counter++;
+		serviceRegistrations._counter++;
 
 		BundlePortletApp bundlePortletApp = createOrGetPortletApp(
 			bundle, classLoader, serviceRegistrations);
@@ -328,7 +328,7 @@ public class PortletTracker
 		Bundle bundle, com.liferay.portal.model.Portlet portletModel,
 		ServiceRegistrations serviceRegistrations) {
 
-		if (serviceRegistrations.resource != null) {
+		if (serviceRegistrations._resourceServiceRegistration != null) {
 			return;
 		}
 
@@ -363,24 +363,24 @@ public class PortletTracker
 			return;
 		}
 
-		serviceRegistrations.counter--;
+		serviceRegistrations._counter--;
 
-		if (serviceRegistrations.counter > 0) {
+		if (serviceRegistrations._counter > 0) {
 			return;
 		}
 
 		serviceRegistrations = _serviceRegistrations.remove(bundle);
 
-		if (serviceRegistrations.jsp != null) {
-			serviceRegistrations.jsp.unregister();
+		if (serviceRegistrations._jspServiceRegistration != null) {
+			serviceRegistrations._jspServiceRegistration.unregister();
 		}
 
-		if (serviceRegistrations.resource != null) {
-			serviceRegistrations.resource.unregister();
+		if (serviceRegistrations._resourceServiceRegistration != null) {
+			serviceRegistrations._resourceServiceRegistration.unregister();
 		}
 
-		if (serviceRegistrations.context != null) {
-			serviceRegistrations.context.unregister();
+		if (serviceRegistrations._contextServiceRegistration != null) {
+			serviceRegistrations._contextServiceRegistration.unregister();
 		}
 	}
 
@@ -773,7 +773,7 @@ public class PortletTracker
 				qname = parts[1];
 			}
 
-			QName qName = _getQName(
+			QName qName = getQName(
 				name, qname, portletApp.getDefaultNamespace());
 
 			processingEvents.add(qName);
@@ -848,7 +848,7 @@ public class PortletTracker
 				qname = parts[1];
 			}
 
-			QName qName = _getQName(
+			QName qName = getQName(
 				name, qname, portletApp.getDefaultNamespace());
 
 			publishingEvents.add(qName);
@@ -937,7 +937,7 @@ public class PortletTracker
 			bundleContext.registerService(
 				Servlet.class, new JspServlet(), properties);
 
-		serviceRegistrations.jsp = serviceRegistration;
+		serviceRegistrations._jspServiceRegistration = serviceRegistration;
 	}
 
 	protected BundlePortletApp createOrGetPortletApp(
@@ -946,9 +946,9 @@ public class PortletTracker
 
 		BundleContext bundleContext = bundle.getBundleContext();
 
-		if (serviceRegistrations.context != null) {
+		if (serviceRegistrations._contextServiceRegistration != null) {
 			ServiceReference<?> serviceReference =
-				serviceRegistrations.context.getReference();
+				serviceRegistrations._contextServiceRegistration.getReference();
 
 			return (BundlePortletApp)bundleContext.getService(serviceReference);
 		}
@@ -984,7 +984,7 @@ public class PortletTracker
 			bundleContext.registerService(
 				ServletContextHelper.class, bundlePortletApp, properties);
 
-		serviceRegistrations.context = serviceRegistration;
+		serviceRegistrations._contextServiceRegistration = serviceRegistration;
 
 		return bundlePortletApp;
 	}
@@ -1008,7 +1008,7 @@ public class PortletTracker
 			bundleContext.registerService(
 				Servlet.class, new HttpServlet() {}, properties);
 
-		serviceRegistrations.resource = serviceRegistration;
+		serviceRegistrations._resourceServiceRegistration = serviceRegistration;
 	}
 
 	@Deactivate
@@ -1164,7 +1164,7 @@ public class PortletTracker
 		_servletContext = null;
 	}
 
-	private QName _getQName(String name, String uri, String defaultNamespace) {
+	protected QName getQName(String name, String uri, String defaultNamespace) {
 		if (Validator.isNull(name) && Validator.isNull(uri)) {
 			return null;
 		}
@@ -1201,10 +1201,10 @@ public class PortletTracker
 
 	private class ServiceRegistrations {
 
-		int counter = 0;
-		ServiceRegistration<?> context;
-		ServiceRegistration<?> resource;
-		ServiceRegistration<?> jsp;
+		private ServiceRegistration<?> _contextServiceRegistration;
+		private int _counter = 0;
+		private ServiceRegistration<?> _jspServiceRegistration;
+		private ServiceRegistration<?> _resourceServiceRegistration;
 
 	}
 
