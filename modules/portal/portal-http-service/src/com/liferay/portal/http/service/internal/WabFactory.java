@@ -42,16 +42,16 @@ public class WabFactory {
 		_bundleContext = componentContext.getBundleContext();
 
 		try {
-			_wabBundleDeployer = new WebBundleDeployer(
+			_webBundleDeployer = new WebBundleDeployer(
 				_bundleContext, _extendedHttpService);
 
 			_startedBundleListener = new StartedBundleListener(
-				_wabBundleDeployer);
+				_webBundleDeployer);
 
 			_bundleContext.addBundleListener(_startedBundleListener);
 
 			_stoppedBundleListener = new StoppedBundleListener(
-				_wabBundleDeployer);
+				_webBundleDeployer);
 
 			_bundleContext.addBundleListener(_stoppedBundleListener);
 		}
@@ -64,9 +64,9 @@ public class WabFactory {
 
 	@Deactivate
 	public void deactivate() {
-		_wabBundleDeployer.close();
+		_webBundleDeployer.close();
 
-		_wabBundleDeployer = null;
+		_webBundleDeployer = null;
 
 		_bundleContext.removeBundleListener(_startedBundleListener);
 
@@ -88,7 +88,7 @@ public class WabFactory {
 			}
 
 			try {
-				_wabBundleDeployer.doStart(bundle, servletContextName);
+				_webBundleDeployer.doStart(bundle, servletContextName);
 			}
 			catch (Exception e) {
 				_log.error(e, e);
@@ -116,6 +116,6 @@ public class WabFactory {
 	private ExtendedHttpService _extendedHttpService;
 	private StartedBundleListener _startedBundleListener;
 	private StoppedBundleListener _stoppedBundleListener;
-	private WebBundleDeployer _wabBundleDeployer;
+	private WebBundleDeployer _webBundleDeployer;
 
 }
