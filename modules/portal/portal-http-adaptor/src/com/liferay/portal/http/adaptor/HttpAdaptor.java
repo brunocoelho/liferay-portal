@@ -12,7 +12,7 @@
  * details.
  */
 
-package com.liferay.osgi.http.adaptor;
+package com.liferay.portal.http.adaptor;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
