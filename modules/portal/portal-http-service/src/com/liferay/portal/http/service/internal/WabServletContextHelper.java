@@ -34,7 +34,7 @@ public class WabServletContextHelper extends ServletContextHelper {
 		super(bundle);
 
 		_bundle = bundle;
-		
+
 		Class<?> clazz = getClass();
 
 		_string = clazz.getSimpleName() + '[' + bundle.getBundleId() + ']';
