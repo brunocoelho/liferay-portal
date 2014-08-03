@@ -111,7 +111,7 @@ public class WabServletContextHelper extends ServletContextHelper {
 		return _string;
 	}
 
-	private final Bundle _bundle;
-	private final String _string;
+	private Bundle _bundle;
+	private String _string;
 
 }
