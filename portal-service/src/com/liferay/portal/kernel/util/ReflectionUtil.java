@@ -87,10 +87,10 @@ public class ReflectionUtil {
 			ParameterizedType parameterizedType =
 				(ParameterizedType)clazz.getGenericSuperclass();
 
-			Type[] arguments = parameterizedType.getActualTypeArguments();
+			Type[] types = parameterizedType.getActualTypeArguments();
 
-			if (arguments.length > 0) {
-				return (Class<?>)arguments[0];
+			if (types.length > 0) {
+				return (Class<?>)types[0];
 			}
 		}
 		catch (Throwable t) {
