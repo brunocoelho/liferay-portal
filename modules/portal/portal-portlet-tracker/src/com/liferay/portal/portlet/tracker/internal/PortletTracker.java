@@ -56,6 +56,7 @@ import java.io.IOException;
 
 import java.net.URL;
 
+import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -916,7 +917,7 @@ public class PortletTracker
 		PortletApp portletApp, BundleContext bundleContext,
 		ServiceRegistrations serviceRegistrations) {
 
-		Hashtable<String, Object> properties = new Hashtable<String, Object>();
+		Dictionary<String, Object> properties = new Hashtable<String, Object>();
 
 		properties.put(
 			HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
@@ -957,6 +958,7 @@ public class PortletTracker
 				CompanyConstants.SYSTEM, PortletKeys.PORTAL);
 
 		String contextName = String.valueOf(bundle.getBundleId());
+
 		String contextPath = "/".concat(contextName);
 
 		BundlePortletApp bundlePortletApp = new BundlePortletApp(
@@ -971,7 +973,7 @@ public class PortletTracker
 
 		bundlePortletApp.setServletContext(servletContext);
 
-		Hashtable<String, Object> properties = new Hashtable<String, Object>();
+		Dictionary<String, Object> properties = new Hashtable<String, Object>();
 
 		properties.put(
 			HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_NAME, contextName);
@@ -991,16 +993,16 @@ public class PortletTracker
 		PortletApp portletApp, BundleContext bundleContext,
 		ServiceRegistrations serviceRegistrations) {
 
-		Hashtable<String, Object> properties = new Hashtable<String, Object>();
+		Dictionary<String, Object> properties = new Hashtable<String, Object>();
 
 		properties.put(
 			HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
 			portletApp.getServletContextName());
 		properties.put(
-			HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/*");
-		properties.put(
 			HttpWhiteboardConstants.HTTP_WHITEBOARD_RESOURCE_PREFIX,
 			"/META-INF/resources");
+		properties.put(
+			HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN, "/*");
 
 		ServiceRegistration<Servlet> serviceRegistration =
 			bundleContext.registerService(
@@ -1014,6 +1016,7 @@ public class PortletTracker
 		_serviceTracker.close();
 
 		_serviceTracker = null;
+
 		_componentContext = null;
 
 		if (_log.isInfoEnabled()) {
