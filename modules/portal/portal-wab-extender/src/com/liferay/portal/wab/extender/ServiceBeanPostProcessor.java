@@ -15,6 +15,7 @@ package com.liferay.portal.wab.extender;
 
 import com.liferay.portal.kernel.util.ReflectionUtil;
 
+import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -39,7 +40,7 @@ import org.springframework.web.context.WebApplicationContext;
  */
 public class ServiceBeanPostProcessor
 	implements ApplicationContextAware, ApplicationListener<ContextClosedEvent>,
-		BeanPostProcessor {
+			   BeanPostProcessor {
 
 	@Override
 	public void onApplicationEvent(ContextClosedEvent contextClosedEvent) {
@@ -69,7 +70,7 @@ public class ServiceBeanPostProcessor
 			return bean;
 		}
 
-		Hashtable<String, Object> properties = new Hashtable<String, Object>();
+		Dictionary<String, Object> properties = new Hashtable<String, Object>();
 
 		properties.put("bean.id", beanName);
 
