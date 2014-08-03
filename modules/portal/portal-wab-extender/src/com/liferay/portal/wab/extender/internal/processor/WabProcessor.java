@@ -239,8 +239,8 @@ public class WabProcessor {
 
 	protected void expandServiceJarIntoClassesDir(URI uri, File zipFile)
 		throws IOException {
-
-		File webInfClasses = new File(uri.resolve("WEB-INF/classes").getPath());
+		
+		URI webInfClasesURI = uri.resolve("WEB-INF/classes");
 
 		ZipInputStream zipInputStream = new ZipInputStream(
 			new FileInputStream(zipFile));
@@ -251,19 +251,23 @@ public class WabProcessor {
 					zipInputStream.closeEntry()) {
 
 				if (zipEntry.isDirectory()) {
-					File newFile = new File(webInfClasses, zipEntry.getName());
+					File dir = new File(
+						webInfClasesURI.getPath(), zipEntry.getName());
 
-					newFile.mkdirs();
+					dir.mkdirs();
 
 					continue;
 				}
 
-				File newFile = new File(webInfClasses, zipEntry.getName());
+				File file = new File(
+					webInfClasesURI.getPath(), zipEntry.getName());
 
-				newFile.getParentFile().mkdirs();
+				File parentFile = file.getParentFile();
+				
+				parentFile.mkdirs();
 
 				FileOutputStream fileOutputStream = new FileOutputStream(
-					newFile);
+					file);
 
 				try {
 					StreamUtil.transfer(
@@ -840,6 +844,7 @@ public class WabProcessor {
 
 			Element paramNameElement = contextParamElement.element(
 				"param-name");
+
 			String paramName = paramNameElement.getTextTrim();
 
 			if (!paramName.equals("portalContextConfigLocation")) {
