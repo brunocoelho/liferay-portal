@@ -59,20 +59,20 @@ public class ModelListenerRegistrationUtil {
 	}
 
 	private <T> ModelListener<T>[] _getModelListeners(Class<T> clazz) {
-		List<ModelListener<?>> list = _modelListenerMap.get(clazz);
+		List<ModelListener<?>> modelListeners = _modelListeners.get(clazz);
 
-		if (list == null) {
-			list = new ArrayList<ModelListener<?>>();
+		if (modelListeners == null) {
+			modelListeners = new ArrayList<ModelListener<?>>();
 
-			List<ModelListener<?>> previousList = _modelListenerMap.putIfAbsent(
-				clazz, list);
+			List<ModelListener<?>> previousList = _modelListeners.putIfAbsent(
+				clazz, modelListeners);
 
 			if (previousList != null) {
-				list = previousList;
+				modelListeners = previousList;
 			}
 		}
 
-		return list.toArray(new ModelListener[list.size()]);
+		return modelListeners.toArray(new ModelListener[modelListeners.size()]);
 	}
 
 	private <T> void _register(
@@ -99,7 +99,7 @@ public class ModelListenerRegistrationUtil {
 	private static ModelListenerRegistrationUtil _instance =
 		new ModelListenerRegistrationUtil();
 
-	private ConcurrentMap<Class<?>, List<ModelListener<?>>> _modelListenerMap =
+	private ConcurrentMap<Class<?>, List<ModelListener<?>>> _modelListeners =
 		new ConcurrentHashMap<Class<?>, List<ModelListener<?>>>();
 	private Map<String, ServiceRegistration<?>> _serviceRegistrations =
 		new ConcurrentHashMap<String, ServiceRegistration<?>>();
@@ -122,20 +122,20 @@ public class ModelListenerRegistrationUtil {
 
 			clazz = ReflectionUtil.getGenericSuperType(clazz);
 
-			List<ModelListener<?>> list = _modelListenerMap.get(clazz);
+			List<ModelListener<?>> modelListeners = _modelListeners.get(clazz);
 
-			if (list == null) {
-				list = new ArrayList<ModelListener<?>>();
+			if (modelListeners == null) {
+				modelListeners = new ArrayList<ModelListener<?>>();
 
-				List<ModelListener<?>> previousList =
-					_modelListenerMap.putIfAbsent(clazz, list);
+				List<ModelListener<?>> previousModelListeners =
+					_modelListeners.putIfAbsent(clazz, modelListeners);
 
-				if (previousList != null) {
-					list = previousList;
+				if (previousModelListeners != null) {
+					modelListeners = previousModelListeners;
 				}
 			}
 
-			list.add(modelListener);
+			modelListeners.add(modelListener);
 
 			return modelListener;
 		}
@@ -159,10 +159,10 @@ public class ModelListenerRegistrationUtil {
 
 			clazz = ReflectionUtil.getGenericSuperType(clazz);
 
-			List<ModelListener<?>> list = _modelListenerMap.get(clazz);
+			List<ModelListener<?>> modelListeners = _modelListeners.get(clazz);
 
-			if (list != null) {
-				list.remove(modelListener);
+			if (modelListeners != null) {
+				modelListeners.remove(modelListener);
 			}
 		}
 
