@@ -555,11 +555,9 @@ public class WabProcessor {
 	}
 
 	protected void processExportPackageNames(Analyzer analyzer) {
-		StringBundler sb = new StringBundler(13);
-
-		sb.append(StringUtil.merge(_exportPackageNames.toArray()));
-
-		analyzer.setProperty(Constants.EXPORT_PACKAGE, sb.toString());
+		analyzer.setProperty(
+			Constants.EXPORT_PACKAGE,
+			StringUtil.merge(_exportPackageNames.toArray()));
 	}
 
 	protected void processExtraHeaders(Analyzer analyzer) {
