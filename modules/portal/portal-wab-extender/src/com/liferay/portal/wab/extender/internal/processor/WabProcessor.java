@@ -885,27 +885,19 @@ public class WabProcessor {
 			Element rootElement = document.getRootElement();
 
 			_servicePackageName = rootElement.attributeValue("package-path");
+			
+			String[] partialPackageNames = {
+				"", ".model", ".model.impl", ".persistence",
+				".persistence.impl", ".service", ".service.base",
+				".service.impl", ".service.http"
+			};
 
-			_exportPackageNames.add(versionedServicePackage(""));
-			_importPackageNames.add(versionedServicePackage(""));
-			_exportPackageNames.add(versionedServicePackage(".model"));
-			_importPackageNames.add(versionedServicePackage(".model"));
-			_exportPackageNames.add(versionedServicePackage(".model.impl"));
-			_importPackageNames.add(versionedServicePackage(".model.impl"));
-			_exportPackageNames.add(versionedServicePackage(".persistence"));
-			_importPackageNames.add(versionedServicePackage(".persistence"));
-			_exportPackageNames.add(
-				versionedServicePackage(".persistence.impl"));
-			_importPackageNames.add(
-				versionedServicePackage(".persistence.impl"));
-			_exportPackageNames.add(versionedServicePackage(".service"));
-			_importPackageNames.add(versionedServicePackage(".service"));
-			_exportPackageNames.add(versionedServicePackage(".service.base"));
-			_importPackageNames.add(versionedServicePackage(".service.base"));
-			_exportPackageNames.add(versionedServicePackage(".service.impl"));
-			_importPackageNames.add(versionedServicePackage(".service.impl"));
-			_exportPackageNames.add(versionedServicePackage(".service.http"));
-			_importPackageNames.add(versionedServicePackage(".service.http"));
+			for (String partialPackageName : partialPackageNames) {
+				_exportPackageNames.add(
+					versionedServicePackage(partialPackageName));
+				_importPackageNames.add(
+					versionedServicePackage(partialPackageName));
+			}
 
 			_importPackageNames.add("com.liferay.portal.wab.extender");
 
