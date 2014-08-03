@@ -45,11 +45,6 @@ public class HttpAdaptor {
 	protected void activate(ComponentContext componentContext) {
 		BundleContext bundleContext = componentContext.getBundleContext();
 
-		Dictionary<String, Object> properties = new Hashtable<String, Object>();
-
-		properties.put("bean.id", HttpServlet.class.getName());
-		properties.put("original.bean", Boolean.TRUE.toString());
-
 		String[] classNames = new String[] {
 			HttpServiceServlet.class.getName(), HttpServlet.class.getName()
 		};
@@ -96,6 +91,12 @@ public class HttpAdaptor {
 
 		try {
 			_httpServiceServlet.init(servletConfig);
+	
+			Dictionary<String, Object> properties =
+				new Hashtable<String, Object>();
+	
+			properties.put("bean.id", HttpServlet.class.getName());
+			properties.put("original.bean", Boolean.TRUE.toString());
 
 			_serviceRegistration = bundleContext.registerService(
 				classNames, _httpServiceServlet, properties);
