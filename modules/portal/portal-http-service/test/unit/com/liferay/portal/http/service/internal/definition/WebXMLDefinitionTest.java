@@ -85,7 +85,7 @@ public class WebXMLDefinitionTest {
 		for (int i = 0; i < count; i++) {
 			ListenerDefinition listenerDefinition = new ListenerDefinition();
 
-			listenerDefinition.setListener(new EventListener() {});
+			listenerDefinition.setEventListener(new EventListener() {});
 
 			_webXmlDefinition.addListenerDefinition(listenerDefinition);
 		}

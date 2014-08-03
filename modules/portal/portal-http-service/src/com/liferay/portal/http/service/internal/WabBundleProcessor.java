@@ -158,7 +158,7 @@ public class WabBundleProcessor {
 		for (ListenerDefinition listenerDefinition : listenerDefinitions) {
 			try {
 				_extendedHttpService.unregisterListener(
-					listenerDefinition.getListener(), _servletContextName);
+					listenerDefinition.getEventListener(), _servletContextName);
 			}
 			catch (Exception e) {
 				_log.error(e, e);
@@ -239,7 +239,7 @@ public class WabBundleProcessor {
 		for (ListenerDefinition listenerDefinition : listenerDefinitions) {
 			try {
 				_extendedHttpService.registerListener(
-					listenerDefinition.getListener(), _servletContextName);
+					listenerDefinition.getEventListener(), _servletContextName);
 			}
 			catch (Exception e) {
 				return e;

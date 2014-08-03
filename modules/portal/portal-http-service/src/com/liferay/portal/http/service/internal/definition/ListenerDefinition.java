@@ -21,14 +21,14 @@ import java.util.EventListener;
  */
 public class ListenerDefinition {
 
-	public EventListener getListener() {
-		return _listener;
+	public EventListener getEventListener() {
+		return _eventListener;
 	}
 
-	public void setListener(EventListener listener) {
-		_listener = listener;
+	public void setEventListener(EventListener eventListener) {
+		_eventListener = eventListener;
 	}
 
-	private EventListener _listener;
+	private EventListener _eventListener;
 
 }

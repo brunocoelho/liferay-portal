@@ -259,9 +259,9 @@ public class WebXMLDefinitionLoader {
 				continue;
 			}
 
-			EventListener listener = clazz.newInstance();
+			EventListener eventListener = clazz.newInstance();
 
-			listenerDefinition.setListener(listener);
+			listenerDefinition.setEventListener(eventListener);
 
 			webXML.addListenerDefinition(listenerDefinition);
 		}

@@ -88,7 +88,7 @@ public class WebXMLDefinitionLoaderTest {
 		Assert.assertEquals(numfOfListeners, listenerDefinitions.size());
 
 		for (ListenerDefinition listenerDefinition : listenerDefinitions) {
-			Object listener = listenerDefinition.getListener();
+			Object listener = listenerDefinition.getEventListener();
 
 			Assert.assertTrue(listener instanceof ServletContextListener);
 		}
