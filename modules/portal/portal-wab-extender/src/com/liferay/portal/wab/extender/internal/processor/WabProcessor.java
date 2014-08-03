@@ -889,8 +889,10 @@ public class WabProcessor {
 			_importPackageNames.add(versionedServicePackage(".model.impl"));
 			_exportPackageNames.add(versionedServicePackage(".persistence"));
 			_importPackageNames.add(versionedServicePackage(".persistence"));
-			_exportPackageNames.add(versionedServicePackage(".persistence.impl"));
-			_importPackageNames.add(versionedServicePackage(".persistence.impl"));
+			_exportPackageNames.add(
+				versionedServicePackage(".persistence.impl"));
+			_importPackageNames.add(
+				versionedServicePackage(".persistence.impl"));
 			_exportPackageNames.add(versionedServicePackage(".service"));
 			_importPackageNames.add(versionedServicePackage(".service"));
 			_exportPackageNames.add(versionedServicePackage(".service.base"));
@@ -911,7 +913,8 @@ public class WabProcessor {
 			FileUtil.write(
 				new File(metaInfDir, "servicebeanpostprocessor-spring.xml"),
 				clazz.getResourceAsStream(
-					"/com/liferay/portal/wab/extender/internal/dependencies/servicebeanpostprocessor-spring.xml"));
+					"/com/liferay/portal/wab/extender/internal/dependencies" +
+						"/servicebeanpostprocessor-spring.xml"));
 		}
 		catch (Exception e) {
 			_log.error(e, e);
