@@ -262,13 +262,16 @@ public class WabBundleProcessor {
 
 			try {
 				if (servlet instanceof WabResourceServlet) {
+					List<String> urlPatterns =
+						servletDefinition.getURLPatterns();
+
 					String prefix = MapUtil.getString(
 						servletDefinition.getInitParameters(), "prefix",
 						StringPool.SLASH);
 
 					_extendedHttpService.registerResources(
-						servletDefinition.getURLPatterns().toArray(
-							new String[0]), prefix, _servletContextName);
+						urlPatterns.toArray(new String[0]), prefix,
+						_servletContextName);
 
 					continue;
 				}
