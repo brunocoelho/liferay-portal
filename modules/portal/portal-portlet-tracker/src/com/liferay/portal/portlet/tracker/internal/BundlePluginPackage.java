@@ -165,7 +165,7 @@ public class BundlePluginPackage implements PluginPackage {
 
 	@Override
 	public String getVersion() {
-		return _bundle.getVersion().toString();
+		return String.valueOf(_bundle.getVersion());
 	}
 
 	@Override
@@ -196,7 +196,7 @@ public class BundlePluginPackage implements PluginPackage {
 	}
 
 	@Override
-	public void setDeploymentSettings(Properties properties) {
+	public void setDeploymentSettings(Properties deploymentSettings) {
 	}
 
 	@Override
