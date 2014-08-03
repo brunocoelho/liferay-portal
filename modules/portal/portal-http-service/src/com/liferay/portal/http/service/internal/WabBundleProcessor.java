@@ -172,12 +172,12 @@ public class WabBundleProcessor {
 		Map<String, ServletDefinition> servlets =
 			_webXML.getServletDefinitions();
 
-		List<ServletDefinition> list = new ArrayList<ServletDefinition>(
-			servlets.values());
+		List<ServletDefinition> servletDefinitionsList =
+			new ArrayList<ServletDefinition>(servlets.values());
 
-		Collections.reverse(list);
+		Collections.reverse(servletDefinitionsList);
 
-		for (ServletDefinition servletDefinition : list) {
+		for (ServletDefinition servletDefinition : servletDefinitionsList) {
 			Servlet servlet = servletDefinition.getServlet();
 
 			try {
