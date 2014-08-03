@@ -268,10 +268,10 @@ public class JspCompiler extends Jsr199JavaCompiler {
 
 		BundleWiring bundleWiring = _bundle.adapt(BundleWiring.class);
 
-		Collection<String> wiringEntries = bundleWiring.listResources(
+		Collection<String> resourcePaths = bundleWiring.listResources(
 			"/", "*.tld", BundleWiring.FINDENTRIES_RECURSE);
 
-		Iterator<String> iterator = wiringEntries.iterator();
+		Iterator<String> iterator = resourcePaths.iterator();
 
 		while (iterator.hasNext()) {
 			String resourcePath = iterator.next();
@@ -283,8 +283,7 @@ public class JspCompiler extends Jsr199JavaCompiler {
 			if (uri != null) {
 				tldMappings.put(
 					uri,
-					new String[] {
-						StringPool.SLASH.concat(resourcePath), null});
+					new String[] {StringPool.SLASH.concat(resourcePath), null});
 			}
 		}
 
