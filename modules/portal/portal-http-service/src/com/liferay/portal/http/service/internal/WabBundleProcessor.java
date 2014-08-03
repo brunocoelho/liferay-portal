@@ -131,12 +131,12 @@ public class WabBundleProcessor {
 		Map<String, FilterDefinition> filterDefinitions =
 			_webXML.getFilterDefinitions();
 
-		List<FilterDefinition> list = new ArrayList<FilterDefinition>(
-			filterDefinitions.values());
+		List<FilterDefinition> filterDefinitionsList =
+			new ArrayList<FilterDefinition>(filterDefinitions.values());
 
-		Collections.reverse(list);
+		Collections.reverse(filterDefinitionsList);
 
-		for (FilterDefinition filterDefinition : list) {
+		for (FilterDefinition filterDefinition : filterDefinitionsList) {
 			try {
 				_extendedHttpService.unregisterFilter(
 					filterDefinition.getFilter(), _servletContextName);
