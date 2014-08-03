@@ -49,7 +49,7 @@ public class HttpAdaptor {
 		properties.put("bean.id", HttpServlet.class.getName());
 		properties.put("original.bean", Boolean.TRUE.toString());
 
-		String[] classes = new String[] {
+		String[] classNames = new String[] {
 			HttpServiceServlet.class.getName(),
 			HttpServlet.class.getName()
 		};
@@ -84,7 +84,7 @@ public class HttpAdaptor {
 			_httpServiceServlet.init(servletConfig);
 
 			_serviceRegistration = bundleContext.registerService(
-				classes, _httpServiceServlet, properties);
+				classNames, _httpServiceServlet, properties);
 		}
 		catch (ServletException se) {
 			_servletContext.log(se.getMessage(), se);
@@ -94,8 +94,11 @@ public class HttpAdaptor {
 	@Deactivate
 	protected void deactivate() {
 		_serviceRegistration.unregister();
+
 		_serviceRegistration = null;
+
 		_httpServiceServlet.destroy();
+
 		_httpServiceServlet = null;
 	}
 
