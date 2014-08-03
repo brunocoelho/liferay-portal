@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2000-2014 Liferay, Inc. All rights reserved.
+ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
@@ -50,8 +50,7 @@ public class HttpAdaptor {
 		properties.put("original.bean", Boolean.TRUE.toString());
 
 		String[] classNames = new String[] {
-			HttpServiceServlet.class.getName(),
-			HttpServlet.class.getName()
+			HttpServiceServlet.class.getName(), HttpServlet.class.getName()
 		};
 
 		_httpServiceServlet = new AdaptorServlet();
@@ -107,20 +106,20 @@ public class HttpAdaptor {
 		_servletContext = servletContext;
 	}
 
-	private ServletContext _servletContext;
-	private ServiceRegistration<?> _serviceRegistration;
 	private HttpServiceServlet _httpServiceServlet;
+	private ServiceRegistration<?> _serviceRegistration;
+	private ServletContext _servletContext;
 
 	private class AdaptorServlet extends HttpServiceServlet {
 
 		@Override
-		public void init(ServletConfig servletConfig) {
-			_servletConfig = servletConfig;
+		public ServletConfig getServletConfig() {
+			return _servletConfig;
 		}
 
 		@Override
-		public ServletConfig getServletConfig() {
-			return _servletConfig;
+		public void init(ServletConfig servletConfig) {
+			_servletConfig = servletConfig;
 		}
 
 		private ServletConfig _servletConfig;
