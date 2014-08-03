@@ -322,8 +322,8 @@ public class JspCompiler extends Jsr199JavaCompiler {
 
 	private static final String[] _JSP_COMPILER_DEPENDENCIES = {
 		"com.liferay.portal.kernel.exception.PortalException",
-		"com.liferay.portal.util.PortalImpl",
-		"javax.portlet.PortletException", "javax.servlet.ServletException"
+		"com.liferay.portal.util.PortalImpl", "javax.portlet.PortletException",
+		"javax.servlet.ServletException"
 	};
 
 	private static Log _log = LogFactoryUtil.getLog(JspCompiler.class);

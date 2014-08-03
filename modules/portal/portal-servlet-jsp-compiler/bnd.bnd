@@ -6,11 +6,11 @@ Export-Package:\
 	com.liferay.portal.servlet.jsp.compiler.jsp;version='1.0.0',\
 	javax.servlet.jsp.resources;version='2.2.0',\
 	org.apache.jasper;version='2.3.3.b01',\
-	org.apache.jasper.runtime;version='2.3.3.b01',\
 	org.apache.jasper.compiler;version='2.3.3.b01',\
-	org.apache.jasper.security;version='2.3.3.b01',\
-	org.apache.jasper.resources;version='2.3.3.b01',\
 	org.apache.jasper.compiler.tagplugin;version='2.3.3.b01',\
+	org.apache.jasper.resources;version='2.3.3.b01',\
+	org.apache.jasper.runtime;version='2.3.3.b01',\
+	org.apache.jasper.security;version='2.3.3.b01',\
 	org.apache.jasper.tagplugins.jstl;version='2.3.3.b01',\
 	org.glassfish.jsp.api;version='2.3.3.b01',\
 	org.apache.jasper.servlet;version='2.3.3.b01',\
