@@ -223,15 +223,13 @@ public class PortletTracker
 
 		BundleWiring bundleWiring = bundle.adapt(BundleWiring.class);
 
-		ClassLoader classLoader = bundleWiring.getClassLoader();
-
 		ServiceRegistrations serviceRegistrations = getServiceRegistrations(
 			bundle);
 
 		serviceRegistrations._counter++;
 
 		BundlePortletApp bundlePortletApp = createBundlePortletApp(
-			bundle, classLoader, serviceRegistrations);
+			bundle, bundleWiring.getClassLoader(), serviceRegistrations);
 
 		com.liferay.portal.model.Portlet portletModel = buildPortletModel(
 			bundlePortletApp, portletId);
@@ -254,7 +252,7 @@ public class PortletTracker
 		PortletBagFactory portletBagFactory = new BundlePortletBagFactory(
 			portlet);
 
-		portletBagFactory.setClassLoader(classLoader);
+		portletBagFactory.setClassLoader(bundleWiring.getClassLoader());
 		portletBagFactory.setServletContext(
 			bundlePortletApp.getServletContext());
 		portletBagFactory.setWARFile(true);
