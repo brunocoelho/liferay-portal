@@ -344,8 +344,7 @@ public class PortletTracker
 		createStaticResourceServlet(
 			portletModel.getPortletApp(), bundleContext, serviceRegistrations);
 
-		urls = bundle.findEntries(
-			"/META-INF/resources", "*.jsp", true);
+		urls = bundle.findEntries("/META-INF/resources", "*.jsp", true);
 
 		if ((urls == null) || !urls.hasMoreElements()) {
 			return;
@@ -1054,6 +1053,20 @@ public class PortletTracker
 		return serviceReference.getProperty(_NAMESPACE + property);
 	}
 
+	protected QName getQName(String name, String uri, String defaultNamespace) {
+		if (Validator.isNull(name) && Validator.isNull(uri)) {
+			return null;
+		}
+
+		if (Validator.isNull(uri)) {
+			return SAXReaderUtil.createQName(
+				name, SAXReaderUtil.createNamespace(defaultNamespace));
+		}
+
+		return SAXReaderUtil.createQName(
+			name, SAXReaderUtil.createNamespace(uri));
+	}
+
 	protected ServiceRegistrations getServiceRegistrations(Bundle bundle) {
 		ServiceRegistrations serviceRegistrations = _serviceRegistrations.get(
 			bundle);
@@ -1162,20 +1175,6 @@ public class PortletTracker
 
 	protected void unsetServletContext(ServletContext servletContext) {
 		_servletContext = null;
-	}
-
-	protected QName getQName(String name, String uri, String defaultNamespace) {
-		if (Validator.isNull(name) && Validator.isNull(uri)) {
-			return null;
-		}
-
-		if (Validator.isNull(uri)) {
-			return SAXReaderUtil.createQName(
-				name, SAXReaderUtil.createNamespace(defaultNamespace));
-		}
-
-		return SAXReaderUtil.createQName(
-			name, SAXReaderUtil.createNamespace(uri));
 	}
 
 	private static final String _NAMESPACE = "com.liferay.portlet.";
