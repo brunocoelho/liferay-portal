@@ -1,3 +1,4 @@
+/* @generated */
 /*
  * Copyright (c) OSGi Alliance (2012). All Rights Reserved.
  * 
