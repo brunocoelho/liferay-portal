@@ -50,19 +50,19 @@ public class HttpAdaptor {
 		};
 
 		_httpServiceServlet = new HttpServiceServlet() {
-	
+
 			@Override
 			public ServletConfig getServletConfig() {
 				return _servletConfig;
 			}
-	
+
 			@Override
 			public void init(ServletConfig servletConfig) {
 				_servletConfig = servletConfig;
 			}
-	
+
 			private ServletConfig _servletConfig;
-	
+
 		};
 
 		ServletConfig servletConfig = new ServletConfig() {
