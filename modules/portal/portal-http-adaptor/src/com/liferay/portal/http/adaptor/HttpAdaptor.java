@@ -45,10 +45,6 @@ public class HttpAdaptor {
 	protected void activate(ComponentContext componentContext) {
 		BundleContext bundleContext = componentContext.getBundleContext();
 
-		String[] classNames = new String[] {
-			HttpServiceServlet.class.getName(), HttpServlet.class.getName()
-		};
-
 		_httpServiceServlet = new HttpServiceServlet() {
 
 			@Override
@@ -104,7 +100,10 @@ public class HttpAdaptor {
 		properties.put("original.bean", Boolean.TRUE.toString());
 
 		_serviceRegistration = bundleContext.registerService(
-			classNames, _httpServiceServlet, properties);
+			new String[] {
+				HttpServiceServlet.class.getName(), HttpServlet.class.getName()
+			},
+			_httpServiceServlet, properties);
 	}
 
 	@Deactivate
