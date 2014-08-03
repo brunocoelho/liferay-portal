@@ -106,12 +106,12 @@ public class FilterDefinition {
 		_urlPatterns.addAll(urlPatterns);
 	}
 
-	private boolean _asyncSupported = false;
+	private boolean _asyncSupported;
 	private List<String> _dispatchers = new ArrayList<String>();
 	private Filter _filter;
 	private Map<String, String> _initParameters = new HashMap<String, String>();
 	private String _name;
-	private int _priority = 0;
+	private int _priority;
 	private List<String> _servletNames = new ArrayList<String>();
 	private List<String> _urlPatterns = new ArrayList<String>();
 

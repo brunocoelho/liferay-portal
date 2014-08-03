@@ -13,8 +13,6 @@
  */
 package com.liferay.portal.http.service.internal;
 
-import java.io.IOException;
-
 import java.net.URL;
 
 import java.util.Enumeration;
@@ -35,9 +33,11 @@ public class WabServletContextHelper extends ServletContextHelper {
 	public WabServletContextHelper(Bundle bundle) {
 		super(bundle);
 
-		this.bundle = bundle;
-		this.string = getClass().getSimpleName() + '[' + bundle.getBundleId() +
-			']';
+		_bundle = bundle;
+		
+		Class<?> clazz = getClass();
+
+		_string = clazz.getSimpleName() + '[' + bundle.getBundleId() + ']';
 	}
 
 	@Override
@@ -58,7 +58,7 @@ public class WabServletContextHelper extends ServletContextHelper {
 
 	@Override
 	public URL getResource(String name) {
-		if ((name == null) || (bundle == null)) {
+		if ((name == null) || (_bundle == null)) {
 			return null;
 		}
 
@@ -66,52 +66,51 @@ public class WabServletContextHelper extends ServletContextHelper {
 			name = name.substring(1);
 		}
 
-		URL entry = bundle.getEntry(name);
+		URL url = _bundle.getEntry(name);
 
-		if (entry == null) {
-			entry = bundle.getResource(name);
+		if (url == null) {
+			url = _bundle.getResource(name);
 		}
 
-		return entry;
+		return url;
 	}
 
 	@Override
 	public Set<String> getResourcePaths(String path) {
-		if ((path == null) || (bundle == null)) {
+		if ((path == null) || (_bundle == null)) {
 			return null;
 		}
 
-		Enumeration<URL> enumeration = bundle.findEntries(path, null, false);
+		Enumeration<URL> enumeration = _bundle.findEntries(path, null, false);
 
 		if (enumeration == null) {
 			return null;
 		}
 
-		Set<String> result = new HashSet<String>();
+		Set<String> paths = new HashSet<String>();
 
 		while (enumeration.hasMoreElements()) {
 			URL url = enumeration.nextElement();
 
-			result.add(url.getPath());
+			paths.add(url.getPath());
 		}
 
-		return result;
+		return paths;
 	}
 
 	@Override
 	public boolean handleSecurity(
-			HttpServletRequest request, HttpServletResponse response)
-		throws IOException {
+		HttpServletRequest request, HttpServletResponse response) {
 
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return string;
+		return _string;
 	}
 
-	private final Bundle bundle;
-	private final String string;
+	private final Bundle _bundle;
+	private final String _string;
 
 }
