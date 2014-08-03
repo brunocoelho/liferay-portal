@@ -109,11 +109,15 @@ public class HttpAdaptor {
 
 	@Deactivate
 	protected void deactivate() {
-		_serviceRegistration.unregister();
+		if (_serviceRegistration != null) {
+			_serviceRegistration.unregister();
+		}
 
 		_serviceRegistration = null;
 
-		_httpServiceServlet.destroy();
+		if (_httpServiceServlet != null) {
+			_httpServiceServlet.destroy();
+		}
 
 		_httpServiceServlet = null;
 	}
