@@ -245,11 +245,12 @@ public class WebXMLDefinitionLoader {
 			String listenerClassName = listenerElement.elementText(
 				"listener-class");
 
-			Class<? extends EventListener> clazz = null;
+			Class<? extends EventListener> eventListenerClass = null;
 
 			try {
-				clazz = bundle.loadClass(listenerClassName).asSubclass(
-					EventListener.class);
+				Class<?> clazz = bundle.loadClass(listenerClassName);
+				
+				eventListenerClass = clazz.asSubclass(EventListener.class);
 			}
 			catch (Exception e) {
 				_log.error("Unable to load listener " + listenerClassName);
@@ -257,7 +258,7 @@ public class WebXMLDefinitionLoader {
 				continue;
 			}
 
-			EventListener eventListener = clazz.newInstance();
+			EventListener eventListener = eventListenerClass.newInstance();
 
 			listenerDefinition.setEventListener(eventListener);
 
@@ -281,8 +282,8 @@ public class WebXMLDefinitionLoader {
 			Class<?> servletClass = null;
 
 			try {
-				if (WabResourceServlet.class.getName().equals(
-						servletClassName)) {
+				if (servletClassName.equals(
+						WabResourceServlet.class.getName())) {
 
 					servletClass = WabResourceServlet.class;
 				}
