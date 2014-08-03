@@ -528,7 +528,7 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 
 	protected static final String WHERE_OR = " OR ";
 
-	/*
+	/**
 	 * This was left behind to not break legacy services. They would still
 	 * collect their listeners through their afterPropertiesSet method
 	 */

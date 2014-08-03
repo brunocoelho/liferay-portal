@@ -1607,13 +1607,13 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 			return right${pkColumn.methodName} + 1;
 		}
 	</#if>
-	
-	
+
+
 	/**
 	 * Initializes the ${entity.humanName} persistence.
 	 */
 	public void afterPropertiesSet() {
-		
+
 		<#list entity.columnList as column>
 			<#if column.isCollection() && column.isMappingManyToMany()>
 				<#assign tempEntity = serviceBuilder.getEntity(column.getEJBName())>
