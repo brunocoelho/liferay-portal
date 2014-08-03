@@ -53,7 +53,21 @@ public class HttpAdaptor {
 			HttpServiceServlet.class.getName(), HttpServlet.class.getName()
 		};
 
-		_httpServiceServlet = new AdaptorServlet();
+		_httpServiceServlet = new HttpServiceServlet() {
+	
+			@Override
+			public ServletConfig getServletConfig() {
+				return _servletConfig;
+			}
+	
+			@Override
+			public void init(ServletConfig servletConfig) {
+				_servletConfig = servletConfig;
+			}
+	
+			private ServletConfig _servletConfig;
+	
+		};
 
 		ServletConfig servletConfig = new ServletConfig() {
 
@@ -109,21 +123,5 @@ public class HttpAdaptor {
 	private HttpServiceServlet _httpServiceServlet;
 	private ServiceRegistration<?> _serviceRegistration;
 	private ServletContext _servletContext;
-
-	private class AdaptorServlet extends HttpServiceServlet {
-
-		@Override
-		public ServletConfig getServletConfig() {
-			return _servletConfig;
-		}
-
-		@Override
-		public void init(ServletConfig servletConfig) {
-			_servletConfig = servletConfig;
-		}
-
-		private ServletConfig _servletConfig;
-
-	}
 
 }
