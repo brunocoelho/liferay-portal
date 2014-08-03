@@ -1608,7 +1608,6 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		}
 	</#if>
 
-
 	/**
 	 * Initializes the ${entity.humanName} persistence.
 	 */
