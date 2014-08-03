@@ -894,9 +894,9 @@ public class WabProcessor {
 
 			for (String partialPackageName : partialPackageNames) {
 				_exportPackageNames.add(
-					versionedServicePackage(partialPackageName));
+					getVersionedServicePackageName(partialPackageName));
 				_importPackageNames.add(
-					versionedServicePackage(partialPackageName));
+					getVersionedServicePackageName(partialPackageName));
 			}
 
 			_importPackageNames.add("com.liferay.portal.wab.extender");
@@ -1110,8 +1110,9 @@ public class WabProcessor {
 		writeManifest(manifest);
 	}
 
-	protected String versionedServicePackage(String subPackage) {
-		return _servicePackageName + subPackage + ";version=" + _bundleVersion;
+	protected String getVersionedServicePackageName(String partialPackageName) {
+		return _servicePackageName + partialPackageName + ";version=" +
+			_bundleVersion;
 	}
 
 	protected void writeGeneratedWab(File file) throws IOException {
