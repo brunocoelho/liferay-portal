@@ -214,8 +214,7 @@ public class WabBundleProcessor {
 
 			try {
 				_extendedHttpService.registerFilter(
-					filterDefinition.getFilter(),
-					filterDefinition.getName(),
+					filterDefinition.getFilter(), filterDefinition.getName(),
 					filterDefinition.getURLPatterns().toArray(new String[0]),
 					filterDefinition.getServletNames().toArray(new String[0]),
 					filterDefinition.getDispatchers().toArray(new String[0]),
@@ -283,9 +282,7 @@ public class WabBundleProcessor {
 		}
 	}
 
-	protected void readConfiguration(Bundle bundle)
-		throws Exception {
-
+	protected void readConfiguration(Bundle bundle) throws Exception {
 		_webXML = _webXMLDefinitionLoader.loadWebXML(bundle);
 	}
 

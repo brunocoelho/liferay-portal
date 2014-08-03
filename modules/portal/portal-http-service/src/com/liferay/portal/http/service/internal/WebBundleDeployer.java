@@ -121,8 +121,8 @@ public class WebBundleDeployer {
 	private static Log _log = LogFactoryUtil.getLog(WebBundleDeployer.class);
 
 	private BundleContext _bundleContext;
+	private ExtendedHttpService _extendedHttpService;
 	private Map<Bundle, WabBundleProcessor> _wabBundles =
 		new ConcurrentHashMap<Bundle, WabBundleProcessor>();
-	private ExtendedHttpService _extendedHttpService;
 
 }

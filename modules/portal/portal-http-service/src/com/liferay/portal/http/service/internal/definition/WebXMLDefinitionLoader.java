@@ -279,8 +279,7 @@ public class WebXMLDefinitionLoader {
 		List<Element> servletMappingElements = rootElement.elements(
 			"servlet-mapping");
 
-		List<Element> errorPageElements = rootElement.elements(
-			"error-page");
+		List<Element> errorPageElements = rootElement.elements("error-page");
 
 		Map<String, String> errorPageLocationMappings =
 			getErrorPageLocationMappings(errorPageElements);

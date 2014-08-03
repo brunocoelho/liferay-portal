@@ -38,10 +38,6 @@ public class FilterDefinition {
 		_urlPatterns.add(urlPattern);
 	}
 
-	public boolean isAsyncSupported() {
-		return _asyncSupported;
-	}
-
 	public List<String> getDispatchers() {
 		return _dispatchers;
 	}
@@ -68,6 +64,10 @@ public class FilterDefinition {
 
 	public List<String> getURLPatterns() {
 		return _urlPatterns;
+	}
+
+	public boolean isAsyncSupported() {
+		return _asyncSupported;
 	}
 
 	public void setAsyncSupported(boolean asyncSupported) {
@@ -110,9 +110,9 @@ public class FilterDefinition {
 	private List<String> _dispatchers = new ArrayList<String>();
 	private Filter _filter;
 	private Map<String, String> _initParameters = new HashMap<String, String>();
+	private String _name;
 	private int _priority = 0;
 	private List<String> _servletNames = new ArrayList<String>();
-	private String _name;
 	private List<String> _urlPatterns = new ArrayList<String>();
 
 }
