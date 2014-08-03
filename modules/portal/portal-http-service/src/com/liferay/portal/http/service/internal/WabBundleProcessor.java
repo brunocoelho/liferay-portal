@@ -70,8 +70,11 @@ public class WabBundleProcessor {
 			currentThread.setContextClassLoader(_bundleClassLoader);
 
 			destroyServlets();
+
 			destroyFilters();
+
 			destroyListeners();
+
 			destroyContext();
 		}
 		finally {
@@ -104,6 +107,7 @@ public class WabBundleProcessor {
 			}
 
 			initFilters();
+
 			initServlets();
 		}
 		finally {
