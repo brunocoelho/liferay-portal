@@ -58,7 +58,7 @@ public class BundlePortletApp extends ServletContextHelper
 		}
 
 		_contextPath = httpServiceEndpoint + contextPath;
-		_pluginPackage = new BundlePluginPackage(this, bundle);
+		_pluginPackage = new BundlePluginPackage(bundle, this);
 		_portletApp = portalPortletModel.getPortletApp();
 	}
 

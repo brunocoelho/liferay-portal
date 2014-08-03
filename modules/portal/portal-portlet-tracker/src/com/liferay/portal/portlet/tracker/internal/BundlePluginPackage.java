@@ -35,9 +35,9 @@ import org.osgi.framework.Constants;
  */
 public class BundlePluginPackage implements PluginPackage {
 
-	public BundlePluginPackage(PortletApp portletApp, Bundle bundle) {
-		_portletApp = portletApp;
+	public BundlePluginPackage(Bundle bundle, PortletApp portletApp) {
 		_bundle = bundle;
+		_portletApp = portletApp;
 
 		_headers = _bundle.getHeaders();
 		_version = Version.getInstance(getVersion());

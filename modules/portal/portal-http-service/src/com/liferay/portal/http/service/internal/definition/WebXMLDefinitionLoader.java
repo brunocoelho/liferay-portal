@@ -249,7 +249,7 @@ public class WebXMLDefinitionLoader {
 
 			try {
 				Class<?> clazz = bundle.loadClass(listenerClassName);
-				
+
 				eventListenerClass = clazz.asSubclass(EventListener.class);
 			}
 			catch (Exception e) {
