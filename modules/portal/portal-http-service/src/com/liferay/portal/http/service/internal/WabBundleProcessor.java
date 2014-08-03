@@ -94,7 +94,7 @@ public class WabBundleProcessor {
 
 			currentThread.setContextClassLoader(_bundleClassLoader);
 
-			readConfiguration(_bundle);
+			_webXML = _webXMLDefinitionLoader.loadWebXML(_bundle);
 
 			initContext();
 
@@ -169,11 +169,11 @@ public class WabBundleProcessor {
 	}
 
 	protected void destroyServlets() {
-		Map<String, ServletDefinition> servlets =
+		Map<String, ServletDefinition> servletDefinitions =
 			_webXML.getServletDefinitions();
 
 		List<ServletDefinition> servletDefinitionsList =
-			new ArrayList<ServletDefinition>(servlets.values());
+			new ArrayList<ServletDefinition>(servletDefinitions.values());
 
 		Collections.reverse(servletDefinitionsList);
 
@@ -287,10 +287,6 @@ public class WabBundleProcessor {
 				_log.error(e, e);
 			}
 		}
-	}
-
-	protected void readConfiguration(Bundle bundle) throws Exception {
-		_webXML = _webXMLDefinitionLoader.loadWebXML(bundle);
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(WabBundleProcessor.class);
