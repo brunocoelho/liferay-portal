@@ -331,10 +331,10 @@ public class PortletTracker
 			return;
 		}
 
-		Enumeration<URL> webResourceURLs = bundle.findEntries(
+		Enumeration<URL> urls = bundle.findEntries(
 			"/META-INF/resources", "*.*", true);
 
-		if ((webResourceURLs == null) || !webResourceURLs.hasMoreElements()) {
+		if ((urls == null) || !urls.hasMoreElements()) {
 			return;
 		}
 
@@ -343,10 +343,10 @@ public class PortletTracker
 		createStaticResourceServlet(
 			portletModel.getPortletApp(), bundleContext, serviceRegistrations);
 
-		webResourceURLs = bundle.findEntries(
+		urls = bundle.findEntries(
 			"/META-INF/resources", "*.jsp", true);
 
-		if ((webResourceURLs == null) || !webResourceURLs.hasMoreElements()) {
+		if ((urls == null) || !urls.hasMoreElements()) {
 			return;
 		}
 
