@@ -97,18 +97,19 @@ public class JspCompiler extends Jsr199JavaCompiler {
 
 		BundleWiring bundleWiring = bundle.adapt(BundleWiring.class);
 
-		List<BundleWire> providedWires = bundleWiring.getRequiredWires(null);
+		List<BundleWire> requiredBundleWires = bundleWiring.getRequiredWires(
+			null);
 
-		for (BundleWire bundleWire : providedWires) {
-			BundleWiring providerWiring = bundleWire.getProviderWiring();
+		for (BundleWire bundleWire : requiredBundleWires) {
+			BundleWiring providedBundleWiring = bundleWire.getProviderWiring();
 
-			bundleJavaManager.addBundleWiring(providerWiring);
+			bundleJavaManager.addBundleWiring(providedBundleWiring);
 		}
 
-		List<BundleRequirement> requirements = bundleWiring.getRequirements(
-			BundleRevision.PACKAGE_NAMESPACE);
+		List<BundleRequirement> bundleRequirements =
+			bundleWiring.getRequirements(BundleRevision.PACKAGE_NAMESPACE);
 
-		for (BundleRequirement bundleRequirement : requirements) {
+		for (BundleRequirement bundleRequirement : bundleRequirements) {
 			bundleJavaManager.addBundleRequirement(bundleRequirement);
 		}
 	}
@@ -223,7 +224,7 @@ public class JspCompiler extends Jsr199JavaCompiler {
 
 			return document.valueOf("/taglib/uri/text()");
 		}
-		catch (DocumentException e) {
+		catch (DocumentException de) {
 			return null;
 		}
 	}
