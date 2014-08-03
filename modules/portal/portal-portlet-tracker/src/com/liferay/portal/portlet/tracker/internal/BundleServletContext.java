@@ -81,7 +81,9 @@ public class BundleServletContext {
 				return url.openStream();
 			}
 			catch (IOException e) {
+
 				// ignore
+
 			}
 		}
 
@@ -95,7 +97,7 @@ public class BundleServletContext {
 	private static Log _log = LogFactoryUtil.getLog(BundleServletContext.class);
 
 	private ClassLoader _classLoader;
-	private ServletContextHelper _servletContextHelper;
 	private ServletContext _servletContext;
+	private ServletContextHelper _servletContextHelper;
 
 }

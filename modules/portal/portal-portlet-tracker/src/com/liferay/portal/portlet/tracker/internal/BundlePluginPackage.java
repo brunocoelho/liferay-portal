@@ -114,7 +114,7 @@ public class BundlePluginPackage implements PluginPackage {
 
 	@Override
 	public String getPackageId() {
-		return  String.valueOf(_bundle.getBundleId());
+		return String.valueOf(_bundle.getBundleId());
 	}
 
 	@Override

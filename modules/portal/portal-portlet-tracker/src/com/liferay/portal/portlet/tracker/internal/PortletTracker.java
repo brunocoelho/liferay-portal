@@ -355,8 +355,8 @@ public class PortletTracker
 	}
 
 	protected void clearServiceRegistrations(Bundle bundle) {
-		ServiceRegistrations serviceRegistrations =
-			_serviceRegistrations.get(bundle);
+		ServiceRegistrations serviceRegistrations = _serviceRegistrations.get(
+			bundle);
 
 		if (serviceRegistrations == null) {
 			return;

@@ -84,6 +84,7 @@ public class BundlePortletApp extends ServletContextHelper
 	@Override
 	public void addPublicRenderParameter(
 		PublicRenderParameter publicRenderParameter) {
+
 		_portletApp.addPublicRenderParameter(publicRenderParameter);
 	}
 
