@@ -89,16 +89,15 @@ public class WebXMLDefinitionLoader {
 	protected List<String> getDispatchers(Element element) {
 		List<String> dispatchers = new ArrayList<String>();
 
-		for (Element curElement : element.elements("dispatcher")) {
-			dispatchers.add(StringUtil.toUpperCase(curElement.getTextTrim()));
+		for (Element dispatcherElement : element.elements("dispatcher")) {
+			dispatchers.add(
+				StringUtil.toUpperCase(dispatcherElement.getTextTrim()));
 		}
 
 		return dispatchers;
 	}
 
-	protected Map<String, String> getErrorPageLocationMappings(
-		List<Element> elements) {
-
+	protected Map<String, String> getErrorPages(List<Element> elements) {
 		Map<String, String> errorPages = new HashMap<String, String>();
 
 		for (Element element : elements) {
@@ -120,8 +119,8 @@ public class WebXMLDefinitionLoader {
 	protected List<String> getServletNames(Element element) {
 		List<String> servletNames = new ArrayList<String>();
 
-		for (Element curElement : element.elements("servlet-name")) {
-			servletNames.add(curElement.getTextTrim());
+		for (Element servletNameElement : element.elements("servlet-name")) {
+			servletNames.add(servletNameElement.getTextTrim());
 		}
 
 		return servletNames;
@@ -130,8 +129,8 @@ public class WebXMLDefinitionLoader {
 	protected List<String> getURLPatterns(Element element) {
 		List<String> urlPatterns = new ArrayList<String>();
 
-		for (Element curElement : element.elements("url-pattern")) {
-			String urlPattern = curElement.getTextTrim();
+		for (Element urlPatternElement : element.elements("url-pattern")) {
+			String urlPattern = urlPatternElement.getTextTrim();
 
 			if (urlPattern.endsWith(_SLASH_STAR) && (urlPattern.length() > 2)) {
 				urlPattern = urlPattern.substring(0, urlPattern.length() - 2);
@@ -148,28 +147,26 @@ public class WebXMLDefinitionLoader {
 	}
 
 	protected void readContextParameters(
-		Bundle bundle, Element rootElement, WebXMLDefinition webXML) {
+		Bundle bundle, Element element, WebXMLDefinition webXML) {
 
-		for (Element element : rootElement.elements("context-param")) {
-			String name = element.elementText("param-name");
-			String value = element.elementText("param-value");
+		for (Element contextParamElement : element.elements("context-param")) {
+			String name = contextParamElement.elementText("param-name");
+			String value = contextParamElement.elementText("param-value");
 
 			webXML.setContextParameter(name, value);
 		}
 	}
 
 	protected void readFilters(
-			Bundle bundle, Element rootElement, WebXMLDefinition webXML)
+			Bundle bundle, Element element, WebXMLDefinition webXML)
 		throws IllegalAccessException, InstantiationException {
 
-		List<Element> filterElements = rootElement.elements("filter");
-
-		List<Element> filterMappingElements = rootElement.elements(
+		List<Element> filterMappingElements = element.elements(
 			"filter-mapping");
 
 		Collections.reverse(new ArrayList<Element>(filterMappingElements));
 
-		for (Element filterElement : filterElements) {
+		for (Element filterElement : element.elements("filter")) {
 			String filterClassName = filterElement.elementText("filter-class");
 
 			Class<?> clazz = null;
@@ -187,16 +184,16 @@ public class WebXMLDefinitionLoader {
 
 			FilterDefinition filterDefinition = new FilterDefinition();
 
+			boolean asyncSupported = GetterUtil.getBoolean(
+				filterElement.elementText("async-supported"));
+
+			filterDefinition.setAsyncSupported(asyncSupported);
+
 			filterDefinition.setFilter(filter);
 
 			String filterName = filterElement.elementText("filter-name");
 
 			filterDefinition.setName(filterName);
-
-			boolean asyncSupported = GetterUtil.getBoolean(
-				filterElement.elementText("async-supported"));
-
-			filterDefinition.setAsyncSupported(asyncSupported);
 
 			List<Element> initParamElements = filterElement.elements(
 				"init-param");
@@ -282,7 +279,7 @@ public class WebXMLDefinitionLoader {
 		List<Element> errorPageElements = rootElement.elements("error-page");
 
 		Map<String, String> errorPageLocationMappings =
-			getErrorPageLocationMappings(errorPageElements);
+			getErrorPages(errorPageElements);
 
 		for (Element servletElement : servletElements) {
 			String servletClassName = servletElement.elementText(

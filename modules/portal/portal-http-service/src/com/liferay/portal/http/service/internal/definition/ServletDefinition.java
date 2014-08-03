@@ -82,7 +82,7 @@ public class ServletDefinition {
 		_urlPatterns = urlPatterns;
 	}
 
-	private boolean _asyncSupported = false;
+	private boolean _asyncSupported;
 	private List<String> _errorPages = new ArrayList<String>();
 	private Map<String, String> _initParameters = new HashMap<String, String>();
 	private String _name;
