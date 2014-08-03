@@ -48,9 +48,7 @@ public class BundlePortletApp extends ServletContextHelper
 		super(bundle);
 
 		_portalPortletModel = portalPortletModel;
-		_portletApp = portalPortletModel.getPortletApp();
 		_servletContextName = servletContextName;
-		_pluginPackage = new BundlePluginPackage(this, bundle);
 
 		if ((httpServiceEndpoint.length() > 0) &&
 			httpServiceEndpoint.endsWith("/")) {
@@ -60,6 +58,8 @@ public class BundlePortletApp extends ServletContextHelper
 		}
 
 		_contextPath = httpServiceEndpoint + contextPath;
+		_pluginPackage = new BundlePluginPackage(this, bundle);
+		_portletApp = portalPortletModel.getPortletApp();
 	}
 
 	@Override
