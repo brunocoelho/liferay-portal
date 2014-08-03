@@ -184,94 +184,75 @@ public class BundlePluginPackage implements PluginPackage {
 
 	@Override
 	public void setAuthor(String author) {
-		// Unsupported
 	}
 
 	@Override
 	public void setChangeLog(String changeLog) {
-		// Unsupported
 	}
 
 	@Override
 	public void setContext(String context) {
-		// Unsupported
 	}
 
 	@Override
 	public void setDeploymentSettings(Properties properties) {
-		// Unsupported
 	}
 
 	@Override
 	public void setDownloadURL(String downloadURL) {
-		// Unsupported
 	}
 
 	@Override
 	public void setLicenses(List<License> licenses) {
-		// Unsupported
 	}
 
 	@Override
 	public void setLiferayVersions(List<String> liferayVersions) {
-		// Unsupported
 	}
 
 	@Override
 	public void setLongDescription(String longDescription) {
-		// Unsupported
 	}
 
 	@Override
 	public void setModifiedDate(Date modifiedDate) {
-		// Unsupported
 	}
 
 	@Override
 	public void setName(String name) {
-		// Unsupported
 	}
 
 	@Override
 	public void setPageURL(String pageURL) {
-		// Unsupported
 	}
 
 	@Override
 	public void setRecommendedDeploymentContext(String deploymentContext) {
-		// Unsupported
 	}
 
 	@Override
 	public void setRepository(RemotePluginPackageRepository repository) {
-		// Unsupported
 	}
 
 	@Override
 	public void setRequiredDeploymentContexts(
 		List<String> requiredDeploymentContexts) {
-
-		// Unsupported
 	}
 
 	@Override
 	public void setScreenshots(List<Screenshot> screenshots) {
-		// Unsupported
 	}
 
 	@Override
 	public void setShortDescription(String shortDescription) {
-		// Unsupported
 	}
 
 	@Override
 	public void setTags(List<String> tags) {
-		// Unsupported
 	}
 
 	@Override
 	public void setTypes(List<String> types) {
-		// Unsupported
 	}
 
 	private Bundle _bundle;
