@@ -43,7 +43,7 @@ public class WebBundleDeployer {
 	}
 
 	public void close() {
-		Set<Bundle> bundles = _wabBundles.keySet();
+		Set<Bundle> bundles = _wabBundleProcessors.keySet();
 
 		for (Bundle bundle : bundles) {
 			try {
@@ -66,7 +66,7 @@ public class WebBundleDeployer {
 
 			wabBundleProcessor.init();
 
-			_wabBundles.put(bundle, wabBundleProcessor);
+			_wabBundleProcessors.put(bundle, wabBundleProcessor);
 		}
 		catch (Exception e) {
 			EventUtil.sendEvent(bundle, EventUtil.FAILED, e, false);
@@ -74,10 +74,11 @@ public class WebBundleDeployer {
 	}
 
 	public void doStop(Bundle bundle) {
-		WabBundleProcessor wabBundleProcessor = _wabBundles.remove(bundle);
+		WabBundleProcessor wabBundleProcessor = _wabBundleProcessors.remove(
+			bundle);
 
 		if (wabBundleProcessor == null) {
-			throw new IllegalArgumentException("Bundle is not a WAB.");
+			throw new IllegalArgumentException("Bundle is not a WAB");
 		}
 
 		EventUtil.sendEvent(bundle, EventUtil.UNDEPLOYING, null, false);
@@ -97,7 +98,7 @@ public class WebBundleDeployer {
 	protected void handleCollidedWABs(Bundle bundle) {
 		String servletContextName = WabUtil.getWebContextName(bundle);
 
-		Set<Bundle> wabBundles = _wabBundles.keySet();
+		Set<Bundle> wabBundles = _wabBundleProcessors.keySet();
 
 		for (Bundle curBundle : _bundleContext.getBundles()) {
 			if (WabUtil.isFragmentBundle(curBundle) ||
@@ -122,7 +123,7 @@ public class WebBundleDeployer {
 
 	private BundleContext _bundleContext;
 	private ExtendedHttpService _extendedHttpService;
-	private Map<Bundle, WabBundleProcessor> _wabBundles =
+	private Map<Bundle, WabBundleProcessor> _wabBundleProcessors =
 		new ConcurrentHashMap<Bundle, WabBundleProcessor>();
 
 }
