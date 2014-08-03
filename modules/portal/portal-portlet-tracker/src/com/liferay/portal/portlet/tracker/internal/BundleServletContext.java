@@ -14,8 +14,6 @@
 
 package com.liferay.portal.portlet.tracker.internal;
 
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.PluginContextListener;
 import com.liferay.portal.model.PortletApp;
 
@@ -90,8 +88,6 @@ public class BundleServletContext {
 	public Set<String> getResourcePaths(String path) {
 		return _servletContextHelper.getResourcePaths(path);
 	}
-
-	private static Log _log = LogFactoryUtil.getLog(BundleServletContext.class);
 
 	private ClassLoader _classLoader;
 	private ServletContext _servletContext;
