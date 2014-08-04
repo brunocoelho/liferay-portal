@@ -235,14 +235,14 @@ public class WabBundleProcessor {
 				_extendedHttpService.registerListener(
 					listenerDefinition.getEventListener(), _servletContextName);
 			}
-			catch (Exception e) {
+			catch (Exception e1) {
 				try {
 					destroy();
 				}
-				catch (Exception e1) {
+				catch (Exception e2) {
 				}
 
-				throw e;
+				throw e1;
 			}
 		}
 	}
