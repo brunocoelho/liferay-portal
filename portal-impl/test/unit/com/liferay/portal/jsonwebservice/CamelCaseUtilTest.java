@@ -47,12 +47,6 @@ public class CamelCaseUtilTest {
 			"camelCaseWord",
 			CamelCaseUtil.normalizeCamelCase("camelCASEWord", false));
 		Assert.assertEquals(
-			"camelCaseWord",
-			CamelCaseUtil.normalizeCamelCase("camelCASEWord", true));
-		Assert.assertEquals(
-			"camelCaseWord",
-			CamelCaseUtil.normalizeCamelCase("camelCASEWord", false));
-		Assert.assertEquals(
 			"camelCase", CamelCaseUtil.normalizeCamelCase("camelCASE", true));
 		Assert.assertEquals(
 			"camelCase", CamelCaseUtil.normalizeCamelCase("camelCASE", false));
