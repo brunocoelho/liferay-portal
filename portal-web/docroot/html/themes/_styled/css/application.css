@@ -854,7 +854,7 @@
 	}
 }
 
-/* LPS-44925 - Borders not showing on modal android 4.4.2 */
+/* LPS-44925 */
 
 .aui .modal-content .dialog-iframe-node {
 	border: 1px solid transparent;
