@@ -266,15 +266,13 @@ public class WabProcessor {
 				
 				parentFile.mkdirs();
 
-				FileOutputStream fileOutputStream = new FileOutputStream(
-					file);
+				OutputStream outputStream = new FileOutputStream(file);
 
 				try {
-					StreamUtil.transfer(
-						zipInputStream, fileOutputStream, false);
+					StreamUtil.transfer(zipInputStream, outputStream, false);
 				}
 				finally {
-					fileOutputStream.close();
+					outputStream.close();
 				}
 			}
 		}
