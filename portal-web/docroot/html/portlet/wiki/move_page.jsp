@@ -51,6 +51,7 @@ String newTitle = ParamUtil.get(request, "newTitle", StringPool.BLANK);
 
 		<%
 		boolean pending = false;
+
 		boolean hasWorkflowDefinitionLink = WorkflowDefinitionLinkLocalServiceUtil.hasWorkflowDefinitionLink(themeDisplay.getCompanyId(), scopeGroupId, WikiPage.class.getName());
 
 		if (hasWorkflowDefinitionLink) {
