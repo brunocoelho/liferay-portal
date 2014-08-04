@@ -414,6 +414,7 @@ public class HtmlBBCodeTranslatorImpl implements BBCodeTranslator {
 
 		if (Validator.isNotNull(attributes)) {
 			sb.append(StringPool.SPACE);
+
 			handleImageAttributes(sb, attributes);
 		}
 
@@ -421,7 +422,7 @@ public class HtmlBBCodeTranslatorImpl implements BBCodeTranslator {
 	}
 
 	protected void handleImageAttributes(StringBundler sb, String attributes) {
-		Matcher matcher = _attrPattern.matcher(attributes);
+		Matcher matcher = _attributesPattern.matcher(attributes);
 
 		while (matcher.find()) {
 			String attributeName = matcher.group(1);
@@ -751,7 +752,7 @@ public class HtmlBBCodeTranslatorImpl implements BBCodeTranslator {
 	private static Log _log = LogFactoryUtil.getLog(
 		HtmlBBCodeTranslatorImpl.class);
 
-	private Pattern _attrPattern = Pattern.compile(
+	private Pattern _attributesPattern = Pattern.compile(
 		"\\s*([^=]+)\\s*=\\s*\"([^\"]+)\"\\s*");
 	private Map<String, String> _bbCodeCharacters;
 	private BBCodeParser _bbCodeParser = new BBCodeParser();
