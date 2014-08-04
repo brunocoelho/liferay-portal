@@ -135,7 +135,7 @@ public class JSONWebServiceTracker
 		_jsonWebServiceActionsManager = null;
 	}
 
-	private ClassLoader getBundleClassLoader(Bundle bundle) {
+	protected ClassLoader getBundleClassLoader(Bundle bundle) {
 		BundleWiring bundleWiring = bundle.adapt(BundleWiring.class);
 
 		return bundleWiring.getClassLoader();
