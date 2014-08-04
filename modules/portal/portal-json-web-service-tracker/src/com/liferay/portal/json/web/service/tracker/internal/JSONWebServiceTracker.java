@@ -109,14 +109,14 @@ public class JSONWebServiceTracker
 		_jsonWebServiceActionsManager = jsonWebServiceActionsManager;
 	}
 
+	protected void unregisterService(Object service) {
+		_jsonWebServiceActionsManager.unregisterJSONWebServiceActions(service);
+	}
+
 	protected void unsetJSONWebServiceActionsManager(
 		JSONWebServiceActionsManager jsonWebServiceActionsManager) {
 
 		_jsonWebServiceActionsManager = null;
-	}
-
-	protected void unregisterService(Object service) {
-		_jsonWebServiceActionsManager.unregisterJSONWebServiceActions(service);
 	}
 
 	private ComponentContext _componentContext;
