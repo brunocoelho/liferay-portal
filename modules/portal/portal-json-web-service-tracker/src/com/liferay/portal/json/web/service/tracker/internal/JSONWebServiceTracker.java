@@ -87,6 +87,12 @@ public class JSONWebServiceTracker
 		unregisterService(service);
 	}
 
+	protected ClassLoader getBundleClassLoader(Bundle bundle) {
+		BundleWiring bundleWiring = bundle.adapt(BundleWiring.class);
+
+		return bundleWiring.getClassLoader();
+	}
+
 	protected Object getService(ServiceReference<Object> serviceReference) {
 		BundleContext bundleContext = _componentContext.getBundleContext();
 
@@ -133,12 +139,6 @@ public class JSONWebServiceTracker
 		JSONWebServiceActionsManager jsonWebServiceActionsManager) {
 
 		_jsonWebServiceActionsManager = null;
-	}
-
-	protected ClassLoader getBundleClassLoader(Bundle bundle) {
-		BundleWiring bundleWiring = bundle.adapt(BundleWiring.class);
-
-		return bundleWiring.getClassLoader();
 	}
 
 	private ComponentContext _componentContext;
