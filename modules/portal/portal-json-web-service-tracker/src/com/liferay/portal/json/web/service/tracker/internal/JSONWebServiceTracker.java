@@ -115,7 +115,7 @@ public class JSONWebServiceTracker
 		_jsonWebServiceActionsManager = null;
 	}
 
-	private void unregisterService(Object service) {
+	protected void unregisterService(Object service) {
 		_jsonWebServiceActionsManager.unregisterJSONWebServiceActions(service);
 	}
 
