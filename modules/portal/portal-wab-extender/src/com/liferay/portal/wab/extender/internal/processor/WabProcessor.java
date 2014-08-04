@@ -239,7 +239,7 @@ public class WabProcessor {
 
 	protected void expandServiceJarIntoClassesDir(URI uri, File zipFile)
 		throws IOException {
-		
+
 		URI webInfClasesURI = uri.resolve("WEB-INF/classes");
 
 		ZipInputStream zipInputStream = new ZipInputStream(
@@ -263,7 +263,7 @@ public class WabProcessor {
 					webInfClasesURI.getPath(), zipEntry.getName());
 
 				File parentFile = file.getParentFile();
-				
+
 				parentFile.mkdirs();
 
 				OutputStream outputStream = new FileOutputStream(file);
@@ -345,6 +345,11 @@ public class WabProcessor {
 		catch (IOException ioe) {
 			return new Properties();
 		}
+	}
+
+	protected String getVersionedServicePackageName(String partialPackageName) {
+		return _servicePackageName + partialPackageName + ";version=" +
+			_bundleVersion;
 	}
 
 	protected String getWebContextPath() {
@@ -884,7 +889,7 @@ public class WabProcessor {
 			Element rootElement = document.getRootElement();
 
 			_servicePackageName = rootElement.attributeValue("package-path");
-			
+
 			String[] partialPackageNames = {
 				"", ".model", ".model.impl", ".persistence",
 				".persistence.impl", ".service", ".service.base",
@@ -1107,11 +1112,6 @@ public class WabProcessor {
 		processWebContextPath(manifest);
 
 		writeManifest(manifest);
-	}
-
-	protected String getVersionedServicePackageName(String partialPackageName) {
-		return _servicePackageName + partialPackageName + ";version=" +
-			_bundleVersion;
 	}
 
 	protected void writeGeneratedWab(File file) throws IOException {
