@@ -32,6 +32,7 @@ import com.liferay.portal.kernel.search.messaging.SearchWriterMessageListener;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
@@ -137,20 +138,26 @@ public abstract class AbstractSearchEngineConfigurator
 			RejectedExecutionHandler rejectedExecutionHandler =
 				new CallerRunsPolicy() {
 
-				@Override
-				public void rejectedExecution(
-					Runnable runnable, ThreadPoolExecutor threadPoolExecutor) {
+					@Override
+					public void rejectedExecution(
+						Runnable runnable,
+						ThreadPoolExecutor threadPoolExecutor) {
+	
+						if (_log.isWarnEnabled()) {
+							StringBundler sb = new StringBundler(4);
+							
+							sb.append("The search index writer's task queue ");
+							sb.append("is at its maximum capacity. The ");
+							sb.append("current thread will handle the ");
+							sb.append("request.");
 
-					if (_log.isWarnEnabled()) {
-						_log.warn(
-							"Task queue of search index writer has reached " +
-								"its maximum capacity. The current thread " +
-								"will handle the request.");
+							_log.warn(sb.toString());
+						}
+	
+						super.rejectedExecution(runnable, threadPoolExecutor);
 					}
 
-					super.rejectedExecution(runnable, threadPoolExecutor);
-				}
-			};
+				};
 
 			parallelDestination.setRejectedExecutionHandler(
 				rejectedExecutionHandler);
