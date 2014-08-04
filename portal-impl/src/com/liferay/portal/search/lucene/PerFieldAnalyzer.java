@@ -98,7 +98,8 @@ public class PerFieldAnalyzer extends Analyzer implements Tokenizer {
 	}
 
 	@Override
-	public final TokenStream reusableTokenStream(String fieldName, Reader reader)
+	public final TokenStream reusableTokenStream(
+			String fieldName, Reader reader)
 		throws IOException {
 
 		Analyzer analyzer = getAnalyzer(fieldName);

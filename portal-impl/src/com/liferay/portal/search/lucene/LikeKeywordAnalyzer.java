@@ -31,7 +31,8 @@ public class LikeKeywordAnalyzer extends Analyzer {
 	}
 
 	@Override
-	public final TokenStream reusableTokenStream(String fieldName, Reader reader)
+	public final TokenStream reusableTokenStream(
+			String fieldName, Reader reader)
 		throws IOException {
 
 		return _analyzer.reusableTokenStream(fieldName, reader);
