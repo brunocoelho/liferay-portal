@@ -122,7 +122,7 @@ public class ModelListenerRegistrationUtil {
 			ModelListener<?> modelListener = registry.getService(
 				serviceReference);
 
-			Class<?> clazz = getModelListeners(modelListener);
+			Class<?> clazz = _getModelListeners(modelListener);
 
 			if (clazz == null) {
 				return null;
@@ -161,7 +161,7 @@ public class ModelListenerRegistrationUtil {
 
 			registry.ungetService(serviceReference);
 
-			Class<?> clazz = getModelListeners(modelListener);
+			Class<?> clazz = _getModelListeners(modelListener);
 
 			List<ModelListener<?>> modelListeners = _modelListeners.get(clazz);
 
@@ -170,7 +170,7 @@ public class ModelListenerRegistrationUtil {
 			}
 		}
 
-		private Class<?> getModelListeners(ModelListener<?> modelListener) {
+		private Class<?> _getModelListeners(ModelListener<?> modelListener) {
 			Class<?> clazz = modelListener.getClass();
 
 			if (ProxyUtil.isProxyClass(clazz)) {
