@@ -119,7 +119,7 @@ public class ResourceBlockPermissionLocalServiceImpl
 				}
 			}
 
-			if (availableActionIds.size() > 0) {
+			if (!availableActionIds.isEmpty()) {
 				roleIdsToActionIds.put(
 					resourceBlockPermission.getRoleId(), availableActionIds);
 			}
