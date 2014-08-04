@@ -100,10 +100,11 @@ public class JSONWebServiceTracker
 			"json.web.service.path");
 		Object service = getService(serviceReference);
 
-		ClassLoader classLoader = _getBundleClassLoader(
-			serviceReference.getBundle());
 		ClassLoader contextClassLoader =
 			ClassLoaderUtil.getContextClassLoader();
+
+		ClassLoader classLoader = getBundleClassLoader(
+			serviceReference.getBundle());
 
 		ClassLoaderUtil.setContextClassLoader(classLoader);
 
@@ -134,7 +135,7 @@ public class JSONWebServiceTracker
 		_jsonWebServiceActionsManager = null;
 	}
 
-	private ClassLoader _getBundleClassLoader(Bundle bundle) {
+	private ClassLoader getBundleClassLoader(Bundle bundle) {
 		BundleWiring bundleWiring = bundle.adapt(BundleWiring.class);
 
 		return bundleWiring.getClassLoader();
