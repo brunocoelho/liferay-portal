@@ -55,7 +55,7 @@ if (iteratorURL != null) {
 	url = HttpUtil.removeParameter(url, namespace + searchContainer.getOrderByTypeParam());
 }
 
-JSONArray primaryKeys = JSONFactoryUtil.createJSONArray();
+JSONArray primaryKeysJSONArray = JSONFactoryUtil.createJSONArray();
 %>
 
 <c:if test="<%= resultRows.isEmpty() && (emptyResultsMessage != null) %>">
@@ -224,7 +224,7 @@ JSONArray primaryKeys = JSONFactoryUtil.createJSONArray();
 		for (int i = 0; i < resultRows.size(); i++) {
 			com.liferay.portal.kernel.dao.search.ResultRow row = (com.liferay.portal.kernel.dao.search.ResultRow)resultRows.get(i);
 
-			primaryKeys.put(row.getPrimaryKey());
+			primaryKeysJSONArray.put(row.getPrimaryKey());
 
 			request.setAttribute(WebKeys.SEARCH_CONTAINER_RESULT_ROW, row);
 
@@ -358,7 +358,7 @@ JSONArray primaryKeys = JSONFactoryUtil.createJSONArray();
 			}
 		).render();
 
-		searchContainer.updateDataStore(<%= primaryKeys.toString() %>);
+		searchContainer.updateDataStore(<%= primaryKeysJSONArray.toString() %>);
 	</aui:script>
 </c:if>
 
