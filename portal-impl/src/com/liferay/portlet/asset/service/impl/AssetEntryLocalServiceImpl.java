@@ -563,6 +563,7 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 			Group group = groupLocalService.getGroup(groupId);
 
 			entry.setCompanyId(group.getCompanyId());
+
 			entry.setUserId(userId);
 
 			User user = userPersistence.fetchByPrimaryKey(userId);
