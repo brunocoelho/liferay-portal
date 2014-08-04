@@ -61,8 +61,12 @@ public class BundleServletContext {
 		if (url != null) {
 			PortletApp portletApp = (PortletApp)_servletContextHelper;
 
-			path = portletApp.getContextPath().substring(
-				_servletContext.getContextPath().length()).concat(path);
+			String portletAppContextPath = portletApp.getContextPath();
+			String servletContextContextPath = _servletContext.getContextPath();
+
+			int index = servletContextContextPath.length();
+
+			path = portletAppContextPath.substring(index) + path;
 		}
 
 		return _servletContext.getRequestDispatcher(path);
