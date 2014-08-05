@@ -14,9 +14,9 @@
 
 package com.liferay.portal.wab.extender.internal;
 
-import com.liferay.portal.wab.extender.internal.event.EventUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.wab.extender.internal.event.EventUtil;
 
 import java.util.Map;
 import java.util.Set;

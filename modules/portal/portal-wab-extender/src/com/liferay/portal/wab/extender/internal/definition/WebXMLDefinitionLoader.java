@@ -14,7 +14,6 @@
 
 package com.liferay.portal.wab.extender.internal.definition;
 
-import com.liferay.portal.wab.extender.internal.WabResourceServlet;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -25,6 +24,7 @@ import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.DocumentException;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
+import com.liferay.portal.wab.extender.internal.WabResourceServlet;
 
 import java.net.URL;
 

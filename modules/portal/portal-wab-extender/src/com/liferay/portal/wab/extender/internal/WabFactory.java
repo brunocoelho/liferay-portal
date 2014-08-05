@@ -14,10 +14,10 @@
 
 package com.liferay.portal.wab.extender.internal;
 
-import com.liferay.portal.wab.extender.internal.event.EventUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.wab.extender.internal.event.EventUtil;
 
 import org.eclipse.equinox.http.servlet.ExtendedHttpService;
 

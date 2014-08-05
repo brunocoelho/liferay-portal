@@ -14,17 +14,17 @@
 
 package com.liferay.portal.wab.extender.internal;
 
-import com.liferay.portal.wab.extender.internal.definition.FilterDefinition;
-import com.liferay.portal.wab.extender.internal.definition.ListenerDefinition;
-import com.liferay.portal.wab.extender.internal.definition.ServletDefinition;
-import com.liferay.portal.wab.extender.internal.definition.WebXMLDefinition;
-import com.liferay.portal.wab.extender.internal.definition.WebXMLDefinitionLoader;
 import com.liferay.portal.kernel.deploy.hot.DependencyManagementThreadLocal;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.xml.DocumentException;
+import com.liferay.portal.wab.extender.internal.definition.FilterDefinition;
+import com.liferay.portal.wab.extender.internal.definition.ListenerDefinition;
+import com.liferay.portal.wab.extender.internal.definition.ServletDefinition;
+import com.liferay.portal.wab.extender.internal.definition.WebXMLDefinition;
+import com.liferay.portal.wab.extender.internal.definition.WebXMLDefinitionLoader;
 
 import java.util.ArrayList;
 import java.util.Collections;
