@@ -80,9 +80,7 @@ public class ModuleApplicationContextCreator
 		Collections.addAll(
 			configLocations, ConfigUtils.getHeaderLocations(headers));
 
-		String liferayService = headers.get("Liferay-Service");
-
-		if (liferayService != null) {
+		if (headers.get("Liferay-Service") != null) {
 			configLocations.add(0, "META-INF/spring/parent/*.xml");
 		}
 
