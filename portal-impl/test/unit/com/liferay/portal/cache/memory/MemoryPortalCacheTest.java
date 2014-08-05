@@ -135,7 +135,6 @@ public class MemoryPortalCacheTest {
 		List<String> keys = _memoryPortalCache.getKeys();
 
 		Assert.assertEquals(2, keys.size());
-
 		Assert.assertTrue(keys.contains(_KEY_1));
 		Assert.assertTrue(keys.contains(_KEY_2));
 	}

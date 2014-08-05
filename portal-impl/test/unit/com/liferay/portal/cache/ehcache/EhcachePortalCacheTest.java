@@ -252,7 +252,6 @@ public class EhcachePortalCacheTest {
 		List<String> keys = _ehcachePortalCache.getKeys();
 
 		Assert.assertEquals(2, keys.size());
-
 		Assert.assertTrue(keys.contains(_KEY_1));
 		Assert.assertTrue(keys.contains(_KEY_2));
 	}
