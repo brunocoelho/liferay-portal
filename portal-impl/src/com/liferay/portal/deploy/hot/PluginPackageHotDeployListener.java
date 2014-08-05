@@ -167,6 +167,19 @@ public class PluginPackageHotDeployListener extends BaseHotDeployListener {
 		}
 	}
 
+	protected URL getPortalCacheConfigurationURL(
+		Configuration configuration, ClassLoader classLoader,
+		String configLocation) {
+
+		String cacheConfigurationLocation = configuration.get(configLocation);
+
+		if (Validator.isNull(cacheConfigurationLocation)) {
+			return null;
+		}
+
+		return classLoader.getResource(cacheConfigurationLocation);
+	}
+
 	protected void initLogger(ClassLoader classLoader) {
 		Log4JUtil.configureLog4J(
 			classLoader.getResource("META-INF/portal-log4j.xml"));
@@ -256,33 +269,20 @@ public class PluginPackageHotDeployListener extends BaseHotDeployListener {
 
 		PortalCacheConfiguratorUtil.reconfigureCaches(
 			classLoader,
-			_getCacheConfiguration(
+			getPortalCacheConfigurationURL(
 				portletPropertiesConfiguration, classLoader,
 				PropsKeys.EHCACHE_SINGLE_VM_CONFIG_LOCATION));
 
 		PortalCacheConfiguratorUtil.reconfigureCaches(
 			classLoader,
-			_getCacheConfiguration(
+			getPortalCacheConfigurationURL(
 				portletPropertiesConfiguration, classLoader,
 				PropsKeys.EHCACHE_MULTI_VM_CONFIG_LOCATION));
 
 		PortalCacheConfiguratorUtil.reconfigureHibernateCache(
-			_getCacheConfiguration(
+			getPortalCacheConfigurationURL(
 				portletPropertiesConfiguration, classLoader,
 				PropsKeys.NET_SF_EHCACHE_CONFIGURATION_RESOURCE_NAME));
-	}
-
-	private URL _getCacheConfiguration(
-		Configuration configuration, ClassLoader classLoader,
-		String configLocation) {
-
-		String cacheConfigurationLocation = configuration.get(configLocation);
-
-		if (Validator.isNull(cacheConfigurationLocation)) {
-			return null;
-		}
-
-		return classLoader.getResource(cacheConfigurationLocation);
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(

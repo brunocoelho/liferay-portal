@@ -52,11 +52,11 @@ public class PortalCacheConfiguratorImpl implements PortalCacheConfigurator {
 		try {
 			ClassLoaderUtil.setContextClassLoader(aggregateClassLoader);
 
-			_log(_singleVMCacheManager.getName(), url);
+			log(_singleVMCacheManager.getName(), url);
 
 			_singleVMCacheManager.reconfigureCaches(url);
 
-			_log(_multiVMCacheManager.getName(), url);
+			log(_multiVMCacheManager.getName(), url);
 
 			_multiVMCacheManager.reconfigureCaches(url);
 		}
@@ -81,11 +81,11 @@ public class PortalCacheConfiguratorImpl implements PortalCacheConfigurator {
 		liferayEhcacheRegionFactory.reconfigureCaches(url);
 	}
 
-	private void _log(String cacheName, URL url) {
+	protected void log(String cacheName, URL url) {
 		if (_log.isInfoEnabled()) {
 			_log.info(
-				"Reconfiguring caches in cache manager " +
-					cacheName + " using " + url);
+				"Reconfiguring caches in cache manager " + cacheName +
+					" using " + url);
 		}
 	}
 
@@ -94,9 +94,10 @@ public class PortalCacheConfiguratorImpl implements PortalCacheConfigurator {
 
 	@BeanReference(
 		name = "com.liferay.portal.kernel.cache.MultiVMPortalCacheManager")
-	PortalCacheManager<?, ?> _multiVMCacheManager;
+	private PortalCacheManager<?, ?> _multiVMCacheManager;
+
 	@BeanReference(
 		name = "com.liferay.portal.kernel.cache.SingleVMPortalCacheManager")
-	PortalCacheManager<?, ?> _singleVMCacheManager;
+	private PortalCacheManager<?, ?> _singleVMCacheManager;
 
 }
