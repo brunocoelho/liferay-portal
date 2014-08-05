@@ -39,7 +39,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	immediate = true
 )
-public class HttpAdaptor {
+public class HttpAdapter {
 
 	@Activate
 	protected void activate(ComponentContext componentContext) {
