@@ -58,7 +58,7 @@ public class XStreamHierarchicalStreamReaderAdaptor
 	}
 
 	@Override
-	public Iterator getAttributeNames() {
+	public Iterator<String> getAttributeNames() {
 		return _hierarchicalStreamReader.getAttributeNames();
 	}
 

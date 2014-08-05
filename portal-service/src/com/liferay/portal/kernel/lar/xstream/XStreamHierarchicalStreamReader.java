@@ -31,7 +31,7 @@ public interface XStreamHierarchicalStreamReader {
 
 	public String getAttributeName(int index);
 
-	public Iterator getAttributeNames();
+	public Iterator<String> getAttributeNames();
 
 	public String getNodeName();
 

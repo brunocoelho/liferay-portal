@@ -28,7 +28,7 @@ public interface XStreamMarshallingContext {
 
 	public Object get(Object key);
 
-	public Iterator keys();
+	public Iterator<String> keys();
 
 	public void put(Object key, Object value);
 

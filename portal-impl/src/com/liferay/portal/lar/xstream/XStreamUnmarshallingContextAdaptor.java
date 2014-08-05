@@ -37,13 +37,13 @@ public class XStreamUnmarshallingContextAdaptor
 	}
 
 	@Override
-	public Object convertAnother(Object object, Class clazz) {
+	public Object convertAnother(Object object, Class<?> clazz) {
 		return _unmarshallingContext.convertAnother(object, clazz);
 	}
 
 	@Override
 	public Object convertAnother(
-		Object object, Class clazz, XStreamConverter xStreamConverter) {
+		Object object, Class<?> clazz, XStreamConverter xStreamConverter) {
 
 		return _unmarshallingContext.convertAnother(
 			object, clazz, new ConverterAdaptor(xStreamConverter));

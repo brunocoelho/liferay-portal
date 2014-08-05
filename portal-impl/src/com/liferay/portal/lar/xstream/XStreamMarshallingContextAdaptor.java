@@ -33,10 +33,12 @@ public class XStreamMarshallingContextAdaptor
 		_marshallingContext = marshallingContext;
 	}
 
+	@Override
 	public void convertAnother(Object object) {
 		_marshallingContext.convertAnother(object);
 	}
 
+	@Override
 	public void convertAnother(
 		Object object, XStreamConverter xStreamConverter) {
 
@@ -44,14 +46,17 @@ public class XStreamMarshallingContextAdaptor
 			object, new ConverterAdaptor(xStreamConverter));
 	}
 
+	@Override
 	public Object get(Object key) {
 		return _marshallingContext.get(key);
 	}
 
-	public Iterator keys() {
+	@Override
+	public Iterator<String> keys() {
 		return _marshallingContext.keys();
 	}
 
+	@Override
 	public void put(Object key, Object value) {
 		_marshallingContext.put(key, value);
 	}

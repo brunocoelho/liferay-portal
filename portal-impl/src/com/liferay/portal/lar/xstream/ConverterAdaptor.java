@@ -34,7 +34,7 @@ public class ConverterAdaptor implements Converter {
 	}
 
 	@Override
-	public boolean canConvert(Class clazz) {
+	public boolean canConvert(@SuppressWarnings("rawtypes") Class clazz) {
 		return _xStreamConverter.canConvert(clazz);
 	}
 

@@ -19,7 +19,7 @@ package com.liferay.portal.kernel.lar.xstream;
  */
 public interface XStreamConverter {
 
-	public boolean canConvert(Class clazz);
+	public boolean canConvert(Class<?> clazz);
 
 	public void marshal(
 			Object object, XStreamHierarchicalStreamWriter writer,

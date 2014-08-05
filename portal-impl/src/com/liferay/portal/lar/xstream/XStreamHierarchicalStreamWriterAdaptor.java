@@ -30,30 +30,37 @@ class XStreamHierarchicalStreamWriterAdaptor
 		_hierarchicalStreamWriter = hierarchicalStreamWriter;
 	}
 
+	@Override
 	public void startNode(String name) {
 		_hierarchicalStreamWriter.startNode(name);
 	}
 
+	@Override
 	public void addAttribute(String key, String value) {
 		_hierarchicalStreamWriter.addAttribute(key, value);
 	}
 
+	@Override
 	public void setValue(String value) {
 		_hierarchicalStreamWriter.setValue(value);
 	}
 
+	@Override
 	public void endNode() {
 		_hierarchicalStreamWriter.endNode();
 	}
 
+	@Override
 	public void flush() {
 		_hierarchicalStreamWriter.flush();
 	}
 
+	@Override
 	public void close() {
 		_hierarchicalStreamWriter.close();
 	}
 
+	@Override
 	public XStreamHierarchicalStreamWriterAdaptor underlyingWriter() {
 		return new XStreamHierarchicalStreamWriterAdaptor(
 			_hierarchicalStreamWriter.underlyingWriter());
