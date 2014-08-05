@@ -22,10 +22,10 @@ import com.thoughtworks.xstream.converters.UnmarshallingContext;
 /**
  * @author Daniel Kocsis
  */
-public class XStreamUnmarshallingContextAdaptor
+public class XStreamUnmarshallingContextAdapter
 	implements XStreamUnmarshallingContext {
 
-	public XStreamUnmarshallingContextAdaptor(
+	public XStreamUnmarshallingContextAdapter(
 		UnmarshallingContext unmarshallingContext) {
 
 		_unmarshallingContext = unmarshallingContext;
@@ -46,7 +46,7 @@ public class XStreamUnmarshallingContextAdaptor
 		Object object, Class<?> clazz, XStreamConverter xStreamConverter) {
 
 		return _unmarshallingContext.convertAnother(
-			object, clazz, new ConverterAdaptor(xStreamConverter));
+			object, clazz, new ConverterAdapter(xStreamConverter));
 	}
 
 	@Override

@@ -24,10 +24,10 @@ import java.util.Iterator;
 /**
  * @author Daniel Kocsis
  */
-public class XStreamMarshallingContextAdaptor
+public class XStreamMarshallingContextAdapter
 	implements XStreamMarshallingContext {
 
-	public XStreamMarshallingContextAdaptor(
+	public XStreamMarshallingContextAdapter(
 		MarshallingContext marshallingContext) {
 
 		_marshallingContext = marshallingContext;
@@ -43,7 +43,7 @@ public class XStreamMarshallingContextAdaptor
 		Object object, XStreamConverter xStreamConverter) {
 
 		_marshallingContext.convertAnother(
-			object, new ConverterAdaptor(xStreamConverter));
+			object, new ConverterAdapter(xStreamConverter));
 	}
 
 	@Override

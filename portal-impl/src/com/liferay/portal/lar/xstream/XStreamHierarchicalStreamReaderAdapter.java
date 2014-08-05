@@ -23,10 +23,10 @@ import java.util.Iterator;
 /**
  * @author Daniel Kocsis
  */
-public class XStreamHierarchicalStreamReaderAdaptor
+public class XStreamHierarchicalStreamReaderAdapter
 	implements XStreamHierarchicalStreamReader {
 
-	public XStreamHierarchicalStreamReaderAdaptor(
+	public XStreamHierarchicalStreamReaderAdapter(
 		HierarchicalStreamReader hierarchicalStreamReader) {
 
 		_hierarchicalStreamReader = hierarchicalStreamReader;
@@ -89,7 +89,7 @@ public class XStreamHierarchicalStreamReaderAdaptor
 
 	@Override
 	public XStreamHierarchicalStreamReader underlyingReader() {
-		return new XStreamHierarchicalStreamReaderAdaptor(
+		return new XStreamHierarchicalStreamReaderAdapter(
 			_hierarchicalStreamReader.underlyingReader());
 	}
 

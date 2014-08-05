@@ -27,9 +27,9 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 /**
  * @author Daniel Kocsis
  */
-public class ConverterAdaptor implements Converter {
+public class ConverterAdapter implements Converter {
 
-	public ConverterAdaptor(XStreamConverter xStreamConverter) {
+	public ConverterAdapter(XStreamConverter xStreamConverter) {
 		_xStreamConverter = xStreamConverter;
 	}
 
@@ -46,9 +46,9 @@ public class ConverterAdaptor implements Converter {
 		try {
 			_xStreamConverter.marshal(
 				object,
-				new XStreamHierarchicalStreamWriterAdaptor(
+				new XStreamHierarchicalStreamWriterAdapter(
 					hierarchicalStreamWriter),
-				new XStreamMarshallingContextAdaptor(marshallingContext));
+				new XStreamMarshallingContextAdapter(marshallingContext));
 		}
 		catch (Exception e) {
 			_log.error("Unable to marshal object", e);
@@ -62,9 +62,9 @@ public class ConverterAdaptor implements Converter {
 
 		try {
 			return _xStreamConverter.unmarshal(
-				new XStreamHierarchicalStreamReaderAdaptor(
+				new XStreamHierarchicalStreamReaderAdapter(
 					hierarchicalStreamReader),
-				new XStreamUnmarshallingContextAdaptor(unmarshallingContext));
+				new XStreamUnmarshallingContextAdapter(unmarshallingContext));
 		}
 		catch (Exception e) {
 			_log.error("Unable to un-marshal object", e);
@@ -73,7 +73,7 @@ public class ConverterAdaptor implements Converter {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(ConverterAdaptor.class);
+	private static Log _log = LogFactoryUtil.getLog(ConverterAdapter.class);
 
 	private XStreamConverter _xStreamConverter;
 

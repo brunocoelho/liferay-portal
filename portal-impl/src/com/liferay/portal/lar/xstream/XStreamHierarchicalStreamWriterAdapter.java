@@ -21,10 +21,10 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 /**
  * @author Daniel Kocsis
  */
-class XStreamHierarchicalStreamWriterAdaptor
+class XStreamHierarchicalStreamWriterAdapter
 	implements XStreamHierarchicalStreamWriter {
 
-	public XStreamHierarchicalStreamWriterAdaptor(
+	public XStreamHierarchicalStreamWriterAdapter(
 		HierarchicalStreamWriter hierarchicalStreamWriter) {
 
 		_hierarchicalStreamWriter = hierarchicalStreamWriter;
@@ -61,8 +61,8 @@ class XStreamHierarchicalStreamWriterAdaptor
 	}
 
 	@Override
-	public XStreamHierarchicalStreamWriterAdaptor underlyingWriter() {
-		return new XStreamHierarchicalStreamWriterAdaptor(
+	public XStreamHierarchicalStreamWriterAdapter underlyingWriter() {
+		return new XStreamHierarchicalStreamWriterAdapter(
 			_hierarchicalStreamWriter.underlyingWriter());
 	}
 

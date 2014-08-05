@@ -54,7 +54,7 @@ import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.kernel.xml.XPath;
 import com.liferay.portal.kernel.zip.ZipReader;
 import com.liferay.portal.kernel.zip.ZipWriter;
-import com.liferay.portal.lar.xstream.ConverterAdaptor;
+import com.liferay.portal.lar.xstream.ConverterAdapter;
 import com.liferay.portal.model.AttachedModel;
 import com.liferay.portal.model.AuditedModel;
 import com.liferay.portal.model.ClassedModel;
@@ -2402,7 +2402,7 @@ public class PortletDataContextImpl implements PortletDataContext {
 
 		for (XStreamConverter xStreamConverter : xStreamConverters) {
 			_xStream.registerConverter(
-				new ConverterAdaptor(xStreamConverter),
+				new ConverterAdapter(xStreamConverter),
 				XStream.PRIORITY_VERY_HIGH);
 		}
 
