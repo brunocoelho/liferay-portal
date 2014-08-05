@@ -12,7 +12,7 @@
  * details.
  */
 
-package com.liferay.portal.wab.extender;
+package com.liferay.portal.wab.generator;
 
 import com.liferay.portal.kernel.util.ReflectionUtil;
 

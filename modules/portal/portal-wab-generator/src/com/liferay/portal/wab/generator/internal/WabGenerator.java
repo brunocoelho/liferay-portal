@@ -12,10 +12,10 @@
  * details.
  */
 
-package com.liferay.portal.wab.extender.internal;
+package com.liferay.portal.wab.generator.internal;
 
-import com.liferay.portal.wab.extender.internal.artifact.WarArtifactUrlTransformer;
-import com.liferay.portal.wab.extender.internal.handler.WabURLStreamHandlerService;
+import com.liferay.portal.wab.generator.internal.artifact.WarArtifactUrlTransformer;
+import com.liferay.portal.wab.generator.internal.handler.WabURLStreamHandlerService;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -41,7 +41,7 @@ import org.osgi.service.url.URLStreamHandlerService;
 @Component(
 	immediate = true
 )
-public class WabExtender {
+public class WabGenerator {
 
 	@Activate
 	public void start(BundleContext bundleContext) throws Exception {

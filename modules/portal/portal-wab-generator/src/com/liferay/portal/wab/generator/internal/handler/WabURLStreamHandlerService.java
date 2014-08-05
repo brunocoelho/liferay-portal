@@ -12,9 +12,9 @@
  * details.
  */
 
-package com.liferay.portal.wab.extender.internal.handler;
+package com.liferay.portal.wab.generator.internal.handler;
 
-import com.liferay.portal.wab.extender.internal.connection.WabURLConnection;
+import com.liferay.portal.wab.generator.internal.connection.WabURLConnection;
 
 import java.net.URL;
 import java.net.URLConnection;

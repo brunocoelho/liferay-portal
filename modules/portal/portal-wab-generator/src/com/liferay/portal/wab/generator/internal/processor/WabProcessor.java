@@ -12,7 +12,7 @@
  * details.
  */
 
-package com.liferay.portal.wab.extender.internal.processor;
+package com.liferay.portal.wab.generator.internal.processor;
 
 import aQute.bnd.osgi.Analyzer;
 
@@ -50,9 +50,9 @@ import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.kernel.xml.XPath;
 import com.liferay.portal.util.Portal;
 import com.liferay.portal.util.PropsValues;
-import com.liferay.portal.wab.extender.internal.introspection.ClassLoaderSource;
-import com.liferay.portal.wab.extender.internal.introspection.Source;
-import com.liferay.portal.wab.extender.internal.util.AntUtil;
+import com.liferay.portal.wab.generator.internal.introspection.ClassLoaderSource;
+import com.liferay.portal.wab.generator.internal.introspection.Source;
+import com.liferay.portal.wab.generator.internal.util.AntUtil;
 import com.liferay.portlet.dynamicdatamapping.util.DDMXMLUtil;
 
 import java.io.File;
@@ -139,7 +139,7 @@ public class WabProcessor {
 			jarOutputStream.close();
 		}
 
-		if (PropsValues.MODULE_FRAMEWORK_WEB_EXTENDER_GENERATED_WABS_STORE) {
+		if (PropsValues.MODULE_FRAMEWORK_WEB_GENERATOR_GENERATED_WABS_STORE) {
 			writeGeneratedWab(outputFile);
 		}
 
@@ -549,7 +549,7 @@ public class WabProcessor {
 	protected void processDefaultServletPackages() {
 		for (String value :
 				PropsValues.
-					MODULE_FRAMEWORK_WEB_EXTENDER_DEFAULT_SERVLET_PACKAGES) {
+					MODULE_FRAMEWORK_WEB_GENERATOR_DEFAULT_SERVLET_PACKAGES) {
 
 			int index = value.indexOf(StringPool.SEMICOLON);
 
@@ -572,7 +572,7 @@ public class WabProcessor {
 			Constants.BUNDLE_SYMBOLICNAME);
 
 		Properties properties = PropsUtil.getProperties(
-			PropsKeys.MODULE_FRAMEWORK_WEB_EXTENDER_HEADERS, true);
+			PropsKeys.MODULE_FRAMEWORK_WEB_GENERATOR_HEADERS, true);
 
 		Enumeration<Object> keys = properties.keys();
 
@@ -628,7 +628,7 @@ public class WabProcessor {
 			String path = relativizedURI.getPath();
 
 			if (ArrayUtil.contains(
-					PropsValues.MODULE_FRAMEWORK_WEB_EXTENDER_EXCLUDED_PATHS,
+					PropsValues.MODULE_FRAMEWORK_WEB_GENERATOR_EXCLUDED_PATHS,
 					path)) {
 
 				continue;
@@ -903,7 +903,7 @@ public class WabProcessor {
 					getVersionedServicePackageName(partialPackageName));
 			}
 
-			_importPackageNames.add("com.liferay.portal.wab.extender");
+			_importPackageNames.add("com.liferay.portal.wab.generator");
 
 			File metaInfDir = new File(uri.resolve("WEB-INF/classes/META-INF"));
 
@@ -914,7 +914,7 @@ public class WabProcessor {
 			FileUtil.write(
 				new File(metaInfDir, "service-bean-post-processor-spring.xml"),
 				clazz.getResourceAsStream(
-					"/com/liferay/portal/wab/extender/internal/dependencies" +
+					"/com/liferay/portal/wab/generator/internal/dependencies" +
 						"/service-bean-post-processor-spring.xml"));
 		}
 		catch (Exception e) {
@@ -1116,7 +1116,7 @@ public class WabProcessor {
 
 	protected void writeGeneratedWab(File file) throws IOException {
 		File dir = new File(
-			PropsValues.MODULE_FRAMEWORK_WEB_EXTENDER_GENERATED_WABS_STORE_DIR);
+			PropsValues.MODULE_FRAMEWORK_WEB_GENERATOR_GENERATED_WABS_STORE_DIR);
 
 		dir.mkdirs();
 
@@ -1199,7 +1199,7 @@ public class WabProcessor {
 			}
 
 			if (ArrayUtil.contains(
-					PropsValues.MODULE_FRAMEWORK_WEB_EXTENDER_EXCLUDED_PATHS,
+					PropsValues.MODULE_FRAMEWORK_WEB_GENERATOR_EXCLUDED_PATHS,
 					path)) {
 
 				continue;
