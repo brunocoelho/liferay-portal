@@ -29,6 +29,9 @@ import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.plugin.PluginPackageUtil;
 import com.liferay.portal.service.ServiceComponentLocalServiceUtil;
+import com.liferay.portal.service.configuration.ServiceComponentConfiguration;
+import com.liferay.portal.service.configuration.servlet.ServletContextComponentConfiguration;
+import com.liferay.portal.util.ClassLoaderUtil;
 import com.liferay.util.log4j.Log4JUtil;
 import com.liferay.util.portlet.PortletProps;
 
@@ -75,11 +78,12 @@ public class PluginPackageHotDeployListener extends BaseHotDeployListener {
 	}
 
 	protected void destroyServiceComponent(
-			ServletContext servletContext, ClassLoader classLoader)
+			ServiceComponentConfiguration serviceComponentConfiguration,
+			ClassLoader classLoader)
 		throws Exception {
 
 		ServiceComponentLocalServiceUtil.destroyServiceComponent(
-			servletContext, classLoader);
+			serviceComponentConfiguration, classLoader);
 	}
 
 	protected void doInvokeDeploy(HotDeployEvent hotDeployEvent)
@@ -156,7 +160,8 @@ public class PluginPackageHotDeployListener extends BaseHotDeployListener {
 		ServletContextPool.remove(servletContextName);
 
 		destroyServiceComponent(
-			servletContext, hotDeployEvent.getContextClassLoader());
+			new ServletContextComponentConfiguration(servletContext),
+			hotDeployEvent.getContextClassLoader());
 
 		unregisterClpMessageListeners(servletContext);
 
@@ -247,7 +252,8 @@ public class PluginPackageHotDeployListener extends BaseHotDeployListener {
 		}
 
 		ServiceComponentLocalServiceUtil.initServiceComponent(
-			servletContext, classLoader, buildNamespace, buildNumber, buildDate,
+			new ServletContextComponentConfiguration(servletContext),
+			classLoader, buildNamespace, buildNumber, buildDate,
 			buildAutoUpgrade);
 	}
 
