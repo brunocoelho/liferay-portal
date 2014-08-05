@@ -37,9 +37,9 @@ import org.aspectj.weaver.tools.WeavingAdaptor;
 /**
  * @author Shuyang Zhou
  */
-public class URLWeavingAdaptor extends WeavingAdaptor {
+public class URLWeavingAdapter extends WeavingAdaptor {
 
-	public URLWeavingAdaptor(URL[] urls, Class<?>[] aspectClasses) {
+	public URLWeavingAdapter(URL[] urls, Class<?>[] aspectClasses) {
 		super(null, urls, new URL[0]);
 
 		generatedClassHandler = new RecordGeneratedClassHandler();
