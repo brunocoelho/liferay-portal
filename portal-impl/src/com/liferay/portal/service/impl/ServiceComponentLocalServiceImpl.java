@@ -275,7 +275,8 @@ public class ServiceComponentLocalServiceImpl
 			ServiceComponentConfiguration serviceComponentConfiguration)
 		throws DocumentException {
 
-		InputStream inputStream = serviceComponentConfiguration.getHibernateInputStream();
+		InputStream inputStream =
+			serviceComponentConfiguration.getHibernateInputStream();
 
 		if (inputStream == null) {
 			return;
