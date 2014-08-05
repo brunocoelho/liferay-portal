@@ -1,7 +1,7 @@
 Bundle-Name: Liferay Portal WAB Extender
 Bundle-Version: ${plugin.full.version}
 Export-Package:\
-	com.liferay.portal.http.service.ws.axis,\
+	com.liferay.portal.wab.extender.ws.axis,\
 	org.osgi.dto;version='1.0'
 Import-Package:\
 	javax.servlet;version='[2.3.0,4.0.0)',\
