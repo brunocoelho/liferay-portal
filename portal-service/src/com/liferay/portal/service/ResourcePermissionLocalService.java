@@ -321,8 +321,7 @@ public interface ResourcePermissionLocalService extends BaseLocalService,
 	public java.util.Map<java.lang.Long, java.util.Set<java.lang.String>> getAvailableResourcePermissionActionIds(
 		long companyId, java.lang.String name, int scope,
 		java.lang.String primKey, long[] roleIds,
-		java.util.Collection<java.lang.String> actionIds)
-		throws com.liferay.portal.kernel.exception.PortalException;
+		java.util.Collection<java.lang.String> actionIds);
 
 	/**
 	* Returns the Spring bean ID for this bean.
