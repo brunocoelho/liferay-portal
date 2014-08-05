@@ -331,8 +331,7 @@ public class PortletDataContextImpl implements PortletDataContext {
 
 	@Override
 	public void addExpando(
-			Element element, String path, ClassedModel classedModel)
-		throws PortalException {
+		Element element, String path, ClassedModel classedModel) {
 
 		addExpando(element, path, classedModel, classedModel.getModelClass());
 	}
@@ -418,7 +417,7 @@ public class PortletDataContextImpl implements PortletDataContext {
 	}
 
 	@Override
-	public void addPortalPermissions() throws PortalException {
+	public void addPortalPermissions() {
 		addPermissions(PortletKeys.PORTAL, getCompanyId());
 	}
 
@@ -1916,9 +1915,8 @@ public class PortletDataContextImpl implements PortletDataContext {
 	}
 
 	protected void addExpando(
-			Element element, String path, ClassedModel classedModel,
-			Class<?> clazz)
-		throws PortalException {
+		Element element, String path, ClassedModel classedModel,
+		Class<?> clazz) {
 
 		String className = clazz.getName();
 
