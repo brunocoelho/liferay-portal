@@ -18,23 +18,18 @@ import com.liferay.portal.spring.extender.internal.blueprint.ModuleBeanFactoryPo
 import com.liferay.portal.spring.extender.internal.bundle.CompositeResourceLoaderBundle;
 import com.liferay.portal.spring.extender.internal.classloader.BundleResolverClassLoader;
 
-import java.io.IOException;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.List;
 
 import org.eclipse.gemini.blueprint.context.DelegatedExecutionOsgiBundleApplicationContext;
-import org.eclipse.gemini.blueprint.context.support.OsgiBundleXmlApplicationContext;
 import org.eclipse.gemini.blueprint.extender.OsgiApplicationContextCreator;
 import org.eclipse.gemini.blueprint.extender.support.internal.ConfigUtils;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
-
-import org.springframework.context.ApplicationContext;
 
 /**
  * @author Miguel Pastor
@@ -89,23 +84,6 @@ public class ModuleApplicationContextCreator
 		}
 
 		return locations.toArray(new String[locations.size()]);
-	}
-
-	private ApplicationContext _buildParentContext(
-			Bundle bundle, ClassLoader classLoader)
-		throws IOException {
-
-		OsgiBundleXmlApplicationContext osgiBundleXmlApplicationContext =
-			new OsgiBundleXmlApplicationContext(
-				new String[] {"META-INF/spring/parent/*.xml"});
-
-		osgiBundleXmlApplicationContext.setBundleContext(
-			bundle.getBundleContext());
-		osgiBundleXmlApplicationContext.setClassLoader(classLoader);
-
-		osgiBundleXmlApplicationContext.refresh();
-
-		return osgiBundleXmlApplicationContext;
 	}
 
 	private Bundle _getExtenderBundle() {
