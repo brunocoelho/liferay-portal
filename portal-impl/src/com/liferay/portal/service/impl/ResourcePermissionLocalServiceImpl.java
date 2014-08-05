@@ -414,9 +414,8 @@ public class ResourcePermissionLocalServiceImpl
 	@Deprecated
 	@Override
 	public Map<Long, Set<String>> getAvailableResourcePermissionActionIds(
-			long companyId, String name, int scope, String primKey,
-			long[] roleIds, Collection<String> actionIds)
-		throws PortalException {
+		long companyId, String name, int scope, String primKey,
+		long[] roleIds, Collection<String> actionIds) {
 
 		return getAvailableResourcePermissionActionIds(
 			companyId, name, scope, primKey, new ArrayList<String>(actionIds));
