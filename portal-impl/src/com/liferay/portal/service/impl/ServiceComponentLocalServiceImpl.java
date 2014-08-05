@@ -144,7 +144,7 @@ public class ServiceComponentLocalServiceImpl
 			Element tablesSQLElement = dataElement.addElement("tables-sql");
 
 			String tablesSQL = StringUtil.read(
-				serviceComponentConfiguration.sqlTables());
+				serviceComponentConfiguration.getSQLTablesInputStream());
 
 			tablesSQLElement.addCDATA(tablesSQL);
 
@@ -152,14 +152,14 @@ public class ServiceComponentLocalServiceImpl
 				"sequences-sql");
 
 			String sequencesSQL = StringUtil.read(
-				serviceComponentConfiguration.sqlSequences());
+				serviceComponentConfiguration.getSQLSequencesInputStream());
 
 			sequencesSQLElement.addCDATA(sequencesSQL);
 
 			Element indexesSQLElement = dataElement.addElement("indexes-sql");
 
 			String indexesSQL = StringUtil.read(
-				serviceComponentConfiguration.sqlIndexes());
+				serviceComponentConfiguration.getSQLIndexesInputStream());
 
 			indexesSQLElement.addCDATA(indexesSQL);
 
@@ -275,7 +275,7 @@ public class ServiceComponentLocalServiceImpl
 			ServiceComponentConfiguration serviceComponentConfiguration)
 		throws DocumentException {
 
-		InputStream inputStream = serviceComponentConfiguration.hibernate();
+		InputStream inputStream = serviceComponentConfiguration.getHibernateInputStream();
 
 		if (inputStream == null) {
 			return;

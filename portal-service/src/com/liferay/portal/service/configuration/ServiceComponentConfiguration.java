@@ -21,16 +21,16 @@ import java.io.InputStream;
  */
 public interface ServiceComponentConfiguration {
 
-	public InputStream hibernate();
+	public InputStream getHibernateInputStream();
 
-	public InputStream modelHints();
+	public InputStream getModelHintsInputStream();
 
-	public InputStream modelHintsExt();
+	public InputStream getModelHintsExtInputStream();
 
-	public InputStream sqlIndexes();
+	public InputStream getSQLIndexesInputStream();
 
-	public InputStream sqlSequences();
+	public InputStream getSQLSequencesInputStream();
 
-	public InputStream sqlTables();
+	public InputStream getSQLTablesInputStream();
 
 }

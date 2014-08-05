@@ -32,36 +32,36 @@ public class ServletServiceContextComponentConfiguration
 	}
 
 	@Override
-	public InputStream hibernate() {
+	public InputStream getHibernateInputStream() {
 		return _servletContext.getResourceAsStream(
 			"classes/META-INF/portlet-hbm.xml");
 	}
 
 	@Override
-	public InputStream modelHints() {
+	public InputStream getModelHintsInputStream() {
 		return _servletContext.getResourceAsStream(
 			"META-INF/portlet-model-hints.xml");
 	}
 
 	@Override
-	public InputStream modelHintsExt() {
+	public InputStream getModelHintsExtInputStream() {
 		return _servletContext.getResourceAsStream(
 			"META-INF/portlet-model-hints-ext.xml");
 	}
 
 	@Override
-	public InputStream sqlIndexes() {
+	public InputStream getSQLIndexesInputStream() {
 		return _servletContext.getResourceAsStream("/WEB-INF/sql/indexes.sql");
 	}
 
 	@Override
-	public InputStream sqlSequences() {
+	public InputStream getSQLSequencesInputStream() {
 		return _servletContext.getResourceAsStream(
 			"/WEB-INF/sql/sequences.sql");
 	}
 
 	@Override
-	public InputStream sqlTables() {
+	public InputStream getSQLTablesInputStream() {
 		return _servletContext.getResourceAsStream("/WEB-INF/sql/tables.sql");
 	}
 
