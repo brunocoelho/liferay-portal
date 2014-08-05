@@ -30,8 +30,7 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.plugin.PluginPackageUtil;
 import com.liferay.portal.service.ServiceComponentLocalServiceUtil;
 import com.liferay.portal.service.configuration.ServiceComponentConfiguration;
-import com.liferay.portal.service.configuration.servlet.ServletContextComponentConfiguration;
-import com.liferay.portal.util.ClassLoaderUtil;
+import com.liferay.portal.service.configuration.servlet.ServletServiceContextComponentConfiguration;
 import com.liferay.util.log4j.Log4JUtil;
 import com.liferay.util.portlet.PortletProps;
 
@@ -160,7 +159,7 @@ public class PluginPackageHotDeployListener extends BaseHotDeployListener {
 		ServletContextPool.remove(servletContextName);
 
 		destroyServiceComponent(
-			new ServletContextComponentConfiguration(servletContext),
+			new ServletServiceContextComponentConfiguration(servletContext),
 			hotDeployEvent.getContextClassLoader());
 
 		unregisterClpMessageListeners(servletContext);
@@ -252,7 +251,7 @@ public class PluginPackageHotDeployListener extends BaseHotDeployListener {
 		}
 
 		ServiceComponentLocalServiceUtil.initServiceComponent(
-			new ServletContextComponentConfiguration(servletContext),
+			new ServletServiceContextComponentConfiguration(servletContext),
 			classLoader, buildNamespace, buildNumber, buildDate,
 			buildAutoUpgrade);
 	}

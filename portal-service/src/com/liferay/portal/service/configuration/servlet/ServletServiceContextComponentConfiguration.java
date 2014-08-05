@@ -22,10 +22,12 @@ import java.io.InputStream;
 /**
  * @author Miguel Pastor
  */
-public class ServletContextComponentConfiguration implements
-	ServiceComponentConfiguration {
+public class ServletServiceContextComponentConfiguration
+	implements ServiceComponentConfiguration {
 
-	public ServletContextComponentConfiguration(ServletContext servletContext) {
+	public ServletServiceContextComponentConfiguration(
+		ServletContext servletContext) {
+
 		_servletContext = servletContext;
 	}
 
