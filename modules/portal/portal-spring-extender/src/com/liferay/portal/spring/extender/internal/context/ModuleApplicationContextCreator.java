@@ -62,7 +62,7 @@ public class ModuleApplicationContextCreator
 
 		ServiceBuilderApplicationContext serviceBuilderApplicationContext =
 			new ServiceBuilderApplicationContext(
-				compositeResourceLoaderBundle, _buildLocations(headers));
+				compositeResourceLoaderBundle, buildConfigLocations(headers));
 
 		serviceBuilderApplicationContext.setBundleContext(bundleContext);
 
@@ -72,18 +72,21 @@ public class ModuleApplicationContextCreator
 		return serviceBuilderApplicationContext;
 	}
 
-	private String[] _buildLocations(Dictionary<String, String> headers) {
-		List<String> locations = new ArrayList<String>();
+	protected String[] buildConfigLocations(
+		Dictionary<String, String> headers) {
 
-		Collections.addAll(locations, ConfigUtils.getHeaderLocations(headers));
+		List<String> configLocations = new ArrayList<String>();
+
+		Collections.addAll(
+			configLocations, ConfigUtils.getHeaderLocations(headers));
 
 		String liferayService = headers.get("Liferay-Service");
 
 		if (liferayService != null) {
-			locations.add(0, "META-INF/spring/parent/*.xml");
+			configLocations.add(0, "META-INF/spring/parent/*.xml");
 		}
 
-		return locations.toArray(new String[locations.size()]);
+		return configLocations.toArray(new String[configLocations.size()]);
 	}
 
 	private Bundle _getExtenderBundle() {

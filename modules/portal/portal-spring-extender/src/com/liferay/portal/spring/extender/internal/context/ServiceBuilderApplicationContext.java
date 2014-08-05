@@ -27,8 +27,10 @@ import org.springframework.core.io.support.ResourcePatternResolver;
 public class ServiceBuilderApplicationContext
 	extends OsgiBundleXmlApplicationContext {
 
-	public ServiceBuilderApplicationContext(Bundle bundle, String[] locations) {
-		super(locations);
+	public ServiceBuilderApplicationContext(
+		Bundle bundle, String[] configLocations) {
+
+		super(configLocations);
 
 		_bundle = bundle;
 	}
