@@ -15,7 +15,6 @@
 package com.liferay.portal.spring.extender.internal.bundle;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 
 import java.net.URL;
@@ -31,7 +30,6 @@ import java.util.Map;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
 
@@ -46,30 +44,30 @@ public class CompositeResourceLoaderBundle implements Bundle {
 
 	@Override
 	public <A> A adapt(Class<A> type) {
-		throw new UnsupportedOperationException(_NOT_SUPPORTED_METHOD_MESSAGE);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public int compareTo(Bundle o) {
-		throw new UnsupportedOperationException(_NOT_SUPPORTED_METHOD_MESSAGE);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Enumeration<URL> findEntries(
 		String path, String filePattern, boolean recurse) {
 
-		List<URL> list = new ArrayList<URL>();
+		List<URL> urls = new ArrayList<URL>();
 
 		for (Bundle bundle : _bundles) {
-			Enumeration<URL> entries = bundle.findEntries(
+			Enumeration<URL> enumeration = bundle.findEntries(
 				path, filePattern, recurse);
 
-			if ((entries != null) && entries.hasMoreElements()) {
-				list.addAll(Collections.list(entries));
+			if ((enumeration != null) && enumeration.hasMoreElements()) {
+				urls.addAll(Collections.list(enumeration));
 			}
 		}
 
-		return Collections.enumeration(list);
+		return Collections.enumeration(urls);
 	}
 
 	@Override
@@ -79,47 +77,47 @@ public class CompositeResourceLoaderBundle implements Bundle {
 
 	@Override
 	public long getBundleId() {
-		throw new UnsupportedOperationException(_NOT_SUPPORTED_METHOD_MESSAGE);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public File getDataFile(String filename) {
-		throw new UnsupportedOperationException(_NOT_SUPPORTED_METHOD_MESSAGE);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public URL getEntry(String path) {
-		throw new UnsupportedOperationException(_NOT_SUPPORTED_METHOD_MESSAGE);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Enumeration<String> getEntryPaths(String path) {
-		throw new UnsupportedOperationException(_NOT_SUPPORTED_METHOD_MESSAGE);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Dictionary<String, String> getHeaders() {
-		throw new UnsupportedOperationException(_NOT_SUPPORTED_METHOD_MESSAGE);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Dictionary<String, String> getHeaders(String locale) {
-		throw new UnsupportedOperationException(_NOT_SUPPORTED_METHOD_MESSAGE);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public long getLastModified() {
-		throw new UnsupportedOperationException(_NOT_SUPPORTED_METHOD_MESSAGE);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public String getLocation() {
-		throw new UnsupportedOperationException(_NOT_SUPPORTED_METHOD_MESSAGE);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public ServiceReference<?>[] getRegisteredServices() {
-		throw new UnsupportedOperationException(_NOT_SUPPORTED_METHOD_MESSAGE);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -136,84 +134,81 @@ public class CompositeResourceLoaderBundle implements Bundle {
 	}
 
 	@Override
-	public Enumeration<URL> getResources(String name) throws IOException {
-		throw new UnsupportedOperationException(_NOT_SUPPORTED_METHOD_MESSAGE);
+	public Enumeration<URL> getResources(String name) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public ServiceReference<?>[] getServicesInUse() {
-		throw new UnsupportedOperationException(_NOT_SUPPORTED_METHOD_MESSAGE);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Map<X509Certificate, List<X509Certificate>> getSignerCertificates(
 		int signersType) {
 
-		throw new UnsupportedOperationException(_NOT_SUPPORTED_METHOD_MESSAGE);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public int getState() {
-		throw new UnsupportedOperationException(_NOT_SUPPORTED_METHOD_MESSAGE);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public String getSymbolicName() {
-		throw new UnsupportedOperationException(_NOT_SUPPORTED_METHOD_MESSAGE);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Version getVersion() {
-		throw new UnsupportedOperationException(_NOT_SUPPORTED_METHOD_MESSAGE);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public boolean hasPermission(Object permission) {
-		throw new UnsupportedOperationException(_NOT_SUPPORTED_METHOD_MESSAGE);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public Class<?> loadClass(String name) throws ClassNotFoundException {
-		throw new UnsupportedOperationException(_NOT_SUPPORTED_METHOD_MESSAGE);
+	public Class<?> loadClass(String name) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void start() throws BundleException {
-		throw new UnsupportedOperationException(_NOT_SUPPORTED_METHOD_MESSAGE);
+	public void start() {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void start(int options) throws BundleException {
-		throw new UnsupportedOperationException(_NOT_SUPPORTED_METHOD_MESSAGE);
+	public void start(int options) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void stop() throws BundleException {
-		throw new UnsupportedOperationException(_NOT_SUPPORTED_METHOD_MESSAGE);
+	public void stop() {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void stop(int options) throws BundleException {
-		throw new UnsupportedOperationException(_NOT_SUPPORTED_METHOD_MESSAGE);
+	public void stop(int options) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void uninstall() throws BundleException {
-		throw new UnsupportedOperationException(_NOT_SUPPORTED_METHOD_MESSAGE);
+	public void uninstall() {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void update() throws BundleException {
-		throw new UnsupportedOperationException(_NOT_SUPPORTED_METHOD_MESSAGE);
+	public void update() {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void update(InputStream input) throws BundleException {
-		throw new UnsupportedOperationException(_NOT_SUPPORTED_METHOD_MESSAGE);
+	public void update(InputStream inputStream) {
+		throw new UnsupportedOperationException();
 	}
-
-	private static final String _NOT_SUPPORTED_METHOD_MESSAGE =
-		"This method cannot be invoked on this kind of bundle";
 
 	private Bundle[] _bundles;
 
