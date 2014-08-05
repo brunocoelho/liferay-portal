@@ -19,15 +19,15 @@ package com.liferay.portal.kernel.lar.xstream;
  */
 public interface XStreamUnmarshallingContext {
 
+	public void addCompletionCallback(Runnable runnable, int i);
+
 	public Object convertAnother(Object object, Class<?> clazz);
 
 	public Object convertAnother(
 		Object object, Class<?> clazz, XStreamConverter xStreamConverter);
 
-	Object currentObject();
+	public Object currentObject();
 
-	Object getRequiredType();
-
-	void addCompletionCallback(Runnable runnable, int i);
+	public Object getRequiredType();
 
 }
