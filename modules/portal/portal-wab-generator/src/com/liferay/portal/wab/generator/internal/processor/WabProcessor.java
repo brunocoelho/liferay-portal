@@ -1116,7 +1116,8 @@ public class WabProcessor {
 
 	protected void writeGeneratedWab(File file) throws IOException {
 		File dir = new File(
-			PropsValues.MODULE_FRAMEWORK_WEB_GENERATOR_GENERATED_WABS_STORE_DIR);
+			PropsValues.
+				MODULE_FRAMEWORK_WEB_GENERATOR_GENERATED_WABS_STORE_DIR);
 
 		dir.mkdirs();
 
