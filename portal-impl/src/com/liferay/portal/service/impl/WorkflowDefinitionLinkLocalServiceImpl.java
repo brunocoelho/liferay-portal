@@ -80,9 +80,8 @@ public class WorkflowDefinitionLinkLocalServiceImpl
 
 	@Override
 	public void deleteWorkflowDefinitionLink(
-			long companyId, long groupId, String className, long classPK,
-			long typePK)
-		throws PortalException {
+		long companyId, long groupId, String className, long classPK,
+		long typePK) {
 
 		WorkflowDefinitionLink workflowDefinitionLink =
 			fetchWorkflowDefinitionLink(
@@ -110,9 +109,8 @@ public class WorkflowDefinitionLinkLocalServiceImpl
 
 	@Override
 	public WorkflowDefinitionLink fetchWorkflowDefinitionLink(
-			long companyId, long groupId, String className, long classPK,
-			long typePK)
-		throws PortalException {
+		long companyId, long groupId, String className, long classPK,
+		long typePK) {
 
 		return fetchWorkflowDefinitionLink(
 			companyId, groupId, className, classPK, typePK, false);
@@ -120,9 +118,8 @@ public class WorkflowDefinitionLinkLocalServiceImpl
 
 	@Override
 	public WorkflowDefinitionLink fetchWorkflowDefinitionLink(
-			long companyId, long groupId, String className, long classPK,
-			long typePK, boolean strict)
-		throws PortalException {
+		long companyId, long groupId, String className, long classPK,
+		long typePK, boolean strict) {
 
 		if (!WorkflowEngineManagerUtil.isDeployed()) {
 			return null;

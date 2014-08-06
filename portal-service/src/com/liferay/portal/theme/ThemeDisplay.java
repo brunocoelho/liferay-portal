@@ -839,7 +839,7 @@ public class ThemeDisplay
 		return _siteGroupId;
 	}
 
-	public long getSiteGroupIdOrLiveGroupId() throws PortalException {
+	public long getSiteGroupIdOrLiveGroupId() {
 		return StagingUtil.getLiveGroupId(_siteGroupId);
 	}
 
