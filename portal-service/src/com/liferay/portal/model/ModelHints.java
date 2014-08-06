@@ -56,7 +56,7 @@ public interface ModelHints {
 
 	public boolean isLocalized(String model, String field);
 
-	void read(ClassLoader classLoader, InputStream inputStream)
+	public void read(ClassLoader classLoader, InputStream inputStream)
 		throws Exception;
 
 	public void read(ClassLoader classLoader, String source) throws Exception;
