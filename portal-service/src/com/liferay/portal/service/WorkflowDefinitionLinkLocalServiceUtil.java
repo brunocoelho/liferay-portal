@@ -318,23 +318,20 @@ public class WorkflowDefinitionLinkLocalServiceUtil {
 	}
 
 	public static boolean hasWorkflowDefinitionLink(long companyId,
-		long groupId, java.lang.String className)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		long groupId, java.lang.String className) {
 		return getService()
 				   .hasWorkflowDefinitionLink(companyId, groupId, className);
 	}
 
 	public static boolean hasWorkflowDefinitionLink(long companyId,
-		long groupId, java.lang.String className, long classPK)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		long groupId, java.lang.String className, long classPK) {
 		return getService()
 				   .hasWorkflowDefinitionLink(companyId, groupId, className,
 			classPK);
 	}
 
 	public static boolean hasWorkflowDefinitionLink(long companyId,
-		long groupId, java.lang.String className, long classPK, long typePK)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		long groupId, java.lang.String className, long classPK, long typePK) {
 		return getService()
 				   .hasWorkflowDefinitionLink(companyId, groupId, className,
 			classPK, typePK);
