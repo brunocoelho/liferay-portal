@@ -79,8 +79,7 @@ public interface WorkflowDefinitionLinkLocalService extends BaseLocalService,
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	public void deleteWorkflowDefinitionLink(long companyId, long groupId,
-		java.lang.String className, long classPK, long typePK)
-		throws com.liferay.portal.kernel.exception.PortalException;
+		java.lang.String className, long classPK, long typePK);
 
 	/**
 	* Deletes the workflow definition link from the database. Also notifies the appropriate model listeners.
@@ -176,13 +175,12 @@ public interface WorkflowDefinitionLinkLocalService extends BaseLocalService,
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public com.liferay.portal.model.WorkflowDefinitionLink fetchWorkflowDefinitionLink(
 		long companyId, long groupId, java.lang.String className, long classPK,
-		long typePK) throws com.liferay.portal.kernel.exception.PortalException;
+		long typePK);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public com.liferay.portal.model.WorkflowDefinitionLink fetchWorkflowDefinitionLink(
 		long companyId, long groupId, java.lang.String className, long classPK,
-		long typePK, boolean strict)
-		throws com.liferay.portal.kernel.exception.PortalException;
+		long typePK, boolean strict);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public com.liferay.portal.model.WorkflowDefinitionLink fetchWorkflowDefinitionLink(

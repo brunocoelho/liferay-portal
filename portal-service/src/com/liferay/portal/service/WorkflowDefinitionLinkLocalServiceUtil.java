@@ -84,8 +84,7 @@ public class WorkflowDefinitionLinkLocalServiceUtil {
 	}
 
 	public static void deleteWorkflowDefinitionLink(long companyId,
-		long groupId, java.lang.String className, long classPK, long typePK)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		long groupId, java.lang.String className, long classPK, long typePK) {
 		getService()
 			.deleteWorkflowDefinitionLink(companyId, groupId, className,
 			classPK, typePK);
@@ -203,7 +202,7 @@ public class WorkflowDefinitionLinkLocalServiceUtil {
 
 	public static com.liferay.portal.model.WorkflowDefinitionLink fetchWorkflowDefinitionLink(
 		long companyId, long groupId, java.lang.String className, long classPK,
-		long typePK) throws com.liferay.portal.kernel.exception.PortalException {
+		long typePK) {
 		return getService()
 				   .fetchWorkflowDefinitionLink(companyId, groupId, className,
 			classPK, typePK);
@@ -211,8 +210,7 @@ public class WorkflowDefinitionLinkLocalServiceUtil {
 
 	public static com.liferay.portal.model.WorkflowDefinitionLink fetchWorkflowDefinitionLink(
 		long companyId, long groupId, java.lang.String className, long classPK,
-		long typePK, boolean strict)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		long typePK, boolean strict) {
 		return getService()
 				   .fetchWorkflowDefinitionLink(companyId, groupId, className,
 			classPK, typePK, strict);
