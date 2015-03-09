@@ -14,7 +14,9 @@
 
 package com.liferay.portal.security.membershippolicy;
 
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.model.Role;
 import com.liferay.portal.model.RoleConstants;
 import com.liferay.portal.model.User;
@@ -26,10 +28,8 @@ import com.liferay.portal.service.UserGroupRoleLocalServiceUtil;
 import com.liferay.portal.service.UserGroupRoleServiceUtil;
 import com.liferay.portal.service.UserLocalServiceUtil;
 import com.liferay.portal.service.persistence.UserGroupRolePK;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
-import com.liferay.portal.util.test.RandomTestUtil;
-import com.liferay.portal.util.test.TestPropsValues;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portlet.expando.service.ExpandoTableLocalServiceUtil;
 
 import java.util.ArrayList;
@@ -38,16 +38,21 @@ import java.util.List;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Roberto Díaz
  */
-@ExecutionTestListeners(listeners = {MainServletExecutionTestListener.class})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 public class OrganizationMembershipPolicyRolesTest
 	extends BaseOrganizationMembershipPolicyTestCase {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE);
 
 	@After
 	@Override
@@ -68,7 +73,7 @@ public class OrganizationMembershipPolicyRolesTest
 
 	@Test(expected = MembershipPolicyException.class)
 	public void testAssignUserToForbiddenRole() throws Exception {
-		List<UserGroupRole> userGroupRoles = new ArrayList<UserGroupRole>();
+		List<UserGroupRole> userGroupRoles = new ArrayList<>();
 
 		long[] userIds = addUsers();
 		long[] forbiddenRoleIds = addForbiddenRoles();
@@ -97,7 +102,7 @@ public class OrganizationMembershipPolicyRolesTest
 
 	@Test
 	public void testPropagateWhenAssigningRolesToUser() throws Exception {
-		List<UserGroupRole> userGroupRoles = new ArrayList<UserGroupRole>();
+		List<UserGroupRole> userGroupRoles = new ArrayList<>();
 
 		long[] userIds = addUsers();
 		long[] standardRoleIds = addStandardRoles();
@@ -176,8 +181,7 @@ public class OrganizationMembershipPolicyRolesTest
 		List<UserGroupRole> initialUserGroupRoles =
 			UserGroupRoleLocalServiceUtil.getUserGroupRoles(user.getUserId());
 
-		List<UserGroupRole> emptyNonAbstractList =
-			new ArrayList<UserGroupRole>();
+		List<UserGroupRole> emptyNonAbstractList = new ArrayList<>();
 
 		MembershipPolicyTestUtil.updateUser(
 			user, null, null, null, null, emptyNonAbstractList);

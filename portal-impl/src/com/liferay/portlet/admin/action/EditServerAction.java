@@ -18,15 +18,15 @@ import com.liferay.mail.service.MailServiceUtil;
 import com.liferay.portal.captcha.CaptchaImpl;
 import com.liferay.portal.captcha.recaptcha.ReCaptchaImpl;
 import com.liferay.portal.captcha.simplecaptcha.SimpleCaptchaImpl;
+import com.liferay.portal.convert.ConvertException;
 import com.liferay.portal.convert.ConvertProcess;
 import com.liferay.portal.kernel.cache.CacheRegistryUtil;
 import com.liferay.portal.kernel.cache.MultiVMPoolUtil;
 import com.liferay.portal.kernel.cache.SingleVMPoolUtil;
 import com.liferay.portal.kernel.captcha.Captcha;
 import com.liferay.portal.kernel.captcha.CaptchaUtil;
-import com.liferay.portal.kernel.cluster.Address;
 import com.liferay.portal.kernel.cluster.ClusterExecutorUtil;
-import com.liferay.portal.kernel.cluster.ClusterLink;
+import com.liferay.portal.kernel.cluster.ClusterNode;
 import com.liferay.portal.kernel.cluster.ClusterRequest;
 import com.liferay.portal.kernel.concurrent.ThreadPoolExecutor;
 import com.liferay.portal.kernel.dao.shard.ShardUtil;
@@ -40,6 +40,7 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.log.SanitizerLogWrapper;
 import com.liferay.portal.kernel.mail.Account;
 import com.liferay.portal.kernel.messaging.BaseAsyncDestination;
 import com.liferay.portal.kernel.messaging.Destination;
@@ -51,6 +52,7 @@ import com.liferay.portal.kernel.scripting.ScriptingException;
 import com.liferay.portal.kernel.scripting.ScriptingHelperUtil;
 import com.liferay.portal.kernel.scripting.ScriptingUtil;
 import com.liferay.portal.kernel.search.Indexer;
+import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.SearchEngineUtil;
 import com.liferay.portal.kernel.servlet.DirectServletRegistryUtil;
 import com.liferay.portal.kernel.servlet.SessionErrors;
@@ -72,8 +74,8 @@ import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.UnsyncPrintWriterPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.xuggler.XugglerUtil;
-import com.liferay.portal.model.Portlet;
 import com.liferay.portal.search.SearchEngineInitializer;
+import com.liferay.portal.search.lucene.LuceneHelper;
 import com.liferay.portal.search.lucene.LuceneHelperUtil;
 import com.liferay.portal.search.lucene.cluster.LuceneClusterUtil;
 import com.liferay.portal.security.auth.PrincipalException;
@@ -87,7 +89,6 @@ import com.liferay.portal.security.membershippolicy.SiteMembershipPolicyFactoryU
 import com.liferay.portal.security.membershippolicy.UserGroupMembershipPolicy;
 import com.liferay.portal.security.membershippolicy.UserGroupMembershipPolicyFactoryUtil;
 import com.liferay.portal.security.permission.PermissionChecker;
-import com.liferay.portal.service.PortletLocalServiceUtil;
 import com.liferay.portal.service.ServiceComponentLocalServiceUtil;
 import com.liferay.portal.struts.ActionConstants;
 import com.liferay.portal.struts.PortletAction;
@@ -109,7 +110,6 @@ import java.io.File;
 
 import java.util.Enumeration;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -298,6 +298,15 @@ public class EditServerAction extends PortletAction {
 			convertProcess.setParameterValues(values);
 		}
 
+		try {
+			convertProcess.validate();
+		}
+		catch (ConvertException ce) {
+			SessionErrors.add(actionRequest, ce.getClass(), ce);
+
+			return null;
+		}
+
 		String path = convertProcess.getPath();
 
 		if (path != null) {
@@ -366,18 +375,18 @@ public class EditServerAction extends PortletAction {
 	}
 
 	protected void reindex(ActionRequest actionRequest) throws Exception {
-		String portletId = ParamUtil.getString(actionRequest, "portletId");
+		String className = ParamUtil.getString(actionRequest, "className");
 
 		long[] companyIds = PortalInstances.getCompanyIds();
 
 		if (LuceneHelperUtil.isLoadIndexFromClusterEnabled()) {
 			MessageValuesThreadLocal.setValue(
-				ClusterLink.CLUSTER_FORWARD_MESSAGE, true);
+				LuceneHelper.SKIP_LOAD_INDEX_FROM_CLUSTER, true);
 		}
 
-		Set<String> usedSearchEngineIds = new HashSet<String>();
+		Set<String> usedSearchEngineIds = new HashSet<>();
 
-		if (Validator.isNull(portletId)) {
+		if (Validator.isNull(className)) {
 			for (long companyId : companyIds) {
 				try {
 					SearchEngineInitializer searchEngineInitializer =
@@ -394,48 +403,36 @@ public class EditServerAction extends PortletAction {
 			}
 		}
 		else {
-			Portlet portlet = PortletLocalServiceUtil.getPortletById(
-				companyIds[0], portletId);
+			Indexer indexer = IndexerRegistryUtil.getIndexer(className);
 
-			if (portlet == null) {
+			if (indexer == null) {
 				return;
 			}
 
-			List<Indexer> indexers = portlet.getIndexerInstances();
+			Set<String> searchEngineIds = new HashSet<>();
 
-			if (indexers == null) {
-				return;
-			}
-
-			Set<String> searchEngineIds = new HashSet<String>();
-
-			for (Indexer indexer : indexers) {
-				searchEngineIds.add(indexer.getSearchEngineId());
-			}
+			searchEngineIds.add(indexer.getSearchEngineId());
 
 			for (String searchEngineId : searchEngineIds) {
 				for (long companyId : companyIds) {
-					SearchEngineUtil.deletePortletDocuments(
-						searchEngineId, companyId, portletId, true);
+					SearchEngineUtil.deleteEntityDocuments(
+						searchEngineId, companyId, className, true);
 				}
 			}
 
-			for (Indexer indexer : indexers) {
-				for (long companyId : companyIds) {
-					ShardUtil.pushCompanyService(companyId);
+			for (long companyId : companyIds) {
+				ShardUtil.pushCompanyService(companyId);
 
-					try {
-						indexer.reindex(
-							new String[] {String.valueOf(companyId)});
+				try {
+					indexer.reindex(new String[] {String.valueOf(companyId)});
 
-						usedSearchEngineIds.add(indexer.getSearchEngineId());
-					}
-					catch (Exception e) {
-						_log.error(e, e);
-					}
-					finally {
-						ShardUtil.popCompanyService();
-					}
+					usedSearchEngineIds.add(indexer.getSearchEngineId());
+				}
+				catch (Exception e) {
+					_log.error(e, e);
+				}
+				finally {
+					ShardUtil.popCompanyService();
 				}
 			}
 		}
@@ -444,8 +441,7 @@ public class EditServerAction extends PortletAction {
 			return;
 		}
 
-		Set<BaseAsyncDestination> searchWriterDestinations =
-			new HashSet<BaseAsyncDestination>();
+		Set<BaseAsyncDestination> searchWriterDestinations = new HashSet<>();
 
 		MessageBus messageBus = MessageBusUtil.getMessageBus();
 
@@ -518,7 +514,9 @@ public class EditServerAction extends PortletAction {
 			SessionErrors.add(
 				actionRequest, ScriptingException.class.getName(), se);
 
-			_log.error(se.getMessage());
+			Log log = SanitizerLogWrapper.allowCRLF(_log);
+
+			log.error(se.getMessage());
 		}
 	}
 
@@ -609,12 +607,16 @@ public class EditServerAction extends PortletAction {
 
 	protected void threadDump() throws Exception {
 		if (_log.isInfoEnabled()) {
-			_log.info(ThreadUtil.threadDump());
+			Log log = SanitizerLogWrapper.allowCRLF(_log);
+
+			log.info(ThreadUtil.threadDump());
 		}
 		else {
+			Class<?> clazz = getClass();
+
 			_log.error(
 				"Thread dumps require the log level to be at least INFO for " +
-					getClass().getName());
+					clazz.getName());
 		}
 	}
 
@@ -950,11 +952,13 @@ public class EditServerAction extends PortletAction {
 		ServiceComponentLocalServiceUtil.verifyDB();
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(EditServerAction.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		EditServerAction.class);
 
-	private static MethodKey _loadIndexesFromClusterMethodKey = new MethodKey(
-		LuceneClusterUtil.class, "loadIndexesFromCluster", long[].class,
-		Address.class);
+	private static final MethodKey _loadIndexesFromClusterMethodKey =
+		new MethodKey(
+			LuceneClusterUtil.class, "loadIndexesFromCluster", long[].class,
+		ClusterNode.class);
 
 	private static class ClusterLoadingSyncJob implements Runnable {
 
@@ -1026,14 +1030,11 @@ public class EditServerAction extends PortletAction {
 			}
 
 			if (_master) {
-				Address localClusterNodeAddress =
-					ClusterExecutorUtil.getLocalClusterNodeAddress();
-
 				ClusterRequest clusterRequest =
 					ClusterRequest.createMulticastRequest(
 						new MethodHandler(
 							_loadIndexesFromClusterMethodKey, _companyIds,
-							localClusterNodeAddress),
+							ClusterExecutorUtil.getLocalClusterNode()),
 						true);
 
 				try {
@@ -1052,9 +1053,9 @@ public class EditServerAction extends PortletAction {
 			}
 		}
 
-		private long[] _companyIds;
-		private CountDownLatch _countDownLatch;
-		private boolean _master;
+		private final long[] _companyIds;
+		private final CountDownLatch _countDownLatch;
+		private final boolean _master;
 
 	}
 

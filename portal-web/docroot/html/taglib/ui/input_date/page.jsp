@@ -34,10 +34,10 @@ boolean nullable = GetterUtil.getBoolean((String)request.getAttribute("liferay-u
 String yearParam = GetterUtil.getString((String)request.getAttribute("liferay-ui:input-date:yearParam"));
 int yearValue = GetterUtil.getInteger((String)request.getAttribute("liferay-ui:input-date:yearValue"));
 
-String dayParamId = namespace + HtmlUtil.getAUICompatibleId(dayParam);
-String monthParamId = namespace + HtmlUtil.getAUICompatibleId(monthParam);
-String nameId = namespace + HtmlUtil.getAUICompatibleId(name);
-String yearParamId = namespace + HtmlUtil.getAUICompatibleId(yearParam);
+String dayParamId = namespace + HtmlUtil.escapeAttribute(dayParam);
+String monthParamId = namespace + HtmlUtil.escapeAttribute(monthParam);
+String nameId = namespace + HtmlUtil.escapeAttribute(name);
+String yearParamId = namespace + HtmlUtil.escapeAttribute(yearParam);
 
 Calendar calendar = CalendarFactoryUtil.getCalendar(yearValue, monthValue, dayValue);
 
@@ -103,18 +103,19 @@ Format format = FastDateFormatFactoryUtil.getSimpleDateFormat(simpleDateFormatPa
 							container.one('#<%= nameId %>').attr('disabled', newVal);
 							container.one('#<%= yearParamId %>').attr('disabled', newVal);
 						},
-						selectionChange: function(event) {
+						enterKey: function(event) {
 							var instance = this;
 
-							var container = instance.get('container');
+							var inputVal = instance.get('activeInput').val();
 
-							var date = event.newSelection[0];
+							var date = instance.getParsedDatesFromInputValue(inputVal);
 
 							if (date) {
-								container.one('#<%= dayParamId %>').val(date.getDate());
-								container.one('#<%= monthParamId %>').val(date.getMonth());
-								container.one('#<%= yearParamId %>').val(date.getFullYear());
+								datePicker.updateValue(date[0]);
 							}
+						},
+						selectionChange: function(event) {
+							datePicker.updateValue(event.newSelection[0]);
 						}
 					},
 					popover: {
@@ -130,6 +131,18 @@ Format format = FastDateFormatFactoryUtil.getSimpleDateFormat(simpleDateFormatPa
 				var container = instance.get('container');
 
 				return new Date(container.one('#<%= yearParamId %>').val(), container.one('#<%= monthParamId %>').val(), container.one('#<%= dayParamId %>').val());
+			};
+
+			datePicker.updateValue = function(date) {
+				var instance = this;
+
+				var container = instance.get('container');
+
+				if (date) {
+					container.one('#<%= dayParamId %>').val(date.getDate());
+					container.one('#<%= monthParamId %>').val(date.getMonth());
+					container.one('#<%= yearParamId %>').val(date.getFullYear());
+				}
 			};
 
 			return datePicker;

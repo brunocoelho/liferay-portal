@@ -14,24 +14,41 @@
 
 package com.liferay.xsl.content.web.portlet.action;
 
+import aQute.bnd.annotation.metatype.Configurable;
+
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.theme.ThemeDisplay;
+import com.liferay.xsl.content.web.configuration.XSLContentConfiguration;
+import com.liferay.xsl.content.web.constants.XSLContentPortletKeys;
+import com.liferay.xsl.content.web.util.XSLContentUtil;
+
+import java.util.Map;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
 import javax.portlet.PortletConfig;
+import javax.portlet.RenderRequest;
+import javax.portlet.RenderResponse;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Modified;
 
 /**
  * @author Brian Wing Shun Chan
  * @author Hugo Huijser
+ * @author Samuel Kong
  */
 @Component(
+	configurationPid = "com.liferay.xsl.content.web.configuration.XSLContentConfiguration",
 	immediate = true,
 	property = {
-		"javax.portlet.name=com_liferay_xsl_content_web_portlet_XSLContentPortlet"
+		"javax.portlet.name=" + XSLContentPortletKeys.XSL_CONTENT,
+		"valid.url.prefixes=@portlet_context_url@"
 	},
 	service = ConfigurationAction.class
 )
@@ -48,16 +65,69 @@ public class XSLContentConfigurationAction extends DefaultConfigurationAction {
 		super.processAction(portletConfig, actionRequest, actionResponse);
 	}
 
-	protected void validateUrls(ActionRequest actionRequest) {
-		String xmlUrl = getParameter(actionRequest, "xmlUrl");
-		String xslUrl = getParameter(actionRequest, "xslUrl");
+	@Override
+	public String render(
+			PortletConfig portletConfig, RenderRequest renderRequest,
+			RenderResponse renderResponse)
+		throws Exception {
 
-		if (xmlUrl.startsWith("file:/")) {
+		renderRequest.setAttribute(
+			XSLContentConfiguration.class.getName(), _xslContentConfiguration);
+
+		return super.render(portletConfig, renderRequest, renderResponse);
+	}
+
+	@Activate
+	@Modified
+	protected void activate(Map<String, Object> properties) {
+		_xslContentConfiguration = Configurable.createConfigurable(
+			XSLContentConfiguration.class, properties);
+	}
+
+	protected String[] getValidUrlPrefixes(ThemeDisplay themeDisplay) {
+		String validUrlPrefixes = XSLContentUtil.replaceUrlTokens(
+			themeDisplay, _xslContentConfiguration.validUrlPrefixes());
+
+		return StringUtil.split(validUrlPrefixes);
+	}
+
+	protected boolean hasValidUrlPrefix(String[] validUrlPrefixes, String url) {
+		if (validUrlPrefixes.length == 0) {
+			return true;
+		}
+
+		for (String validUrlPrefix : validUrlPrefixes) {
+			if (StringUtil.startsWith(url, validUrlPrefix)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	protected void validateUrls(ActionRequest actionRequest) {
+		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		String[] validUrlPrefixes = getValidUrlPrefixes(themeDisplay);
+
+		String xmlUrl = getParameter(actionRequest, "xmlUrl");
+
+		xmlUrl = XSLContentUtil.replaceUrlTokens(themeDisplay, xmlUrl);
+
+		if (!hasValidUrlPrefix(validUrlPrefixes, xmlUrl)) {
 			SessionErrors.add(actionRequest, "xmlUrl");
 		}
-		else if (xslUrl.startsWith("file:/")) {
+
+		String xslUrl = getParameter(actionRequest, "xslUrl");
+
+		xslUrl = XSLContentUtil.replaceUrlTokens(themeDisplay, xslUrl);
+
+		if (!hasValidUrlPrefix(validUrlPrefixes, xslUrl)) {
 			SessionErrors.add(actionRequest, "xslUrl");
 		}
 	}
+
+	private volatile XSLContentConfiguration _xslContentConfiguration;
 
 }

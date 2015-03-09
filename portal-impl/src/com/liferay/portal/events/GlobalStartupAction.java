@@ -72,8 +72,7 @@ public class GlobalStartupAction extends SimpleAction {
 			return _autoDeployListeners;
 		}
 
-		List<AutoDeployListener> autoDeployListeners =
-			new ArrayList<AutoDeployListener>();
+		List<AutoDeployListener> autoDeployListeners = new ArrayList<>();
 
 		String[] autoDeployListenerClassNames = PropsUtil.getArray(
 			PropsKeys.AUTO_DEPLOY_LISTENERS);
@@ -107,8 +106,7 @@ public class GlobalStartupAction extends SimpleAction {
 			return _hotDeployListeners;
 		}
 
-		List<HotDeployListener> hotDeployListeners =
-			new ArrayList<HotDeployListener>();
+		List<HotDeployListener> hotDeployListeners = new ArrayList<>();
 
 		String[] hotDeployListenerClassNames = PropsUtil.getArray(
 			PropsKeys.HOT_DEPLOY_LISTENERS);
@@ -136,8 +134,7 @@ public class GlobalStartupAction extends SimpleAction {
 	}
 
 	public static List<SandboxDeployListener> getSandboxDeployListeners() {
-		List<SandboxDeployListener> sandboxDeployListeners =
-			new ArrayList<SandboxDeployListener>();
+		List<SandboxDeployListener> sandboxDeployListeners = new ArrayList<>();
 
 		String[] sandboxDeployListenerClassNames = PropsUtil.getArray(
 			PropsKeys.SANDBOX_DEPLOY_LISTENERS);
@@ -351,7 +348,8 @@ public class GlobalStartupAction extends SimpleAction {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(GlobalStartupAction.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		GlobalStartupAction.class);
 
 	private static List<AutoDeployListener> _autoDeployListeners;
 	private static List<HotDeployListener> _hotDeployListeners;

@@ -15,10 +15,12 @@
 package com.liferay.portal.cache.ehcache;
 
 import com.liferay.portal.cache.cluster.EhcachePortalCacheClusterReplicatorFactory;
-import com.liferay.portal.kernel.test.CodeCoverageAssertor;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
+import com.liferay.portal.kernel.test.rule.NewEnv;
 import com.liferay.portal.kernel.util.StringPool;
-import com.liferay.portal.test.AdviseWith;
-import com.liferay.portal.test.runners.AspectJMockingNewClassLoaderJUnitTestRunner;
+import com.liferay.portal.test.rule.AdviseWith;
+import com.liferay.portal.test.rule.AspectJNewEnvTestRule;
 
 import java.net.URL;
 
@@ -39,18 +41,20 @@ import org.aspectj.lang.annotation.Aspect;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Tina Tian
  */
-@RunWith(AspectJMockingNewClassLoaderJUnitTestRunner.class)
+@NewEnv(type = NewEnv.Type.CLASSLOADER)
 public class EhcacheConfigurationUtilTest {
 
 	@ClassRule
-	public static CodeCoverageAssertor codeCoverageAssertor =
-		new CodeCoverageAssertor();
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			CodeCoverageAssertor.INSTANCE, AspectJNewEnvTestRule.INSTANCE);
 
 	@Before
 	public void setUp() {
@@ -172,9 +176,8 @@ public class EhcacheConfigurationUtilTest {
 	)
 	@Test
 	public void testClusterEnabled2() {
-		Configuration configuration =
-			EhcacheConfigurationUtil.getConfiguration(
-				_configurationURL, false, false);
+		Configuration configuration = EhcacheConfigurationUtil.getConfiguration(
+			_configurationURL, false, false);
 
 		_assertListenerConfigsEquals(_configuration, configuration);
 
@@ -194,6 +197,7 @@ public class EhcacheConfigurationUtilTest {
 		_assertClusterLinkReplicatorConfigs(configuration, true);
 	}
 
+	@NewEnv(type = NewEnv.Type.NONE)
 	@Test
 	public void testMisc() {
 		Configuration configuration = EhcacheConfigurationUtil.getConfiguration(
@@ -233,7 +237,8 @@ public class EhcacheConfigurationUtilTest {
 	public static class DisableClusterLinkAdvice {
 
 		@Around(
-			"set(* com.liferay.portal.util.PropsValues.CLUSTER_LINK_ENABLED)")
+			"set(* com.liferay.portal.util.PropsValues.CLUSTER_LINK_ENABLED)"
+		)
 		public Object disableClusterLink(
 				ProceedingJoinPoint proceedingJoinPoint)
 			throws Throwable {
@@ -248,7 +253,8 @@ public class EhcacheConfigurationUtilTest {
 
 		@Around(
 			"set(* com.liferay.portal.util.PropsValues." +
-				"EHCACHE_CLUSTER_LINK_REPLICATION_ENABLED)")
+				"EHCACHE_CLUSTER_LINK_REPLICATION_ENABLED)"
+		)
 		public Object disableClusterLinkReplicate(
 				ProceedingJoinPoint proceedingJoinPoint)
 			throws Throwable {
@@ -263,7 +269,8 @@ public class EhcacheConfigurationUtilTest {
 
 		@Around(
 			"set(* com.liferay.portal.util.PropsValues." +
-				"EHCACHE_BOOTSTRAP_CACHE_LOADER_ENABLED)")
+				"EHCACHE_BOOTSTRAP_CACHE_LOADER_ENABLED)"
+		)
 		public Object disableEhcacheBootStrap(
 				ProceedingJoinPoint proceedingJoinPoint)
 			throws Throwable {
@@ -277,7 +284,8 @@ public class EhcacheConfigurationUtilTest {
 	public static class EnableClusterLinkAdvice {
 
 		@Around(
-			"set(* com.liferay.portal.util.PropsValues.CLUSTER_LINK_ENABLED)")
+			"set(* com.liferay.portal.util.PropsValues.CLUSTER_LINK_ENABLED)"
+		)
 		public Object enableClusterLink(ProceedingJoinPoint proceedingJoinPoint)
 			throws Throwable {
 
@@ -291,7 +299,8 @@ public class EhcacheConfigurationUtilTest {
 
 		@Around(
 			"set(* com.liferay.portal.util.PropsValues." +
-				"EHCACHE_CLUSTER_LINK_REPLICATION_ENABLED)")
+				"EHCACHE_CLUSTER_LINK_REPLICATION_ENABLED)"
+		)
 		public Object enableClusterLinkReplicate(
 				ProceedingJoinPoint proceedingJoinPoint)
 			throws Throwable {
@@ -306,7 +315,8 @@ public class EhcacheConfigurationUtilTest {
 
 		@Around(
 			"set(* com.liferay.portal.util.PropsValues." +
-				"EHCACHE_BOOTSTRAP_CACHE_LOADER_ENABLED)")
+				"EHCACHE_BOOTSTRAP_CACHE_LOADER_ENABLED)"
+		)
 		public Object enableEhcacheBootstrap(
 				ProceedingJoinPoint proceedingJoinPoint)
 			throws Throwable {
@@ -523,8 +533,7 @@ public class EhcacheConfigurationUtilTest {
 	private List<CacheConfiguration> _getAllCacheConfigurations(
 		Configuration configuration) {
 
-		List<CacheConfiguration> cacheConfigurations =
-			new ArrayList<CacheConfiguration>();
+		List<CacheConfiguration> cacheConfigurations = new ArrayList<>();
 
 		CacheConfiguration defaultCacheConfiguration =
 			configuration.getDefaultCacheConfiguration();

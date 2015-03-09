@@ -15,9 +15,8 @@
 package com.liferay.portal.settings;
 
 import com.liferay.portal.kernel.settings.BaseSettings;
-import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.settings.Settings;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.util.ContentUtil;
 
 import java.util.Properties;
 
@@ -27,19 +26,26 @@ import java.util.Properties;
  */
 public class PropertiesSettings extends BaseSettings {
 
-	public PropertiesSettings(Properties properties) {
+	public PropertiesSettings(
+		LocationVariableResolver locationVariableResolver,
+		Properties properties) {
+
+		this(locationVariableResolver, properties, null);
+	}
+
+	public PropertiesSettings(
+		LocationVariableResolver locationVariableResolver,
+		Properties properties, Settings parentSettings) {
+
+		super(parentSettings);
+
+		_locationVariableResolver = locationVariableResolver;
 		_properties = properties;
 	}
 
 	@Override
 	protected String doGetValue(String key) {
-		String value = _properties.getProperty(key);
-
-		if (isLocationVariable("resource", value)) {
-			return ContentUtil.get(getLocation("resource", value));
-		}
-
-		return value;
+		return readProperty(key);
 	}
 
 	@Override
@@ -48,37 +54,20 @@ public class PropertiesSettings extends BaseSettings {
 	}
 
 	protected String getProperty(String key) {
+		return readProperty(key);
+	}
+
+	protected String readProperty(String key) {
 		String value = _properties.getProperty(key);
 
-		if (isLocationVariable("resource", value)) {
-			return ContentUtil.get(getLocation("resource", value));
+		if (_locationVariableResolver.isLocationVariable(value)) {
+			return _locationVariableResolver.resolve(value);
 		}
 
 		return value;
 	}
 
-	private String getLocation(String protocol, String value) {
-		return value.substring(protocol.length() + 3, value.length() - 1);
-	}
-
-	private boolean isLocationVariable(String protocol, String value) {
-		if (value == null) {
-			return false;
-		}
-
-		String prefix =
-			StringPool.DOLLAR + StringPool.OPEN_CURLY_BRACE + protocol +
-				StringPool.COLON;
-
-		if (value.startsWith(prefix) &&
-			value.endsWith(StringPool.CLOSE_CURLY_BRACE)) {
-
-			return true;
-		}
-
-		return false;
-	}
-
-	private Properties _properties;
+	private final LocationVariableResolver _locationVariableResolver;
+	private final Properties _properties;
 
 }

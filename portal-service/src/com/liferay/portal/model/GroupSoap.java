@@ -43,6 +43,7 @@ public class GroupSoap implements Serializable {
 		soapModel.setParentGroupId(model.getParentGroupId());
 		soapModel.setLiveGroupId(model.getLiveGroupId());
 		soapModel.setTreePath(model.getTreePath());
+		soapModel.setGroupKey(model.getGroupKey());
 		soapModel.setName(model.getName());
 		soapModel.setDescription(model.getDescription());
 		soapModel.setType(model.getType());
@@ -52,6 +53,7 @@ public class GroupSoap implements Serializable {
 		soapModel.setFriendlyURL(model.getFriendlyURL());
 		soapModel.setSite(model.getSite());
 		soapModel.setRemoteStagingGroupCount(model.getRemoteStagingGroupCount());
+		soapModel.setInheritContent(model.getInheritContent());
 		soapModel.setActive(model.getActive());
 
 		return soapModel;
@@ -185,6 +187,14 @@ public class GroupSoap implements Serializable {
 		_treePath = treePath;
 	}
 
+	public String getGroupKey() {
+		return _groupKey;
+	}
+
+	public void setGroupKey(String groupKey) {
+		_groupKey = groupKey;
+	}
+
 	public String getName() {
 		return _name;
 	}
@@ -265,6 +275,18 @@ public class GroupSoap implements Serializable {
 		_remoteStagingGroupCount = remoteStagingGroupCount;
 	}
 
+	public boolean getInheritContent() {
+		return _inheritContent;
+	}
+
+	public boolean isInheritContent() {
+		return _inheritContent;
+	}
+
+	public void setInheritContent(boolean inheritContent) {
+		_inheritContent = inheritContent;
+	}
+
 	public boolean getActive() {
 		return _active;
 	}
@@ -287,6 +309,7 @@ public class GroupSoap implements Serializable {
 	private long _parentGroupId;
 	private long _liveGroupId;
 	private String _treePath;
+	private String _groupKey;
 	private String _name;
 	private String _description;
 	private int _type;
@@ -296,5 +319,6 @@ public class GroupSoap implements Serializable {
 	private String _friendlyURL;
 	private boolean _site;
 	private int _remoteStagingGroupCount;
+	private boolean _inheritContent;
 	private boolean _active;
 }

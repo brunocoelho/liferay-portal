@@ -52,11 +52,7 @@ if (layout != null) {
 			liveFriendlyURL = PortalUtil.getLayoutFriendlyURL(liveLayout, themeDisplay);
 		}
 		else if ((layout.isPrivateLayout() && (liveGroup.getPrivateLayoutsPageCount() > 0)) || (layout.isPublicLayout() && (liveGroup.getPublicLayoutsPageCount() > 0))) {
-			liveFriendlyURL = PortalUtil.getGroupFriendlyURL(liveGroup, layout.isPrivateLayout(), themeDisplay);
-		}
-
-		if (Validator.isNotNull(liveFriendlyURL)) {
-			liveFriendlyURL = PortalUtil.addPreservedParameters(themeDisplay, liveFriendlyURL);
+			liveFriendlyURL = liveGroup.getDisplayURL(themeDisplay, layout.isPrivateLayout());
 		}
 	}
 
@@ -69,11 +65,7 @@ if (layout != null) {
 			stagingFriendlyURL = PortalUtil.getLayoutFriendlyURL(stagingLayout, themeDisplay);
 		}
 		else {
-			stagingFriendlyURL = PortalUtil.getGroupFriendlyURL(stagingGroup, layout.isPrivateLayout(), themeDisplay);
-		}
-
-		if (Validator.isNotNull(stagingFriendlyURL)) {
-			stagingFriendlyURL = PortalUtil.addPreservedParameters(themeDisplay, stagingFriendlyURL);
+			stagingFriendlyURL = stagingGroup.getDisplayURL(themeDisplay, layout.isPrivateLayout());
 		}
 	}
 
@@ -95,6 +87,7 @@ if (layout != null) {
 									<c:when test="<%= (group.isStagingGroup() || group.isStagedRemotely()) && branchingEnabled %>">
 
 										<%
+										request.setAttribute(WebKeys.PRIVATE_LAYOUT, privateLayout);
 										request.setAttribute("view.jsp-layoutBranch", layoutBranch);
 										request.setAttribute("view.jsp-layoutRevision", layoutRevision);
 										request.setAttribute("view.jsp-layoutSetBranch", layoutSetBranch);
@@ -132,6 +125,7 @@ if (layout != null) {
 												<c:otherwise>
 
 													<%
+													request.setAttribute("privateLayout", privateLayout);
 													request.setAttribute("view.jsp-typeSettingsProperties", liveLayout.getTypeSettingsProperties());
 													%>
 
@@ -216,9 +210,9 @@ if (layout != null) {
 			Liferay.Service(
 				'/backgroundtask/get-background-tasks-count',
 				{
+					completed: false,
 					groupId: '<%= liveGroup.getGroupId() %>',
-					taskExecutorClassName: '<%= LayoutStagingBackgroundTaskExecutor.class.getName() %>',
-					completed: false
+					taskExecutorClassName: '<%= LayoutStagingBackgroundTaskExecutor.class.getName() %>'
 				},
 				function(obj) {
 					var incomplete = obj > 0;

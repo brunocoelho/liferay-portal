@@ -79,17 +79,18 @@ public class IndexAccessorImpl implements IndexAccessor {
 
 		_path = PropsValues.LUCENE_DIR + _companyId + StringPool.SLASH;
 
+		IndexSearcherManager indexSearcherManager = null;
+
 		try {
 			if (!SPIUtil.isSPI()) {
 				_checkLuceneDir();
 				_initIndexWriter();
 				_initCommitScheduler();
 
-				_indexSearcherManager = new IndexSearcherManager(_indexWriter);
+				indexSearcherManager = new IndexSearcherManager(_indexWriter);
 			}
 			else {
-				_indexSearcherManager = new IndexSearcherManager(
-					getLuceneDir());
+				indexSearcherManager = new IndexSearcherManager(getLuceneDir());
 			}
 		}
 		catch (IOException ioe) {
@@ -98,6 +99,8 @@ public class IndexAccessorImpl implements IndexAccessor {
 					_companyId,
 				ioe);
 		}
+
+		_indexSearcherManager = indexSearcherManager;
 	}
 
 	@Override
@@ -237,43 +240,40 @@ public class IndexAccessorImpl implements IndexAccessor {
 	public void loadIndex(InputStream inputStream) throws IOException {
 		File tempFile = FileUtil.createTempFile();
 
-		Directory tempDirectory = FSDirectory.open(tempFile);
+		try (Directory tempDirectory = FSDirectory.open(tempFile)) {
+			IndexCommitSerializationUtil.deserializeIndex(
+				inputStream, tempDirectory);
 
-		IndexCommitSerializationUtil.deserializeIndex(
-			inputStream, tempDirectory);
+			_deleteDirectory();
 
-		_deleteDirectory();
+			try (IndexReader indexReader = IndexReader.open(
+					tempDirectory, false)) {
 
-		IndexReader indexReader = IndexReader.open(tempDirectory, false);
+				if (indexReader.numDocs() > 0) {
+					try (IndexSearcher indexSearcher = new IndexSearcher(
+							indexReader)) {
 
-		if (indexReader.numDocs() > 0) {
-			IndexSearcher indexSearcher = new IndexSearcher(indexReader);
+						TopDocs topDocs = indexSearcher.search(
+							new MatchAllDocsQuery(), indexReader.numDocs());
 
-			try {
-				TopDocs topDocs = indexSearcher.search(
-					new MatchAllDocsQuery(), indexReader.numDocs());
+						ScoreDoc[] scoreDocs = topDocs.scoreDocs;
 
-				ScoreDoc[] scoreDocs = topDocs.scoreDocs;
+						for (ScoreDoc scoreDoc : scoreDocs) {
+							Document document = indexSearcher.doc(scoreDoc.doc);
 
-				for (ScoreDoc scoreDoc : scoreDocs) {
-					Document document = indexSearcher.doc(scoreDoc.doc);
-
-					addDocument(document);
+							addDocument(document);
+						}
+					}
+					catch (IllegalArgumentException iae) {
+						if (_log.isDebugEnabled()) {
+							_log.debug(iae.getMessage());
+						}
+					}
 				}
-			}
-			catch (IllegalArgumentException iae) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(iae.getMessage());
-				}
-			}
 
-			indexSearcher.close();
+				indexReader.flush();
+			}
 		}
-
-		indexReader.flush();
-		indexReader.close();
-
-		tempDirectory.close();
 
 		FileUtil.deltree(tempFile);
 	}
@@ -543,17 +543,18 @@ public class IndexAccessorImpl implements IndexAccessor {
 
 	private static final String _LUCENE_STORE_TYPE_RAM = "ram";
 
-	private static Log _log = LogFactoryUtil.getLog(IndexAccessorImpl.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		IndexAccessorImpl.class);
 
 	private volatile int _batchCount;
-	private Lock _commitLock = new ReentrantLock();
+	private final Lock _commitLock = new ReentrantLock();
 	private long _companyId;
 	private Directory _directory;
-	private DumpIndexDeletionPolicy _dumpIndexDeletionPolicy =
+	private final DumpIndexDeletionPolicy _dumpIndexDeletionPolicy =
 		new DumpIndexDeletionPolicy();
-	private IndexSearcherManager _indexSearcherManager;
+	private final IndexSearcherManager _indexSearcherManager;
 	private IndexWriter _indexWriter;
-	private String _path;
+	private final String _path;
 	private ScheduledExecutorService _scheduledExecutorService;
 
 	private static class InvalidateProcessCallable

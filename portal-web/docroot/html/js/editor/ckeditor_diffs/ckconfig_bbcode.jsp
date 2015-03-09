@@ -36,6 +36,7 @@ languageId = LocaleUtil.toLanguageId(locale);
 
 String name = ParamUtil.getString(request, "name");
 boolean resizable = ParamUtil.getBoolean(request, "resizable");
+boolean showSource = ParamUtil.getBoolean(request, "showSource");
 
 response.setContentType(ContentTypes.TEXT_JAVASCRIPT);
 %>
@@ -68,27 +69,47 @@ response.setContentType(ContentTypes.TEXT_JAVASCRIPT);
 	].join(',');
 
 	config.toolbar_bbcode = [
-		['Bold', 'Italic', 'Underline', 'Strike', '-', 'Link', 'Unlink'],
-		['Image', 'Smiley', '-', 'TextColor', '-', 'NumberedList', 'BulletedList', '-', 'Outdent', 'Indent'],
-		['JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock', '-', 'Blockquote', '-', 'Code'],
+		['Bold', 'Italic', 'Underline', 'Strike'],
+		['TextColor'],
+		['JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'],
+		['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Blockquote', '-', 'Code'],
 		'/',
-		['Font', 'FontSize', '-', 'Format', '-', 'Undo', 'Redo', '-', 'Source'],
+		['Format', 'Font', 'FontSize'],
+		['Link', 'Unlink'],
+		['Image', '-', 'Smiley'],
+		'/',
+		['Cut', 'Copy', 'Paste', '-', 'SelectAll', '-', 'Undo', 'Redo'],
+
+		<c:if test="<%= showSource %>">
+			['Source'],
+		</c:if>
+
 		['A11YBtn']
 	];
 
 	config.toolbar_phone = [
 		['Bold', 'Italic', 'Underline'],
 		['NumberedList', 'BulletedList'],
-		['Image', 'Link', 'Unlink']
+		['Link', 'Unlink'],
+		['Image']
 	];
+
+	<c:if test="<%= showSource %>">
+		config.toolbar_phone.push(['Source']);
+	</c:if>
 
 	config.toolbar_tablet = [
 		['Bold', 'Italic', 'Underline', 'Strike'],
-		['NumberedList', 'BulletedList'],
-		['Image', 'Link', 'Unlink'],
 		['JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'],
-		['Styles', 'FontSize']
+		['NumberedList', 'BulletedList'],
+		['Styles', 'FontSize'],
+		['Link', 'Unlink'],
+		['Image']
 	];
+
+	<c:if test="<%= showSource %>">
+		config.toolbar_tablet.push(['Source']);
+	</c:if>
 
 	config.bodyClass = 'html-editor <%= HtmlUtil.escapeJS(cssClasses) %>';
 

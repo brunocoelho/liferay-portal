@@ -57,7 +57,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see ImagePersistence
- * @see ImageUtil
+ * @see com.liferay.portal.service.persistence.ImageUtil
  * @generated
  */
 @ProviderType
@@ -1181,7 +1181,7 @@ public class ImagePersistenceImpl extends BasePersistenceImpl<Image>
 	private static class NullCacheModel implements CacheModel<Image>, MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

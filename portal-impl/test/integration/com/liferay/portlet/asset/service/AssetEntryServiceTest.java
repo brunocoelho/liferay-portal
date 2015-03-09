@@ -14,13 +14,13 @@
 
 package com.liferay.portlet.asset.service;
 
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.model.Group;
-import com.liferay.portal.test.DeleteAfterTestRun;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
-import com.liferay.portal.util.test.GroupTestUtil;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portlet.asset.model.AssetEntry;
 import com.liferay.portlet.asset.service.persistence.AssetEntryQuery;
 import com.liferay.portlet.asset.util.test.AssetTestUtil;
@@ -33,15 +33,20 @@ import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Alberto Chaparro
  */
-@ExecutionTestListeners(listeners = {MainServletExecutionTestListener.class})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 public class AssetEntryServiceTest {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -155,7 +160,7 @@ public class AssetEntryServiceTest {
 		RatingsTestUtil.addStats(
 			assetEntry3.getClassName(), assetEntry3.getClassPK(), 3000);
 
-		List<AssetEntry> assetEntries = new ArrayList<AssetEntry>(3);
+		List<AssetEntry> assetEntries = new ArrayList<>(3);
 
 		assetEntries.add(assetEntry3);
 		assetEntries.add(assetEntry1);

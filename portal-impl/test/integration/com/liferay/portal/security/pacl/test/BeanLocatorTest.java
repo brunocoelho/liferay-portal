@@ -18,26 +18,27 @@ import com.liferay.portal.kernel.bean.BeanLocator;
 import com.liferay.portal.kernel.bean.BeanLocatorException;
 import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
 import com.liferay.portal.kernel.bean.PortletBeanLocatorUtil;
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.uuid.PortalUUID;
-import com.liferay.portal.kernel.xml.SAXReader;
+import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.security.auth.AuthTokenUtil;
-import com.liferay.portal.test.listeners.PACLExecutionTestListener;
-import com.liferay.portal.test.runners.PACLIntegrationJUnitTestRunner;
+import com.liferay.portal.test.rule.PACLTestRule;
 
 import java.util.Map;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Raymond Augé
  */
-@ExecutionTestListeners(listeners = {PACLExecutionTestListener.class})
-@RunWith(PACLIntegrationJUnitTestRunner.class)
 public class BeanLocatorTest {
+
+	@ClassRule
+	@Rule
+	public static final PACLTestRule paclTestRule = new PACLTestRule();
 
 	@Test
 	public void testPlugin1() throws Exception {
@@ -160,7 +161,7 @@ public class BeanLocatorTest {
 	@Test
 	public void testPortal4() throws Exception {
 		try {
-			PortalBeanLocatorUtil.locate(SAXReader.class);
+			PortalBeanLocatorUtil.locate(SAXReaderUtil.class);
 		}
 		catch (SecurityException se) {
 			Assert.fail();
@@ -170,7 +171,7 @@ public class BeanLocatorTest {
 	@Test
 	public void testPortal5() throws Exception {
 		try {
-			PortalBeanLocatorUtil.locate(SAXReader.class.getName());
+			PortalBeanLocatorUtil.locate(SAXReaderUtil.class.getName());
 		}
 		catch (SecurityException se) {
 			Assert.fail();

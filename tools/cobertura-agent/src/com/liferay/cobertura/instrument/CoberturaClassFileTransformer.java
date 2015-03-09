@@ -26,13 +26,9 @@ import java.lang.management.RuntimeMXBean;
 
 import java.security.ProtectionDomain;
 
-import java.util.Collection;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import net.sourceforge.cobertura.coveragedata.CoverageDataFileHandler;
 import net.sourceforge.cobertura.coveragedata.ProjectData;
 
 import org.objectweb.asm.ClassReader;
@@ -46,9 +42,7 @@ import org.objectweb.asm.Opcodes;
  */
 public class CoberturaClassFileTransformer implements ClassFileTransformer {
 
-	public CoberturaClassFileTransformer(
-		String[] includes, String[] excludes, final File lockFile) {
-
+	public CoberturaClassFileTransformer(String[] includes, String[] excludes) {
 		_includePatterns = new Pattern[includes.length];
 
 		for (int i = 0; i < includes.length; i++) {
@@ -64,32 +58,13 @@ public class CoberturaClassFileTransformer implements ClassFileTransformer {
 
 			_excludePatterns[i] = pattern;
 		}
-
-		ProjectDataUtil.addShutdownHook(
-			new Runnable() {
-
-				@Override
-				public void run() {
-					File dataFile =
-						CoverageDataFileHandler.getDefaultDataFile();
-
-					Collection<ProjectData> projectDatas =
-						_projectDatas.values();
-
-					ProjectDataUtil.mergeSave(
-						dataFile, lockFile,
-						projectDatas.toArray(
-							new ProjectData[projectDatas.size()]));
-
-					_projectDatas.clear();
-				}
-
-			}
-
-		);
 	}
 
 	public boolean matches(String className) {
+		if (className == null) {
+			return false;
+		}
+
 		if (_excludePatterns.length != 0) {
 			for (Pattern excludePattern : _excludePatterns) {
 				Matcher matcher = excludePattern.matcher(className);
@@ -123,18 +98,8 @@ public class CoberturaClassFileTransformer implements ClassFileTransformer {
 				InstrumentationAgent.recordInstrumentation(
 					classLoader, className, classfileBuffer);
 
-				ProjectData projectData = _projectDatas.get(classLoader);
-
-				if (projectData == null) {
-					projectData = new ProjectData();
-
-					ProjectData previousProjectData = _projectDatas.putIfAbsent(
-						classLoader, projectData);
-
-					if (previousProjectData != null) {
-						projectData = previousProjectData;
-					}
-				}
+				ProjectData projectData =
+					ProjectDataUtil.getOrCreateProjectData(classLoader);
 
 				ClassWriter classWriter = new ContextAwareClassWriter(
 					ClassWriter.COMPUTE_FRAMES);
@@ -161,7 +126,8 @@ public class CoberturaClassFileTransformer implements ClassFileTransformer {
 			// redirecting ProjectData#initialize to
 			// InstrumentationAgent#initialize
 
-			if (className.equals(
+			if ((className != null) &&
+				className.equals(
 					"net/sourceforge/cobertura/coveragedata/TouchCollector")) {
 
 				ClassWriter classWriter = new ContextAwareClassWriter(
@@ -216,32 +182,14 @@ public class CoberturaClassFileTransformer implements ClassFileTransformer {
 
 		File classFile = new File(dumpDir, className + ".class");
 
-		OutputStream outputStream = null;
-
-		try {
-			outputStream = new FileOutputStream(classFile);
-
+		try (OutputStream outputStream = new FileOutputStream(classFile)) {
 			outputStream.write(data);
 		}
-		finally {
-			if (outputStream != null) {
-				outputStream.close();
-			}
-		}
 
-		FileWriter fileWriter = null;
-
-		try {
-			fileWriter = new FileWriter(logFile, true);
-
+		try (FileWriter fileWriter = new FileWriter(logFile, true)) {
 			fileWriter.write(
 				"Instrumented " + className + " from " + classLoader +
 					" and dumped to " + classFile.getAbsolutePath() + "\n");
-		}
-		finally {
-			if (fileWriter != null) {
-				fileWriter.close();
-			}
 		}
 	}
 
@@ -268,10 +216,8 @@ public class CoberturaClassFileTransformer implements ClassFileTransformer {
 			"cobertura-dump/" + processId);
 	}
 
-	private Pattern[] _excludePatterns;
-	private Pattern[] _includePatterns;
-	private ConcurrentMap<ClassLoader, ProjectData> _projectDatas =
-		new ConcurrentHashMap<ClassLoader, ProjectData>();
+	private final Pattern[] _excludePatterns;
+	private final Pattern[] _includePatterns;
 
 	private static class TouchCollectorClassVisitor extends ClassVisitor {
 

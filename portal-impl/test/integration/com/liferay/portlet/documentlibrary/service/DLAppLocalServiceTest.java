@@ -14,26 +14,33 @@
 
 package com.liferay.portlet.documentlibrary.service;
 
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.messaging.MessageBusUtil;
 import com.liferay.portal.kernel.messaging.MessageListener;
+import com.liferay.portal.kernel.repository.LocalRepository;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.rule.Sync;
+import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
+import com.liferay.portal.kernel.test.util.GroupTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.model.Group;
+import com.liferay.portal.model.Repository;
+import com.liferay.portal.repository.liferayrepository.LiferayRepository;
+import com.liferay.portal.service.ClassNameLocalServiceUtil;
+import com.liferay.portal.service.RepositoryLocalServiceUtil;
 import com.liferay.portal.service.ServiceContext;
-import com.liferay.portal.test.DeleteAfterTestRun;
-import com.liferay.portal.test.Sync;
-import com.liferay.portal.test.SynchronousDestinationExecutionTestListener;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
-import com.liferay.portal.util.test.GroupTestUtil;
-import com.liferay.portal.util.test.RandomTestUtil;
-import com.liferay.portal.util.test.ServiceContextTestUtil;
-import com.liferay.portal.util.test.TestPropsValues;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portlet.asset.model.AssetEntry;
 import com.liferay.portlet.asset.service.AssetEntryLocalServiceUtil;
 import com.liferay.portlet.documentlibrary.NoSuchFolderException;
@@ -41,169 +48,306 @@ import com.liferay.portlet.documentlibrary.model.DLFileEntryConstants;
 import com.liferay.portlet.documentlibrary.model.DLFolderConstants;
 import com.liferay.portlet.documentlibrary.model.DLSyncConstants;
 
+import java.io.ByteArrayInputStream;
+
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 
 /**
  * @author Manuel de la Peña
  */
-@ExecutionTestListeners(
-	listeners = {
-		MainServletExecutionTestListener.class,
-		SynchronousDestinationExecutionTestListener.class
-	})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
-@Sync
+@RunWith(Enclosed.class)
 public class DLAppLocalServiceTest {
 
-	@Before
-	public void setUp() throws Exception {
-		_group = GroupTestUtil.addGroup();
+	@Sync
+	public static class WhenAddingAFolder {
+
+		@ClassRule
+		@Rule
+		public static final AggregateTestRule aggregateTestRule =
+			new AggregateTestRule(
+				new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE,
+				SynchronousDestinationTestRule.INSTANCE);
+
+		@Before
+		public void setUp() throws Exception {
+			_group = GroupTestUtil.addGroup();
+		}
+
+		@Test
+		public void shouldAddAssetEntry() throws Exception {
+			Folder folder = addFolder(_group.getGroupId(), false);
+
+			AssetEntry assetEntry = AssetEntryLocalServiceUtil.fetchEntry(
+				DLFolderConstants.getClassName(), folder.getFolderId());
+
+			Assert.assertNotNull(assetEntry);
+		}
+
+		@Test
+		public void shouldFireSyncEvent() throws Exception {
+			AtomicInteger counter = registerDLSyncEventProcessorMessageListener(
+				DLSyncConstants.EVENT_ADD);
+
+			addFolder(_group.getGroupId(), true);
+
+			Assert.assertEquals(1, counter.get());
+		}
+
+		@Test
+		public void shouldSucceedForNonRootFolders() throws Exception {
+			Folder folder = addFolder(_group.getGroupId(), false);
+
+			Assert.assertTrue(folder != null);
+		}
+
+		@Test
+		public void shouldSucceedForRootFolder() throws Exception {
+			Folder folder = addFolder(_group.getGroupId(), true);
+
+			Assert.assertTrue(folder != null);
+		}
+
+		@DeleteAfterTestRun
+		private Group _group;
+
 	}
 
-	@Test
-	public void testAddAssetEntryWhenAddingFolder() throws Exception {
-		Folder folder = addFolder(false);
+	@Sync
+	public static class WhenDeletingALocalRepository {
 
-		AssetEntry assetEntry = AssetEntryLocalServiceUtil.fetchEntry(
-			DLFolderConstants.getClassName(), folder.getFolderId());
+		@ClassRule
+		@Rule
+		public static final AggregateTestRule aggregateTestRule =
+			new AggregateTestRule(
+				new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE,
+				SynchronousDestinationTestRule.INSTANCE);
 
-		Assert.assertNotNull(assetEntry);
+		@Before
+		public void setUp() throws Exception {
+			_group = GroupTestUtil.addGroup();
+
+			ServiceContext serviceContext =
+				ServiceContextTestUtil.getServiceContext(_group.getGroupId());
+
+			_repository = RepositoryLocalServiceUtil.addRepository(
+				serviceContext.getUserId(), _group.getGroupId(),
+				ClassNameLocalServiceUtil.getClassNameId(
+					LiferayRepository.class),
+				DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+				RandomTestUtil.randomString(), StringPool.BLANK,
+				RandomTestUtil.randomString(), new UnicodeProperties(), true,
+				serviceContext);
+		}
+
+		@Test
+		public void shouldFireSyncEvent() throws Exception {
+			AtomicInteger counter = registerDLSyncEventProcessorMessageListener(
+				DLSyncConstants.EVENT_DELETE);
+
+			addFolder(_group.getGroupId(), false);
+
+			ServiceContext serviceContext =
+				ServiceContextTestUtil.getServiceContext(_group.getGroupId());
+
+			addFileEntry(serviceContext);
+
+			DLAppLocalServiceUtil.deleteAll(_group.getGroupId());
+
+			Assert.assertEquals(3, counter.get());
+		}
+
+		@Test
+		public void shouldOnlyDeleteRequestedRepository()
+			throws PortalException {
+
+			LocalRepository localRepository =
+				RepositoryLocalServiceUtil.getLocalRepositoryImpl(
+					_repository.getRepositoryId());
+
+			ServiceContext serviceContext =
+				ServiceContextTestUtil.getServiceContext(_group.getGroupId());
+
+			FileEntry fileEntry = localRepository.addFileEntry(
+				serviceContext.getUserId(),
+				DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+				RandomTestUtil.randomString(), ContentTypes.APPLICATION_TEXT,
+				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+				RandomTestUtil.randomString(),
+				new ByteArrayInputStream(new byte[0]), 0, serviceContext);
+
+			DLAppLocalServiceUtil.deleteAll(_group.getGroupId());
+
+			Assert.assertNotNull(
+				localRepository.getFileEntry(fileEntry.getFileEntryId()));
+		}
+
+		@DeleteAfterTestRun
+		private Group _group;
+
+		private Repository _repository;
+
 	}
 
-	@Test
-	public void testAddFolder() throws Exception {
-		Folder folder = addFolder(true);
+	@Sync
+	public static class WhenUpdatingAFileEntry {
 
-		Assert.assertTrue(folder != null);
+		@ClassRule
+		@Rule
+		public static final AggregateTestRule aggregateTestRule =
+			new AggregateTestRule(
+				new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE,
+				SynchronousDestinationTestRule.INSTANCE);
+
+		@Before
+		public void setUp() throws Exception {
+			_group = GroupTestUtil.addGroup();
+		}
+
+		@Test
+		public void shouldFireSyncEvent() throws Throwable {
+			AtomicInteger counter = registerDLSyncEventProcessorMessageListener(
+				DLSyncConstants.EVENT_UPDATE);
+
+			ServiceContext serviceContext =
+				ServiceContextTestUtil.getServiceContext(_group.getGroupId());
+
+			FileEntry fileEntry = addFileEntry(serviceContext);
+
+			updateFileEntry(serviceContext, fileEntry);
+
+			Assert.assertEquals(2, counter.get());
+		}
+
+		@Test
+		public void shouldUpdateAssetEntry() throws Exception {
+			ServiceContext serviceContext =
+				ServiceContextTestUtil.getServiceContext(_group.getGroupId());
+
+			FileEntry fileEntry = addFileEntry(serviceContext);
+
+			updateFileEntry(serviceContext, fileEntry);
+
+			AssetEntry assetEntry = AssetEntryLocalServiceUtil.getEntry(
+				DLFileEntryConstants.getClassName(),
+				fileEntry.getFileEntryId());
+
+			Assert.assertEquals("New Title", assetEntry.getTitle());
+		}
+
+		@DeleteAfterTestRun
+		private Group _group;
+
 	}
 
-	@Test
-	public void testAddRootFolder() throws Exception {
-		Folder folder = addFolder(false);
+	@Sync
+	public static class WhenUpdatingAFolder {
 
-		Assert.assertTrue(folder != null);
+		@ClassRule
+		@Rule
+		public static final AggregateTestRule aggregateTestRule =
+			new AggregateTestRule(
+				new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE,
+				SynchronousDestinationTestRule.INSTANCE);
+
+		@Before
+		public void setUp() throws Exception {
+			_group = GroupTestUtil.addGroup();
+		}
+
+		@Test(expected = NoSuchFolderException.class)
+		public void shouldFailForDefaultParentFolder() throws Exception {
+			ServiceContext serviceContext =
+				ServiceContextTestUtil.getServiceContext(_group.getGroupId());
+
+			DLAppLocalServiceUtil.updateFolder(
+				DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+				DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+				RandomTestUtil.randomString(), StringPool.BLANK,
+				serviceContext);
+		}
+
+		@Test
+		public void shouldUpdateAssetEntry() throws Exception {
+			ServiceContext serviceContext =
+				ServiceContextTestUtil.getServiceContext(_group.getGroupId());
+
+			Folder folder = addFolder(_group.getGroupId(), false, "Old Name");
+
+			DLAppLocalServiceUtil.updateFolder(
+				folder.getFolderId(), folder.getParentFolderId(), "New Name",
+				RandomTestUtil.randomString(), serviceContext);
+
+			AssetEntry assetEntry = AssetEntryLocalServiceUtil.getEntry(
+				DLFolderConstants.getClassName(), folder.getFolderId());
+
+			Assert.assertEquals("New Name", assetEntry.getTitle());
+		}
+
+		@DeleteAfterTestRun
+		private Group _group;
+
 	}
 
-	@Test
-	public void testFireSyncEventWhenAddingFolder() throws Exception {
-		AtomicInteger counter = registerDLSyncEventProcessorMessageListener(
-			DLSyncConstants.EVENT_ADD);
-
-		addFolder(true);
-
-		Assert.assertEquals(1, counter.get());
-	}
-
-	@Test
-	public void testFireSyncEventWhenUpdatingFileEntry() throws Throwable {
-		AtomicInteger counter = registerDLSyncEventProcessorMessageListener(
-			DLSyncConstants.EVENT_UPDATE);
-
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
-
-		FileEntry fileEntry = addFileEntry(serviceContext);
-
-		updateFileEntry(serviceContext, fileEntry);
-
-		Assert.assertEquals(2, counter.get());
-	}
-
-	@Test
-	public void testUpdateAssetEntryWhenUpdatingFileEntry() throws Exception {
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
-
-		FileEntry fileEntry = addFileEntry(serviceContext);
-
-		updateFileEntry(serviceContext, fileEntry);
-
-		AssetEntry assetEntry = AssetEntryLocalServiceUtil.getEntry(
-			DLFileEntryConstants.getClassName(), fileEntry.getFileEntryId());
-
-		Assert.assertEquals("New Title", assetEntry.getTitle());
-	}
-
-	@Test
-	public void testUpdateAssetEntryWhenUpdatingFolder() throws Exception {
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
-
-		Folder folder = addFolder(false, "Old Name");
-
-		DLAppLocalServiceUtil.updateFolder(
-			folder.getFolderId(), folder.getParentFolderId(), "New Name",
-			RandomTestUtil.randomString(), serviceContext);
-
-		AssetEntry assetEntry = AssetEntryLocalServiceUtil.getEntry(
-			DLFolderConstants.getClassName(), folder.getFolderId());
-
-		Assert.assertEquals("New Name", assetEntry.getTitle());
-	}
-
-	@Test(expected = NoSuchFolderException.class)
-	public void testUpdateDefaultParentFolder() throws Exception {
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
-
-		DLAppLocalServiceUtil.updateFolder(
-			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-			RandomTestUtil.randomString(), StringPool.BLANK, serviceContext);
-	}
-
-	protected FileEntry addFileEntry(ServiceContext serviceContext)
+	protected static FileEntry addFileEntry(ServiceContext serviceContext)
 		throws Exception {
 
 		return DLAppLocalServiceUtil.addFileEntry(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			TestPropsValues.getUserId(), serviceContext.getScopeGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString(), ContentTypes.TEXT_PLAIN, "Old Title",
 			RandomTestUtil.randomString(), null, RandomTestUtil.randomBytes(),
 			serviceContext);
 	}
 
-	protected Folder addFolder(boolean rootFolder) throws Exception {
-		return addFolder(rootFolder, RandomTestUtil.randomString());
+	protected static Folder addFolder(long groupId, boolean rootFolder)
+		throws Exception {
+
+		return addFolder(groupId, rootFolder, RandomTestUtil.randomString());
 	}
 
-	protected Folder addFolder(boolean rootFolder, String name)
+	protected static Folder addFolder(
+			long groupId, boolean rootFolder, String name)
 		throws Exception {
 
 		long parentFolderId = DLFolderConstants.DEFAULT_PARENT_FOLDER_ID;
 
 		if (!rootFolder) {
 			Folder parentFolder = addFolder(
-				parentFolderId, "Test Folder", true);
+				groupId, parentFolderId, "Test Folder", true);
 
 			parentFolderId = parentFolder.getFolderId();
 		}
 
-		return addFolder(parentFolderId, name);
+		return addFolder(groupId, parentFolderId, name);
 	}
 
-	protected Folder addFolder(long parentFolderId, String name)
+	protected static Folder addFolder(
+			long groupId, long parentFolderId, String name)
 		throws Exception {
 
-		return addFolder(parentFolderId, name, false);
+		return addFolder(groupId, parentFolderId, name, false);
 	}
 
-	protected Folder addFolder(
-			long parentFolderId, String name, boolean deleteExisting)
+	protected static Folder addFolder(
+			long groupId, long parentFolderId, String name,
+			boolean deleteExisting)
 		throws Exception {
 
 		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
+			ServiceContextTestUtil.getServiceContext(groupId);
 
 		if (deleteExisting) {
 			try {
 				Folder folder = DLAppLocalServiceUtil.getFolder(
-					_group.getGroupId(), parentFolderId, name);
+					groupId, parentFolderId, name);
 
 				DLAppLocalServiceUtil.deleteFolder(folder.getFolderId());
 			}
@@ -212,11 +356,11 @@ public class DLAppLocalServiceTest {
 		}
 
 		return DLAppLocalServiceUtil.addFolder(
-			TestPropsValues.getUserId(), _group.getGroupId(), parentFolderId,
-			name, StringPool.BLANK, serviceContext);
+			TestPropsValues.getUserId(), groupId, parentFolderId, name,
+			StringPool.BLANK, serviceContext);
 	}
 
-	protected AtomicInteger registerDLSyncEventProcessorMessageListener(
+	protected static AtomicInteger registerDLSyncEventProcessorMessageListener(
 		final String targetEvent) {
 
 		final AtomicInteger counter = new AtomicInteger();
@@ -239,7 +383,7 @@ public class DLAppLocalServiceTest {
 		return counter;
 	}
 
-	protected FileEntry updateFileEntry(
+	protected static FileEntry updateFileEntry(
 			ServiceContext serviceContext, FileEntry fileEntry)
 		throws Exception {
 
@@ -249,8 +393,5 @@ public class DLAppLocalServiceTest {
 			RandomTestUtil.randomString(), null, true,
 			RandomTestUtil.randomBytes(), serviceContext);
 	}
-
-	@DeleteAfterTestRun
-	private Group _group;
 
 }

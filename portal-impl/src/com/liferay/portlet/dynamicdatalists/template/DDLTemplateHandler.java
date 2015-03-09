@@ -71,7 +71,7 @@ public class DDLTemplateHandler extends BaseDDMTemplateHandler {
 		throws Exception {
 
 		Map<String, TemplateVariableGroup> templateVariableGroups =
-			new LinkedHashMap<String, TemplateVariableGroup>();
+			new LinkedHashMap<>();
 
 		addTemplateVariableGroup(
 			templateVariableGroups, getDDLVariablesTemplateVariableGroups());
@@ -144,7 +144,7 @@ public class DDLTemplateHandler extends BaseDDMTemplateHandler {
 		return _templateVariableCodeHandler;
 	}
 
-	private TemplateVariableCodeHandler _templateVariableCodeHandler =
+	private final TemplateVariableCodeHandler _templateVariableCodeHandler =
 		new DDMTemplateVariableCodeHandler(
 			"com/liferay/portlet/dynamicdatalists/dependencies/template/");
 

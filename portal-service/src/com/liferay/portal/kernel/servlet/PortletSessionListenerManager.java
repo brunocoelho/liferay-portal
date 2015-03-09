@@ -282,16 +282,13 @@ public class PortletSessionListenerManager
 		return httpSessionEvent;
 	}
 
-	private static List<HttpSessionActivationListener>
-		_httpSessionActivationListeners =
-			new ArrayList<HttpSessionActivationListener>();
-	private static List<HttpSessionAttributeListener>
-		_httpSessionAttributeListeners =
-			new ArrayList<HttpSessionAttributeListener>();
-	private static List<HttpSessionBindingListener>
-		_httpSessionBindingListeners =
-			new ArrayList<HttpSessionBindingListener>();
-	private static List<HttpSessionListener> _httpSessionListeners =
-		new ArrayList<HttpSessionListener>();
+	private static final List<HttpSessionActivationListener>
+		_httpSessionActivationListeners = new ArrayList<>();
+	private static final List<HttpSessionAttributeListener>
+		_httpSessionAttributeListeners = new ArrayList<>();
+	private static final List<HttpSessionBindingListener>
+		_httpSessionBindingListeners = new ArrayList<>();
+	private static final List<HttpSessionListener> _httpSessionListeners =
+		new ArrayList<>();
 
 }

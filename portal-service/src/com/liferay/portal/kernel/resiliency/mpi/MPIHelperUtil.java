@@ -102,7 +102,7 @@ public class MPIHelperUtil {
 	}
 
 	public static List<SPIProvider> getSPIProviders() {
-		List<SPIProvider> spiProviders = new ArrayList<SPIProvider>();
+		List<SPIProvider> spiProviders = new ArrayList<>();
 
 		for (SPIProviderContainer spiProviderContainer :
 				_spiProviderContainers.values()) {
@@ -114,7 +114,7 @@ public class MPIHelperUtil {
 	}
 
 	public static List<SPI> getSPIs() {
-		List<SPI> spis = new ArrayList<SPI>();
+		List<SPI> spis = new ArrayList<>();
 
 		for (SPIProviderContainer spiProviderContainer :
 				_spiProviderContainers.values()) {
@@ -132,7 +132,7 @@ public class MPIHelperUtil {
 	}
 
 	public static List<SPI> getSPIs(String spiProviderName) {
-		List<SPI> spis = new ArrayList<SPI>();
+		List<SPI> spis = new ArrayList<>();
 
 		SPIProviderContainer spiProviderContainer = _spiProviderContainers.get(
 			spiProviderName);
@@ -378,8 +378,7 @@ public class MPIHelperUtil {
 
 		if (_log.isWarnEnabled()) {
 			_log.warn(
-				"Not unregistering unregistered SPI provider " +
-					spiProvider);
+				"Not unregistering unregistered SPI provider " + spiProvider);
 		}
 
 		return false;
@@ -413,25 +412,15 @@ public class MPIHelperUtil {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(MPIHelperUtil.class);
+	private static final Log _log = LogFactoryUtil.getLog(MPIHelperUtil.class);
 
-	private static Intraband _intraband;
-	private static MPI _mpi;
-	private static MPI _mpiImpl;
-	private static ConcurrentMap<String, SPIProviderContainer>
-		_spiProviderContainers =
-			new ConcurrentHashMap<String, SPIProviderContainer>();
-	private static ThreadLocal<SPI> _unregisteringSPIThreadLocal =
-		new CentralizedThreadLocal<SPI>(true);
-
-	private static class MPIImpl implements MPI {
-
-		@Override
-		public boolean isAlive() {
-			return true;
-		}
-
-	}
+	private static final Intraband _intraband;
+	private static final MPI _mpi;
+	private static final MPI _mpiImpl;
+	private static final ConcurrentMap<String, SPIProviderContainer>
+		_spiProviderContainers = new ConcurrentHashMap<>();
+	private static final ThreadLocal<SPI> _unregisteringSPIThreadLocal =
+		new CentralizedThreadLocal<>(true);
 
 	static {
 
@@ -465,6 +454,15 @@ public class MPIHelperUtil {
 		}
 	}
 
+	private static class MPIImpl implements MPI {
+
+		@Override
+		public boolean isAlive() {
+			return true;
+		}
+
+	}
+
 	private static class SPIProviderContainer {
 
 		public SPIProviderContainer(SPIProvider spiProvider) {
@@ -491,9 +489,9 @@ public class MPIHelperUtil {
 			return _spis.remove(spiId, spi);
 		}
 
-		private SPIProvider _spiProvider;
-		private ConcurrentMap<String, SPI> _spis =
-			new ConcurrentHashMap<String, SPI>();
+		private final SPIProvider _spiProvider;
+		private final ConcurrentMap<String, SPI> _spis =
+			new ConcurrentHashMap<>();
 
 	}
 

@@ -20,6 +20,8 @@ import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -163,14 +165,12 @@ public class AUIUtil {
 		}
 
 		if (baseType.equals("checkbox") || baseType.equals("radio")) {
-			sb.append("class=\"");
-			sb.append(baseType);
-
 			if (inlineField) {
-				sb.append(" inline");
+				sb.append("class=\"");
+				sb.append(baseType);
+				sb.append("-inline");
+				sb.append("\" ");
 			}
-
-			sb.append("\" ");
 		}
 		else {
 			sb.append("class=\"control-label\" ");
@@ -217,5 +217,24 @@ public class AUIUtil {
 
 		return null;
 	}
+
+	public static boolean isOpensNewWindow(String target) {
+		if ((target != null) &&
+			(target.equals("_blank") || target.equals("_new"))) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	public static String normalizeId(String name) {
+		Matcher matcher = _friendlyURLPattern.matcher(name);
+
+		return matcher.replaceAll(StringPool.DASH);
+	}
+
+	private static final Pattern _friendlyURLPattern = Pattern.compile(
+		"[^A-Za-z0-9/_-]");
 
 }

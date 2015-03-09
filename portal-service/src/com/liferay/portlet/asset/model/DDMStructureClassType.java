@@ -86,10 +86,10 @@ public class DDMStructureClassType implements ClassType {
 		return _classTypeName;
 	}
 
-	protected List<ClassTypeField> getClassTypeFields(DDMStructure ddmStructure)
-		throws PortalException {
+	protected List<ClassTypeField> getClassTypeFields(
+		DDMStructure ddmStructure) {
 
-		List<ClassTypeField> classTypeFields = new ArrayList<ClassTypeField>();
+		List<ClassTypeField> classTypeFields = new ArrayList<>();
 
 		List<DDMFormField> ddmFormFields = ddmStructure.getDDMFormFields(false);
 
@@ -97,11 +97,9 @@ public class DDMStructureClassType implements ClassType {
 			String indexType = ddmFormField.getIndexType();
 			String name = ddmFormField.getName();
 
-			boolean privateField = ddmStructure.isFieldPrivate(name);
-
 			String type = ddmFormField.getType();
 
-			if (Validator.isNull(indexType) || privateField ||
+			if (Validator.isNull(indexType) ||
 				!ArrayUtil.contains(_SELECTABLE_DDM_STRUCTURE_FIELDS, type)) {
 
 				continue;
@@ -123,8 +121,8 @@ public class DDMStructureClassType implements ClassType {
 		"radio", "select", "text"
 	};
 
-	private long _classTypeId;
-	private String _classTypeName;
-	private String _languageId;
+	private final long _classTypeId;
+	private final String _classTypeName;
+	private final String _languageId;
 
 }

@@ -17,8 +17,8 @@ package com.liferay.portal.kernel.nio.intraband.messaging;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.portal.kernel.messaging.Message;
-import com.liferay.portal.kernel.test.CodeCoverageAssertor;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -35,8 +35,8 @@ import org.junit.Test;
 public class MessageRoutingBagTest {
 
 	@ClassRule
-	public static CodeCoverageAssertor codeCoverageAssertor =
-		new CodeCoverageAssertor();
+	public static final CodeCoverageAssertor codeCoverageAssertor =
+		CodeCoverageAssertor.INSTANCE;
 
 	@Test
 	public void testAutomaticSerialization() throws Exception {
@@ -66,12 +66,11 @@ public class MessageRoutingBagTest {
 		UnsyncByteArrayOutputStream unsyncByteArrayOutputStream =
 			new UnsyncByteArrayOutputStream();
 
-		ObjectOutputStream objectOutputStream = new ObjectOutputStream(
-			unsyncByteArrayOutputStream);
+		try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(
+				unsyncByteArrayOutputStream)) {
 
-		objectOutputStream.writeObject(messageRoutingBag);
-
-		objectOutputStream.close();
+			objectOutputStream.writeObject(messageRoutingBag);
+		}
 
 		byte[] bytes = unsyncByteArrayOutputStream.toByteArray();
 
@@ -89,9 +88,8 @@ public class MessageRoutingBagTest {
 		Assert.assertEquals(
 			routingDowncast, newMessageRoutingBag.isRoutingDowncast());
 
-		List<String> routingTrace =
-			(List<String>)ReflectionTestUtil.getFieldValue(
-				newMessageRoutingBag, "_routingTrace");
+		List<String> routingTrace = ReflectionTestUtil.getFieldValue(
+			newMessageRoutingBag, "_routingTrace");
 
 		Assert.assertEquals(2, routingTrace.size());
 		Assert.assertEquals(routingId1, routingTrace.get(0));
@@ -150,9 +148,8 @@ public class MessageRoutingBagTest {
 		Assert.assertEquals(
 			routingDowncast, newMessageRoutingBag.isRoutingDowncast());
 
-		List<String> routingTrace =
-			(List<String>)ReflectionTestUtil.getFieldValue(
-				newMessageRoutingBag, "_routingTrace");
+		List<String> routingTrace = ReflectionTestUtil.getFieldValue(
+			newMessageRoutingBag, "_routingTrace");
 
 		Assert.assertEquals(2, routingTrace.size());
 		Assert.assertEquals(routingId1, routingTrace.get(0));

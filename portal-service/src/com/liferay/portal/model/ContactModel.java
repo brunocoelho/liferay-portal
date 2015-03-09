@@ -323,28 +323,28 @@ public interface ContactModel extends AttachedModel, AuditedModel,
 	 *
 	 * @return the prefix ID of this contact
 	 */
-	public int getPrefixId();
+	public long getPrefixId();
 
 	/**
 	 * Sets the prefix ID of this contact.
 	 *
 	 * @param prefixId the prefix ID of this contact
 	 */
-	public void setPrefixId(int prefixId);
+	public void setPrefixId(long prefixId);
 
 	/**
 	 * Returns the suffix ID of this contact.
 	 *
 	 * @return the suffix ID of this contact
 	 */
-	public int getSuffixId();
+	public long getSuffixId();
 
 	/**
 	 * Sets the suffix ID of this contact.
 	 *
 	 * @param suffixId the suffix ID of this contact
 	 */
-	public void setSuffixId(int suffixId);
+	public void setSuffixId(long suffixId);
 
 	/**
 	 * Returns the male of this contact.
@@ -643,19 +643,19 @@ public interface ContactModel extends AttachedModel, AuditedModel,
 	public Object clone();
 
 	@Override
-	public int compareTo(Contact contact);
+	public int compareTo(com.liferay.portal.model.Contact contact);
 
 	@Override
 	public int hashCode();
 
 	@Override
-	public CacheModel<Contact> toCacheModel();
+	public CacheModel<com.liferay.portal.model.Contact> toCacheModel();
 
 	@Override
-	public Contact toEscapedModel();
+	public com.liferay.portal.model.Contact toEscapedModel();
 
 	@Override
-	public Contact toUnescapedModel();
+	public com.liferay.portal.model.Contact toUnescapedModel();
 
 	@Override
 	public String toString();

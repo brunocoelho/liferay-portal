@@ -15,7 +15,6 @@
 package com.liferay.portal.service;
 
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskConstants;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.messaging.Destination;
 import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.MessageBus;
@@ -23,18 +22,18 @@ import com.liferay.portal.kernel.messaging.MessageBusUtil;
 import com.liferay.portal.kernel.messaging.SynchronousDestination;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.test.AssertUtils;
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.util.GroupTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.lar.backgroundtask.PortletStagingBackgroundTaskExecutor;
 import com.liferay.portal.model.BackgroundTask;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.model.User;
 import com.liferay.portal.model.impl.BackgroundTaskImpl;
-import com.liferay.portal.test.DeleteAfterTestRun;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
-import com.liferay.portal.util.test.GroupTestUtil;
-import com.liferay.portal.util.test.RandomTestUtil;
-import com.liferay.portal.util.test.UserTestUtil;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 
 import java.io.File;
 import java.io.InputStream;
@@ -50,15 +49,20 @@ import java.util.Map;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Cristina González
  */
-@ExecutionTestListeners(listeners = {MainServletExecutionTestListener.class})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 public class BackgroundTaskLocalServiceTest {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -184,9 +188,7 @@ public class BackgroundTaskLocalServiceTest {
 
 		Map<String, Serializable> taskContextMap = getTaskContextMap();
 
-		String taskContext = JSONFactoryUtil.serialize(taskContextMap);
-
-		backgroundTaskImpl.setTaskContext(taskContext);
+		backgroundTaskImpl.setTaskContextMap(taskContextMap);
 
 		BackgroundTask backgroundTask =
 			BackgroundTaskLocalServiceUtil.addBackgroundTask(
@@ -308,8 +310,7 @@ public class BackgroundTaskLocalServiceTest {
 	}
 
 	protected Map<String, Serializable> getTaskContextMap() throws Exception {
-		Map<String, Serializable> taskContext =
-			new HashMap<String, Serializable>();
+		Map<String, Serializable> taskContext = new HashMap<>();
 
 		taskContext.put("param1", RandomTestUtil.randomBoolean());
 		taskContext.put("param2", RandomTestUtil.randomString());
@@ -328,7 +329,7 @@ public class BackgroundTaskLocalServiceTest {
 	private static final Class<?> _TASK_EXECUTOR_CLASS =
 		PortletStagingBackgroundTaskExecutor.class;
 
-	private Destination _destination = new SynchronousDestination();
+	private final Destination _destination = new SynchronousDestination();
 
 	@DeleteAfterTestRun
 	private Group _group;

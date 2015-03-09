@@ -14,21 +14,21 @@
 
 package com.liferay.portlet.messageboards.service;
 
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.util.GroupTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.security.permission.ActionKeys;
 import com.liferay.portal.security.permission.DoAsUserThread;
 import com.liferay.portal.service.ServiceContext;
-import com.liferay.portal.service.ServiceTestUtil;
 import com.liferay.portal.service.UserLocalServiceUtil;
-import com.liferay.portal.test.DeleteAfterTestRun;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
-import com.liferay.portal.util.test.GroupTestUtil;
-import com.liferay.portal.util.test.RandomTestUtil;
-import com.liferay.portal.util.test.ServiceContextTestUtil;
-import com.liferay.portal.util.test.UserTestUtil;
+import com.liferay.portal.service.test.ServiceTestUtil;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portlet.messageboards.model.MBCategory;
 import com.liferay.portlet.messageboards.model.MBCategoryConstants;
 import com.liferay.portlet.messageboards.model.MBMessage;
@@ -41,15 +41,20 @@ import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Alexander Chow
  */
-@ExecutionTestListeners(listeners = {MainServletExecutionTestListener.class})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 public class MBMessageServiceTest {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -155,7 +160,7 @@ public class MBMessageServiceTest {
 		protected void doRun() throws Exception {
 			String body = "This is a test message.";
 			List<ObjectValuePair<String, InputStream>> inputStreamOVPs =
-				new ArrayList<ObjectValuePair<String, InputStream>>();
+				new ArrayList<>();
 			boolean anonymous = false;
 			double priority = 0.0;
 			boolean allowPingbacks = false;
@@ -173,7 +178,7 @@ public class MBMessageServiceTest {
 			MBMessageLocalServiceUtil.deleteMessage(mbMessage);
 		}
 
-		private String _subject;
+		private final String _subject;
 
 	}
 

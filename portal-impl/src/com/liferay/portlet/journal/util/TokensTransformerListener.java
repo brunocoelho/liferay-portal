@@ -87,12 +87,12 @@ public class TokensTransformerListener extends BaseTransformerListener {
 
 			if (Validator.isNotNull(key) && s.contains(key)) {
 				if (!hasKey) {
-					escapedKeysList = new ArrayList<String>();
-					escapedValuesList = new ArrayList<String>();
-					keysList = new ArrayList<String>();
-					valuesList = new ArrayList<String>();
-					tempEscapedKeysList = new ArrayList<String>();
-					tempEscapedValuesList = new ArrayList<String>();
+					escapedKeysList = new ArrayList<>();
+					escapedValuesList = new ArrayList<>();
+					keysList = new ArrayList<>();
+					valuesList = new ArrayList<>();
+					tempEscapedKeysList = new ArrayList<>();
+					tempEscapedValuesList = new ArrayList<>();
 
 					hasKey = true;
 				}
@@ -103,9 +103,8 @@ public class TokensTransformerListener extends BaseTransformerListener {
 				String escapedKey = StringPool.AT.concat(
 					actualKey).concat(StringPool.AT);
 
-				String tempEscapedKey =
-					TEMP_ESCAPED_AT_OPEN.concat(key).concat(
-						TEMP_ESCAPED_AT_CLOSE);
+				String tempEscapedKey = TEMP_ESCAPED_AT_OPEN.concat(key).concat(
+					TEMP_ESCAPED_AT_CLOSE);
 
 				escapedKeysList.add(escapedKey);
 				escapedValuesList.add(tempEscapedKey);
@@ -139,7 +138,7 @@ public class TokensTransformerListener extends BaseTransformerListener {
 		return s;
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		TokensTransformerListener.class);
 
 }

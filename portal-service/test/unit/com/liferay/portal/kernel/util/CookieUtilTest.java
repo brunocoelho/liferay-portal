@@ -14,7 +14,7 @@
 
 package com.liferay.portal.kernel.util;
 
-import com.liferay.portal.kernel.test.CodeCoverageAssertor;
+import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 
 import javax.servlet.http.Cookie;
 
@@ -28,8 +28,8 @@ import org.junit.Test;
 public class CookieUtilTest {
 
 	@ClassRule
-	public static CodeCoverageAssertor codeCoverageAssertor =
-		new CodeCoverageAssertor();
+	public static final CodeCoverageAssertor codeCoverageAssertor =
+		CodeCoverageAssertor.INSTANCE;
 
 	@Test
 	public void testConstructor() {

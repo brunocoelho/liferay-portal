@@ -24,7 +24,6 @@ import com.liferay.portal.kernel.dao.jdbc.DataSourceFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.servlet.PluginContextListener;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -57,7 +56,7 @@ import org.hibernate.dialect.Dialect;
 /**
  * @author Alexander Chow
  */
-public class ConvertDatabase extends ConvertProcess {
+public class ConvertDatabase extends BaseConvertProcess {
 
 	@Override
 	public String getDescription() {
@@ -92,7 +91,7 @@ public class ConvertDatabase extends ConvertProcess {
 
 		List<String> modelNames = ModelHintsUtil.getModels();
 
-		Map<String, Tuple> tableDetails = new LinkedHashMap<String, Tuple>();
+		Map<String, Tuple> tableDetails = new LinkedHashMap<>();
 
 		Connection connection = dataSource.getConnection();
 
@@ -179,7 +178,7 @@ public class ConvertDatabase extends ConvertProcess {
 				ServiceComponentLocalServiceUtil.getServiceComponents(
 					QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
-			Set<String> validIndexNames = new HashSet<String>();
+			Set<String> validIndexNames = new HashSet<>();
 
 			for (ServiceComponent serviceComponent : serviceComponents) {
 				String indexesSQL = serviceComponent.getIndexesSQL();
@@ -224,9 +223,7 @@ public class ConvertDatabase extends ConvertProcess {
 				ServletContext servletContext = ServletContextPool.get(
 					servletContextName);
 
-				ClassLoader classLoader =
-					(ClassLoader)servletContext.getAttribute(
-						PluginContextListener.PLUGIN_CLASS_LOADER);
+				ClassLoader classLoader = servletContext.getClassLoader();
 
 				return classLoader.loadClass(implClassName);
 			}
@@ -291,6 +288,7 @@ public class ConvertDatabase extends ConvertProcess {
 			CyrusVirtual.TABLE_SQL_CREATE)
 	};
 
-	private static Log _log = LogFactoryUtil.getLog(ConvertDatabase.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		ConvertDatabase.class);
 
 }

@@ -45,7 +45,7 @@ public class AutoDeployUtil {
 	}
 
 	private AutoDeployUtil() {
-		_autoDeployDirs = new HashMap<String, AutoDeployDir>();
+		_autoDeployDirs = new HashMap<>();
 	}
 
 	private AutoDeployDir _getDir(String name) {
@@ -66,8 +66,8 @@ public class AutoDeployUtil {
 		}
 	}
 
-	private static AutoDeployUtil _instance = new AutoDeployUtil();
+	private static final AutoDeployUtil _instance = new AutoDeployUtil();
 
-	private Map<String, AutoDeployDir> _autoDeployDirs;
+	private final Map<String, AutoDeployDir> _autoDeployDirs;
 
 }

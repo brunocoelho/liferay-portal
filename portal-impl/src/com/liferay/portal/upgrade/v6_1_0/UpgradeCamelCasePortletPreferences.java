@@ -109,7 +109,7 @@ public class UpgradeCamelCasePortletPreferences
 		return PortletPreferencesFactoryUtil.toXML(portletPreferences);
 	}
 
-	private Map<String, String> _camelCasePreferenceNames =
-		new HashMap<String, String>();
+	private final Map<String, String> _camelCasePreferenceNames =
+		new HashMap<>();
 
 }

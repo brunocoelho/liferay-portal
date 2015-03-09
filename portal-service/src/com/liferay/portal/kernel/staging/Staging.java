@@ -60,7 +60,7 @@ public interface Staging {
 	 * @deprecated As of 7.0.0, replaced by {@link
 	 *             com.liferay.portal.service.StagingLocalServiceUtil#
 	 *             checkDefaultLayoutSetBranches(long, Group, boolean, boolean,
-	 *             boolean, ServiceContext))}
+	 *             boolean, ServiceContext)}
 	 */
 	@Deprecated
 	public void checkDefaultLayoutSetBranches(
@@ -75,6 +75,11 @@ public interface Staging {
 	public void copyFromLive(PortletRequest PortletRequest, Portlet portlet)
 		throws PortalException;
 
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #publishPortlet(long, long,
+	 *             long, long, long, String, Map, Date, Date)}
+	 */
+	@Deprecated
 	public void copyPortlet(
 			PortletRequest PortletRequest, long sourceGroupId,
 			long targetGroupId, long sourcePlid, long targetPlid,
@@ -212,8 +217,20 @@ public interface Staging {
 
 	public Group getStagingGroup(long groupId);
 
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link
+	 *             com.liferay.portal.kernel.lar.exportimportconfiguration.ExportImportConfigurationParameterMapFactory#buildParameterMap(
+	 *             )}
+	 */
+	@Deprecated
 	public Map<String, String[]> getStagingParameters();
 
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link
+	 *             com.liferay.portal.kernel.lar.exportimportconfiguration.ExportImportConfigurationParameterMapFactory#buildParameterMap(
+	 *             PortletRequest)}
+	 */
+	@Deprecated
 	public Map<String, String[]> getStagingParameters(
 		PortletRequest PortletRequest);
 
@@ -264,6 +281,19 @@ public interface Staging {
 			long userId, long sourceGroupId, long targetGroupId,
 			boolean privateLayout, Map<String, String[]> parameterMap,
 			Date startDate, Date endDate)
+		throws PortalException;
+
+	public void publishPortlet(
+			long userId, ExportImportConfiguration exportImportConfiguration)
+		throws PortalException;
+
+	public void publishPortlet(long userId, long exportImportConfigurationId)
+		throws PortalException;
+
+	public void publishPortlet(
+			long userId, long sourceGroupId, long targetGroupId,
+			long sourcePlid, long targetPlid, String portletId,
+			Map<String, String[]> parameterMap, Date startDate, Date endDate)
 		throws PortalException;
 
 	public void publishToLive(PortletRequest PortletRequest)
@@ -322,10 +352,24 @@ public interface Staging {
 			PortletDataContext portletDataContext)
 		throws PortalException;
 
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link
+	 *             com.liferay.portal.kernel.lar.ExportImportDateUtil#updateLastPublishDate(
+	 *             long, boolean, com.liferay.portal.kernel.util.DateRange,
+	 *             Date)}
+	 */
+	@Deprecated
 	public void updateLastPublishDate(
 			long sourceGroupId, boolean privateLayout, Date lastPublishDate)
 		throws PortalException;
 
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link
+	 *             com.liferay.portal.kernel.lar.ExportImportDateUtil#updateLastPublishDate(
+	 *             String, PortletPreferences,
+	 *             com.liferay.portal.kernel.util.DateRange, Date)}
+	 */
+	@Deprecated
 	public void updateLastPublishDate(
 			String portletId, PortletPreferences portletPreferences,
 			Date lastPublishDate)

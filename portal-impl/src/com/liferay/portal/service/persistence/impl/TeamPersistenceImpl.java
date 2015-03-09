@@ -63,7 +63,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see TeamPersistence
- * @see TeamUtil
+ * @see com.liferay.portal.service.persistence.TeamUtil
  * @generated
  */
 @ProviderType
@@ -2434,7 +2434,7 @@ public class TeamPersistenceImpl extends BasePersistenceImpl<Team>
 	private static class NullCacheModel implements CacheModel<Team>, MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

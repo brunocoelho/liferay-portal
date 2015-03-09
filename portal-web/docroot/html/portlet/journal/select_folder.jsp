@@ -37,7 +37,7 @@ if (folder != null) {
 		title="home"
 	/>
 
-	<liferay-ui:breadcrumb showGuestGroup="<%= false %>" showLayout="<%= false %>" showParentGroups="<%= false %>" />
+	<liferay-ui:breadcrumb showCurrentGroup="<%= false %>" showGuestGroup="<%= false %>" showLayout="<%= false %>" showParentGroups="<%= false %>" />
 
 	<%
 	PortletURL portletURL = renderResponse.createRenderURL();
@@ -151,6 +151,6 @@ if (folder != null) {
 	</liferay-ui:search-container>
 </aui:form>
 
-<aui:script use="aui-base">
+<aui:script>
 	Liferay.Util.selectEntityHandler('#<portlet:namespace />selectFolderFm', '<%= HtmlUtil.escapeJS(eventName) %>');
 </aui:script>

@@ -62,8 +62,7 @@ public class TransactionLifecycleManager {
 	public static Set<TransactionLifecycleListener>
 		getRegisteredTransactionLifecycleListeners() {
 
-		return new LinkedHashSet<TransactionLifecycleListener>(
-			_transactionLifecycleListeners);
+		return new LinkedHashSet<>(_transactionLifecycleListeners);
 	}
 
 	public static boolean register(
@@ -79,8 +78,7 @@ public class TransactionLifecycleManager {
 			transactionLifecycleListener);
 	}
 
-	private static Set<TransactionLifecycleListener>
-		_transactionLifecycleListeners =
-			new CopyOnWriteArraySet<TransactionLifecycleListener>();
+	private static final Set<TransactionLifecycleListener>
+		_transactionLifecycleListeners = new CopyOnWriteArraySet<>();
 
 }

@@ -95,6 +95,8 @@ public class PropsUtil {
 	}
 
 	private PropsUtil() {
+		Configuration configuration = null;
+
 		try {
 
 			// Default liferay home directory
@@ -163,32 +165,35 @@ public class PropsUtil {
 
 			// Liferay home directory
 
-			_configuration = new ConfigurationImpl(
+			configuration = new ConfigurationImpl(
 				PropsUtil.class.getClassLoader(), PropsFiles.PORTAL);
-
-			String liferayHome = _get(PropsKeys.LIFERAY_HOME);
-
-			if (_log.isDebugEnabled()) {
-				_log.debug("Configured Liferay home " + liferayHome);
-			}
-
-			SystemProperties.set(PropsKeys.LIFERAY_HOME, liferayHome);
-
-			// Ehcache disk directory
-
-			SystemProperties.set(
-				"ehcache.disk.store.dir", liferayHome + "/data/ehcache");
-
-			if (GetterUtil.getBoolean(
-					SystemProperties.get("company-id-properties"))) {
-
-				_configurations = new HashMap<Long, Configuration>();
-			}
 		}
 		catch (Exception e) {
-			if (_log.isErrorEnabled()) {
-				_log.error("Unable to initialize PropsUtil", e);
-			}
+			_log.error("Unable to initialize PropsUtil", e);
+		}
+
+		_configuration = configuration;
+
+		String liferayHome = _get(PropsKeys.LIFERAY_HOME);
+
+		if (_log.isDebugEnabled()) {
+			_log.debug("Configured Liferay home " + liferayHome);
+		}
+
+		SystemProperties.set(PropsKeys.LIFERAY_HOME, liferayHome);
+
+		// Ehcache disk directory
+
+		SystemProperties.set(
+			"ehcache.disk.store.dir", liferayHome + "/data/ehcache");
+
+		if (GetterUtil.getBoolean(
+				SystemProperties.get("company-id-properties"))) {
+
+			_configurations = new HashMap<>();
+		}
+		else {
+			_configurations = null;
 		}
 	}
 
@@ -338,11 +343,11 @@ public class PropsUtil {
 		_getConfiguration().set(key, value);
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(PropsUtil.class);
+	private static final Log _log = LogFactoryUtil.getLog(PropsUtil.class);
 
 	private static PropsUtil _instance = new PropsUtil();
 
-	private Configuration _configuration;
-	private Map<Long, Configuration> _configurations;
+	private final Configuration _configuration;
+	private final Map<Long, Configuration> _configurations;
 
 }

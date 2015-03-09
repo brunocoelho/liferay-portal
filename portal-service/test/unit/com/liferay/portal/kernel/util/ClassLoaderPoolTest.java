@@ -14,8 +14,8 @@
 
 package com.liferay.portal.kernel.util;
 
-import com.liferay.portal.kernel.test.CodeCoverageAssertor;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -33,8 +33,8 @@ import org.junit.Test;
 public class ClassLoaderPoolTest {
 
 	@ClassRule
-	public static CodeCoverageAssertor codeCoverageAssertor =
-		new CodeCoverageAssertor();
+	public static final CodeCoverageAssertor codeCoverageAssertor =
+		CodeCoverageAssertor.INSTANCE;
 
 	@Before
 	public void setUp() {
@@ -42,15 +42,13 @@ public class ClassLoaderPoolTest {
 
 		PortalClassLoaderUtil.setClassLoader(clazz.getClassLoader());
 
-		_classLoaders =
-			(Map<String, ClassLoader>)ReflectionTestUtil.getFieldValue(
-				ClassLoaderPool.class, "_classLoaders");
+		_classLoaders = ReflectionTestUtil.getFieldValue(
+			ClassLoaderPool.class, "_classLoaders");
 
 		_classLoaders.clear();
 
-		_contextNames =
-			(Map<ClassLoader, String>)ReflectionTestUtil.getFieldValue(
-				ClassLoaderPool.class, "_contextNames");
+		_contextNames = ReflectionTestUtil.getFieldValue(
+			ClassLoaderPool.class, "_contextNames");
 
 		_contextNames.clear();
 	}

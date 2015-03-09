@@ -59,7 +59,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see CompanyPersistence
- * @see CompanyUtil
+ * @see com.liferay.portal.service.persistence.CompanyUtil
  * @generated
  */
 @ProviderType
@@ -2024,7 +2024,7 @@ public class CompanyPersistenceImpl extends BasePersistenceImpl<Company>
 		MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

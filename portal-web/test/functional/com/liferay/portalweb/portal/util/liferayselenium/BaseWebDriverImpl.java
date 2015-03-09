@@ -20,13 +20,11 @@ import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portalweb.portal.util.TestPropsValues;
+import com.liferay.portalweb.util.TestPropsValues;
 
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
-
-import net.jsourcerer.webdriver.jserrorcollector.JavaScriptError;
 
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Keys;
@@ -47,28 +45,39 @@ public abstract class BaseWebDriverImpl
 
 		super(webDriver);
 
-		_projectDirName = projectDirName;
+		String dependenciesDirName =
+			"portal-web//test//functional//com//liferay//portalweb//" +
+				"dependencies//";
+
+		String outputDirName = TestPropsValues.OUTPUT_DIR_NAME;
+
+		String sikuliImagesDirName = dependenciesDirName + "sikuli//linux//";
 
 		if (OSDetector.isWindows()) {
-			_dependenciesDirName = StringUtil.replace(
-				_dependenciesDirName, "//", "\\");
+			dependenciesDirName = StringUtil.replace(
+				dependenciesDirName, "//", "\\");
 
-			_outputDirName = StringUtil.replace(_outputDirName, "//", "\\");
+			outputDirName = StringUtil.replace(outputDirName, "//", "\\");
 
-			_projectDirName = StringUtil.replace(_projectDirName, "//", "\\");
+			projectDirName = StringUtil.replace(projectDirName, "//", "\\");
 
-			_sikuliImagesDirName = StringUtil.replace(
-				_sikuliImagesDirName, "//", "\\");
-			_sikuliImagesDirName = StringUtil.replace(
-				_sikuliImagesDirName, "linux", "windows");
+			sikuliImagesDirName = StringUtil.replace(
+				sikuliImagesDirName, "//", "\\");
+			sikuliImagesDirName = StringUtil.replace(
+				sikuliImagesDirName, "linux", "windows");
 		}
+
+		_dependenciesDirName = dependenciesDirName;
+		_outputDirName = outputDirName;
+		_projectDirName = projectDirName;
+		_sikuliImagesDirName = sikuliImagesDirName;
 
 		if (!TestPropsValues.MOBILE_DEVICE_ENABLED) {
 			WebDriver.Options options = webDriver.manage();
 
 			WebDriver.Window window = options.window();
 
-			int x = 1065;
+			int x = 1280;
 			int y = 1040;
 
 			window.setSize(new Dimension(x, y));
@@ -148,84 +157,7 @@ public abstract class BaseWebDriverImpl
 	public void assertJavaScriptErrors(String ignoreJavaScriptError)
 		throws Exception {
 
-		if (!TestPropsValues.TEST_ASSSERT_JAVASCRIPT_ERRORS) {
-			return;
-		}
-
-		String location = getLocation();
-
-		if (!location.contains("localhost")) {
-			return;
-		}
-
-		String pageSource = null;
-
-		try {
-			pageSource = getPageSource();
-		}
-		catch (Exception e) {
-			WebDriver.TargetLocator targetLocator = switchTo();
-
-			targetLocator.window(defaultWindowHandle);
-
-			pageSource = getPageSource();
-		}
-
-		if (pageSource.contains(
-				"html id=\"feedHandler\" xmlns=" +
-					"\"http://www.w3.org/1999/xhtml\"")) {
-
-			return;
-		}
-
-		WebElement webElement = getWebElement("//body");
-
-		WrapsDriver wrapsDriver = (WrapsDriver)webElement;
-
-		WebDriver webDriver = wrapsDriver.getWrappedDriver();
-
-		List<JavaScriptError> javaScriptErrors = JavaScriptError.readErrors(
-			webDriver);
-
-		if (!javaScriptErrors.isEmpty()) {
-			for (JavaScriptError javaScriptError : javaScriptErrors) {
-				String javaScriptErrorValue = javaScriptError.toString();
-
-				System.out.println("JS_ERROR: " + javaScriptErrorValue);
-
-				if (Validator.isNotNull(ignoreJavaScriptError) &&
-					javaScriptErrorValue.contains(ignoreJavaScriptError)) {
-
-					continue;
-				}
-
-				// LPS-41634
-
-				if (javaScriptErrorValue.contains(
-						"TypeError: d.config.doc.defaultView is null")) {
-
-					continue;
-				}
-
-				// LPS-41634
-
-				if (javaScriptErrorValue.contains(
-						"NS_ERROR_NOT_INITIALIZED:")) {
-
-					continue;
-				}
-
-				// LPS-42469
-
-				if (javaScriptErrorValue.contains(
-						"Permission denied to access property 'type'")) {
-
-					continue;
-				}
-
-				throw new Exception(javaScriptErrorValue);
-			}
-		}
+		WebDriverHelper.assertJavaScriptErrors(this, ignoreJavaScriptError);
 	}
 
 	@Override
@@ -240,6 +172,16 @@ public abstract class BaseWebDriverImpl
 	@Override
 	public void assertLocation(String pattern) {
 		LiferaySeleniumHelper.assertLocation(this, pattern);
+	}
+
+	@Override
+	public void assertNoJavaScriptExceptions() throws Exception {
+		LiferaySeleniumHelper.assertNoJavaScriptExceptions();
+	}
+
+	@Override
+	public void assertNoLiferayExceptions() throws Exception {
+		LiferaySeleniumHelper.assertNoLiferayExceptions();
 	}
 
 	@Override
@@ -1000,12 +942,10 @@ public abstract class BaseWebDriverImpl
 	}
 
 	private String _clipBoard = "";
-	private String _dependenciesDirName =
-		"portal-web//test//functional//com//liferay//portalweb//dependencies//";
-	private String _outputDirName = TestPropsValues.OUTPUT_DIR_NAME;
+	private final String _dependenciesDirName;
+	private final String _outputDirName;
 	private String _primaryTestSuiteName;
-	private String _projectDirName;
-	private String _sikuliImagesDirName =
-		_dependenciesDirName + "sikuli//linux//";
+	private final String _projectDirName;
+	private final String _sikuliImagesDirName;
 
 }

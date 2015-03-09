@@ -28,9 +28,9 @@ if (organizationId > 0) {
 }
 %>
 
-<liferay-portlet:actionURL portletConfiguration="true" var="configurationActionURL" />
+<liferay-portlet:actionURL portletConfiguration="<%= true %>" var="configurationActionURL" />
 
-<liferay-portlet:renderURL portletConfiguration="true" var="configurationRenderURL" />
+<liferay-portlet:renderURL portletConfiguration="<%= true %>" var="configurationRenderURL" />
 
 <aui:form action="<%= configurationActionURL %>" method="post" name="fm">
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
@@ -48,7 +48,11 @@ if (organizationId > 0) {
 
 			<aui:button name="selectOrganizationButton" value="select" />
 
-			<aui:button disabled="<%= organizationId <= 0 %>" name="removeOrganizationButton" onClick='<%= renderResponse.getNamespace() + "removeOrganization();" %>' value="remove" />
+			<%
+			String taglibRemoveFolder = "Liferay.Util.removeEntitySelection('organizationId', 'organizationName', this, '" + renderResponse.getNamespace() + "');";
+			%>
+
+			<aui:button disabled="<%= organizationId <= 0 %>" name="removeOrganizationButton" onClick="<%= taglibRemoveFolder %>" value="remove" />
 		</div>
 
 		<aui:select name="preferences--displayStyle--">
@@ -82,8 +86,8 @@ if (organizationId > 0) {
 	</aui:button-row>
 </aui:form>
 
-<aui:script use="aui-base">
-	A.one('#<portlet:namespace />selectOrganizationButton').on(
+<aui:script>
+	AUI.$('#<portlet:namespace />selectOrganizationButton').on(
 		'click',
 		function(event) {
 			Liferay.Util.selectEntity(
@@ -97,25 +101,17 @@ if (organizationId > 0) {
 					uri: '<portlet:renderURL windowState="<%= LiferayWindowState.POP_UP.toString() %>"><portlet:param name="struts_action" value="/portlet_configuration/select_organization" /><portlet:param name="tabs1" value="organizations" /></portlet:renderURL>'
 				},
 				function(event) {
-					document.<portlet:namespace />fm.<portlet:namespace />organizationId.value = event.organizationid;
+					var form = AUI.$(document.<portlet:namespace />fm);
 
-					document.getElementById('<portlet:namespace />organizationName').value = event.name;
+					form.fm('organizationId').val(event.organizationid);
+
+					form.fm('organizationName').val(event.name);
 
 					Liferay.Util.toggleDisabled('#<portlet:namespace />removeOrganizationButton', false);
 				}
 			);
 		}
 	);
-</aui:script>
-
-<aui:script>
-	function <portlet:namespace />removeOrganization() {
-		document.<portlet:namespace />fm.<portlet:namespace />organizationId.value = '';
-
-		document.getElementById('<portlet:namespace />organizationName').value = '';
-
-		Liferay.Util.toggleDisabled('#<portlet:namespace />removeOrganizationButton', true);
-	}
 
 	Liferay.Util.toggleSelectBox('<portlet:namespace />selectionMethod', 'users', '<portlet:namespace />UsersSelectionOptions');
 </aui:script>

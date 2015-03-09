@@ -57,7 +57,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see PasswordTrackerPersistence
- * @see PasswordTrackerUtil
+ * @see com.liferay.portal.service.persistence.PasswordTrackerUtil
  * @generated
  */
 @ProviderType
@@ -1239,7 +1239,7 @@ public class PasswordTrackerPersistenceImpl extends BasePersistenceImpl<Password
 		MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

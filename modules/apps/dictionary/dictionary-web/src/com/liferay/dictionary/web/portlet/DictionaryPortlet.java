@@ -14,8 +14,8 @@
 
 package com.liferay.dictionary.web.portlet;
 
-import com.liferay.dictionary.web.upgrade.DictionaryUpgrade;
-import com.liferay.util.bridges.mvc.MVCPortlet;
+import com.liferay.dictionary.web.upgrade.DictionaryWebUpgrade;
+import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 
 import javax.portlet.Portlet;
 
@@ -36,7 +36,6 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.private-session-attributes=false",
 		"com.liferay.portlet.remoteable=true",
 		"com.liferay.portlet.render-weight=50",
-		"com.liferay.portlet.struts-path=dictionary",
 		"javax.portlet.display-name=Dictionary",
 		"javax.portlet.expiration-cache=0",
 		"javax.portlet.init-param.template-path=/",
@@ -49,7 +48,8 @@ import org.osgi.service.component.annotations.Reference;
 public class DictionaryPortlet extends MVCPortlet {
 
 	@Reference(unbind = "-")
-	protected void setDictionaryUpgrade(DictionaryUpgrade dictionaryUpgrade) {
+	protected void setDictionaryWebUpgrade(
+		DictionaryWebUpgrade dictionaryWebUpgrade) {
 	}
 
 }

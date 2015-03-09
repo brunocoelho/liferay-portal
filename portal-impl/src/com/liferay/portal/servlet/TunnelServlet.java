@@ -103,14 +103,10 @@ public class TunnelServlet extends HttpServlet {
 		}
 
 		if (returnObj != null) {
-			try {
-				ObjectOutputStream oos = new ObjectOutputStream(
-					response.getOutputStream());
+			try (ObjectOutputStream oos = new ObjectOutputStream(
+					response.getOutputStream())) {
 
 				oos.writeObject(returnObj);
-
-				oos.flush();
-				oos.close();
 			}
 			catch (IOException ioe) {
 				_log.error(ioe, ioe);
@@ -134,6 +130,6 @@ public class TunnelServlet extends HttpServlet {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(TunnelServlet.class);
+	private static final Log _log = LogFactoryUtil.getLog(TunnelServlet.class);
 
 }

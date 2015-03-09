@@ -60,7 +60,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see DLFileVersionPersistence
- * @see DLFileVersionUtil
+ * @see com.liferay.portlet.documentlibrary.service.persistence.DLFileVersionUtil
  * @generated
  */
 @ProviderType
@@ -5976,6 +5976,7 @@ public class DLFileVersionPersistenceImpl extends BasePersistenceImpl<DLFileVers
 		dlFileVersionImpl.setFolderId(dlFileVersion.getFolderId());
 		dlFileVersionImpl.setFileEntryId(dlFileVersion.getFileEntryId());
 		dlFileVersionImpl.setTreePath(dlFileVersion.getTreePath());
+		dlFileVersionImpl.setFileName(dlFileVersion.getFileName());
 		dlFileVersionImpl.setExtension(dlFileVersion.getExtension());
 		dlFileVersionImpl.setMimeType(dlFileVersion.getMimeType());
 		dlFileVersionImpl.setTitle(dlFileVersion.getTitle());

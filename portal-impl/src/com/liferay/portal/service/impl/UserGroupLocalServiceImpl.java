@@ -36,7 +36,6 @@ import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.SetUtil;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.Group;
@@ -47,11 +46,10 @@ import com.liferay.portal.model.Team;
 import com.liferay.portal.model.User;
 import com.liferay.portal.model.UserGroup;
 import com.liferay.portal.model.UserGroupConstants;
-import com.liferay.portal.security.ldap.LDAPUserGroupTransactionThreadLocal;
+import com.liferay.portal.security.exportimport.UserGroupImportTransactionThreadLocal;
 import com.liferay.portal.security.permission.PermissionCacheUtil;
 import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.service.base.UserGroupLocalServiceBaseImpl;
-import com.liferay.portal.util.PortletKeys;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.usersadmin.util.UsersAdminUtil;
 
@@ -78,8 +76,8 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 	/**
 	 * Adds the user groups to the group.
 	 *
-	 * @param  groupId the primary key of the group
-	 * @param  userGroupIds the primary keys of the user groups
+	 * @param groupId the primary key of the group
+	 * @param userGroupIds the primary keys of the user groups
 	 */
 	@Override
 	public void addGroupUserGroups(long groupId, long[] userGroupIds) {
@@ -91,8 +89,8 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 	/**
 	 * Adds the user groups to the team.
 	 *
-	 * @param  teamId the primary key of the team
-	 * @param  userGroupIds the primary keys of the user groups
+	 * @param teamId the primary key of the team
+	 * @param userGroupIds the primary keys of the user groups
 	 */
 	@Override
 	public void addTeamUserGroups(long teamId, long[] userGroupIds) {
@@ -189,7 +187,7 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 		userGroup.setName(name);
 		userGroup.setDescription(description);
 		userGroup.setAddedByLDAPImport(
-			LDAPUserGroupTransactionThreadLocal.isOriginatesFromLDAP());
+			UserGroupImportTransactionThreadLocal.isOriginatesFromImport());
 		userGroup.setExpandoBridgeAttributes(serviceContext);
 
 		userGroupPersistence.update(userGroup);
@@ -199,9 +197,10 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 		groupLocalService.addGroup(
 			userId, GroupConstants.DEFAULT_PARENT_GROUP_ID,
 			UserGroup.class.getName(), userGroup.getUserGroupId(),
-			GroupConstants.DEFAULT_LIVE_GROUP_ID, String.valueOf(userGroupId),
-			null, 0, true, GroupConstants.DEFAULT_MEMBERSHIP_RESTRICTION, null,
-			false, true, null);
+			GroupConstants.DEFAULT_LIVE_GROUP_ID,
+			getLocalizationMap(String.valueOf(userGroupId)), null, 0, true,
+			GroupConstants.DEFAULT_MEMBERSHIP_RESTRICTION, null, false, true,
+			null);
 
 		// Resources
 
@@ -227,7 +226,7 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 	 * This method is called from {@link #deleteUserGroup(UserGroup)}.
 	 * </p>
 	 *
-	 * @param  userId the primary key of the user
+	 * @param userId the primary key of the user
 	 */
 	@Override
 	public void clearUserUserGroups(long userId) {
@@ -353,7 +352,8 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 	@Override
 	@SystemEvent(
 		action = SystemEventConstants.ACTION_SKIP,
-		type = SystemEventConstants.TYPE_DELETE)
+		type = SystemEventConstants.TYPE_DELETE
+	)
 	public UserGroup deleteUserGroup(UserGroup userGroup)
 		throws PortalException {
 
@@ -440,8 +440,7 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 			return Collections.emptyList();
 		}
 
-		List<UserGroup> userGroups = new ArrayList<UserGroup>(
-			userGroupIds.size());
+		List<UserGroup> userGroups = new ArrayList<>(userGroupIds.size());
 
 		for (Long userGroupId : userGroupIds) {
 			userGroups.add(userGroupPersistence.findByPrimaryKey(userGroupId));
@@ -487,8 +486,7 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 	public List<UserGroup> getUserGroups(long[] userGroupIds)
 		throws PortalException {
 
-		List<UserGroup> userGroups = new ArrayList<UserGroup>(
-			userGroupIds.length);
+		List<UserGroup> userGroups = new ArrayList<>(userGroupIds.length);
 
 		for (long userGroupId : userGroupIds) {
 			UserGroup userGroup = getUserGroup(userGroupId);
@@ -831,7 +829,7 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 			List<UserGroup> userGroups = UsersAdminUtil.getUserGroups(hits);
 
 			if (userGroups != null) {
-				return new BaseModelSearchResult<UserGroup>(
+				return new BaseModelSearchResult<>(
 					userGroups, hits.getLength());
 			}
 		}
@@ -869,8 +867,8 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 	/**
 	 * Removes the user groups from the group.
 	 *
-	 * @param  groupId the primary key of the group
-	 * @param  userGroupIds the primary keys of the user groups
+	 * @param groupId the primary key of the group
+	 * @param userGroupIds the primary keys of the user groups
 	 */
 	@Override
 	public void unsetGroupUserGroups(long groupId, long[] userGroupIds) {
@@ -891,8 +889,8 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 	/**
 	 * Removes the user groups from the team.
 	 *
-	 * @param  teamId the primary key of the team
-	 * @param  userGroupIds the primary keys of the user groups
+	 * @param teamId the primary key of the team
+	 * @param userGroupIds the primary keys of the user groups
 	 */
 	@Override
 	public void unsetTeamUserGroups(long teamId, long[] userGroupIds) {
@@ -976,8 +974,7 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 
 		searchContext.setAndSearch(andSearch);
 
-		Map<String, Serializable> attributes =
-			new HashMap<String, Serializable>();
+		Map<String, Serializable> attributes = new HashMap<>();
 
 		attributes.put("description", description);
 		attributes.put("name", name);
@@ -1034,8 +1031,7 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 	}
 
 	protected Map<String, String[]> getLayoutTemplatesParameters() {
-		Map<String, String[]> parameterMap =
-			new LinkedHashMap<String, String[]>();
+		Map<String, String[]> parameterMap = new LinkedHashMap<>();
 
 		parameterMap.put(
 			PortletDataHandlerKeys.DATA_STRATEGY,
@@ -1068,10 +1064,6 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 			new String[] {Boolean.TRUE.toString()});
 		parameterMap.put(
 			PortletDataHandlerKeys.PORTLET_DATA,
-			new String[] {Boolean.TRUE.toString()});
-		parameterMap.put(
-			PortletDataHandlerKeys.PORTLET_DATA + StringPool.UNDERLINE +
-				PortletKeys.ASSET_CATEGORIES_ADMIN,
 			new String[] {Boolean.TRUE.toString()});
 		parameterMap.put(
 			PortletDataHandlerKeys.PORTLET_DATA_ALL,

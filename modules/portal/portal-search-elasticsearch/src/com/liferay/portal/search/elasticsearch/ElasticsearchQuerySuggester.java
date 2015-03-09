@@ -19,6 +19,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BaseQuerySuggester;
 import com.liferay.portal.kernel.search.DocumentImpl;
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.search.QuerySuggester;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.search.elasticsearch.connection.ElasticsearchConnectionManager;
 import com.liferay.portal.search.elasticsearch.util.DocumentTypes;
@@ -48,7 +49,7 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Michael C. Han
  */
-@Component(immediate = true)
+@Component(immediate = true, service = QuerySuggester.class)
 public class ElasticsearchQuerySuggester extends BaseQuerySuggester {
 
 	@Reference
@@ -78,8 +79,7 @@ public class ElasticsearchQuerySuggester extends BaseQuerySuggester {
 			return Collections.emptyMap();
 		}
 
-		Map<String, List<String>> suggestionsMap =
-			new HashMap<String, List<String>>();
+		Map<String, List<String>> suggestionsMap = new HashMap<>();
 
 		for (Object entry : suggestion.getEntries()) {
 			Suggest.Suggestion.Entry<? extends Suggest.Suggestion.Entry.Option>
@@ -92,7 +92,7 @@ public class ElasticsearchQuerySuggester extends BaseQuerySuggester {
 			List<String> suggestionsList = suggestionsMap.get(text);
 
 			if (suggestionsList == null) {
-				suggestionsList = new ArrayList<String>();
+				suggestionsList = new ArrayList<>();
 
 				suggestionsMap.put(text, suggestionsList);
 			}
@@ -139,7 +139,7 @@ public class ElasticsearchQuerySuggester extends BaseQuerySuggester {
 				(Suggest.Suggestion.Entry
 					<? extends Suggest.Suggestion.Entry.Option>)entries.get(0);
 
-		List<String> keywordQueries = new ArrayList<String>();
+		List<String> keywordQueries = new ArrayList<>();
 
 		for (Suggest.Suggestion.Entry.Option option :
 				suggestionEntry.getOptions()) {
@@ -197,7 +197,7 @@ public class ElasticsearchQuerySuggester extends BaseQuerySuggester {
 
 	private static final String _REQUEST_TYPE_SPELL_CHECK = "spellCheckRequest";
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		ElasticsearchQuerySuggester.class);
 
 	private ElasticsearchConnectionManager _elasticsearchConnectionManager;

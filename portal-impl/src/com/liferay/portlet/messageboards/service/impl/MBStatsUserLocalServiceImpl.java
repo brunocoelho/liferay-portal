@@ -121,8 +121,8 @@ public class MBStatsUserLocalServiceImpl
 
 		Disjunction disjunction = RestrictionsFactoryUtil.disjunction();
 
-		QueryDefinition<MBThread> queryDefinition =
-			new QueryDefinition<MBThread>(WorkflowConstants.STATUS_IN_TRASH);
+		QueryDefinition<MBThread> queryDefinition = new QueryDefinition<>(
+			WorkflowConstants.STATUS_IN_TRASH);
 
 		List<MBThread> threads = mbThreadLocalService.getGroupThreads(
 			groupId, queryDefinition);
@@ -261,7 +261,7 @@ public class MBStatsUserLocalServiceImpl
 		return statsUser;
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		MBStatsUserLocalServiceImpl.class);
 
 }

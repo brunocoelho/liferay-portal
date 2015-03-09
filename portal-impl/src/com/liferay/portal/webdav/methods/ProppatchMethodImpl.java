@@ -108,7 +108,7 @@ public class ProppatchMethodImpl extends BasePropMethodImpl {
 		throws InvalidRequestException, LockException {
 
 		try {
-			Set<QName> newProps = new HashSet<QName>();
+			Set<QName> newProps = new HashSet<>();
 
 			HttpServletRequest request = webDAVRequest.getHttpServletRequest();
 
@@ -198,6 +198,7 @@ public class ProppatchMethodImpl extends BasePropMethodImpl {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(ProppatchMethodImpl.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		ProppatchMethodImpl.class);
 
 }

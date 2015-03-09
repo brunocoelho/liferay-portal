@@ -224,7 +224,7 @@ public class UnmodifiableList<E> implements List<E>, Serializable {
 
 	@Override
 	public List<E> subList(int fromIndex, int toIndex) {
-		return new UnmodifiableList<E>(_list.subList(fromIndex, toIndex));
+		return new UnmodifiableList<>(_list.subList(fromIndex, toIndex));
 	}
 
 	@Override
@@ -245,6 +245,6 @@ public class UnmodifiableList<E> implements List<E>, Serializable {
 	private static final String _MESSAGE =
 		"Please make a copy of this read-only list before modifying it.";
 
-	private List<? extends E> _list;
+	private final List<? extends E> _list;
 
 }

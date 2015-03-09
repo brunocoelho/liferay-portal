@@ -187,7 +187,7 @@ public class LayoutLocalServiceVirtualLayoutsAdvice
 
 		layouts = ListUtil.copy(layouts);
 
-		List<Layout> childLayouts = new ArrayList<Layout>();
+		List<Layout> childLayouts = new ArrayList<>();
 
 		for (Layout layout : layouts) {
 			Layout childLayout = layout;
@@ -313,10 +313,10 @@ public class LayoutLocalServiceVirtualLayoutsAdvice
 		Integer.TYPE
 	};
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		LayoutLocalServiceVirtualLayoutsAdvice.class);
 
-	private static ThreadLocal<Long> _virtualLayoutTargetGroupId =
+	private static final ThreadLocal<Long> _virtualLayoutTargetGroupId =
 		new AutoResetThreadLocal<Long>(
 			LayoutLocalServiceVirtualLayoutsAdvice.class +
 				"._virtualLayoutTargetGroupId",

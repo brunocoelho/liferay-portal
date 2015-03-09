@@ -57,7 +57,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see VirtualHostPersistence
- * @see VirtualHostUtil
+ * @see com.liferay.portal.service.persistence.VirtualHostUtil
  * @generated
  */
 @ProviderType
@@ -1279,7 +1279,7 @@ public class VirtualHostPersistenceImpl extends BasePersistenceImpl<VirtualHost>
 		MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

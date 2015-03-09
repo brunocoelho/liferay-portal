@@ -14,27 +14,37 @@
 
 package com.liferay.amazon.rankings.web.portlet.validator;
 
+import aQute.bnd.annotation.metatype.Configurable;
+
+import com.liferay.amazon.rankings.web.configuration.AmazonRankingsConfiguration;
+import com.liferay.amazon.rankings.web.constants.AmazonRankingsPortletKeys;
 import com.liferay.amazon.rankings.web.model.AmazonRankings;
 import com.liferay.amazon.rankings.web.util.AmazonRankingsUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.StringPool;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.portlet.PortletPreferences;
 import javax.portlet.PreferencesValidator;
 import javax.portlet.ValidatorException;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Modified;
 
 /**
  * @author Brian Wing Shun Chan
  */
 @Component(
-	immediate = true,
+	configurationPid = "com.liferay.amazon.rankings.web.configuration.AmazonRankingsConfiguration",
+	configurationPolicy = ConfigurationPolicy.OPTIONAL, immediate = true,
 	property = {
-		"javax.portlet.name=com_liferay_amazon_rankings_web_portlet_AmazonRankingsPortlet"
+		"javax.portlet.name=" + AmazonRankingsPortletKeys.AMAZON_RANKINGS
 	}
 )
 public class AmazonRankingsPreferencesValidator
@@ -44,21 +54,15 @@ public class AmazonRankingsPreferencesValidator
 	public void validate(PortletPreferences portletPreferences)
 		throws ValidatorException {
 
-		List<String> badIsbns = new ArrayList<String>();
+		List<String> badIsbns = new ArrayList<>();
 
-		String amazonAccessKeyId = portletPreferences.getValue(
-			"amazon.access.key.id", "");
-		String amazonAssociateTag = portletPreferences.getValue(
-			"amazon.associate.tag" , "");
-		String amazonSecretAccessKey = portletPreferences.getValue(
-			"amazon.secret.access.key", "");
-		String[] isbns = portletPreferences.getValues("isbns", new String[0]);
+		String[] isbns = portletPreferences.getValues(
+			"isbns", StringPool.EMPTY_ARRAY);
 
 		for (String isbn : isbns) {
 			AmazonRankings amazonRankings =
 				AmazonRankingsUtil.getAmazonRankings(
-					amazonAccessKeyId, amazonAssociateTag,
-					amazonSecretAccessKey, isbn);
+					_amazonRankingsConfiguration, isbn);
 
 			if (amazonRankings == null) {
 				badIsbns.add(isbn);
@@ -74,7 +78,16 @@ public class AmazonRankingsPreferencesValidator
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
+	@Activate
+	@Modified
+	protected void activate(Map<String, Object> properties) {
+		_amazonRankingsConfiguration = Configurable.createConfigurable(
+			AmazonRankingsConfiguration.class, properties);
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
 		AmazonRankingsPreferencesValidator.class);
+
+	private volatile AmazonRankingsConfiguration _amazonRankingsConfiguration;
 
 }

@@ -59,7 +59,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see WebsitePersistence
- * @see WebsiteUtil
+ * @see com.liferay.portal.service.persistence.WebsiteUtil
  * @generated
  */
 @ProviderType
@@ -4588,7 +4588,7 @@ public class WebsitePersistenceImpl extends BasePersistenceImpl<Website>
 		MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

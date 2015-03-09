@@ -38,24 +38,30 @@
 		ddmFormFieldRenderingContext.setNamespace(fieldsNamespace);
 		ddmFormFieldRenderingContext.setPortletNamespace(portletResponse.getNamespace());
 		ddmFormFieldRenderingContext.setReadOnly(readOnly);
+		ddmFormFieldRenderingContext.setShowEmptyFieldLabel(showEmptyFieldLabel);
 		%>
 
 		<%= ddmFormFieldRenderer.render(ddmFormField, ddmFormFieldRenderingContext) %>
 
-		<aui:input name="<%= fieldsDisplayInputName %>" type="hidden" />
+		<aui:input name="<%= ddmFormValuesInputName %>" type="hidden" />
 
-		<aui:script use="liferay-ddm-repeatable-fields">
-			new Liferay.DDM.RepeatableFields(
-				{
-					classNameId: <%= classNameId %>,
-					classPK: <%= classPK %>,
-					container: '#<%= randomNamespace %>',
-					doAsGroupId: <%= scopeGroupId %>,
-					fieldsDisplayInput: '#<portlet:namespace /><%= fieldsDisplayInputName %>',
-					namespace: '<%= fieldsNamespace %>',
-					p_l_id: <%= themeDisplay.getPlid() %>,
-					portletNamespace: '<portlet:namespace />',
-					repeatable: <%= repeatable %>
+		<aui:script use="liferay-ddm-form">
+			Liferay.component(
+				'<portlet:namespace /><%= fieldsNamespace %>ddmForm',
+				function() {
+					return new Liferay.DDM.Form(
+						{
+							container: '#<%= randomNamespace %>',
+							ddmFormValuesInput: '#<portlet:namespace /><%= ddmFormValuesInputName %>',
+							definition: <%= DDMFormJSONSerializerUtil.serialize(ddmForm) %>,
+							doAsGroupId: <%= scopeGroupId %>,
+							fieldsNamespace: '<%= fieldsNamespace %>',
+							mode: '<%= mode %>',
+							p_l_id: <%= themeDisplay.getPlid() %>,
+							portletNamespace: '<portlet:namespace />',
+							repeatable: <%= repeatable %>
+						}
+					);
 				}
 			);
 		</aui:script>

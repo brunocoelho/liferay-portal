@@ -58,7 +58,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see ShardPersistence
- * @see ShardUtil
+ * @see com.liferay.portal.service.persistence.ShardUtil
  * @generated
  */
 @ProviderType
@@ -1272,7 +1272,7 @@ public class ShardPersistenceImpl extends BasePersistenceImpl<Shard>
 	private static class NullCacheModel implements CacheModel<Shard>, MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

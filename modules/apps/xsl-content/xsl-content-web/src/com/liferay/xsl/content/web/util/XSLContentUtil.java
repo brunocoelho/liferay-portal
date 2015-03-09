@@ -15,21 +15,35 @@
 package com.liferay.xsl.content.web.util;
 
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
-import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.util.HttpUtil;
+import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.theme.ThemeDisplay;
+import com.liferay.portal.util.PortalUtil;
+import com.liferay.xsl.content.web.configuration.XSLContentConfiguration;
 
-import java.io.IOException;
+import java.io.ByteArrayInputStream;
 
 import java.net.URL;
 
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
+
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
+
+import org.w3c.dom.Document;
 
 /**
  * @author Brian Wing Shun Chan
+ * @author Samuel Kong
  */
 public class XSLContentUtil {
 
@@ -37,27 +51,108 @@ public class XSLContentUtil {
 
 	public static final String DEFAULT_XSL_URL = "/example.xsl";
 
-	public static String transform(URL xmlUrl, URL xslUrl)
-		throws IOException, TransformerException {
+	public static String replaceUrlTokens(
+		ThemeDisplay themeDisplay, String url) {
 
-		String xml = HttpUtil.URLtoString(xmlUrl);
-		String xsl = HttpUtil.URLtoString(xslUrl);
+		StringBundler sb = new StringBundler(4);
 
-		StreamSource xmlSource = new StreamSource(new UnsyncStringReader(xml));
-		StreamSource xslSource = new StreamSource(new UnsyncStringReader(xsl));
+		sb.append(themeDisplay.getPortalURL());
+		sb.append(PortalUtil.getPathModule());
+		sb.append(StringPool.SLASH);
 
-		TransformerFactory transformerFactory =
-			TransformerFactory.newInstance();
+		Bundle bundle = FrameworkUtil.getBundle(XSLContentUtil.class);
 
-		Transformer transformer = transformerFactory.newTransformer(xslSource);
+		String symbolicName = bundle.getSymbolicName();
+
+		sb.append(symbolicName.replaceAll("[^a-zA-Z0-9]", StringPool.BLANK));
+
+		return StringUtil.replace(
+			url, new String[] {"@portal_url@", "@portlet_context_url@"},
+			new String[] {themeDisplay.getPortalURL(), sb.toString()});
+	}
+
+	public static String transform(
+			XSLContentConfiguration xslContentConfiguration, URL xmlUrl,
+			URL xslUrl)
+		throws Exception {
+
+		TransformerFactory transformerFactory = getTransformerFactory(
+			xslContentConfiguration);
+
+		DocumentBuilder documentBuilder = getDocumentBuilder(
+			xslContentConfiguration);
+
+		Transformer transformer = transformerFactory.newTransformer(
+			getXslSource(documentBuilder, xslUrl));
 
 		UnsyncByteArrayOutputStream unsyncByteArrayOutputStream =
 			new UnsyncByteArrayOutputStream();
 
 		transformer.transform(
-			xmlSource, new StreamResult(unsyncByteArrayOutputStream));
+			getXmlSource(documentBuilder, xmlUrl),
+			new StreamResult(unsyncByteArrayOutputStream));
 
 		return unsyncByteArrayOutputStream.toString();
+	}
+
+	protected static DocumentBuilder getDocumentBuilder(
+			XSLContentConfiguration xslContentConfiguration)
+		throws Exception {
+
+		DocumentBuilderFactory documentBuilderFactory =
+			DocumentBuilderFactory.newInstance();
+
+		documentBuilderFactory.setFeature(
+			"http://apache.org/xml/features/disallow-doctype-decl",
+			!xslContentConfiguration.xmlDoctypeDeclarationAllowed());
+		documentBuilderFactory.setFeature(
+			"http://xml.org/sax/features/external-general-entities",
+			xslContentConfiguration.xmlExternalGeneralEntitiesAllowed());
+		documentBuilderFactory.setFeature(
+			"http://xml.org/sax/features/external-parameter-entities",
+			xslContentConfiguration.xmlExternalGeneralEntitiesAllowed());
+
+		documentBuilderFactory.setNamespaceAware(true);
+
+		return documentBuilderFactory.newDocumentBuilder();
+	}
+
+	protected static TransformerFactory getTransformerFactory(
+			XSLContentConfiguration xslContentConfiguration)
+		throws Exception {
+
+		TransformerFactory transformerFactory =
+			TransformerFactory.newInstance();
+
+		transformerFactory.setFeature(
+			XMLConstants.FEATURE_SECURE_PROCESSING,
+			xslContentConfiguration.xslSecureProcessingEnabled());
+
+		return transformerFactory;
+	}
+
+	protected static Source getXmlSource(
+			DocumentBuilder documentBuilder, URL xmlUrl)
+		throws Exception {
+
+		String xml = HttpUtil.URLtoString(xmlUrl);
+
+		Document xmlDocument = documentBuilder.parse(
+			new ByteArrayInputStream(xml.getBytes()));
+
+		return new DOMSource(xmlDocument);
+	}
+
+	protected static Source getXslSource(
+			DocumentBuilder documentBuilder, URL xslUrl)
+		throws Exception {
+
+		String xsl = HttpUtil.URLtoString(xslUrl);
+
+		Document xslDocument = documentBuilder.parse(
+			new ByteArrayInputStream(xsl.getBytes()));
+
+		return new DOMSource(xslDocument);
 	}
 
 }

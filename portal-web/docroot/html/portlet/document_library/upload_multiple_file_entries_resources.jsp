@@ -25,7 +25,7 @@ long repositoryId = BeanParamUtil.getLong(fileEntry, request, "repositoryId");
 
 if (repositoryId <= 0) {
 
-	// add_asset.jspf only passes in groupId
+	// <liferay-ui:asset_add_button /> only passes in groupId
 
 	repositoryId = BeanParamUtil.getLong(fileEntry, request, "groupId");
 }
@@ -43,7 +43,9 @@ boolean inherited = true;
 if ((folder != null) && (folder.getModel() instanceof DLFolder)) {
 	DLFolder dlFolder = (DLFolder)folder.getModel();
 
-	inherited = !dlFolder.isOverrideFileEntryTypes();
+	if (dlFolder.getRestrictionType() == DLFolderConstants.RESTRICTION_TYPE_FILE_ENTRY_TYPES_AND_WORKFLOW) {
+		inherited = false;
+	}
 }
 
 List<DLFileEntryType> fileEntryTypes = DLFileEntryTypeServiceUtil.getFolderFileEntryTypes(PortalUtil.getCurrentAndAncestorSiteGroupIds(scopeGroupId), folderId, inherited);
@@ -80,7 +82,14 @@ if (fileEntryTypeId > 0) {
 
 long assetClassPK = 0;
 
-DLFileVersionActionsDisplayContext dlFileVersionActionsDisplayContext = DLFileVersionActionsDisplayContextUtil.getDLFileVersionActionsDisplayContext(request, response, fileVersion);
+DLEditFileEntryDisplayContext dlEditFileEntryDisplayContext = null;
+
+if (fileEntry == null) {
+	dlEditFileEntryDisplayContext = DLDisplayContextProviderUtil.getDLEditFileEntryDisplayContext(request, response, fileEntryType);
+}
+else {
+	dlEditFileEntryDisplayContext = DLDisplayContextProviderUtil.getDLEditFileEntryDisplayContext(request, response, fileEntry);
+}
 %>
 
 <portlet:actionURL var="uploadMultipleFileEntriesURL">
@@ -93,7 +102,7 @@ DLFileVersionActionsDisplayContext dlFileVersionActionsDisplayContext = DLFileVe
 	<aui:input name="repositoryId" type="hidden" value="<%= String.valueOf(repositoryId) %>" />
 	<aui:input name="folderId" type="hidden" value="<%= String.valueOf(folderId) %>" />
 
-	<div class="no-files-selected-info alert alert-info hide" id="<portlet:namespace />metadataExplanationContainer">
+	<div class="alert alert-info hide no-files-selected-info" id="<portlet:namespace />metadataExplanationContainer">
 		<liferay-ui:message key="select-documents-from-the-left-to-add-them-to-the-documents-and-media" />
 	</div>
 
@@ -154,7 +163,9 @@ DLFileVersionActionsDisplayContext dlFileVersionActionsDisplayContext = DLFileVe
 								try {
 									DLFileEntryMetadata fileEntryMetadata = DLFileEntryMetadataLocalServiceUtil.getFileEntryMetadata(ddmStructure.getStructureId(), fileVersionId);
 
-									fields = StorageEngineUtil.getFields(fileEntryMetadata.getDDMStorageId());
+									DDMFormValues ddmFormValues = StorageEngineUtil.getDDMFormValues(fileEntryMetadata.getDDMStorageId());
+
+									fields = DDMFormValuesToFieldsConverterUtil.convert(ddmStructure, ddmFormValues);
 								}
 								catch (Exception e) {
 								}
@@ -178,53 +189,38 @@ DLFileVersionActionsDisplayContext dlFileVersionActionsDisplayContext = DLFileVe
 					}
 					%>
 
-					<aui:script use="aui-base">
-						var groupSelectorMenu = A.one('#<portlet:namespace />groupSelector').ancestor().one('.lfr-menu-list');
+					<aui:script sandbox="<%= true %>">
+						$('#<portlet:namespace />groupSelector').next('.lfr-menu-list').on(
+							'click',
+							'li a',
+							function(event) {
+								event.preventDefault();
 
-						if (groupSelectorMenu) {
-							groupSelectorMenu.delegate(
-								'click',
-								function(event) {
-									event.preventDefault();
+								$('#<portlet:namespace />commonFileMetadataContainer').load(
+									$(event.currentTarget).attr('href'),
+									function() {
+										var totalFiles = $('input[name=<portlet:namespace />selectUploadedFile]');
 
-									var documentTypeForm = A.one('#<portlet:namespace />fm2');
+										var selectedFiles = totalFiles.filter(':checked');
 
-									documentTypeForm.load(
-										event.currentTarget.attr('href'),
-										{
-											where: 'outer'
-										},
-										function() {
-											var selectedFilesCountContainer = A.one('.selected-files-count');
+										var selectedFilesCount = selectedFiles.length;
 
-											var totalFiles = A.all('input[name=<portlet:namespace />selectUploadedFile]');
+										var selectedFilesText = selectedFiles.eq(0).data('title');
 
-											var totalFilesCount = totalFiles.size();
-
-											var selectedFiles = totalFiles.filter(':checked');
-
-											var selectedFilesCount = selectedFiles.size();
-
-											var selectedFilesText = selectedFiles.item(0).attr('data-title');
-
-											if (selectedFilesCount > 1) {
-												if (selectedFilesCount == totalFilesCount) {
-													selectedFilesText = '<%= UnicodeLanguageUtil.get(request, "all-files-selected") %>';
-												}
-												else {
-													selectedFilesText = A.Lang.sub('<%= UnicodeLanguageUtil.get(request, "x-files-selected") %>', [selectedFilesCount]);
-												}
+										if (selectedFilesCount > 1) {
+											if (selectedFilesCount == totalFiles.length) {
+												selectedFilesText = '<%= UnicodeLanguageUtil.get(request, "all-files-selected") %>';
 											}
-
-											selectedFilesCountContainer.setContent(selectedFilesText);
-
-											selectedFilesCountContainer.attr('title', selectedFilesText);
+											else {
+												selectedFilesText = _.sub('<%= UnicodeLanguageUtil.get(request, "x-files-selected") %>', selectedFilesCount);
+											}
 										}
-									);
-								},
-								'li a'
-							);
-						}
+
+										$('.selected-files-count').html(selectedFilesText).attr('title', selectedFilesText);
+									}
+								);
+							}
+						);
 					</aui:script>
 				</liferay-ui:panel>
 			</c:if>
@@ -258,7 +254,7 @@ DLFileVersionActionsDisplayContext dlFileVersionActionsDisplayContext = DLFileVe
 
 	<span id="<portlet:namespace />selectedFileNameContainer"></span>
 
-	<aui:button type="submit" value="<%= dlFileVersionActionsDisplayContext.getPublishButtonLabel() %>" />
+	<aui:button type="submit" value="<%= dlEditFileEntryDisplayContext.getPublishButtonLabel() %>" />
 </aui:form>
 
 <aui:script>

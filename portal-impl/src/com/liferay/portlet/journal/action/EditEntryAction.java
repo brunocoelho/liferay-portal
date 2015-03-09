@@ -29,7 +29,6 @@ import com.liferay.portal.struts.PortletAction;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portal.util.WebKeys;
-import com.liferay.portlet.PortletURLFactoryUtil;
 import com.liferay.portlet.asset.AssetCategoryException;
 import com.liferay.portlet.asset.AssetTagException;
 import com.liferay.portlet.journal.DuplicateArticleIdException;
@@ -49,8 +48,6 @@ import java.util.List;
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
 import javax.portlet.PortletConfig;
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 import javax.portlet.WindowState;
@@ -74,9 +71,7 @@ public class EditEntryAction extends PortletAction {
 		String cmd = ParamUtil.getString(actionRequest, Constants.CMD);
 
 		try {
-			if (cmd.equals(Constants.DELETE) ||
-				cmd.equals(Constants.DELETE_VERSIONS)) {
-
+			if (cmd.equals(Constants.DELETE)) {
 				deleteEntries(actionRequest, false);
 			}
 			else if (cmd.equals(Constants.EXPIRE)) {
@@ -91,32 +86,6 @@ public class EditEntryAction extends PortletAction {
 
 			String redirect = PortalUtil.escapeRedirect(
 				ParamUtil.getString(actionRequest, "redirect"));
-
-			if (cmd.equals(Constants.DELETE_VERSIONS) &&
-				!ActionUtil.hasArticle(actionRequest)) {
-
-				String referringPortletResource = ParamUtil.getString(
-					actionRequest, "referringPortletResource");
-
-				if (Validator.isNotNull(referringPortletResource)) {
-					setForward(
-						actionRequest,
-						"portlet.journal.asset.add_asset_redirect");
-
-					return;
-				}
-				else {
-					ThemeDisplay themeDisplay =
-						(ThemeDisplay)actionRequest.getAttribute(
-							WebKeys.THEME_DISPLAY);
-
-					PortletURL portletURL = PortletURLFactoryUtil.create(
-						actionRequest, portletConfig.getPortletName(),
-						themeDisplay.getPlid(), PortletRequest.RENDER_PHASE);
-
-					redirect = portletURL.toString();
-				}
-			}
 
 			WindowState windowState = actionRequest.getWindowState();
 
@@ -189,7 +158,7 @@ public class EditEntryAction extends PortletAction {
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		List<TrashedModel> trashedModels = new ArrayList<TrashedModel>();
+		List<TrashedModel> trashedModels = new ArrayList<>();
 
 		long[] deleteFolderIds = StringUtil.split(
 			ParamUtil.getString(actionRequest, "folderIds"), 0L);
@@ -269,7 +238,7 @@ public class EditEntryAction extends PortletAction {
 				folderId, newFolderId, serviceContext);
 		}
 
-		List<String> invalidArticleIds = new ArrayList<String>();
+		List<String> invalidArticleIds = new ArrayList<>();
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
@@ -281,7 +250,7 @@ public class EditEntryAction extends PortletAction {
 			try {
 				JournalArticleServiceUtil.moveArticle(
 					themeDisplay.getScopeGroupId(),
-					HtmlUtil.unescape(articleId), newFolderId);
+					HtmlUtil.unescape(articleId), newFolderId, serviceContext);
 			}
 			catch (InvalidDDMStructureException idse) {
 				invalidArticleIds.add(articleId);

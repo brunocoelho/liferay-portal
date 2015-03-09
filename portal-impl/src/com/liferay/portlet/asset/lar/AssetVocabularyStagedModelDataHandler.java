@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.lar.BaseStagedModelDataHandler;
 import com.liferay.portal.kernel.lar.ExportImportPathUtil;
 import com.liferay.portal.kernel.lar.PortletDataContext;
 import com.liferay.portal.kernel.lar.StagedModelModifiedDateComparator;
+import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -41,6 +42,7 @@ import java.util.Map;
  * @author Gergely Mathe
  * @author Mate Thurzo
  */
+@OSGiBeanProperties
 public class AssetVocabularyStagedModelDataHandler
 	extends BaseStagedModelDataHandler<AssetVocabulary> {
 
@@ -122,6 +124,10 @@ public class AssetVocabularyStagedModelDataHandler
 
 		vocabulary.setUserUuid(vocabulary.getUserUuid());
 
+		portletDataContext.addReferenceElement(
+			vocabulary, vocabularyElement, vocabulary,
+			PortletDataContext.REFERENCE_TYPE_DEPENDENCY, false);
+
 		portletDataContext.addPermissions(
 			AssetVocabulary.class, vocabulary.getVocabularyId());
 
@@ -156,9 +162,8 @@ public class AssetVocabularyStagedModelDataHandler
 
 		AssetVocabulary importedVocabulary = null;
 
-		AssetVocabulary existingVocabulary =
-			fetchStagedModelByUuidAndGroupId(
-				vocabulary.getUuid(), portletDataContext.getScopeGroupId());
+		AssetVocabulary existingVocabulary = fetchStagedModelByUuidAndGroupId(
+			vocabulary.getUuid(), portletDataContext.getScopeGroupId());
 
 		if (existingVocabulary == null) {
 			String name = getVocabularyName(
@@ -167,13 +172,12 @@ public class AssetVocabularyStagedModelDataHandler
 
 			serviceContext.setUuid(vocabulary.getUuid());
 
-			importedVocabulary =
-				AssetVocabularyLocalServiceUtil.addVocabulary(
-					userId, StringPool.BLANK,
-					getVocabularyTitleMap(
-						portletDataContext.getScopeGroupId(), vocabulary, name),
-					vocabulary.getDescriptionMap(), vocabulary.getSettings(),
-					serviceContext);
+			importedVocabulary = AssetVocabularyLocalServiceUtil.addVocabulary(
+				userId, StringPool.BLANK,
+				getVocabularyTitleMap(
+					portletDataContext.getScopeGroupId(), vocabulary, name),
+				vocabulary.getDescriptionMap(), vocabulary.getSettings(),
+				serviceContext);
 		}
 		else {
 			String name = getVocabularyName(
@@ -228,7 +232,7 @@ public class AssetVocabularyStagedModelDataHandler
 		Map<Locale, String> titleMap = vocabulary.getTitleMap();
 
 		if (titleMap == null) {
-			titleMap = new HashMap<Locale, String>();
+			titleMap = new HashMap<>();
 		}
 
 		titleMap.put(PortalUtil.getSiteDefaultLocale(groupId), name);

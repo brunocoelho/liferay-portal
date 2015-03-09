@@ -23,11 +23,11 @@ import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.search.Summary;
+import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.trash.TrashHandler;
 import com.liferay.portal.kernel.trash.TrashHandlerRegistryUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.security.permission.PermissionChecker;
-import com.liferay.portal.util.PortletKeys;
 import com.liferay.portlet.documentlibrary.model.DLFileEntryConstants;
 import com.liferay.portlet.journal.model.JournalArticle;
 import com.liferay.portlet.trash.model.TrashEntry;
@@ -36,30 +36,28 @@ import java.util.Locale;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
 
 /**
  * @author Julio Camarero
  * @author Zsolt Berentey
  */
+@OSGiBeanProperties
 public class TrashIndexer extends BaseIndexer {
 
-	public static final String[] CLASS_NAMES = {TrashEntry.class.getName()};
-
-	public static final String PORTLET_ID = PortletKeys.TRASH;
+	public static final String CLASS_NAME = TrashEntry.class.getName();
 
 	public TrashIndexer() {
 		setDefaultSelectedFieldNames(
 			Field.ENTRY_CLASS_NAME, Field.ENTRY_CLASS_PK,
 			Field.REMOVED_BY_USER_NAME, Field.REMOVED_DATE,
-			Field.ROOT_ENTRY_CLASS_NAME, Field.ROOT_ENTRY_CLASS_PK);
+			Field.ROOT_ENTRY_CLASS_NAME, Field.ROOT_ENTRY_CLASS_PK, Field.UID);
 		setFilterSearch(true);
 		setPermissionAware(true);
 	}
 
 	@Override
-	public String[] getClassNames() {
-		return CLASS_NAMES;
+	public String getClassName() {
+		return CLASS_NAME;
 	}
 
 	@Override
@@ -123,11 +121,6 @@ public class TrashIndexer extends BaseIndexer {
 	}
 
 	@Override
-	public String getPortletId() {
-		return PORTLET_ID;
-	}
-
-	@Override
 	public boolean hasPermission(
 			PermissionChecker permissionChecker, String entryClassName,
 			long entryClassPK, String actionId)
@@ -181,7 +174,7 @@ public class TrashIndexer extends BaseIndexer {
 
 	@Override
 	protected Summary doGetSummary(
-		Document document, Locale locale, String snippet, PortletURL portletURL,
+		Document document, Locale locale, String snippet,
 		PortletRequest portletRequest, PortletResponse portletResponse) {
 
 		return null;
@@ -197,11 +190,6 @@ public class TrashIndexer extends BaseIndexer {
 
 	@Override
 	protected void doReindex(String[] ids) {
-	}
-
-	@Override
-	protected String getPortletId(SearchContext searchContext) {
-		return PORTLET_ID;
 	}
 
 }

@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.documentlibrary.util;
 
+import com.liferay.portal.fabric.InputResource;
+import com.liferay.portal.fabric.OutputResource;
 import com.liferay.portal.kernel.image.GhostscriptUtil;
 import com.liferay.portal.kernel.lar.PortletDataContext;
 import com.liferay.portal.kernel.log.Log;
@@ -42,6 +44,7 @@ import com.liferay.portal.repository.liferayrepository.model.LiferayFileVersion;
 import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.documentlibrary.NoSuchFileEntryException;
+import com.liferay.portlet.documentlibrary.model.DLProcessorConstants;
 import com.liferay.portlet.documentlibrary.store.DLStoreUtil;
 import com.liferay.util.log4j.Log4JUtil;
 
@@ -122,6 +125,11 @@ public class PDFProcessorImpl
 		throws Exception {
 
 		return doGetThumbnailFileSize(fileVersion, index);
+	}
+
+	@Override
+	public String getType() {
+		return DLProcessorConstants.PDF_PROCESSOR;
 	}
 
 	@Override
@@ -381,6 +389,15 @@ public class PDFProcessorImpl
 					destinationFileVersion.getFileEntryId(),
 					destinationFileVersion.getVersion());
 
+				if (Validator.equals(
+						"PWC", destinationFileVersion.getVersion())) {
+
+					File file = new File(
+						DocumentConversionUtil.getFilePath(tempFileId, "pdf"));
+
+					FileUtil.delete(file);
+				}
+
 				File file = DocumentConversionUtil.convert(
 					tempFileId, inputStream, extension, "pdf");
 
@@ -453,7 +470,7 @@ public class PDFProcessorImpl
 		String tempFileId = DLUtil.getTempFileId(
 			fileVersion.getFileEntryId(), fileVersion.getVersion());
 
-		List<String> arguments = new ArrayList<String>();
+		List<String> arguments = new ArrayList<>();
 
 		arguments.add("-sDEVICE=png16m");
 
@@ -475,13 +492,13 @@ public class PDFProcessorImpl
 
 		if (PropsValues.DL_FILE_ENTRY_PREVIEW_DOCUMENT_MAX_WIDTH != 0) {
 			arguments.add(
-				"-dDEVICEWIDTH" +
+				"-dDEVICEWIDTH=" +
 					PropsValues.DL_FILE_ENTRY_PREVIEW_DOCUMENT_MAX_WIDTH);
 		}
 
 		if (PropsValues.DL_FILE_ENTRY_PREVIEW_DOCUMENT_MAX_HEIGHT != 0) {
 			arguments.add(
-				"-dDEVICEHEIGHT" +
+				"-dDEVICEHEIGHT=" +
 					PropsValues.DL_FILE_ENTRY_PREVIEW_DOCUMENT_MAX_HEIGHT);
 		}
 
@@ -552,17 +569,8 @@ public class PDFProcessorImpl
 
 		int previewFilesCount = 0;
 
-		PDDocument pdDocument = null;
-
-		try {
-			pdDocument = PDDocument.load(file);
-
+		try (PDDocument pdDocument = PDDocument.load(file)) {
 			previewFilesCount = pdDocument.getNumberOfPages();
-		}
-		finally {
-			if (pdDocument != null) {
-				pdDocument.close();
-			}
 		}
 
 		File[] previewFiles = new File[previewFilesCount];
@@ -744,9 +752,10 @@ public class PDFProcessorImpl
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(PDFProcessorImpl.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		PDFProcessorImpl.class);
 
-	private List<Long> _fileVersionIds = new Vector<Long>();
+	private final List<Long> _fileVersionIds = new Vector<>();
 	private boolean _ghostscriptInitialized;
 
 	private static class LiferayPDFBoxProcessCallable
@@ -757,7 +766,7 @@ public class PDFProcessorImpl
 			Map<String, String> customLogSettings, File inputFile,
 			File thumbnailFile, File[] previewFiles, String extension,
 			String thumbnailExtension, int dpi, int height, int width,
-			boolean generateThumbnail, boolean generatePreview) {
+			boolean generatePreview, boolean generateThumbnail) {
 
 			_serverId = serverId;
 			_liferayHome = liferayHome;
@@ -770,8 +779,8 @@ public class PDFProcessorImpl
 			_dpi = dpi;
 			_height = height;
 			_width = width;
-			_generateThumbnail = generateThumbnail;
 			_generatePreview = generatePreview;
+			_generateThumbnail = generateThumbnail;
 		}
 
 		@Override
@@ -806,19 +815,28 @@ public class PDFProcessorImpl
 
 		private static final long serialVersionUID = 1L;
 
-		private Map<String, String> _customLogSettings;
-		private int _dpi;
-		private String _extension;
-		private boolean _generatePreview;
-		private boolean _generateThumbnail;
-		private int _height;
-		private File _inputFile;
-		private String _liferayHome;
-		private File[] _previewFiles;
-		private String _serverId;
-		private String _thumbnailExtension;
-		private File _thumbnailFile;
-		private int _width;
+		private final Map<String, String> _customLogSettings;
+		private final int _dpi;
+		private final String _extension;
+		private final boolean _generatePreview;
+		private final boolean _generateThumbnail;
+		private final int _height;
+
+		@InputResource
+		private final File _inputFile;
+
+		private final String _liferayHome;
+
+		@OutputResource
+		private final File[] _previewFiles;
+
+		private final String _serverId;
+		private final String _thumbnailExtension;
+
+		@OutputResource
+		private final File _thumbnailFile;
+
+		private final int _width;
 
 	}
 

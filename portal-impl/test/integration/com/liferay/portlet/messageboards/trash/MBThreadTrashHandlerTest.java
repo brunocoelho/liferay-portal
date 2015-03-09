@@ -14,20 +14,25 @@
 
 package com.liferay.portlet.messageboards.trash;
 
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.Sync;
+import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.ObjectValuePair;
+import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.BaseModel;
 import com.liferay.portal.model.ClassedModel;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.service.ServiceContext;
-import com.liferay.portal.test.Sync;
-import com.liferay.portal.test.SynchronousDestinationExecutionTestListener;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
-import com.liferay.portal.util.test.ServiceContextTestUtil;
-import com.liferay.portal.util.test.TestPropsValues;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portlet.messageboards.model.MBCategory;
+import com.liferay.portlet.messageboards.model.MBCategoryConstants;
 import com.liferay.portlet.messageboards.model.MBMessage;
+import com.liferay.portlet.messageboards.model.MBMessageConstants;
 import com.liferay.portlet.messageboards.model.MBThread;
 import com.liferay.portlet.messageboards.service.MBCategoryLocalServiceUtil;
 import com.liferay.portlet.messageboards.service.MBCategoryServiceUtil;
@@ -35,27 +40,32 @@ import com.liferay.portlet.messageboards.service.MBMessageLocalServiceUtil;
 import com.liferay.portlet.messageboards.service.MBThreadLocalServiceUtil;
 import com.liferay.portlet.messageboards.service.MBThreadServiceUtil;
 import com.liferay.portlet.messageboards.util.test.MBTestUtil;
-import com.liferay.portlet.trash.BaseTrashHandlerTestCase;
+import com.liferay.portlet.trash.test.BaseTrashHandlerTestCase;
+
+import java.io.InputStream;
 
 import java.util.Calendar;
+import java.util.Collections;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Zsolt Berentey
  * @author Eduardo Garcia
  */
-@ExecutionTestListeners(
-	listeners = {
-		MainServletExecutionTestListener.class,
-		SynchronousDestinationExecutionTestListener.class
-	})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 @Sync
 public class MBThreadTrashHandlerTest extends BaseTrashHandlerTestCase {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE,
+			SynchronousDestinationTestRule.INSTANCE);
 
 	@Test
 	public void testCategoryMessageCount() throws Exception {
@@ -143,9 +153,10 @@ public class MBThreadTrashHandlerTest extends BaseTrashHandlerTestCase {
 
 		MBCategory category = (MBCategory)parentBaseModel;
 
-		MBMessage message = MBTestUtil.addMessage(
-			category.getGroupId(), category.getCategoryId(),
-			getSearchKeywords(), approved, serviceContext);
+		MBMessage message = MBTestUtil.addMessageWithWorkflow(
+			serviceContext.getUserId(), category.getGroupId(),
+			category.getCategoryId(), getSearchKeywords(), getSearchKeywords(),
+			approved, serviceContext);
 
 		return message.getThread();
 	}
@@ -155,8 +166,12 @@ public class MBThreadTrashHandlerTest extends BaseTrashHandlerTestCase {
 			boolean approved, ServiceContext serviceContext)
 		throws Exception {
 
-		MBMessage message = MBTestUtil.addMessage(
-			serviceContext.getScopeGroupId());
+		MBMessage message = MBMessageLocalServiceUtil.addMessage(
+			TestPropsValues.getUserId(), RandomTestUtil.randomString(),
+			serviceContext.getScopeGroupId(),
+			MBCategoryConstants.DEFAULT_PARENT_CATEGORY_ID,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			serviceContext);
 
 		return message.getThread();
 	}
@@ -212,7 +227,9 @@ public class MBThreadTrashHandlerTest extends BaseTrashHandlerTestCase {
 			Group group, long parentBaseModelId, ServiceContext serviceContext)
 		throws Exception {
 
-		return MBTestUtil.addCategory(group.getGroupId(), parentBaseModelId);
+		return MBCategoryLocalServiceUtil.addCategory(
+			TestPropsValues.getUserId(), parentBaseModelId,
+			RandomTestUtil.randomString(), StringPool.BLANK, serviceContext);
 	}
 
 	@Override
@@ -220,7 +237,10 @@ public class MBThreadTrashHandlerTest extends BaseTrashHandlerTestCase {
 			Group group, ServiceContext serviceContext)
 		throws Exception {
 
-		return MBTestUtil.addCategory(serviceContext);
+		return MBCategoryLocalServiceUtil.addCategory(
+			TestPropsValues.getUserId(),
+			MBCategoryConstants.DEFAULT_PARENT_CATEGORY_ID,
+			RandomTestUtil.randomString(), StringPool.BLANK, serviceContext);
 	}
 
 	@Override
@@ -299,9 +319,17 @@ public class MBThreadTrashHandlerTest extends BaseTrashHandlerTestCase {
 	protected void replyMessage(BaseModel<?> baseModel) throws Exception {
 		MBThread thread = (MBThread)baseModel;
 
-		MBTestUtil.addMessage(
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				thread.getGroupId(), TestPropsValues.getUserId());
+
+		MBMessageLocalServiceUtil.addMessage(
+			TestPropsValues.getUserId(), RandomTestUtil.randomString(),
 			thread.getGroupId(), thread.getCategoryId(), thread.getThreadId(),
-			thread.getRootMessageId());
+			thread.getRootMessageId(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), MBMessageConstants.DEFAULT_FORMAT,
+			Collections.<ObjectValuePair<String, InputStream>>emptyList(),
+			false, 0.0, false, serviceContext);
 	}
 
 	@Override

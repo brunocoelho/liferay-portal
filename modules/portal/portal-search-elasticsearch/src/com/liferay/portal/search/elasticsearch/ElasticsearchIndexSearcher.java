@@ -24,19 +24,21 @@ import com.liferay.portal.kernel.search.DocumentImpl;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.HitsImpl;
-import com.liferay.portal.kernel.search.IndexSearcher;
+import com.liferay.portal.kernel.search.ParseException;
 import com.liferay.portal.kernel.search.Query;
 import com.liferay.portal.kernel.search.QueryConfig;
+import com.liferay.portal.kernel.search.QuerySuggester;
+import com.liferay.portal.kernel.search.QueryTranslator;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.facet.Facet;
 import com.liferay.portal.kernel.search.facet.collector.FacetCollector;
+import com.liferay.portal.kernel.search.util.SearchUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.elasticsearch.connection.ElasticsearchConnectionManager;
 import com.liferay.portal.search.elasticsearch.facet.ElasticsearchFacetFieldCollector;
 import com.liferay.portal.search.elasticsearch.facet.FacetProcessor;
@@ -49,8 +51,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.lang.time.StopWatch;
 
@@ -62,7 +62,6 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.common.text.Text;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHitField;
 import org.elasticsearch.search.SearchHits;
@@ -81,8 +80,17 @@ import org.osgi.service.component.annotations.Reference;
  * @author Michael C. Han
  * @author Milen Dyankov
  */
-@Component(immediate = true, service = IndexSearcher.class)
+@Component(immediate = true, service = ElasticsearchIndexSearcher.class)
 public class ElasticsearchIndexSearcher extends BaseIndexSearcher {
+
+	@Override
+	public String getQueryString(SearchContext searchContext, Query query)
+		throws ParseException {
+
+		QueryBuilder queryBuilder = _queryTranslator.translate(query);
+
+		return queryBuilder.toString();
+	}
 
 	@Override
 	public Hits search(SearchContext searchContext, Query query)
@@ -95,20 +103,22 @@ public class ElasticsearchIndexSearcher extends BaseIndexSearcher {
 		try {
 			int total = (int)searchCount(searchContext, query);
 
-			if ((searchContext.getEnd() == QueryUtil.ALL_POS) &&
-				(searchContext.getStart() == QueryUtil.ALL_POS)) {
+			int start = searchContext.getStart();
+			int end = searchContext.getEnd();
 
-				searchContext.setEnd(total);
-				searchContext.setStart(0);
+			if ((end == QueryUtil.ALL_POS) && (start == QueryUtil.ALL_POS)) {
+				start = 0;
+				end = total;
 			}
 
 			int[] startAndEnd = SearchPaginationUtil.calculateStartAndEnd(
-				searchContext.getStart(), searchContext.getEnd(), total);
+				start, end, total);
 
-			searchContext.setStart(startAndEnd[0]);
-			searchContext.setEnd(startAndEnd[1]);
+			start = startAndEnd[0];
+			end = startAndEnd[1];
 
-			SearchResponse searchResponse = doSearch(searchContext, query);
+			SearchResponse searchResponse = doSearch(
+				searchContext, query, start, end);
 
 			Hits hits = processSearchResponse(
 				searchResponse, searchContext, query);
@@ -148,7 +158,8 @@ public class ElasticsearchIndexSearcher extends BaseIndexSearcher {
 
 		try {
 			SearchResponse searchResponse = doSearch(
-				searchContext, query, true);
+				searchContext, query, searchContext.getStart(),
+				searchContext.getEnd(), true);
 
 			SearchHits searchHits = searchResponse.getHits();
 
@@ -192,6 +203,19 @@ public class ElasticsearchIndexSearcher extends BaseIndexSearcher {
 		_facetProcessor = facetProcessor;
 	}
 
+	@Override
+	@Reference
+	public void setQuerySuggester(QuerySuggester querySuggester) {
+		super.setQuerySuggester(querySuggester);
+	}
+
+	@Reference
+	public void setQueryTranslator(
+		QueryTranslator<QueryBuilder> queryTranslator) {
+
+		_queryTranslator = queryTranslator;
+	}
+
 	public void setSwallowException(boolean swallowException) {
 		_swallowException = swallowException;
 	}
@@ -230,18 +254,17 @@ public class ElasticsearchIndexSearcher extends BaseIndexSearcher {
 	protected void addHighlights(
 		SearchRequestBuilder searchRequestBuilder, QueryConfig queryConfig) {
 
-		if (!queryConfig.isHighlightEnabled()) {
-			return;
+		for (String highlightFieldName : queryConfig.getHighlightFieldNames()) {
+			addHighlightedField(
+				searchRequestBuilder, queryConfig, highlightFieldName);
 		}
 
-		addHighlightedField(
-			searchRequestBuilder, queryConfig, Field.ASSET_CATEGORY_TITLES);
-		addHighlightedField(searchRequestBuilder, queryConfig, Field.CONTENT);
-		addHighlightedField(
-			searchRequestBuilder, queryConfig, Field.DESCRIPTION);
-		addHighlightedField(searchRequestBuilder, queryConfig, Field.TITLE);
-
-		searchRequestBuilder.setHighlighterRequireFieldMatch(true);
+		searchRequestBuilder.setHighlighterPostTags(
+			SearchUtil.HIGHLIGHT_TAG_CLOSE);
+		searchRequestBuilder.setHighlighterPreTags(
+			SearchUtil.HIGHLIGHT_TAG_OPEN);
+		searchRequestBuilder.setHighlighterRequireFieldMatch(
+			queryConfig.isHighlightRequireFieldMatch());
 	}
 
 	protected void addPagination(
@@ -295,32 +318,17 @@ public class ElasticsearchIndexSearcher extends BaseIndexSearcher {
 				sb.append(StringPool.TRIPLE_PERIOD);
 			}
 
+			sb.setIndex(sb.index() - 1);
+
 			snippet = sb.toString();
 		}
 
-		if (!snippet.equals(StringPool.BLANK)) {
-			Matcher matcher = _pattern.matcher(snippet);
-
-			while (matcher.find()) {
-				queryTerms.add(matcher.group(1));
-			}
-
-			snippet = StringUtil.replace(snippet, "<em>", StringPool.BLANK);
-			snippet = StringUtil.replace(snippet, "</em>", StringPool.BLANK);
-		}
-
-		document.addText(
-			Field.SNIPPET.concat(StringPool.UNDERLINE).concat(snippetFieldName),
-			snippet);
+		SearchUtil.addSnippet(document, queryTerms, snippet, snippetFieldName);
 	}
 
 	protected void addSnippets(
 		SearchHit hit, Document document, QueryConfig queryConfig,
 		Set<String> queryTerms) {
-
-		if (!queryConfig.isHighlightEnabled()) {
-			return;
-		}
 
 		Map<String, HighlightField> highlightFields = hit.getHighlightFields();
 
@@ -328,28 +336,21 @@ public class ElasticsearchIndexSearcher extends BaseIndexSearcher {
 			return;
 		}
 
-		addSnippets(
-			document, queryTerms, highlightFields, Field.ASSET_CATEGORY_TITLES,
-			queryConfig.getLocale());
-		addSnippets(
-			document, queryTerms, highlightFields, Field.CONTENT,
-			queryConfig.getLocale());
-		addSnippets(
-			document, queryTerms, highlightFields, Field.DESCRIPTION,
-			queryConfig.getLocale());
-		addSnippets(
-			document, queryTerms, highlightFields, Field.TITLE,
-			queryConfig.getLocale());
+		for (String highlightFieldName : queryConfig.getHighlightFieldNames()) {
+			addSnippets(
+				document, queryTerms, highlightFields, highlightFieldName,
+				queryConfig.getLocale());
+		}
 	}
 
 	protected void addSort(
 		SearchRequestBuilder searchRequestBuilder, Sort[] sorts) {
 
-		if ((sorts == null) || (sorts.length == 0)) {
+		if (ArrayUtil.isEmpty(sorts)) {
 			return;
 		}
 
-		Set<String> sortFieldNames = new HashSet<String>();
+		Set<String> sortFieldNames = new HashSet<>(sorts.length);
 
 		for (Sort sort : sorts) {
 			if (sort == null) {
@@ -391,28 +392,38 @@ public class ElasticsearchIndexSearcher extends BaseIndexSearcher {
 		}
 	}
 
-	protected SearchResponse doSearch(SearchContext searchContext, Query query)
-		throws Exception {
+	protected SearchResponse doSearch(
+			SearchContext searchContext, Query query, int start, int end)
+		throws ParseException {
 
-		return doSearch(searchContext, query, false);
+		return doSearch(searchContext, query, start, end, false);
 	}
 
 	protected SearchResponse doSearch(
-		SearchContext searchContext, Query query, boolean count) {
+			SearchContext searchContext, Query query, int start, int end,
+			boolean count)
+		throws ParseException {
 
 		Client client = _elasticsearchConnectionManager.getClient();
 
-		SearchRequestBuilder searchRequestBuilder = client.prepareSearch(
-			String.valueOf(searchContext.getCompanyId()));
+		SearchRequestBuilder searchRequestBuilder = null;
+
+		QueryConfig queryConfig = query.getQueryConfig();
+
+		String[] selectedIndexNames = queryConfig.getSelectedIndexNames();
+
+		if (ArrayUtil.isEmpty(selectedIndexNames)) {
+			searchRequestBuilder = client.prepareSearch(
+				String.valueOf(searchContext.getCompanyId()));
+		}
+		else {
+			searchRequestBuilder = client.prepareSearch(selectedIndexNames);
+		}
 
 		if (!count) {
-			QueryConfig queryConfig = query.getQueryConfig();
-
 			addFacets(searchRequestBuilder, searchContext);
 			addHighlights(searchRequestBuilder, queryConfig);
-			addPagination(
-				searchRequestBuilder, searchContext.getStart(),
-				searchContext.getEnd());
+			addPagination(searchRequestBuilder, start, end);
 			addSelectedFields(searchRequestBuilder, queryConfig);
 			addSort(searchRequestBuilder, searchContext.getSorts());
 
@@ -422,11 +433,18 @@ public class ElasticsearchIndexSearcher extends BaseIndexSearcher {
 			searchRequestBuilder.setSize(0);
 		}
 
-		QueryBuilder queryBuilder = QueryBuilders.queryString(query.toString());
+		QueryBuilder queryBuilder = _queryTranslator.translate(query);
 
 		searchRequestBuilder.setQuery(queryBuilder);
 
-		searchRequestBuilder.setTypes(DocumentTypes.LIFERAY);
+		String[] selectedTypes = queryConfig.getSelectedTypes();
+
+		if (ArrayUtil.isEmpty(selectedTypes)) {
+			searchRequestBuilder.setTypes(DocumentTypes.LIFERAY);
+		}
+		else {
+			searchRequestBuilder.setTypes(selectedTypes);
+		}
 
 		SearchRequest searchRequest = searchRequestBuilder.request();
 
@@ -443,10 +461,12 @@ public class ElasticsearchIndexSearcher extends BaseIndexSearcher {
 		return searchResponse;
 	}
 
-	protected Document processSearchHit(SearchHit hit) {
+	protected Document processSearchHit(
+		SearchHit searchHit, QueryConfig queryConfig) {
+
 		Document document = new DocumentImpl();
 
-		Map<String, SearchHitField> searchHitFields = hit.getFields();
+		Map<String, SearchHitField> searchHitFields = searchHit.getFields();
 
 		for (Map.Entry<String, SearchHitField> entry :
 				searchHitFields.entrySet()) {
@@ -463,6 +483,8 @@ public class ElasticsearchIndexSearcher extends BaseIndexSearcher {
 			document.add(field);
 		}
 
+		populateUID(document, queryConfig);
+
 		return document;
 	}
 
@@ -476,23 +498,23 @@ public class ElasticsearchIndexSearcher extends BaseIndexSearcher {
 
 		Hits hits = new HitsImpl();
 
-		List<Document> documents = new ArrayList<Document>();
-		Set<String> queryTerms = new HashSet<String>();
-		List<Float> scores = new ArrayList<Float>();
+		List<Document> documents = new ArrayList<>();
+		Set<String> queryTerms = new HashSet<>();
+		List<Float> scores = new ArrayList<>();
 
 		if (searchHits.totalHits() > 0) {
 			SearchHit[] searchHitsArray = searchHits.getHits();
 
 			for (SearchHit searchHit : searchHitsArray) {
-				Document document = processSearchHit(searchHit);
+				Document document = processSearchHit(
+					searchHit, query.getQueryConfig());
 
 				documents.add(document);
 
 				scores.add(searchHit.getScore());
 
 				addSnippets(
-					searchHit, document, searchContext.getQueryConfig(),
-					queryTerms);
+					searchHit, document, query.getQueryConfig(), queryTerms);
 			}
 		}
 
@@ -500,7 +522,7 @@ public class ElasticsearchIndexSearcher extends BaseIndexSearcher {
 		hits.setLength((int)searchHits.getTotalHits());
 		hits.setQuery(query);
 		hits.setQueryTerms(queryTerms.toArray(new String[queryTerms.size()]));
-		hits.setScores(scores.toArray(new Float[scores.size()]));
+		hits.setScores(ArrayUtil.toFloatArray(scores));
 
 		TimeValue timeValue = searchResponse.getTook();
 
@@ -536,12 +558,12 @@ public class ElasticsearchIndexSearcher extends BaseIndexSearcher {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		ElasticsearchIndexSearcher.class);
 
 	private ElasticsearchConnectionManager _elasticsearchConnectionManager;
 	private FacetProcessor<SearchRequestBuilder> _facetProcessor;
-	private Pattern _pattern = Pattern.compile("<em>(.*?)</em>");
+	private QueryTranslator<QueryBuilder> _queryTranslator;
 	private boolean _swallowException;
 
 }

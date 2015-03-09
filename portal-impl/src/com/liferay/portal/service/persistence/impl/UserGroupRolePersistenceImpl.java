@@ -55,7 +55,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see UserGroupRolePersistence
- * @see UserGroupRoleUtil
+ * @see com.liferay.portal.service.persistence.UserGroupRoleUtil
  * @generated
  */
 @ProviderType
@@ -3219,7 +3219,7 @@ public class UserGroupRolePersistenceImpl extends BasePersistenceImpl<UserGroupR
 		MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

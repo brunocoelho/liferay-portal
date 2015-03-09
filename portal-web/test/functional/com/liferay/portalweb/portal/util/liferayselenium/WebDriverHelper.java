@@ -14,15 +14,24 @@
 
 package com.liferay.portalweb.portal.util.liferayselenium;
 
+import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portalweb.portal.util.TestPropsValues;
+import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portalweb.portal.BaseTestCase;
+import com.liferay.portalweb.util.TestPropsValues;
 
 import java.util.List;
+import java.util.Set;
+import java.util.Stack;
 import java.util.concurrent.TimeUnit;
 
+import net.jsourcerer.webdriver.jserrorcollector.JavaScriptError;
+
 import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.internal.WrapsDriver;
@@ -32,8 +41,309 @@ import org.openqa.selenium.internal.WrapsDriver;
  */
 public class WebDriverHelper {
 
+	public static void assertJavaScriptErrors(
+			WebDriver webDriver, String ignoreJavaScriptError)
+		throws Exception {
+
+		if (!TestPropsValues.TEST_ASSERT_JAVASCRIPT_ERRORS) {
+			return;
+		}
+
+		String location = getLocation(webDriver);
+
+		if (!location.contains("localhost")) {
+			return;
+		}
+
+		String pageSource = null;
+
+		try {
+			pageSource = webDriver.getPageSource();
+		}
+		catch (Exception e) {
+			WebDriver.TargetLocator targetLocator = webDriver.switchTo();
+
+			targetLocator.window(_defaultWindowHandle);
+
+			pageSource = webDriver.getPageSource();
+		}
+
+		if (pageSource.contains(
+				"html id=\"feedHandler\" xmlns=" +
+					"\"http://www.w3.org/1999/xhtml\"")) {
+
+			return;
+		}
+
+		WebElement webElement = getWebElement(webDriver, "//body");
+
+		WrapsDriver wrapsDriver = (WrapsDriver)webElement;
+
+		WebDriver wrappedWebDriver = wrapsDriver.getWrappedDriver();
+
+		List<JavaScriptError> javaScriptErrors = JavaScriptError.readErrors(
+			wrappedWebDriver);
+
+		if (!javaScriptErrors.isEmpty()) {
+			for (JavaScriptError javaScriptError : javaScriptErrors) {
+				String javaScriptErrorValue = javaScriptError.toString();
+
+				System.out.println("JS_ERROR: " + javaScriptErrorValue);
+
+				if (Validator.isNotNull(ignoreJavaScriptError) &&
+					javaScriptErrorValue.contains(ignoreJavaScriptError)) {
+
+					continue;
+				}
+
+				// LPS-41634
+
+				if (javaScriptErrorValue.contains(
+						"TypeError: d.config.doc.defaultView is null")) {
+
+					continue;
+				}
+
+				// LPS-41634
+
+				if (javaScriptErrorValue.contains(
+						"NS_ERROR_NOT_INITIALIZED:")) {
+
+					continue;
+				}
+
+				// LPS-42469
+
+				if (javaScriptErrorValue.contains(
+						"Permission denied to access property 'type'")) {
+
+					continue;
+				}
+
+				Exception exception = new Exception(javaScriptErrorValue);
+
+				LiferaySeleniumHelper.addToJavaScriptExceptions(exception);
+
+				throw exception;
+			}
+		}
+	}
+
+	public static String getAttribute(
+		WebDriver webDriver, String attributeLocator) {
+
+		int pos = attributeLocator.lastIndexOf(CharPool.AT);
+
+		String locator = attributeLocator.substring(0, pos);
+
+		WebElement webElement = getWebElement(webDriver, locator);
+
+		String attribute = attributeLocator.substring(pos + 1);
+
+		return webElement.getAttribute(attribute);
+	}
+
+	public static String getDefaultWindowHandle() {
+		return _defaultWindowHandle;
+	}
+
+	public static int getElementHeight(WebDriver webDriver, String locator) {
+		WebElement webElement = getWebElement(webDriver, locator, "1");
+
+		Dimension dimension = webElement.getSize();
+
+		return dimension.getHeight();
+	}
+
+	public static int getElementPositionBottom(
+		WebDriver webDriver, String locator) {
+
+		return getElementPositionTop(webDriver, locator) +
+			getElementHeight(webDriver, locator);
+	}
+
+	public static int getElementPositionCenterX(
+		WebDriver webDriver, String locator) {
+
+		return getElementPositionLeft(webDriver, locator) +
+			(getElementWidth(webDriver, locator) / 2);
+	}
+
+	public static int getElementPositionCenterY(
+		WebDriver webDriver, String locator) {
+
+		return getElementPositionTop(webDriver, locator) +
+			(getElementHeight(webDriver, locator) / 2);
+	}
+
+	public static int getElementPositionLeft(
+		WebDriver webDriver, String locator) {
+
+		WebElement webElement = getWebElement(webDriver, locator, "1");
+
+		Point point = webElement.getLocation();
+
+		return point.getX();
+	}
+
+	public static int getElementPositionRight(
+		WebDriver webDriver, String locator) {
+
+		return getElementPositionLeft(webDriver, locator) +
+			getElementWidth(webDriver, locator);
+	}
+
+	public static int getElementPositionTop(
+		WebDriver webDriver, String locator) {
+
+		WebElement webElement = getWebElement(webDriver, locator, "1");
+
+		Point point = webElement.getLocation();
+
+		return point.getY();
+	}
+
+	public static int getElementWidth(WebDriver webDriver, String locator) {
+		WebElement webElement = getWebElement(webDriver, locator, "1");
+
+		Dimension dimension = webElement.getSize();
+
+		return dimension.getWidth();
+	}
+
+	public static String getEval(WebDriver webDriver, String script) {
+		WebElement webElement = getWebElement(webDriver, "//body");
+
+		WrapsDriver wrapsDriver = (WrapsDriver)webElement;
+
+		WebDriver wrappedWebDriver = wrapsDriver.getWrappedDriver();
+
+		JavascriptExecutor javascriptExecutor =
+			(JavascriptExecutor)wrappedWebDriver;
+
+		return (String)javascriptExecutor.executeScript(script);
+	}
+
+	public static Point getFramePoint(WebDriver webDriver) {
+		int x = 0;
+		int y = 0;
+
+		WebElement bodyWebElement = getWebElement(webDriver, "//body");
+
+		WrapsDriver wrapsDriver = (WrapsDriver)bodyWebElement;
+
+		WebDriver wrappedWebDriver = wrapsDriver.getWrappedDriver();
+
+		WebDriver.TargetLocator targetLocator = wrappedWebDriver.switchTo();
+
+		targetLocator.window(_defaultWindowHandle);
+
+		for (WebElement webElement : _frameWebElements) {
+			Point point = webElement.getLocation();
+
+			x += point.getX();
+			y += point.getY();
+
+			targetLocator.frame(webElement);
+		}
+
+		return new Point(x, y);
+	}
+
+	public static int getFramePositionLeft(WebDriver webDriver) {
+		Point point = getFramePoint(webDriver);
+
+		return point.getX();
+	}
+
+	public static int getFramePositionTop(WebDriver webDriver) {
+		Point point = getFramePoint(webDriver);
+
+		return point.getY();
+	}
+
 	public static String getLocation(WebDriver webDriver) {
 		return webDriver.getCurrentUrl();
+	}
+
+	public static int getNavigationBarHeight() {
+		return _navigationBarHeight;
+	}
+
+	public static int getScrollOffsetX(WebDriver webDriver) {
+		WebElement bodyWebElement = getWebElement(webDriver, "//body");
+
+		WrapsDriver wrapsDriver = (WrapsDriver)bodyWebElement;
+
+		WebDriver wrappedWebDriver = wrapsDriver.getWrappedDriver();
+
+		JavascriptExecutor javascriptExecutor =
+			(JavascriptExecutor)wrappedWebDriver;
+
+		Object pageXOffset = javascriptExecutor.executeScript(
+			"return window.pageXOffset;");
+
+		return GetterUtil.getInteger(pageXOffset);
+	}
+
+	public static int getScrollOffsetY(WebDriver webDriver) {
+		WebElement bodyWebElement = getWebElement(webDriver, "//body");
+
+		WrapsDriver wrapsDriver = (WrapsDriver)bodyWebElement;
+
+		WebDriver wrappedWebDriver = wrapsDriver.getWrappedDriver();
+
+		JavascriptExecutor javascriptExecutor =
+			(JavascriptExecutor)wrappedWebDriver;
+
+		Object pageYOffset = javascriptExecutor.executeScript(
+			"return window.pageYOffset;");
+
+		return GetterUtil.getInteger(pageYOffset);
+	}
+
+	public static int getViewportHeight(WebDriver webDriver) {
+		WebElement bodyWebElement = getWebElement(webDriver, "//body");
+
+		WrapsDriver wrapsDriver = (WrapsDriver)bodyWebElement;
+
+		WebDriver wrappedWebDriver = wrapsDriver.getWrappedDriver();
+
+		JavascriptExecutor javascriptExecutor =
+			(JavascriptExecutor)wrappedWebDriver;
+
+		return GetterUtil.getInteger(
+			javascriptExecutor.executeScript("return window.innerHeight;"));
+	}
+
+	public static int getViewportPositionBottom(WebDriver webDriver) {
+		return getScrollOffsetY(webDriver) + getViewportHeight(webDriver);
+	}
+
+	public static Point getWindowPoint(WebDriver webDriver) {
+		WebElement bodyWebElement = getWebElement(webDriver, "//body");
+
+		WrapsDriver wrapsDriver = (WrapsDriver)bodyWebElement;
+
+		WebDriver wrappedWebDriver = wrapsDriver.getWrappedDriver();
+
+		WebDriver.Options options = wrappedWebDriver.manage();
+
+		WebDriver.Window window = options.window();
+
+		return window.getPosition();
+	}
+
+	public static int getWindowPositionLeft(WebDriver webDriver) {
+		Point point = getWindowPoint(webDriver);
+
+		return point.getX();
+	}
+
+	public static int getWindowPositionTop(WebDriver webDriver) {
+		Point point = getWindowPoint(webDriver);
+
+		return point.getY();
 	}
 
 	public static boolean isElementPresent(
@@ -110,10 +420,90 @@ public class WebDriverHelper {
 		navigation.refresh();
 	}
 
+	public static void selectFrame(WebDriver webDriver, String locator) {
+		WebDriver.TargetLocator targetLocator = webDriver.switchTo();
+
+		if (locator.equals("relative=parent")) {
+			targetLocator.window(_defaultWindowHandle);
+
+			if (!_frameWebElements.isEmpty()) {
+				_frameWebElements.pop();
+
+				if (!_frameWebElements.isEmpty()) {
+					targetLocator.frame(_frameWebElements.peek());
+				}
+			}
+		}
+		else if (locator.equals("relative=top")) {
+			_frameWebElements = new Stack<>();
+
+			targetLocator.window(_defaultWindowHandle);
+		}
+		else {
+			_frameWebElements.push(getWebElement(webDriver, locator));
+
+			targetLocator.frame(_frameWebElements.peek());
+		}
+	}
+
+	public static void selectWindow(WebDriver webDriver, String windowID) {
+		Set<String> windowHandles = webDriver.getWindowHandles();
+
+		if (windowID.equals("name=undefined")) {
+			String title = webDriver.getTitle();
+
+			for (String windowHandle : windowHandles) {
+				WebDriver.TargetLocator targetLocator = webDriver.switchTo();
+
+				targetLocator.window(windowHandle);
+
+				if (!title.equals(webDriver.getTitle())) {
+					return;
+				}
+			}
+
+			BaseTestCase.fail(
+				"Unable to find the window ID \"" + windowID + "\"");
+		}
+		else if (windowID.equals("null")) {
+			WebDriver.TargetLocator targetLocator = webDriver.switchTo();
+
+			targetLocator.window(_defaultWindowHandle);
+		}
+		else {
+			String targetWindowTitle = windowID;
+
+			if (targetWindowTitle.startsWith("title=")) {
+				targetWindowTitle = targetWindowTitle.substring(6);
+			}
+
+			for (String windowHandle : windowHandles) {
+				WebDriver.TargetLocator targetLocator = webDriver.switchTo();
+
+				targetLocator.window(windowHandle);
+
+				if (targetWindowTitle.equals(webDriver.getTitle())) {
+					return;
+				}
+			}
+
+			BaseTestCase.fail(
+				"Unable to find the window ID \"" + windowID + "\"");
+		}
+	}
+
 	public static void setDefaultTimeoutImplicit(WebDriver webDriver) {
 		int timeout = TestPropsValues.TIMEOUT_IMPLICIT_WAIT * 1000;
 
 		setTimeoutImplicit(webDriver, String.valueOf(timeout));
+	}
+
+	public static void setDefaultWindowHandle(String defaultWindowHandle) {
+		_defaultWindowHandle = defaultWindowHandle;
+	}
+
+	public static void setNavigationBarHeight(int navigationBarHeight) {
+		_navigationBarHeight = navigationBarHeight;
 	}
 
 	public static void setTimeoutImplicit(WebDriver webDriver, String timeout) {
@@ -123,6 +513,18 @@ public class WebDriverHelper {
 
 		timeouts.implicitlyWait(
 			GetterUtil.getInteger(timeout), TimeUnit.MILLISECONDS);
+	}
+
+	public static void type(WebDriver webDriver, String locator, String value) {
+		WebElement webElement = getWebElement(webDriver, locator);
+
+		if (!webElement.isEnabled()) {
+			return;
+		}
+
+		webElement.clear();
+
+		webElement.sendKeys(value);
 	}
 
 	protected static WebElement getWebElement(
@@ -203,5 +605,23 @@ public class WebDriverHelper {
 			}
 		}
 	}
+
+	protected static void scrollWebElementIntoView(
+		WebDriver webDriver, WebElement webElement) {
+
+		WrapsDriver wrapsDriver = (WrapsDriver)webElement;
+
+		WebDriver wrappedWebDriver = wrapsDriver.getWrappedDriver();
+
+		JavascriptExecutor javascriptExecutor =
+			(JavascriptExecutor)wrappedWebDriver;
+
+		javascriptExecutor.executeScript(
+			"arguments[0].scrollIntoView();", webElement);
+	}
+
+	private static String _defaultWindowHandle;
+	private static Stack<WebElement> _frameWebElements = new Stack<>();
+	private static int _navigationBarHeight;
 
 }

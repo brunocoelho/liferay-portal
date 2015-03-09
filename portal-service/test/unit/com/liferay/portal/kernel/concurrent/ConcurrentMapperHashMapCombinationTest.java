@@ -16,8 +16,9 @@ package com.liferay.portal.kernel.concurrent;
 
 import com.liferay.portal.kernel.memory.FinalizeManager;
 import com.liferay.portal.kernel.test.GCUtil;
-import com.liferay.portal.kernel.test.NewClassLoaderJUnitTestRunner;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.rule.NewEnv;
+import com.liferay.portal.kernel.test.rule.NewEnvTestRule;
 import com.liferay.portal.kernel.util.StringPool;
 
 import java.lang.ref.Reference;
@@ -25,13 +26,13 @@ import java.lang.ref.Reference;
 import java.util.concurrent.ConcurrentMap;
 
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Shuyang Zhou
  */
-@RunWith(NewClassLoaderJUnitTestRunner.class)
+@NewEnv(type = NewEnv.Type.CLASSLOADER)
 public class ConcurrentMapperHashMapCombinationTest {
 
 	@Test
@@ -63,7 +64,7 @@ public class ConcurrentMapperHashMapCombinationTest {
 
 		testValue1 = null;
 
-		GCUtil.gc();
+		GCUtil.gc(true);
 
 		ReflectionTestUtil.invoke(
 			FinalizeManager.class, "_pollingCleanup", new Class<?>[0]);
@@ -73,7 +74,7 @@ public class ConcurrentMapperHashMapCombinationTest {
 
 		testValue2 = null;
 
-		GCUtil.gc();
+		GCUtil.gc(true);
 
 		ReflectionTestUtil.invoke(
 			FinalizeManager.class, "_pollingCleanup", new Class<?>[0]);
@@ -110,7 +111,7 @@ public class ConcurrentMapperHashMapCombinationTest {
 
 		testKey1 = null;
 
-		GCUtil.gc();
+		GCUtil.gc(true);
 
 		ReflectionTestUtil.invoke(
 			FinalizeManager.class, "_pollingCleanup", new Class<?>[0]);
@@ -121,7 +122,7 @@ public class ConcurrentMapperHashMapCombinationTest {
 		Assert.assertTrue(concurrentReferenceMap.containsValue(testValue2));
 		Assert.assertSame(testValue2, concurrentReferenceMap.get(testKey2));
 
-		GCUtil.fullGC();
+		GCUtil.fullGC(true);
 
 		ReflectionTestUtil.invoke(
 			FinalizeManager.class, "_pollingCleanup", new Class<?>[0]);
@@ -133,12 +134,15 @@ public class ConcurrentMapperHashMapCombinationTest {
 
 		testValue2 = null;
 
-		GCUtil.gc();
+		GCUtil.gc(true);
 
 		ReflectionTestUtil.invoke(
 			FinalizeManager.class, "_pollingCleanup", new Class<?>[0]);
 
 		Assert.assertTrue(concurrentReferenceMap.isEmpty());
 	}
+
+	@Rule
+	public final NewEnvTestRule newEnvTestRule = NewEnvTestRule.INSTANCE;
 
 }

@@ -37,7 +37,7 @@ public class BaseDDMStructureClassTypeReader implements ClassTypeReader {
 	public List<ClassType> getAvailableClassTypes(
 		long[] groupIds, Locale locale) {
 
-		List<ClassType> classTypes = new ArrayList<ClassType>();
+		List<ClassType> classTypes = new ArrayList<>();
 
 		List<DDMStructure> ddmStructures =
 			DDMStructureServiceUtil.getStructures(
@@ -65,6 +65,6 @@ public class BaseDDMStructureClassTypeReader implements ClassTypeReader {
 			LocaleUtil.toLanguageId(locale));
 	}
 
-	private String _className;
+	private final String _className;
 
 }

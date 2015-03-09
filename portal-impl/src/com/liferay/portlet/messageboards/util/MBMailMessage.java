@@ -52,15 +52,14 @@ public class MBMailMessage {
 
 	public List<ObjectValuePair<String, InputStream>> getInputStreamOVPs() {
 		List<ObjectValuePair<String, InputStream>> inputStreamOVPs =
-			new ArrayList<ObjectValuePair<String, InputStream>>(
-				_bytesOVPs.size());
+			new ArrayList<>(_bytesOVPs.size());
 
 		for (ObjectValuePair<String, byte[]> bytesOVP : _bytesOVPs) {
 			String key = bytesOVP.getKey();
 			byte[] bytes = bytesOVP.getValue();
 
 			ByteArrayInputStream byteArrayInputStream =
-							new ByteArrayInputStream(bytes);
+				new ByteArrayInputStream(bytes);
 
 			ObjectValuePair<String, InputStream> inputStreamOVP =
 				new ObjectValuePair<String, InputStream>(
@@ -84,8 +83,8 @@ public class MBMailMessage {
 		_plainBody = plainBody;
 	}
 
-	private List<ObjectValuePair<String, byte[]>> _bytesOVPs =
-		new ArrayList<ObjectValuePair<String, byte[]>>();
+	private final List<ObjectValuePair<String, byte[]>> _bytesOVPs =
+		new ArrayList<>();
 	private String _htmlBody;
 	private String _plainBody;
 

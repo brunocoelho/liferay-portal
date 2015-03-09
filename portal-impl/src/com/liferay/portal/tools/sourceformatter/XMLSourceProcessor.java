@@ -16,6 +16,7 @@ package com.liferay.portal.tools.sourceformatter;
 
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
+import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.PropertiesUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringBundler;
@@ -24,14 +25,12 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
-import com.liferay.portal.tools.ComparableRoute;
 import com.liferay.util.ContentUtil;
 
 import java.io.File;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -71,6 +70,28 @@ public class XMLSourceProcessor extends BaseSourceProcessor {
 		}
 
 		return newContent;
+	}
+
+	protected void checkPoshiCharactersAfterDefinition(
+		String fileName, String content) {
+
+		if (content.contains("/definition>") &&
+			!content.endsWith("/definition>")) {
+
+			processErrorMessage(
+				fileName,
+				"Characters found after definition element: " + fileName);
+		}
+	}
+
+	protected void checkPoshiCharactersBeforeDefinition(
+		String fileName, String content) {
+
+		if (!content.startsWith("<definition")) {
+			processErrorMessage(
+				fileName,
+				"Characters found before definition element: " + fileName);
+		}
 	}
 
 	protected void checkServiceXMLExceptions(
@@ -166,7 +187,7 @@ public class XMLSourceProcessor extends BaseSourceProcessor {
 			File file, String fileName, String absolutePath, String content)
 		throws Exception {
 
-		if (isExcluded(_xmlExclusions, absolutePath)) {
+		if (isExcludedFile(_xmlExclusionFiles, absolutePath)) {
 			return content;
 		}
 
@@ -179,11 +200,14 @@ public class XMLSourceProcessor extends BaseSourceProcessor {
 		if (fileName.contains("/build") && !fileName.contains("/tools/")) {
 			newContent = formatAntXML(fileName, newContent);
 		}
+		else if (fileName.contains("/custom-sql/")) {
+			formatCustomSQLXML(fileName, newContent);
+		}
 		else if (fileName.endsWith("structures.xml")) {
 			newContent = formatDDLStructuresXML(newContent);
 		}
 		else if (fileName.endsWith("routes.xml")) {
-			newContent = formatFriendlyURLRoutesXML(absolutePath, newContent);
+			newContent = formatFriendlyURLRoutesXML(newContent);
 		}
 		else if (fileName.endsWith("/liferay-portlet.xml") ||
 				 (portalSource &&
@@ -449,8 +473,7 @@ public class XMLSourceProcessor extends BaseSourceProcessor {
 		String[] excludes = new String[] {
 			"**\\.bnd\\**", "**\\.idea\\**", "**\\.ivy\\**",
 			"portal-impl\\**\\*.action", "portal-impl\\**\\*.function",
-			"portal-impl\\**\\*.macro", "portal-impl\\**\\*.testcase",
-			"tools\\sdk\\**"
+			"portal-impl\\**\\*.macro", "portal-impl\\**\\*.testcase"
 		};
 
 		String[] includes = new String[] {
@@ -458,11 +481,9 @@ public class XMLSourceProcessor extends BaseSourceProcessor {
 			"**\\*.xml"
 		};
 
-		_friendlyUrlRoutesSortExclusions = getPropertyList(
-			"friendly.url.routes.sort.excludes");
-		_numericalPortletNameElementExclusions = getPropertyList(
-			"numerical.portlet.name.element.excludes");
-		_xmlExclusions = getPropertyList("xml.excludes");
+		_numericalPortletNameElementExclusionFiles = getPropertyList(
+			"numerical.portlet.name.element.excludes.files");
+		_xmlExclusionFiles = getPropertyList("xml.excludes.files");
 
 		List<String> fileNames = getFileNames(excludes, includes);
 
@@ -478,7 +499,7 @@ public class XMLSourceProcessor extends BaseSourceProcessor {
 
 		newContent = fixAntXMLProjectName(fileName, newContent);
 
-		Document document = saxReaderUtil.read(newContent);
+		Document document = saxReader.read(newContent);
 
 		Element rootElement = document.getRootElement();
 
@@ -506,8 +527,27 @@ public class XMLSourceProcessor extends BaseSourceProcessor {
 		return newContent;
 	}
 
+	protected void formatCustomSQLXML(String fileName, String content) {
+		Matcher matcher = _whereNotInSQLPattern.matcher(content);
+
+		if (!matcher.find()) {
+			return;
+		}
+
+		int x = content.lastIndexOf("<sql id=", matcher.start());
+
+		int y = content.indexOf(CharPool.QUOTE, x);
+
+		int z = content.indexOf(CharPool.QUOTE, y + 1);
+
+		processErrorMessage(
+			fileName,
+				"LPS-51315 Avoid using WHERE ... NOT IN: " + fileName + " " +
+					content.substring(y + 1, z));
+	}
+
 	protected String formatDDLStructuresXML(String content) throws Exception {
-		Document document = saxReaderUtil.read(content);
+		Document document = saxReader.read(content);
 
 		Element rootElement = document.getRootElement();
 
@@ -537,67 +577,16 @@ public class XMLSourceProcessor extends BaseSourceProcessor {
 		return document.formattedString();
 	}
 
-	protected String formatFriendlyURLRoutesXML(
-			String absolutePath, String content)
-		throws Exception {
+	protected String formatFriendlyURLRoutesXML(String content) {
+		int pos = content.indexOf("<routes>\n");
 
-		if (isExcluded(_friendlyUrlRoutesSortExclusions, absolutePath)) {
+		if (pos == -1) {
 			return content;
 		}
 
-		Document document = saxReaderUtil.read(content);
+		StringBundler sb = new StringBundler(9);
 
-		Element rootElement = document.getRootElement();
-
-		List<ComparableRoute> comparableRoutes =
-			new ArrayList<ComparableRoute>();
-
-		for (Element routeElement : rootElement.elements("route")) {
-			String pattern = routeElement.elementText("pattern");
-
-			ComparableRoute comparableRoute = new ComparableRoute(pattern);
-
-			for (Element generatedParameterElement :
-					routeElement.elements("generated-parameter")) {
-
-				String name = generatedParameterElement.attributeValue("name");
-				String value = generatedParameterElement.getText();
-
-				comparableRoute.addGeneratedParameter(name, value);
-			}
-
-			for (Element ignoredParameterElement :
-					routeElement.elements("ignored-parameter")) {
-
-				String name = ignoredParameterElement.attributeValue("name");
-
-				comparableRoute.addIgnoredParameter(name);
-			}
-
-			for (Element implicitParameterElement :
-					routeElement.elements("implicit-parameter")) {
-
-				String name = implicitParameterElement.attributeValue("name");
-				String value = implicitParameterElement.getText();
-
-				comparableRoute.addImplicitParameter(name, value);
-			}
-
-			for (Element overriddenParameterElement :
-					routeElement.elements("overridden-parameter")) {
-
-				String name = overriddenParameterElement.attributeValue("name");
-				String value = overriddenParameterElement.getText();
-
-				comparableRoute.addOverriddenParameter(name, value);
-			}
-
-			comparableRoutes.add(comparableRoute);
-		}
-
-		Collections.sort(comparableRoutes);
-
-		StringBundler sb = new StringBundler();
+		String mainReleaseVersion = getMainReleaseVersion();
 
 		sb.append("<?xml version=\"1.0\"?>\n");
 		sb.append("<!DOCTYPE routes PUBLIC \"-//Liferay//DTD Friendly URL ");
@@ -608,66 +597,8 @@ public class XMLSourceProcessor extends BaseSourceProcessor {
 		sb.append(
 			StringUtil.replace(
 				mainReleaseVersion, StringPool.PERIOD, StringPool.UNDERLINE));
-		sb.append(".dtd\">\n\n<routes>\n");
-
-		for (ComparableRoute comparableRoute : comparableRoutes) {
-			sb.append("\t<route>\n");
-			sb.append("\t\t<pattern>");
-			sb.append(comparableRoute.getPattern());
-			sb.append("</pattern>\n");
-
-			Map<String, String> generatedParameters =
-				comparableRoute.getGeneratedParameters();
-
-			for (Map.Entry<String, String> entry :
-					generatedParameters.entrySet()) {
-
-				sb.append("\t\t<generated-parameter name=\"");
-				sb.append(entry.getKey());
-				sb.append("\">");
-				sb.append(entry.getValue());
-				sb.append("</generated-parameter>\n");
-			}
-
-			Set<String> ignoredParameters =
-				comparableRoute.getIgnoredParameters();
-
-			for (String entry : ignoredParameters) {
-				sb.append("\t\t<ignored-parameter name=\"");
-				sb.append(entry);
-				sb.append("\" />\n");
-			}
-
-			Map<String, String> implicitParameters =
-				comparableRoute.getImplicitParameters();
-
-			for (Map.Entry<String, String> entry :
-					implicitParameters.entrySet()) {
-
-				sb.append("\t\t<implicit-parameter name=\"");
-				sb.append(entry.getKey());
-				sb.append("\">");
-				sb.append(entry.getValue());
-				sb.append("</implicit-parameter>\n");
-			}
-
-			Map<String, String> overriddenParameters =
-				comparableRoute.getOverriddenParameters();
-
-			for (Map.Entry<String, String> entry :
-					overriddenParameters.entrySet()) {
-
-				sb.append("\t\t<overridden-parameter name=\"");
-				sb.append(entry.getKey());
-				sb.append("\">");
-				sb.append(entry.getValue());
-				sb.append("</overridden-parameter>\n");
-			}
-
-			sb.append("\t</route>\n");
-		}
-
-		sb.append("</routes>");
+		sb.append(".dtd\">\n\n");
+		sb.append(content.substring(pos));
 
 		return sb.toString();
 	}
@@ -676,14 +607,14 @@ public class XMLSourceProcessor extends BaseSourceProcessor {
 			String fileName, String absolutePath, String content)
 		throws Exception {
 
-		Document document = saxReaderUtil.read(content);
+		Document document = saxReader.read(content);
 
 		Element rootElement = document.getRootElement();
 
 		rootElement.sortAttributes(true);
 
-		boolean checkNumericalPortletNameElement = !isExcluded(
-			_numericalPortletNameElementExclusions, absolutePath);
+		boolean checkNumericalPortletNameElement = !isExcludedFile(
+			_numericalPortletNameElementExclusionFiles, absolutePath);
 
 		List<Element> portletElements = rootElement.elements("portlet");
 
@@ -724,6 +655,9 @@ public class XMLSourceProcessor extends BaseSourceProcessor {
 	protected String formatPoshiXML(String fileName, String content)
 		throws Exception {
 
+		checkPoshiCharactersAfterDefinition(fileName, content);
+		checkPoshiCharactersBeforeDefinition(fileName, content);
+
 		content = sortPoshiAttributes(fileName, content);
 
 		content = sortPoshiCommands(content);
@@ -744,7 +678,7 @@ public class XMLSourceProcessor extends BaseSourceProcessor {
 	protected void formatServiceXML(String fileName, String content)
 		throws Exception {
 
-		Document document = saxReaderUtil.read(content);
+		Document document = saxReader.read(content);
 
 		Element rootElement = document.getRootElement();
 
@@ -774,7 +708,7 @@ public class XMLSourceProcessor extends BaseSourceProcessor {
 	protected void formatStrutsConfigXML(String fileName, String content)
 		throws Exception {
 
-		Document document = saxReaderUtil.read(content);
+		Document document = saxReader.read(content);
 
 		Element rootElement = document.getRootElement();
 
@@ -802,7 +736,7 @@ public class XMLSourceProcessor extends BaseSourceProcessor {
 	protected void formatTilesDefsXML(String fileName, String content)
 		throws Exception {
 
-		Document document = saxReaderUtil.read(content);
+		Document document = saxReader.read(content);
 
 		Element rootElement = document.getRootElement();
 
@@ -966,43 +900,42 @@ public class XMLSourceProcessor extends BaseSourceProcessor {
 
 		StringBundler sb = new StringBundler();
 
-		UnsyncBufferedReader unsyncBufferedReader = new UnsyncBufferedReader(
-			new UnsyncStringReader(content));
+		try (UnsyncBufferedReader unsyncBufferedReader =
+				new UnsyncBufferedReader(new UnsyncStringReader(content))) {
 
-		String line = null;
+			String line = null;
 
-		int lineCount = 0;
+			int lineCount = 0;
 
-		boolean sortAttributes = true;
+			boolean sortAttributes = true;
 
-		while ((line = unsyncBufferedReader.readLine()) != null) {
-			lineCount++;
+			while ((line = unsyncBufferedReader.readLine()) != null) {
+				lineCount++;
 
-			String trimmedLine = StringUtil.trimLeading(line);
+				String trimmedLine = StringUtil.trimLeading(line);
 
-			if (sortAttributes) {
-				if (trimmedLine.startsWith(StringPool.LESS_THAN) &&
-					trimmedLine.endsWith(StringPool.GREATER_THAN) &&
-					!trimmedLine.startsWith("<%") &&
-					!trimmedLine.startsWith("<!")) {
+				if (sortAttributes) {
+					if (trimmedLine.startsWith(StringPool.LESS_THAN) &&
+						trimmedLine.endsWith(StringPool.GREATER_THAN) &&
+						!trimmedLine.startsWith("<%") &&
+						!trimmedLine.startsWith("<!")) {
 
-					line = sortAttributes(fileName, line, lineCount, false);
+						line = sortAttributes(fileName, line, lineCount, false);
+					}
+					else if (trimmedLine.startsWith("<![CDATA[") &&
+							 !trimmedLine.endsWith("]]>")) {
+
+						sortAttributes = false;
+					}
 				}
-				else if (trimmedLine.startsWith("<![CDATA[") &&
-						 !trimmedLine.endsWith("]]>")) {
-
-					sortAttributes = false;
+				else if (trimmedLine.endsWith("]]>")) {
+					sortAttributes = true;
 				}
-			}
-			else if (trimmedLine.endsWith("]]>")) {
-				sortAttributes = true;
-			}
 
-			sb.append(line);
-			sb.append("\n");
+				sb.append(line);
+				sb.append("\n");
+			}
 		}
-
-		unsyncBufferedReader.close();
 
 		content = sb.toString();
 
@@ -1151,8 +1084,7 @@ public class XMLSourceProcessor extends BaseSourceProcessor {
 		"[\t ]-->\n[\t<]");
 
 	private List<String> _columnNames;
-	private List<String> _friendlyUrlRoutesSortExclusions;
-	private List<String> _numericalPortletNameElementExclusions;
+	private List<String> _numericalPortletNameElementExclusionFiles;
 	private Pattern _poshiClosingTagPattern = Pattern.compile("</[^>/]*>");
 	private Pattern _poshiCommandsPattern = Pattern.compile(
 		"\\<command.*name=\\\"([^\\\"]*)\\\".*\\>[\\s\\S]*?\\</command\\>" +
@@ -1183,7 +1115,9 @@ public class XMLSourceProcessor extends BaseSourceProcessor {
 			"(?:(?:\\n){1,}+|\\</execute\\>)");
 	private Pattern _poshiWholeTagPattern = Pattern.compile("<[^\\>^/]*\\/>");
 	private String _tablesContent;
-	private List<String> _xmlExclusions;
+	private Pattern _whereNotInSQLPattern = Pattern.compile(
+		"WHERE[ \t\n]+\\(*[a-zA-z0-9.]+ NOT IN");
+	private List<String> _xmlExclusionFiles;
 
 	private class FinderElementComparator implements Comparator<Element> {
 

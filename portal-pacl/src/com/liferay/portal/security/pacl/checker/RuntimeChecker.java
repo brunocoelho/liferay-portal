@@ -422,7 +422,7 @@ public class RuntimeChecker extends BaseChecker {
 		Set<String> environmentVariables = getPropertySet(
 			"security-manager-environment-variables");
 
-		_environmentVariablePatterns = new ArrayList<Pattern>(
+		_environmentVariablePatterns = new ArrayList<>(
 			environmentVariables.size());
 
 		for (String environmentVariable : environmentVariables) {
@@ -453,7 +453,7 @@ public class RuntimeChecker extends BaseChecker {
 			"security-manager-set-context-class-loader");
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(RuntimeChecker.class);
+	private static final Log _log = LogFactoryUtil.getLog(RuntimeChecker.class);
 
 	private boolean _accessDeclaredMembers;
 	private boolean _createClassLoader;

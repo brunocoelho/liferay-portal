@@ -19,14 +19,17 @@ import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.InstanceFactory;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.Image;
 import com.liferay.portal.service.ImageLocalServiceUtil;
@@ -45,21 +48,25 @@ import com.liferay.portlet.documentlibrary.store.JCRStore;
 import com.liferay.portlet.documentlibrary.store.S3Store;
 import com.liferay.portlet.documentlibrary.store.Store;
 import com.liferay.portlet.documentlibrary.store.StoreFactory;
+import com.liferay.portlet.documentlibrary.util.DLPreviewableProcessor;
 import com.liferay.portlet.documentlibrary.util.comparator.FileVersionVersionComparator;
 import com.liferay.portlet.messageboards.model.MBMessage;
 import com.liferay.portlet.messageboards.service.MBMessageLocalServiceUtil;
-import com.liferay.portlet.wiki.model.WikiPage;
-import com.liferay.portlet.wiki.service.WikiPageLocalServiceUtil;
+import com.liferay.registry.Registry;
+import com.liferay.registry.RegistryUtil;
 
 import java.io.InputStream;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
  * @author Minhchau Dang
  * @author Alexander Chow
+ * @author László Csontos
  */
-public class ConvertDocumentLibrary extends ConvertProcess {
+public class ConvertDocumentLibrary
+	extends BaseConvertProcess implements DLStoreConverter {
 
 	@Override
 	public String getDescription() {
@@ -85,7 +92,9 @@ public class ConvertDocumentLibrary extends ConvertProcess {
 			}
 		}
 
-		return new String[] {sb.toString()};
+		return new String[] {
+			sb.toString(), "delete-files-from-previous-repository=checkbox"
+		};
 	}
 
 	@Override
@@ -94,12 +103,90 @@ public class ConvertDocumentLibrary extends ConvertProcess {
 	}
 
 	@Override
+	public void migrateDLFileEntry(
+		long companyId, long repositoryId, DLFileEntry dlFileEntry) {
+
+		String fileName = dlFileEntry.getName();
+
+		List<DLFileVersion> dlFileVersions = getDLFileVersions(dlFileEntry);
+
+		if (dlFileVersions.isEmpty()) {
+			String versionNumber = Store.VERSION_DEFAULT;
+
+			migrateFile(companyId, repositoryId, fileName, versionNumber);
+
+			return;
+		}
+
+		for (DLFileVersion dlFileVersion : dlFileVersions) {
+			String versionNumber = dlFileVersion.getVersion();
+
+			migrateFile(companyId, repositoryId, fileName, versionNumber);
+		}
+	}
+
+	@Override
+	public void validate() throws FileSystemStoreRootDirException {
+		String sourceStoreClassName = getSourceStoreClassName();
+
+		if (!sourceStoreClassName.endsWith(_FILE_SYSTEM_STORE_SUFFIX)) {
+			return;
+		}
+
+		String targetStoreClassName = getTargetStoreClassName();
+
+		if (!targetStoreClassName.endsWith(_FILE_SYSTEM_STORE_SUFFIX)) {
+			return;
+		}
+
+		if (Validator.isBlank(
+				PropsValues.DL_STORE_ADVANCED_FILE_SYSTEM_ROOT_DIR)) {
+
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"Property \"" +
+						PropsKeys.DL_STORE_ADVANCED_FILE_SYSTEM_ROOT_DIR +
+							" is not set");
+			}
+
+			throw new FileSystemStoreRootDirException();
+		}
+
+		if (Validator.isBlank(PropsValues.DL_STORE_FILE_SYSTEM_ROOT_DIR)) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"Property \"" +
+						PropsKeys.DL_STORE_FILE_SYSTEM_ROOT_DIR +
+							" is not set");
+			}
+
+			throw new FileSystemStoreRootDirException();
+		}
+
+		if (PropsValues.DL_STORE_ADVANCED_FILE_SYSTEM_ROOT_DIR.equals(
+				PropsValues.DL_STORE_FILE_SYSTEM_ROOT_DIR)) {
+
+			if (_log.isWarnEnabled()) {
+				StringBundler sb = new StringBundler(5);
+
+				sb.append("Both properties \"");
+				sb.append(PropsKeys.DL_STORE_ADVANCED_FILE_SYSTEM_ROOT_DIR);
+				sb.append("\" and \"");
+				sb.append(PropsKeys.DL_STORE_FILE_SYSTEM_ROOT_DIR);
+				sb.append("\" have the same value");
+
+				_log.warn(sb.toString());
+			}
+
+			throw new FileSystemStoreRootDirException();
+		}
+	}
+
+	@Override
 	protected void doConvert() throws Exception {
 		_sourceStore = StoreFactory.getInstance();
 
-		String[] values = getParameterValues();
-
-		String targetStoreClassName = values[0];
+		String targetStoreClassName = getTargetStoreClassName();
 
 		_targetStore = (Store)InstanceFactory.newInstance(
 			ClassLoaderUtil.getPortalClassLoader(), targetStoreClassName);
@@ -122,6 +209,24 @@ public class ConvertDocumentLibrary extends ConvertProcess {
 
 		return ListUtil.sort(
 			dlFileVersions, new FileVersionVersionComparator(true));
+	}
+
+	protected String getSourceStoreClassName() {
+		Store sourceStore = StoreFactory.getInstance();
+
+		return sourceStore.getClass().getName();
+	}
+
+	protected String getTargetStoreClassName() {
+		String[] values = getParameterValues();
+
+		return values[0];
+	}
+
+	protected boolean isDeleteFilesFromSourceStore() {
+		String[] values = getParameterValues();
+
+		return GetterUtil.getBoolean(values[1]);
 	}
 
 	protected void migrateDL() throws PortalException {
@@ -160,27 +265,9 @@ public class ConvertDocumentLibrary extends ConvertProcess {
 			});
 
 		actionableDynamicQuery.performActions();
-	}
 
-	protected void migrateDLFileEntry(
-		long companyId, long repositoryId, DLFileEntry dlFileEntry) {
-
-		String fileName = dlFileEntry.getName();
-
-		List<DLFileVersion> dlFileVersions = getDLFileVersions(dlFileEntry);
-
-		if (dlFileVersions.isEmpty()) {
-			String versionNumber = Store.VERSION_DEFAULT;
-
-			migrateFile(companyId, repositoryId, fileName, versionNumber);
-
-			return;
-		}
-
-		for (DLFileVersion dlFileVersion : dlFileVersions) {
-			String versionNumber = dlFileVersion.getVersion();
-
-			migrateFile(companyId, repositoryId, fileName, versionNumber);
+		if (isDeleteFilesFromSourceStore()) {
+			DLPreviewableProcessor.deleteFiles();
 		}
 	}
 
@@ -198,6 +285,11 @@ public class ConvertDocumentLibrary extends ConvertProcess {
 			else {
 				_targetStore.updateFile(
 					companyId, repositoryId, fileName, versionNumber, is);
+			}
+
+			if (isDeleteFilesFromSourceStore()) {
+				_sourceStore.deleteFile(
+					companyId, repositoryId, fileName, versionNumber);
 			}
 		}
 		catch (Exception e) {
@@ -274,55 +366,29 @@ public class ConvertDocumentLibrary extends ConvertProcess {
 		migrateImages();
 		migrateDL();
 		migrateMB();
-		migrateWiki();
+
+		Collection<DLStoreConvertProcess> dlStoreConvertProcesses =
+			_getDLStoreConvertProcesses();
+
+		for (DLStoreConvertProcess dlStoreConvertProcess :
+				dlStoreConvertProcesses) {
+
+			dlStoreConvertProcess.migrate(this);
+		}
 	}
 
-	protected void migrateWiki() throws PortalException {
-		int count = WikiPageLocalServiceUtil.getWikiPagesCount();
+	private Collection<DLStoreConvertProcess> _getDLStoreConvertProcesses() {
+		try {
+			Registry registry = RegistryUtil.getRegistry();
 
-		MaintenanceUtil.appendStatus(
-			"Migrating wiki page attachments in " + count + " pages");
-
-		ActionableDynamicQuery actionableDynamicQuery =
-			WikiPageLocalServiceUtil.getActionableDynamicQuery();
-
-		actionableDynamicQuery.setAddCriteriaMethod(
-			new ActionableDynamicQuery.AddCriteriaMethod() {
-
-				@Override
-				public void addCriteria(DynamicQuery dynamicQuery) {
-					Property property = PropertyFactoryUtil.forName("head");
-
-					dynamicQuery.add(property.eq(true));
-				}
-
-			});
-		actionableDynamicQuery.setPerformActionMethod(
-			new ActionableDynamicQuery.PerformActionMethod() {
-
-				@Override
-				public void performAction(Object object) {
-					WikiPage wikiPage = (WikiPage)object;
-
-					for (FileEntry fileEntry :
-							wikiPage.getAttachmentsFileEntries()) {
-
-						DLFileEntry dlFileEntry =
-							(DLFileEntry)fileEntry.getModel();
-
-						migrateDLFileEntry(
-							wikiPage.getCompanyId(),
-							DLFolderConstants.getDataRepositoryId(
-								dlFileEntry.getRepositoryId(),
-								dlFileEntry.getFolderId()),
-							dlFileEntry);
-					}
-				}
-
-			});
-
-		actionableDynamicQuery.performActions();
+			return registry.getServices(DLStoreConvertProcess.class, null);
+		}
+		catch (Exception e) {
+			throw new SystemException(e);
+		}
 	}
+
+	private static final String _FILE_SYSTEM_STORE_SUFFIX = "FileSystemStore";
 
 	private static final String[] _HOOKS = new String[] {
 		AdvancedFileSystemStore.class.getName(), CMISStore.class.getName(),
@@ -330,7 +396,7 @@ public class ConvertDocumentLibrary extends ConvertProcess {
 		JCRStore.class.getName(), S3Store.class.getName()
 	};
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		ConvertDocumentLibrary.class);
 
 	private Store _sourceStore;

@@ -15,6 +15,8 @@
 package com.liferay.portlet;
 
 import com.liferay.portal.kernel.atom.AtomCollectionAdapter;
+import com.liferay.portal.kernel.configuration.Configuration;
+import com.liferay.portal.kernel.configuration.ConfigurationFactoryUtil;
 import com.liferay.portal.kernel.lar.PortletDataHandler;
 import com.liferay.portal.kernel.lar.StagedModelDataHandler;
 import com.liferay.portal.kernel.log.Log;
@@ -22,7 +24,6 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.notifications.UserNotificationDefinition;
 import com.liferay.portal.kernel.notifications.UserNotificationDeliveryType;
 import com.liferay.portal.kernel.notifications.UserNotificationHandler;
-import com.liferay.portal.kernel.notifications.UserNotificationManagerUtil;
 import com.liferay.portal.kernel.poller.PollerProcessor;
 import com.liferay.portal.kernel.pop.MessageListener;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
@@ -38,16 +39,11 @@ import com.liferay.portal.kernel.search.OpenSearch;
 import com.liferay.portal.kernel.servlet.URLEncoder;
 import com.liferay.portal.kernel.template.TemplateHandler;
 import com.liferay.portal.kernel.trash.TrashHandler;
-import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.ClassUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HttpUtil;
-import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyFactory;
-import com.liferay.portal.kernel.util.SetUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -57,8 +53,6 @@ import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.kernel.xmlrpc.Method;
-import com.liferay.portal.language.LanguageResources;
-import com.liferay.portal.language.LiferayResourceBundle;
 import com.liferay.portal.model.Portlet;
 import com.liferay.portal.notifications.UserNotificationHandlerImpl;
 import com.liferay.portal.security.permission.PermissionPropagator;
@@ -75,17 +69,10 @@ import com.liferay.portlet.social.model.impl.SocialActivityInterpreterImpl;
 import com.liferay.portlet.social.model.impl.SocialRequestInterpreterImpl;
 import com.liferay.registry.collections.ServiceTrackerCollections;
 import com.liferay.registry.collections.ServiceTrackerList;
-import com.liferay.util.portlet.PortletProps;
 
-import java.io.InputStream;
-
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.ResourceBundle;
-import java.util.Set;
 
 import javax.portlet.PreferencesValidator;
 
@@ -143,10 +130,11 @@ public class PortletBagFactory {
 		List<SocialRequestInterpreter> socialRequestInterpreterInstances =
 			newSocialRequestInterpreterInstances(portlet);
 
+		List<UserNotificationDefinition> userNotificationDefinitionInstances =
+			newUserNotificationDefinitionInstances(portlet);
+
 		List<UserNotificationHandler> userNotificationHandlerInstances =
 			newUserNotificationHandlerInstances(portlet);
-
-		initUserNotificationDefinition(portlet);
 
 		List<WebDAVStorage> webDAVStorageInstances = newWebDAVStorageInstances(
 			portlet);
@@ -180,29 +168,7 @@ public class PortletBagFactory {
 			newPreferencesValidatorInstances(portlet);
 
 		ResourceBundleTracker resourceBundleTracker = new ResourceBundleTracker(
-			portlet.getPortletId());
-
-		String resourceBundle = portlet.getResourceBundle();
-
-		if (Validator.isNotNull(resourceBundle) &&
-			!resourceBundle.equals(StrutsResourceBundle.class.getName())) {
-
-			initResourceBundle(resourceBundleTracker, portlet, null);
-			initResourceBundle(
-				resourceBundleTracker, portlet, LocaleUtil.getDefault());
-
-			Set<String> supportedLanguageIds = portlet.getSupportedLocales();
-
-			if (supportedLanguageIds.isEmpty()) {
-				supportedLanguageIds = SetUtil.fromArray(PropsValues.LOCALES);
-			}
-
-			for (String supportedLanguageId : supportedLanguageIds) {
-				Locale locale = LocaleUtil.fromLanguageId(supportedLanguageId);
-
-				initResourceBundle(resourceBundleTracker, portlet, locale);
-			}
-		}
+			_classLoader, portlet);
 
 		PortletBag portletBag = new PortletBagImpl(
 			portlet.getPortletId(), _servletContext, portletInstance,
@@ -213,13 +179,14 @@ public class PortletBagFactory {
 			templateHandlerInstances, portletLayoutListenerInstances,
 			pollerProcessorInstances, popMessageListenerInstances,
 			socialActivityInterpreterInstances,
-			socialRequestInterpreterInstances, userNotificationHandlerInstances,
-			webDAVStorageInstances, xmlRpcMethodInstances,
-			controlPanelEntryInstances, assetRendererFactoryInstances,
-			atomCollectionAdapterInstances, customAttributesDisplayInstances,
-			ddmDisplayInstances, permissionPropagatorInstances,
-			trashHandlerInstances, workflowHandlerInstances,
-			preferencesValidatorInstances);
+			socialRequestInterpreterInstances,
+			userNotificationDefinitionInstances,
+			userNotificationHandlerInstances, webDAVStorageInstances,
+			xmlRpcMethodInstances, controlPanelEntryInstances,
+			assetRendererFactoryInstances, atomCollectionAdapterInstances,
+			customAttributesDisplayInstances, ddmDisplayInstances,
+			permissionPropagatorInstances, trashHandlerInstances,
+			workflowHandlerInstances, preferencesValidatorInstances);
 
 		PortletBagPool.put(portlet.getRootPortletId(), portletBag);
 
@@ -282,11 +249,12 @@ public class PortletBagFactory {
 	protected String getPluginPropertyValue(String propertyKey)
 		throws Exception {
 
-		Class<?> clazz = _classLoader.loadClass(PortletProps.class.getName());
+		if (_configuration == null) {
+			_configuration = ConfigurationFactoryUtil.getConfiguration(
+				_classLoader, "portlet");
+		}
 
-		java.lang.reflect.Method method = clazz.getMethod("get", String.class);
-
-		return (String)method.invoke(null, propertyKey);
+		return _configuration.get(propertyKey);
 	}
 
 	protected javax.portlet.Portlet getPortletInstance(Portlet portlet)
@@ -308,165 +276,16 @@ public class PortletBagFactory {
 		return (javax.portlet.Portlet)portletClass.newInstance();
 	}
 
-	protected InputStream getResourceBundleInputStream(
-		String resourceBundleName, Locale locale) {
-
-		resourceBundleName = resourceBundleName.replace(
-			StringPool.PERIOD, StringPool.SLASH);
-
-		Locale newLocale = locale;
-
-		InputStream inputStream = null;
-
-		while (inputStream == null) {
-			locale = newLocale;
-
-			StringBundler sb = new StringBundler(4);
-
-			sb.append(resourceBundleName);
-
-			if (locale != null) {
-				String localeName = locale.toString();
-
-				if (localeName.length() > 0) {
-					sb.append(StringPool.UNDERLINE);
-					sb.append(localeName);
-				}
-			}
-
-			if (!resourceBundleName.endsWith(".properties")) {
-				sb.append(".properties");
-			}
-
-			String localizedResourceBundleName = sb.toString();
-
-			if (_log.isInfoEnabled()) {
-				_log.info("Attempting to load " + localizedResourceBundleName);
-			}
-
-			inputStream = _classLoader.getResourceAsStream(
-				localizedResourceBundleName);
-
-			if (locale == null) {
-				break;
-			}
-
-			newLocale = LanguageResources.getSuperLocale(locale);
-
-			if (newLocale == null) {
-				break;
-			}
-
-			if (newLocale.equals(locale)) {
-				break;
-			}
-		}
-
-		return inputStream;
-	}
-
 	protected <S> ServiceTrackerList<S> getServiceTrackerList(
 		Class<S> clazz, Portlet portlet) {
 
-		Map<String, Object> properties = new HashMap<String, Object>();
+		Map<String, Object> properties = new HashMap<>();
 
 		properties.put("javax.portlet.name", portlet.getPortletId());
 
 		return ServiceTrackerCollections.list(
 			clazz, "(javax.portlet.name=" + portlet.getPortletId() + ")",
 			properties);
-	}
-
-	protected void initResourceBundle(
-		ResourceBundleTracker resourceBundleTracker, Portlet portlet,
-		Locale locale) {
-
-		try {
-			InputStream inputStream = getResourceBundleInputStream(
-				portlet.getResourceBundle(), locale);
-
-			if (inputStream != null) {
-				ResourceBundle parentResourceBundle = null;
-
-				if (locale != null) {
-					parentResourceBundle =
-						resourceBundleTracker.getResouceBundle(
-							StringPool.BLANK);
-				}
-
-				ResourceBundle resourceBundle = new LiferayResourceBundle(
-					parentResourceBundle, inputStream, StringPool.UTF8);
-
-				String languageId = null;
-
-				if (locale != null) {
-					languageId = LocaleUtil.toLanguageId(locale);
-				}
-
-				resourceBundleTracker.register(languageId, resourceBundle);
-			}
-		}
-		catch (Exception e) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(e.getMessage());
-			}
-		}
-	}
-
-	protected void initUserNotificationDefinition(Portlet portlet)
-		throws Exception {
-
-		if (Validator.isNull(portlet.getUserNotificationDefinitions())) {
-			return;
-		}
-
-		String xml = getContent(portlet.getUserNotificationDefinitions());
-
-		xml = JavaFieldsParser.parse(_classLoader, xml);
-
-		Document document = SAXReaderUtil.read(xml);
-
-		Element rootElement = document.getRootElement();
-
-		for (Element definitionElement : rootElement.elements("definition")) {
-			String modelName = definitionElement.elementText("model-name");
-
-			long classNameId = 0;
-
-			if (Validator.isNotNull(modelName)) {
-				classNameId = PortalUtil.getClassNameId(modelName);
-			}
-
-			int notificationType = GetterUtil.getInteger(
-				definitionElement.elementText("notification-type"));
-
-			String description = GetterUtil.getString(
-				definitionElement.elementText("description"));
-
-			UserNotificationDefinition userNotificationDefinition =
-				new UserNotificationDefinition(
-					portlet.getPortletId(), classNameId, notificationType,
-					description);
-
-			for (Element deliveryTypeElement :
-					definitionElement.elements("delivery-type")) {
-
-				String name = deliveryTypeElement.elementText("name");
-				int type = GetterUtil.getInteger(
-					deliveryTypeElement.elementText("type"));
-				boolean defaultValue = GetterUtil.getBoolean(
-					deliveryTypeElement.elementText("default"));
-				boolean modifiable = GetterUtil.getBoolean(
-					deliveryTypeElement.elementText("modifiable"));
-
-				userNotificationDefinition.addUserNotificationDeliveryType(
-					new UserNotificationDeliveryType(
-						name, type, defaultValue, modifiable));
-			}
-
-			UserNotificationManagerUtil.addUserNotificationDefinition(
-				portlet.getPortletId(), userNotificationDefinition);
-		}
 	}
 
 	protected List<AssetRendererFactory> newAssetRendererFactoryInstances(
@@ -645,15 +464,7 @@ public class PortletBagFactory {
 			Indexer indexerInstance = (Indexer)newInstance(
 				Indexer.class, indexerClass);
 
-			Map<String, Object> properties = new HashMap<String, Object>();
-
-			String[] classNames = ArrayUtil.append(
-				indexerInstance.getClassNames(),
-				ClassUtil.getClassName(indexerInstance));
-
-			properties.put("indexer.classNames", classNames);
-
-			indexerInstances.add(indexerInstance, properties);
+			indexerInstances.add(indexerInstance);
 		}
 
 		return indexerInstances;
@@ -826,14 +637,12 @@ public class PortletBagFactory {
 	}
 
 	protected List<SchedulerEntry> newSchedulerEntryInstances(Portlet portlet) {
-		if (!PropsValues.SCHEDULER_ENABLED) {
-			return new ArrayList<SchedulerEntry>();
-		}
-
 		ServiceTrackerList<SchedulerEntry> schedulerEntries =
 			getServiceTrackerList(SchedulerEntry.class, portlet);
 
-		schedulerEntries.addAll(portlet.getSchedulerEntries());
+		if (PropsValues.SCHEDULER_ENABLED) {
+			schedulerEntries.addAll(portlet.getSchedulerEntries());
+		}
 
 		return schedulerEntries;
 	}
@@ -894,10 +703,9 @@ public class PortletBagFactory {
 		throws Exception {
 
 		ServiceTrackerList<StagedModelDataHandler<?>>
-			stagedModelDataHandlerInstances =
-				getServiceTrackerList(
-					(Class<StagedModelDataHandler<?>>)(Class<?>)
-						StagedModelDataHandler.class, portlet);
+			stagedModelDataHandlerInstances = getServiceTrackerList(
+				(Class<StagedModelDataHandler<?>>)(Class<?>)
+					StagedModelDataHandler.class, portlet);
 
 		List<String> stagedModelDataHandlerClasses =
 			portlet.getStagedModelDataHandlerClasses();
@@ -961,6 +769,68 @@ public class PortletBagFactory {
 		}
 
 		return urlEncoderInstances;
+	}
+
+	protected List<UserNotificationDefinition>
+			newUserNotificationDefinitionInstances(Portlet portlet)
+		throws Exception {
+
+		ServiceTrackerList<UserNotificationDefinition>
+			userNotificationDefinitionInstances = getServiceTrackerList(
+				UserNotificationDefinition.class, portlet);
+
+		if (Validator.isNull(portlet.getUserNotificationDefinitions())) {
+			return userNotificationDefinitionInstances;
+		}
+
+		String xml = getContent(portlet.getUserNotificationDefinitions());
+
+		xml = JavaFieldsParser.parse(_classLoader, xml);
+
+		Document document = SAXReaderUtil.read(xml);
+
+		Element rootElement = document.getRootElement();
+
+		for (Element definitionElement : rootElement.elements("definition")) {
+			String modelName = definitionElement.elementText("model-name");
+
+			long classNameId = 0;
+
+			if (Validator.isNotNull(modelName)) {
+				classNameId = PortalUtil.getClassNameId(modelName);
+			}
+
+			int notificationType = GetterUtil.getInteger(
+				definitionElement.elementText("notification-type"));
+
+			String description = GetterUtil.getString(
+				definitionElement.elementText("description"));
+
+			UserNotificationDefinition userNotificationDefinition =
+				new UserNotificationDefinition(
+					portlet.getPortletId(), classNameId, notificationType,
+					description);
+
+			for (Element deliveryTypeElement :
+					definitionElement.elements("delivery-type")) {
+
+				String name = deliveryTypeElement.elementText("name");
+				int type = GetterUtil.getInteger(
+					deliveryTypeElement.elementText("type"));
+				boolean defaultValue = GetterUtil.getBoolean(
+					deliveryTypeElement.elementText("default"));
+				boolean modifiable = GetterUtil.getBoolean(
+					deliveryTypeElement.elementText("modifiable"));
+
+				userNotificationDefinition.addUserNotificationDeliveryType(
+					new UserNotificationDeliveryType(
+						name, type, defaultValue, modifiable));
+			}
+
+			userNotificationDefinitionInstances.add(userNotificationDefinition);
+		}
+
+		return userNotificationDefinitionInstances;
 	}
 
 	protected List<UserNotificationHandler> newUserNotificationHandlerInstances(
@@ -1059,9 +929,11 @@ public class PortletBagFactory {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(PortletBagFactory.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		PortletBagFactory.class);
 
 	private ClassLoader _classLoader;
+	private Configuration _configuration;
 	private ServletContext _servletContext;
 	private Boolean _warFile;
 

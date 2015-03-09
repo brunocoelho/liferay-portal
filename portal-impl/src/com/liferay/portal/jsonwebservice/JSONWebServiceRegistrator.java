@@ -147,7 +147,7 @@ public class JSONWebServiceRegistrator {
 		throws ClassNotFoundException {
 
 		if (_utilClasses == null) {
-			_utilClasses = new HashMap<Class<?>, Class<?>>();
+			_utilClasses = new HashMap<>();
 		}
 
 		Class<?> utilClass = _utilClasses.get(implementationClass);
@@ -275,7 +275,7 @@ public class JSONWebServiceRegistrator {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		JSONWebServiceRegistrator.class);
 
 	private final JSONWebServiceMappingResolver _jsonWebServiceMappingResolver;

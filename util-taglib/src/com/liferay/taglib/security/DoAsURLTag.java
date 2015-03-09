@@ -20,19 +20,12 @@ import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.model.Company;
-import com.liferay.portal.model.Layout;
-import com.liferay.portal.model.LayoutConstants;
-import com.liferay.portal.service.LayoutLocalServiceUtil;
 import com.liferay.portal.theme.ThemeDisplay;
-import com.liferay.portal.util.PortalUtil;
 import com.liferay.util.Encryptor;
-
-import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.JspWriter;
-import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.TagSupport;
 
 /**
@@ -40,12 +33,8 @@ import javax.servlet.jsp.tagext.TagSupport;
  */
 public class DoAsURLTag extends TagSupport {
 
-	public static void doTag(
-			long doAsUserId, String var, PageContext pageContext)
+	public static String doTag(long doAsUserId, HttpServletRequest request)
 		throws Exception {
-
-		HttpServletRequest request =
-			(HttpServletRequest)pageContext.getRequest();
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
 			WebKeys.THEME_DISPLAY);
@@ -55,26 +44,10 @@ public class DoAsURLTag extends TagSupport {
 		String doAsURL = company.getHomeURL();
 
 		if (Validator.isNull(doAsURL)) {
-			Layout layout = null;
-
-			List<Layout> layouts = LayoutLocalServiceUtil.getLayouts(
-				themeDisplay.getScopeGroupId(), false,
-				LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
-
-			if (!layouts.isEmpty()) {
-				layout = layouts.get(0);
-
-				doAsURL = PortalUtil.getLayoutFriendlyURL(layout, themeDisplay);
-			}
-
-			if (Validator.isNull(doAsURL)) {
-				doAsURL =
-					themeDisplay.getPathContext() + _COMPANY_DEFAULT_HOME_URL;
-			}
+			doAsURL = _PORTAL_IMPERSONATION_DEFAULT_URL;
 		}
-		else {
-			doAsURL = themeDisplay.getPathContext() + doAsURL;
-		}
+
+		doAsURL = themeDisplay.getPathContext() + doAsURL;
 
 		if (doAsUserId <= 0) {
 			doAsUserId = company.getDefaultUser().getUserId();
@@ -83,22 +56,23 @@ public class DoAsURLTag extends TagSupport {
 		String encDoAsUserId = Encryptor.encrypt(
 			company.getKeyObj(), String.valueOf(doAsUserId));
 
-		doAsURL = HttpUtil.addParameter(doAsURL, "doAsUserId", encDoAsUserId);
-
-		if (Validator.isNotNull(var)) {
-			pageContext.setAttribute(var, doAsURL);
-		}
-		else {
-			JspWriter jspWriter = pageContext.getOut();
-
-			jspWriter.write(doAsURL);
-		}
+		return HttpUtil.addParameter(doAsURL, "doAsUserId", encDoAsUserId);
 	}
 
 	@Override
 	public int doEndTag() throws JspException {
 		try {
-			doTag(_doAsUserId, _var, pageContext);
+			String doAsURL = doTag(
+				_doAsUserId, (HttpServletRequest)pageContext.getRequest());
+
+			if (Validator.isNotNull(_var)) {
+				pageContext.setAttribute(_var, doAsURL);
+			}
+			else {
+				JspWriter jspWriter = pageContext.getOut();
+
+				jspWriter.write(doAsURL);
+			}
 		}
 		catch (Exception e) {
 			throw new JspException(e);
@@ -115,8 +89,8 @@ public class DoAsURLTag extends TagSupport {
 		_var = var;
 	}
 
-	private static final String _COMPANY_DEFAULT_HOME_URL = PropsUtil.get(
-		PropsKeys.COMPANY_DEFAULT_HOME_URL);
+	private static final String _PORTAL_IMPERSONATION_DEFAULT_URL =
+		PropsUtil.get(PropsKeys.PORTAL_IMPERSONATION_DEFAULT_URL);
 
 	private long _doAsUserId;
 	private String _var;

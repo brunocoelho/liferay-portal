@@ -245,9 +245,8 @@ public class PermissionServiceImpl extends PermissionServiceBaseImpl {
 		}
 	}
 
-	private Map<String, BaseModelPermissionChecker>
-		_baseModelPermissionCheckers =
-			new ConcurrentHashMap<String, BaseModelPermissionChecker>();
+	private final Map<String, BaseModelPermissionChecker>
+		_baseModelPermissionCheckers = new ConcurrentHashMap<>();
 	private ServiceTracker
 		<BaseModelPermissionChecker, BaseModelPermissionChecker>
 			_serviceTracker;

@@ -57,7 +57,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see ResourceTypePermissionPersistence
- * @see ResourceTypePermissionUtil
+ * @see com.liferay.portal.service.persistence.ResourceTypePermissionUtil
  * @generated
  */
 @ProviderType
@@ -2260,7 +2260,7 @@ public class ResourceTypePermissionPersistenceImpl extends BasePersistenceImpl<R
 		MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

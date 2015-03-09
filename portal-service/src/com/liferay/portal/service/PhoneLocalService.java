@@ -64,12 +64,12 @@ public interface PhoneLocalService extends BaseLocalService,
 	@java.lang.Deprecated
 	public com.liferay.portal.model.Phone addPhone(long userId,
 		java.lang.String className, long classPK, java.lang.String number,
-		java.lang.String extension, int typeId, boolean primary)
+		java.lang.String extension, long typeId, boolean primary)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	public com.liferay.portal.model.Phone addPhone(long userId,
 		java.lang.String className, long classPK, java.lang.String number,
-		java.lang.String extension, int typeId, boolean primary,
+		java.lang.String extension, long typeId, boolean primary,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
@@ -160,20 +160,20 @@ public interface PhoneLocalService extends BaseLocalService,
 		com.liferay.portal.kernel.util.OrderByComparator<T> orderByComparator);
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery);
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,
@@ -285,7 +285,7 @@ public interface PhoneLocalService extends BaseLocalService,
 		com.liferay.portal.model.Phone phone);
 
 	public com.liferay.portal.model.Phone updatePhone(long phoneId,
-		java.lang.String number, java.lang.String extension, int typeId,
+		java.lang.String number, java.lang.String extension, long typeId,
 		boolean primary)
 		throws com.liferay.portal.kernel.exception.PortalException;
 }

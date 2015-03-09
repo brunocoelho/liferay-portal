@@ -32,7 +32,7 @@ public class DynamicDataSourceTargetSource implements TargetSource {
 		Stack<String> methodStack = _methodStack.get();
 
 		if (methodStack == null) {
-			methodStack = new Stack<String>();
+			methodStack = new Stack<>();
 
 			_methodStack.set(methodStack);
 		}
@@ -125,13 +125,13 @@ public class DynamicDataSourceTargetSource implements TargetSource {
 		return !methodStack.empty();
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		DynamicDataSourceTargetSource.class);
 
-	private static ThreadLocal<Stack<String>> _methodStack =
-		new ThreadLocal<Stack<String>>();
-	private static ThreadLocal<Operation> _operationType =
-		new ThreadLocal<Operation>();
+	private static final ThreadLocal<Stack<String>> _methodStack =
+		new ThreadLocal<>();
+	private static final ThreadLocal<Operation> _operationType =
+		new ThreadLocal<>();
 
 	private DataSource _readDataSource;
 	private DataSource _writeDataSource;

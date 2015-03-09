@@ -53,6 +53,7 @@ public class ShardPortletAdvice implements MethodInterceptor {
 				methodName.equals("getPortletByStrutsPath") ||
 				methodName.equals("getPortlets") ||
 				methodName.equals("hasPortlet") ||
+				methodName.equals("loadGetPortletsPool") ||
 				methodName.equals("updatePortlet")) {
 
 				companyId = (Long)argument;
@@ -98,7 +99,8 @@ public class ShardPortletAdvice implements MethodInterceptor {
 		_shardAdvice = shardAdvice;
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(ShardPortletAdvice.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		ShardPortletAdvice.class);
 
 	private ShardAdvice _shardAdvice;
 

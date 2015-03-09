@@ -69,11 +69,10 @@ public class AnnotationTransactionAttributeSource
 		return transactionAttribute;
 	}
 
-	private static TransactionAttribute _nullTransactionAttribute =
+	private static final TransactionAttribute _nullTransactionAttribute =
 		new DefaultTransactionAttribute();
 
-	private Map<MethodTargetClassKey, TransactionAttribute>
-		_transactionAttributes =
-			new ConcurrentHashMap<MethodTargetClassKey, TransactionAttribute>();
+	private final Map<MethodTargetClassKey, TransactionAttribute>
+		_transactionAttributes = new ConcurrentHashMap<>();
 
 }

@@ -119,7 +119,7 @@ public class GetArticleAction extends Action {
 			themeDisplay.getCDNDynamicResourcesHost() +
 				themeDisplay.getPathContext() + "/html/portal/css.jsp");
 
-		Map<String, String> arguments = new LinkedHashMap<String, String>();
+		Map<String, String> arguments = new LinkedHashMap<>();
 
 		arguments.put("type", "text/css");
 		arguments.put("href", url);
@@ -143,16 +143,16 @@ public class GetArticleAction extends Action {
 
 		// XSL template
 
-		String templateId = article.getTemplateId();
+		String ddmTemplateKey = article.getDDMTemplateKey();
 
-		if (Validator.isNull(templateId)) {
+		if (Validator.isNull(ddmTemplateKey)) {
 			return;
 		}
 
 		try {
 			DDMTemplate ddmTemplate = DDMTemplateLocalServiceUtil.getTemplate(
 				article.getGroupId(),
-				PortalUtil.getClassNameId(DDMStructure.class), templateId,
+				PortalUtil.getClassNameId(DDMStructure.class), ddmTemplateKey,
 				true);
 
 			if (Validator.equals(
@@ -162,7 +162,8 @@ public class GetArticleAction extends Action {
 				url =
 					themeDisplay.getPathMain() +
 						"/journal/get_template?groupId=" +
-							article.getGroupId() + "&templateId=" + templateId;
+							article.getGroupId() + "&ddmTemplateKey=" +
+								ddmTemplateKey;
 
 				arguments.clear();
 

@@ -41,6 +41,12 @@ public class SystemProperties {
 
 	public static final String TMP_DIR = "java.io.tmpdir";
 
+	public static void clear(String key) {
+		System.clearProperty(key);
+
+		_properties.remove(key);
+	}
+
 	public static String get(String key) {
 		String value = _properties.get(key);
 
@@ -89,11 +95,9 @@ public class SystemProperties {
 			while (enumeration.hasMoreElements()) {
 				URL url = enumeration.nextElement();
 
-				InputStream inputStream = url.openStream();
-
-				properties.load(inputStream);
-
-				inputStream.close();
+				try (InputStream inputStream = url.openStream()) {
+					properties.load(inputStream);
+				}
 
 				if (!systemPropertiesQuiet) {
 					System.out.println("Loading " + url);
@@ -115,11 +119,9 @@ public class SystemProperties {
 
 				_loaded = true;
 
-				InputStream inputStream = url.openStream();
-
-				properties.load(inputStream);
-
-				inputStream.close();
+				try (InputStream inputStream = url.openStream()) {
+					properties.load(inputStream);
+				}
 
 				if (!systemPropertiesQuiet) {
 					System.out.println("Loading " + url);
@@ -157,7 +159,7 @@ public class SystemProperties {
 			}
 		}
 
-		_properties = new ConcurrentHashMap<String, String>();
+		_properties = new ConcurrentHashMap<>();
 
 		// Use a fast concurrent hash map implementation instead of the slower
 		// java.util.Properties

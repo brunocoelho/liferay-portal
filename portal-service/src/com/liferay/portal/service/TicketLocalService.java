@@ -45,6 +45,11 @@ public interface TicketLocalService extends BaseLocalService,
 	 *
 	 * Never modify or reference this interface directly. Always use {@link TicketLocalServiceUtil} to access the ticket local service. Add custom service methods to {@link com.liferay.portal.service.impl.TicketLocalServiceImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
+	public com.liferay.portal.model.Ticket addDistinctTicket(long companyId,
+		java.lang.String className, long classPK, int type,
+		java.lang.String extraInfo, java.util.Date expirationDate,
+		com.liferay.portal.service.ServiceContext serviceContext);
+
 	public com.liferay.portal.model.Ticket addTicket(long companyId,
 		java.lang.String className, long classPK, int type,
 		java.lang.String extraInfo, java.util.Date expirationDate,
@@ -143,20 +148,20 @@ public interface TicketLocalService extends BaseLocalService,
 		com.liferay.portal.kernel.util.OrderByComparator<T> orderByComparator);
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery);
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,

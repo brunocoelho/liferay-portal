@@ -82,7 +82,6 @@ import com.liferay.portal.struts.StrutsUtil;
 import com.liferay.portal.util.ClassLoaderUtil;
 import com.liferay.portal.util.ExtRegistry;
 import com.liferay.portal.util.MaintenanceUtil;
-import com.liferay.portal.util.Portal;
 import com.liferay.portal.util.PortalInstances;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portal.util.PropsUtil;
@@ -104,6 +103,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import javax.portlet.PortletConfig;
@@ -238,7 +238,7 @@ public class MainServlet extends ActionServlet {
 			_log.debug("Initialize portlets");
 		}
 
-		List<Portlet> portlets = new ArrayList<Portlet>();
+		List<Portlet> portlets = new ArrayList<>();
 
 		try {
 			portlets.addAll(initPortlets(pluginPackage));
@@ -639,6 +639,13 @@ public class MainServlet extends ActionServlet {
 	protected void destroyPortlets(List<Portlet> portlets) throws Exception {
 		for (Portlet portlet : portlets) {
 			PortletInstanceFactoryUtil.destroy(portlet);
+
+			Map<String, PortletFilter> portletFilters =
+				portlet.getPortletFilters();
+
+			for (PortletFilter portletFilter : portletFilters.values()) {
+				PortletFilterFactory.destroy(portletFilter);
+			}
 		}
 	}
 
@@ -855,19 +862,12 @@ public class MainServlet extends ActionServlet {
 
 		ServletContext servletContext = getServletContext();
 
-		String[] xmls = new String[] {
-			HttpUtil.URLtoString(
-				servletContext.getResource(
-					"/WEB-INF/" + Portal.PORTLET_XML_FILE_NAME_CUSTOM)),
-			HttpUtil.URLtoString(
-				servletContext.getResource("/WEB-INF/portlet-ext.xml")),
-			HttpUtil.URLtoString(
-				servletContext.getResource("/WEB-INF/liferay-portlet.xml")),
-			HttpUtil.URLtoString(
-				servletContext.getResource("/WEB-INF/liferay-portlet-ext.xml")),
-			HttpUtil.URLtoString(
-				servletContext.getResource("/WEB-INF/web.xml"))
-		};
+		String[] xmls = new String[PropsValues.PORTLET_CONFIGS.length];
+
+		for (int i = 0; i < PropsValues.PORTLET_CONFIGS.length; i++) {
+			xmls[i] = HttpUtil.URLtoString(
+				servletContext.getResource(PropsValues.PORTLET_CONFIGS[i]));
+		}
 
 		PortletLocalServiceUtil.initEAR(servletContext, xmls, pluginPackage);
 
@@ -1318,6 +1318,6 @@ public class MainServlet extends ActionServlet {
 	private static final String _LIFERAY_PORTAL_REQUEST_HEADER =
 		"Liferay-Portal";
 
-	private static Log _log = LogFactoryUtil.getLog(MainServlet.class);
+	private static final Log _log = LogFactoryUtil.getLog(MainServlet.class);
 
 }

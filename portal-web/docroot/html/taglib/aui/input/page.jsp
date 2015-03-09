@@ -17,26 +17,75 @@
 <%@ include file="/html/taglib/aui/input/init.jsp" %>
 
 <liferay-util:buffer var="labelContent">
-	<liferay-ui:message key="<%= label %>" localizeKey="<%= localizeLabel %>" />
+	<c:if test="<%= Validator.isNotNull(label) %>">
+		<liferay-ui:message key="<%= label %>" localizeKey="<%= localizeLabel %>" />
 
-	<c:if test='<%= required && showRequiredLabel && !type.equals("radio") %>'>
-		<span class="label-required"><liferay-ui:message key="required" /></span>
+		<c:if test='<%= required && showRequiredLabel && !type.equals("radio") %>'>
+			<span class="label-required"><liferay-ui:message key="required" /></span>
+		</c:if>
+
+		<c:if test="<%= Validator.isNotNull(helpMessage) %>">
+			<liferay-ui:icon-help message="<%= helpMessage %>" />
+		</c:if>
+
+		<c:if test="<%= changesContext %>">
+			<span class="hide-accessible">(<liferay-ui:message key="changing-the-value-of-this-field-reloads-the-page" />)</span>
+		</c:if>
 	</c:if>
 
-	<c:if test="<%= Validator.isNotNull(helpMessage) %>">
-		<liferay-ui:icon-help message="<%= helpMessage %>" />
-	</c:if>
+	<c:if test='<%= type.equals("switch") %>'>
 
-	<c:if test="<%= changesContext %>">
-		<span class="hide-accessible"><liferay-ui:message key="changing-the-value-of-this-field-will-reload-the-page" />)</span>
+		<%
+		String buttonIconOff = (String)dynamicAttributes.get("buttonIconOff");
+		String buttonIconOn = (String)dynamicAttributes.get("buttonIconOn");
+		String iconOff = (String)dynamicAttributes.get("iconOff");
+		String iconOn = (String)dynamicAttributes.get("iconOn");
+		String labelOff = (String)dynamicAttributes.get("labelOff");
+
+		String labelOn = (String)dynamicAttributes.get("labelOn");
+
+		if (localizeLabel) {
+			if (Validator.isNotNull(labelOff)) {
+				labelOff = LanguageUtil.get(request, labelOff);
+			}
+
+			if (Validator.isNotNull(labelOn)) {
+				labelOn = LanguageUtil.get(request, labelOn);
+			}
+		}
+		%>
+
+		<span aria-hidden="true" class="switch-bar">
+			<span class="switch-toggle" data-label-off="<%= (Validator.isNotNull(labelOff) ? HtmlUtil.escapeAttribute(labelOff) : StringPool.BLANK) %>" data-label-on="<%= (Validator.isNotNull(labelOn) ? HtmlUtil.escapeAttribute(labelOn) : StringPool.BLANK) %>">
+				<c:if test="<%= Validator.isNotNull(buttonIconOn) %>">
+					<span class="button-icon <%= Validator.isNotNull(buttonIconOff) ? "button-icon-on" : StringPool.BLANK %> switch-icon <%= buttonIconOn %>"></span>
+				</c:if>
+
+				<c:if test="<%= Validator.isNotNull(buttonIconOff) %>">
+					<span class="button-icon button-icon-off switch-icon <%= buttonIconOff %>"></span>
+				</c:if>
+
+				<c:if test="<%= Validator.isNotNull(iconOn) %>">
+					<span class="switch-icon switch-icon-on <%= iconOn %>"></span>
+				</c:if>
+
+				<c:if test="<%= Validator.isNotNull(iconOff) %>">
+					<span class="switch-icon switch-icon-off <%= iconOff %>"></span>
+				</c:if>
+			</span>
+		</span>
 	</c:if>
 </liferay-util:buffer>
 
-<c:if test='<%= !choiceField && !type.equals("hidden") && !wrappedField %>'>
-	<div class="<%= controlGroupCssClass %>">
+<c:if test='<%= !type.equals("hidden") && !wrappedField && useInputWrapper %>'>
+	<div class="<%= inputWrapperClass %>">
 </c:if>
 
-<c:if test='<%= !type.equals("assetCategories") && !type.equals("hidden") && Validator.isNotNull(label) %>'>
+<%
+boolean choiceField = checkboxField || radioField;
+%>
+
+<c:if test='<%= !type.equals("assetCategories") && !type.equals("hidden") && Validator.isNotNull(labelContent) %>'>
 	<label <%= labelTag %>>
 		<c:if test='<%= !choiceField && !inlineLabel.equals("right") %>'>
 				<%= labelContent %>
@@ -71,6 +120,7 @@
 	</c:when>
 	<c:when test="<%= (model != null) && Validator.isNull(type) %>">
 		<liferay-ui:input-field
+			autoComplete='<%= GetterUtil.getBoolean(dynamicAttributes.get("autocomplete"), true) %>'
 			autoFocus="<%= autoFocus %>"
 			bean="<%= bean %>"
 			cssClass="<%= fieldCssClass %>"
@@ -89,7 +139,7 @@
 			placeholder="<%= placeholder %>"
 		/>
 	</c:when>
-	<c:when test='<%= type.equals("checkbox") %>'>
+	<c:when test='<%= baseType.equals("checkbox") %>'>
 
 		<%
 		String valueString = null;
@@ -111,7 +161,7 @@
 				checked = ArrayUtil.contains(requestValues, valueString);
 			}
 			else {
-				checked = Validator.isNotNull(ParamUtil.getString(request, name));
+				checked = ParamUtil.getBoolean(request, name, checked);
 			}
 		}
 		%>
@@ -192,7 +242,7 @@
 			<c:when test='<%= localized && (type.equals("editor") || type.equals("text") || type.equals("textarea")) %>'>
 				<liferay-ui:input-localized
 					autoFocus="<%= autoFocus %>"
-					availableLocales="<%= LanguageUtil.getAvailableLocales() %>"
+					availableLocales="<%= LanguageUtil.getAvailableLocales(themeDisplay.getSiteGroupId()) %>"
 					cssClass="<%= fieldCssClass %>"
 					defaultLanguageId="<%= defaultLanguageId %>"
 					disabled="<%= disabled %>"
@@ -208,6 +258,16 @@
 					xml="<%= valueString %>"
 				/>
 			</c:when>
+			<c:when test='<%= type.equals("editor") %>'>
+				<liferay-ui:input-editor
+					contents="<%= valueString %>"
+					contentsLanguageId="<%= languageId %>"
+					cssClass="<%= cssClass %>"
+					editorImpl="ckeditor"
+					name="<%= fieldParam %>"
+					toolbarSet="simple"
+				/>
+			</c:when>
 			<c:when test='<%= type.equals("textarea") %>'>
 
 				<%
@@ -217,7 +277,7 @@
 				<textarea class="<%= fieldCssClass %>" <%= disabled ? "disabled" : StringPool.BLANK %> id="<%= namespace + id %>" <%= multiple ? "multiple" : StringPool.BLANK %> name="<%= namespace + name %>" <%= Validator.isNotNull(onChange) ? "onChange=\"" + onChange + "\"" : StringPool.BLANK %> <%= Validator.isNotNull(onClick) ? "onClick=\"" + onClick + "\"" : StringPool.BLANK %> <%= Validator.isNotNull(placeholder) ? "placeholder=\"" + LanguageUtil.get(request, placeholder) + "\"" : StringPool.BLANK %> <%= (storedDimensions.length > 1) ? "style=\"height: " + storedDimensions[0] + "; width: " + storedDimensions[1] + ";" + title + "\"" : StringPool.BLANK %> <%= Validator.isNotNull(title) ? "title=\"" + LanguageUtil.get(locale, title) + "\"" : StringPool.BLANK %> <%= AUIUtil.buildData(data) %> <%= InlineUtil.buildDynamicAttributes(dynamicAttributes) %>><%= HtmlUtil.escape(valueString) %></textarea>
 
 				<c:if test="<%= autoSize %>">
-					<aui:script use="aui-autosize">
+					<aui:script use="aui-autosize-deprecated">
 						A.one('#<%= namespace + id %>').plug(A.Plugin.Autosize);
 					</aui:script>
 				</c:if>
@@ -264,14 +324,14 @@
 	</div>
 </c:if>
 
-<c:if test='<%= !type.equals("assetCategories") && !type.equals("hidden") && Validator.isNotNull(label) %>'>
+<c:if test='<%= !type.equals("assetCategories") && !type.equals("hidden") && Validator.isNotNull(labelContent) %>'>
 	<c:if test='<%= choiceField || inlineLabel.equals("right") %>'>
 			<%= labelContent %>
 		</label>
 	</c:if>
 </c:if>
 
-<c:if test='<%= !choiceField && !type.equals("hidden") && !wrappedField %>'>
+<c:if test='<%= !type.equals("hidden") && !wrappedField && useInputWrapper %>'>
 	</div>
 </c:if>
 

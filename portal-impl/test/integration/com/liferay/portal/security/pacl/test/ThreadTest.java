@@ -14,28 +14,33 @@
 
 package com.liferay.portal.security.pacl.test;
 
+import com.liferay.portal.kernel.concurrent.ThreadPoolExecutor;
 import com.liferay.portal.kernel.executor.PortalExecutorManagerUtil;
+import com.liferay.portal.kernel.messaging.Destination;
 import com.liferay.portal.kernel.messaging.Message;
+import com.liferay.portal.kernel.messaging.MessageBus;
 import com.liferay.portal.kernel.messaging.MessageBusUtil;
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
 import com.liferay.portal.kernel.util.Time;
-import com.liferay.portal.test.listeners.PACLExecutionTestListener;
-import com.liferay.portal.test.runners.PACLIntegrationJUnitTestRunner;
+import com.liferay.portal.test.rule.PACLTestRule;
 
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Raymond Augé
  */
-@ExecutionTestListeners(listeners = {PACLExecutionTestListener.class})
-@RunWith(PACLIntegrationJUnitTestRunner.class)
 public class ThreadTest {
+
+	@ClassRule
+	@Rule
+	public static final PACLTestRule paclTestRule = new PACLTestRule();
 
 	@Test
 	public void testCurrent1() throws Exception {
@@ -410,8 +415,11 @@ public class ThreadTest {
 	@Test
 	public void testPortalExecutor1() throws Exception {
 		try {
-			PortalExecutorManagerUtil.execute(
-				"liferay/hot_deploy",
+			ThreadPoolExecutor threadPoolExecutor =
+				PortalExecutorManagerUtil.getPortalExecutor(
+					"liferay/hot_deploy");
+
+			threadPoolExecutor.submit(
 				new Callable<Void>() {
 
 					@Override
@@ -431,8 +439,11 @@ public class ThreadTest {
 	@Test
 	public void testPortalExecutor2() throws Exception {
 		try {
-			PortalExecutorManagerUtil.execute(
-				"liferay/test_pacl",
+			ThreadPoolExecutor threadPoolExecutor =
+				PortalExecutorManagerUtil.getPortalExecutor(
+					"liferay/test_pacl");
+
+			threadPoolExecutor.submit(
 				new Callable<Void>() {
 
 					@Override
@@ -472,7 +483,11 @@ public class ThreadTest {
 	@Test
 	public void testPortalExecutor5() throws Exception {
 		try {
-			PortalExecutorManagerUtil.shutdown("liferay/hot_deploy");
+			ThreadPoolExecutor threadPoolExecutor =
+				PortalExecutorManagerUtil.getPortalExecutor(
+					"liferay/hot_deploy");
+
+			threadPoolExecutor.shutdown();
 
 			Assert.fail();
 		}
@@ -483,10 +498,23 @@ public class ThreadTest {
 	@Test
 	public void testPortalExecutor6() throws Exception {
 		try {
-			PortalExecutorManagerUtil.shutdown("liferay/test_pacl");
+			ThreadPoolExecutor threadPoolExecutor =
+				PortalExecutorManagerUtil.getPortalExecutor(
+					"liferay/test_pacl");
+
+			threadPoolExecutor.shutdown();
+
+			threadPoolExecutor.awaitTermination(1, TimeUnit.MINUTES);
 
 			PortalExecutorManagerUtil.getPortalExecutor(
 				"liferay/test_pacl", true);
+
+			MessageBus messageBus = MessageBusUtil.getMessageBus();
+
+			Destination destination = messageBus.getDestination(
+				"liferay/test_pacl");
+
+			destination.open();
 		}
 		catch (SecurityException se) {
 			Assert.fail();

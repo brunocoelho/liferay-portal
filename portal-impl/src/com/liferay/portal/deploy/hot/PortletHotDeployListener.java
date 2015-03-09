@@ -25,6 +25,7 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletBag;
+import com.liferay.portal.kernel.portlet.PortletBagPool;
 import com.liferay.portal.kernel.scheduler.SchedulerEngineHelperUtil;
 import com.liferay.portal.kernel.scheduler.SchedulerEntry;
 import com.liferay.portal.kernel.scheduler.StorageType;
@@ -58,7 +59,6 @@ import com.liferay.portal.util.WebAppPool;
 import com.liferay.portal.util.WebKeys;
 import com.liferay.portlet.CustomUserAttributes;
 import com.liferay.portlet.InvokerPortlet;
-import com.liferay.portlet.PortletBagFactory;
 import com.liferay.portlet.PortletContextBag;
 import com.liferay.portlet.PortletContextBagPool;
 import com.liferay.portlet.PortletFilterFactory;
@@ -247,50 +247,37 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 		boolean phpPortlet = false;
 		boolean strutsBridges = false;
 
-		PortletBagFactory portletBagFactory = new PortletBagFactory();
-
 		ClassLoader classLoader = hotDeployEvent.getContextClassLoader();
-
-		portletBagFactory.setClassLoader(classLoader);
-
-		portletBagFactory.setServletContext(servletContext);
-		portletBagFactory.setWARFile(true);
 
 		Iterator<Portlet> itr = portlets.iterator();
 
 		while (itr.hasNext()) {
 			Portlet portlet = itr.next();
 
-			PortletBag portletBag = portletBagFactory.create(portlet);
+			PortletBag portletBag = PortletBagPool.get(
+				portlet.getRootPortletId());
 
-			if (portletBag == null) {
-				itr.remove();
+			if (!portletAppInitialized) {
+				initPortletApp(
+					servletContextName, servletContext, classLoader, portlet);
+
+				portletAppInitialized = true;
 			}
-			else {
-				if (!portletAppInitialized) {
-					initPortletApp(
-						servletContextName, servletContext, classLoader,
-						portlet);
 
-					portletAppInitialized = true;
-				}
+			javax.portlet.Portlet portletInstance =
+				portletBag.getPortletInstance();
 
-				javax.portlet.Portlet portletInstance =
-					portletBag.getPortletInstance();
+			if (ClassUtil.isSubclass(
+					portletInstance.getClass(), PHPPortlet.class.getName())) {
 
-				if (ClassUtil.isSubclass(
-						portletInstance.getClass(),
-						PHPPortlet.class.getName())) {
+				phpPortlet = true;
+			}
 
-					phpPortlet = true;
-				}
+			if (ClassUtil.isSubclass(
+					portletInstance.getClass(),
+					StrutsPortlet.class.getName())) {
 
-				if (ClassUtil.isSubclass(
-						portletInstance.getClass(),
-						StrutsPortlet.class.getName())) {
-
-					strutsBridges = true;
-				}
+				strutsBridges = true;
 			}
 		}
 
@@ -413,7 +400,7 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 			return;
 		}
 
-		Set<String> portletIds = new HashSet<String>();
+		Set<String> portletIds = new HashSet<>();
 
 		if (portlets != null) {
 			if (_log.isInfoEnabled()) {
@@ -632,12 +619,11 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 	private static final String _JNDI_JDBC_LIFERAY_POOL =
 		_JNDI_JDBC + "/LiferayPool";
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		PortletHotDeployListener.class);
 
-	private static Map<String, Boolean> _dataSourceBindStates =
-		new HashMap<String, Boolean>();
-	private static Map<String, List<Portlet>> _portlets =
-		new HashMap<String, List<Portlet>>();
+	private static final Map<String, Boolean> _dataSourceBindStates =
+		new HashMap<>();
+	private static final Map<String, List<Portlet>> _portlets = new HashMap<>();
 
 }

@@ -16,7 +16,6 @@ package com.liferay.portal.events;
 
 import com.liferay.portal.kernel.events.ActionException;
 import com.liferay.portal.kernel.events.SimpleAction;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.template.TemplateHandler;
 import com.liferay.portal.kernel.template.TemplateHandlerRegistryUtil;
@@ -30,6 +29,7 @@ import com.liferay.portal.util.PortalUtil;
 import com.liferay.portlet.dynamicdatamapping.model.DDMTemplate;
 import com.liferay.portlet.dynamicdatamapping.model.DDMTemplateConstants;
 import com.liferay.portlet.dynamicdatamapping.service.DDMTemplateLocalServiceUtil;
+import com.liferay.portlet.portletdisplaytemplate.util.PortletDisplayTemplate;
 import com.liferay.util.ContentUtil;
 
 import java.util.HashMap;
@@ -50,38 +50,6 @@ public class AddDefaultDDMTemplatesAction extends SimpleAction {
 		catch (Exception e) {
 			throw new ActionException(e);
 		}
-	}
-
-	protected void addDDMTemplate(
-			long userId, long groupId, long classNameId, String templateKey,
-			String name, String description, String language,
-			String scriptFileName, boolean cacheable,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		DDMTemplate ddmTemplate = DDMTemplateLocalServiceUtil.fetchTemplate(
-			groupId, classNameId, templateKey);
-
-		if (ddmTemplate != null) {
-			return;
-		}
-
-		Map<Locale, String> nameMap = new HashMap<Locale, String>();
-		Map<Locale, String> descriptionMap = new HashMap<Locale, String>();
-
-		Locale[] locales = LanguageUtil.getAvailableLocales(groupId);
-
-		for (Locale locale : locales) {
-			nameMap.put(locale, LanguageUtil.get(locale, name));
-			descriptionMap.put(locale, LanguageUtil.get(locale, description));
-		}
-
-		String script = ContentUtil.get(scriptFileName);
-
-		DDMTemplateLocalServiceUtil.addTemplate(
-			userId, groupId, classNameId, 0, templateKey, nameMap,
-			descriptionMap, DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY, null,
-			language, script, cacheable, false, null, null, serviceContext);
 	}
 
 	protected void addDDMTemplates(
@@ -110,18 +78,29 @@ public class AddDefaultDDMTemplatesAction extends SimpleAction {
 					continue;
 				}
 
-				String name = templateElement.elementText("name");
-				String description = templateElement.elementText("description");
+				Map<Locale, String> nameMap = getLocalizationMap(
+					groupId, templateElement.elementText("name"));
+				Map<Locale, String> descriptionMap = getLocalizationMap(
+					groupId, templateElement.elementText("description"));
 				String language = templateElement.elementText("language");
 				String scriptFileName = templateElement.elementText(
 					"script-file");
+
+				Class<?> clazz = templateHandler.getClass();
+
+				ClassLoader classLoader = clazz.getClassLoader();
+
+				String script = ContentUtil.get(classLoader, scriptFileName);
+
 				boolean cacheable = GetterUtil.getBoolean(
 					templateElement.elementText("cacheable"));
 
-				addDDMTemplate(
-					userId, groupId, classNameId, templateKey, name,
-					description, language, scriptFileName, cacheable,
-					serviceContext);
+				DDMTemplateLocalServiceUtil.addTemplate(
+					userId, groupId, classNameId, 0,
+					PortalUtil.getClassNameId(PortletDisplayTemplate.class),
+					templateKey, nameMap, descriptionMap,
+					DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY, null, language,
+					script, cacheable, false, null, null, serviceContext);
 			}
 		}
 	}
@@ -138,6 +117,18 @@ public class AddDefaultDDMTemplatesAction extends SimpleAction {
 		serviceContext.setUserId(defaultUserId);
 
 		addDDMTemplates(defaultUserId, group.getGroupId(), serviceContext);
+	}
+
+	protected Map<Locale, String> getLocalizationMap(long groupId, String key) {
+		Map<Locale, String> map = new HashMap<>();
+
+		Locale[] locales = LanguageUtil.getAvailableLocales(groupId);
+
+		for (Locale locale : locales) {
+			map.put(locale, LanguageUtil.get(locale, key));
+		}
+
+		return map;
 	}
 
 }

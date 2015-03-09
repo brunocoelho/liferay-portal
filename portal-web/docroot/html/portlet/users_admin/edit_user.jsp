@@ -18,6 +18,7 @@
 
 <%
 String redirect = ParamUtil.getString(request, "redirect");
+
 String backURL = ParamUtil.getString(request, "backURL", redirect);
 
 User selUser = PortalUtil.getSelectedUser(request);
@@ -37,16 +38,9 @@ else {
 	passwordPolicy = selUser.getPasswordPolicy();
 }
 
-String groupIds = ParamUtil.getString(request, "groupsSearchContainerPrimaryKeys");
-
 List<Group> groups = Collections.emptyList();
 
-if (Validator.isNotNull(groupIds)) {
-	long[] groupIdsArray = StringUtil.split(groupIds, 0L);
-
-	groups = GroupLocalServiceUtil.getGroups(groupIdsArray);
-}
-else if (selUser != null) {
+if (selUser != null) {
 	groups = selUser.getGroups();
 
 	if (filterManageableGroups) {
@@ -54,35 +48,19 @@ else if (selUser != null) {
 	}
 }
 
-String organizationIds = ParamUtil.getString(request, "organizationsSearchContainerPrimaryKeys");
-
 List<Organization> organizations = Collections.emptyList();
 
-if (Validator.isNotNull(organizationIds)) {
-	long[] organizationIdsArray = StringUtil.split(organizationIds, 0L);
-
-	organizations = OrganizationLocalServiceUtil.getOrganizations(organizationIdsArray);
-}
-else {
-	if (selUser != null) {
-		organizations = selUser.getOrganizations();
-	}
-
-	if (filterManageableOrganizations) {
-		organizations = UsersAdminUtil.filterOrganizations(permissionChecker, organizations);
-	}
+if (selUser != null) {
+	organizations = selUser.getOrganizations();
 }
 
-String roleIds = ParamUtil.getString(request, "rolesSearchContainerPrimaryKeys");
+if (filterManageableOrganizations) {
+	organizations = UsersAdminUtil.filterOrganizations(permissionChecker, organizations);
+}
 
 List<Role> roles = Collections.emptyList();
 
-if (Validator.isNotNull(roleIds)) {
-	long[] roleIdsArray = StringUtil.split(roleIds, 0L);
-
-	roles = RoleLocalServiceUtil.getRoles(roleIdsArray);
-}
-else if (selUser != null) {
+if (selUser != null) {
 	roles = selUser.getRoles();
 
 	if (filterManageableRoles) {
@@ -93,9 +71,9 @@ else if (selUser != null) {
 List<UserGroupRole> organizationRoles = new ArrayList<UserGroupRole>();
 List<UserGroupRole> siteRoles = new ArrayList<UserGroupRole>();
 
-List<UserGroupRole> userGroupRoles = UsersAdminUtil.getUserGroupRoles(renderRequest);
+List<UserGroupRole> userGroupRoles = Collections.emptyList();
 
-if (userGroupRoles.isEmpty() && (selUser != null)) {
+if (selUser != null) {
 	userGroupRoles = UserGroupRoleLocalServiceUtil.getUserGroupRoles(selUser.getUserId());
 
 	if (filterManageableUserGroupRoles) {
@@ -114,16 +92,9 @@ for (UserGroupRole userGroupRole : userGroupRoles) {
 	}
 }
 
-String userGroupIds = ParamUtil.getString(request, "userGroupsSearchContainerPrimaryKeys");
-
 List<UserGroup> userGroups = Collections.emptyList();
 
-if (Validator.isNotNull(userGroupIds)) {
-	long[] userGroupIdsArray = StringUtil.split(userGroupIds, 0L);
-
-	userGroups = UserGroupLocalServiceUtil.getUserGroups(userGroupIdsArray);
-}
-else if (selUser != null) {
+if (selUser != null) {
 	userGroups = selUser.getUserGroups();
 
 	if (filterManageableUserGroups) {
@@ -279,7 +250,21 @@ if (selUser != null) {
 	</liferay-util:buffer>
 
 	<liferay-util:buffer var="htmlBottom">
-		<c:if test="<%= (selUser != null) && (passwordPolicy != null) && selUser.getLockout() %>">
+
+		<%
+		boolean lockedOut = false;
+
+		if ((selUser != null) && (passwordPolicy != null)) {
+			try {
+				UserLocalServiceUtil.checkLockout(selUser);
+			}
+			catch (UserLockoutException.PasswordPolicyLockout ule) {
+				lockedOut = true;
+			}
+		}
+		%>
+
+		<c:if test="<%= lockedOut %>">
 			<aui:button-row>
 				<div class="alert alert-warning"><liferay-ui:message key="this-user-account-has-been-locked-due-to-excessive-failed-login-attempts" /></div>
 
@@ -311,7 +296,7 @@ if (selUser != null) {
 <aui:script>
 	function <portlet:namespace />createURL(href, value, onclick) {
 		return '<a href="' + href + '"' + (onclick ? ' onclick="' + onclick + '" ' : '') + '>' + value + '</a>';
-	};
+	}
 
 	function <portlet:namespace />saveUser(cmd) {
 		document.<portlet:namespace />fm.<portlet:namespace /><%= Constants.CMD %>.value = cmd;

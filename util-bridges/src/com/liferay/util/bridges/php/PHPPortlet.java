@@ -169,7 +169,7 @@ public class PHPPortlet extends GenericPortlet {
 			quercusServlet = (QuercusServlet)InstanceFactory.newInstance(
 				_QUERCUS_SERVLET);
 
-			Map<String, String> params = new HashMap<String, String>();
+			Map<String, String> params = new HashMap<>();
 
 			Enumeration<String> enu = servletConfig.getInitParameterNames();
 
@@ -264,6 +264,6 @@ public class PHPPortlet extends GenericPortlet {
 	private static final String _QUERCUS_SERVLET =
 		"com.caucho.quercus.servlet.QuercusServlet";
 
-	private static Log _log = LogFactoryUtil.getLog(PHPPortlet.class);
+	private static final Log _log = LogFactoryUtil.getLog(PHPPortlet.class);
 
 }

@@ -14,22 +14,22 @@
 
 package com.liferay.portlet.journal.service;
 
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.rule.Sync;
+import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
+import com.liferay.portal.kernel.test.util.GroupTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.service.ServiceContext;
-import com.liferay.portal.test.DeleteAfterTestRun;
-import com.liferay.portal.test.Sync;
-import com.liferay.portal.test.SynchronousDestinationExecutionTestListener;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
-import com.liferay.portal.util.test.GroupTestUtil;
-import com.liferay.portal.util.test.RandomTestUtil;
-import com.liferay.portal.util.test.ServiceContextTestUtil;
-import com.liferay.portal.util.test.TestPropsValues;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portlet.asset.model.AssetEntry;
 import com.liferay.portlet.asset.service.AssetEntryLocalServiceUtil;
 import com.liferay.portlet.dynamicdatamapping.model.DDMStructure;
@@ -50,21 +50,22 @@ import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Juan Fernández
  */
-@ExecutionTestListeners(
-	listeners = {
-		MainServletExecutionTestListener.class,
-		MainServletExecutionTestListener.class,
-		SynchronousDestinationExecutionTestListener.class
-	})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 @Sync
 public class JournalArticleScheduledTest {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE,
+			SynchronousDestinationTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -95,11 +96,11 @@ public class JournalArticleScheduledTest {
 			long groupId, Date displayDate, int when, boolean approved)
 		throws Exception {
 
-		Map<Locale, String> titleMap = new HashMap<Locale, String>();
+		Map<Locale, String> titleMap = new HashMap<>();
 
 		titleMap.put(LocaleUtil.getDefault(), RandomTestUtil.randomString());
 
-		Map<Locale, String> descriptionMap = new HashMap<Locale, String>();
+		Map<Locale, String> descriptionMap = new HashMap<>();
 
 		descriptionMap.put(
 			LocaleUtil.getDefault(), RandomTestUtil.randomString());
@@ -132,7 +133,7 @@ public class JournalArticleScheduledTest {
 			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			JournalArticleConstants.CLASSNAME_ID_DEFAULT, 0, StringPool.BLANK,
 			true, JournalArticleConstants.VERSION_DEFAULT, titleMap,
-			descriptionMap, content, "general", ddmStructure.getStructureKey(),
+			descriptionMap, content, ddmStructure.getStructureKey(),
 			ddmTemplate.getTemplateKey(), null,
 			displayDateCalendar.get(Calendar.MONTH),
 			displayDateCalendar.get(Calendar.DAY_OF_MONTH),

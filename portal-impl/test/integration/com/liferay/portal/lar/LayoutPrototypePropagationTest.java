@@ -14,28 +14,51 @@
 
 package com.liferay.portal.lar;
 
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
+import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.model.LayoutFriendlyURL;
+import com.liferay.portal.service.LayoutFriendlyURLLocalServiceUtil;
 import com.liferay.portal.service.LayoutLocalServiceUtil;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.listeners.ResetDatabaseExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portal.util.test.LayoutTestUtil;
-import com.liferay.portal.util.test.RandomTestUtil;
-import com.liferay.portal.util.test.TestPropsValues;
 
-import org.junit.runner.RunWith;
+import java.util.Locale;
+
+import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
 
 /**
  * @author Eduardo Garcia
  */
-@ExecutionTestListeners(
-	listeners = {
-		MainServletExecutionTestListener.class,
-		ResetDatabaseExecutionTestListener.class
-	})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 public class LayoutPrototypePropagationTest
 	extends BasePrototypePropagationTestCase {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE);
+
+	@Test
+	public void testAddLayoutFromLayoutPrototypeWithLinkDisabled()
+		throws Exception {
+
+		layout = LayoutTestUtil.addLayout(group, false, layoutPrototype, false);
+
+		Locale locale = LocaleUtil.getDefault();
+
+		LayoutFriendlyURL layoutFriendlyURL =
+			LayoutFriendlyURLLocalServiceUtil.getLayoutFriendlyURL(
+				layout.getPlid(), LanguageUtil.getLanguageId(locale));
+
+		Assert.assertEquals(
+			layoutFriendlyURL.getFriendlyURL(), layout.getFriendlyURL());
+	}
 
 	@Override
 	protected void doSetUp() throws Exception {
@@ -43,14 +66,11 @@ public class LayoutPrototypePropagationTest
 
 		journalArticle = globalJournalArticle;
 
-		journalContentPortletId =
-			addJournalContentPortletToLayout(
-				TestPropsValues.getUserId(), layoutPrototypeLayout,
-				journalArticle, "column-1");
+		portletId = addPortletToLayout(
+			TestPropsValues.getUserId(), layoutPrototypeLayout, journalArticle,
+			"column-1");
 
-		layout = LayoutTestUtil.addLayout(
-			group.getGroupId(), RandomTestUtil.randomString(), true,
-			layoutPrototype, true);
+		layout = LayoutTestUtil.addLayout(group, true, layoutPrototype, true);
 
 		layout = propagateChanges(layout);
 	}

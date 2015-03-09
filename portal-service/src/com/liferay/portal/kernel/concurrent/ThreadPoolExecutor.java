@@ -79,8 +79,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 		_rejectedExecutionHandler = rejectedExecutionHandler;
 		_threadFactory = threadFactory;
 		_threadPoolHandler = threadPoolHandler;
-		_taskQueue = new TaskQueue<Runnable>(maxQueueSize);
-		_workerTasks = new HashSet<WorkerTask>();
+		_taskQueue = new TaskQueue<>(maxQueueSize);
+		_workerTasks = new HashSet<>();
 	}
 
 	public void adjustPoolSize(int newCorePoolSize, int newMaxPoolSize) {
@@ -392,7 +392,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 				workerTask._thread.interrupt();
 			}
 
-			List<Runnable> runnables = new ArrayList<Runnable>();
+			List<Runnable> runnables = new ArrayList<>();
 
 			_taskQueue.drainTo(runnables);
 
@@ -438,6 +438,10 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 		return defaultNoticeableFuture;
 	}
 
+	public NoticeableFuture<Void> terminationNoticeableFuture() {
+		return _terminationDefaultNoticeableFuture;
+	}
+
 	@Override
 	protected void finalize() {
 		shutdown();
@@ -457,14 +461,14 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
 	@Override
 	protected <T> DefaultNoticeableFuture<T> newTaskFor(Callable<T> callable) {
-		return new DefaultNoticeableFuture<T>(callable);
+		return new DefaultNoticeableFuture<>(callable);
 	}
 
 	@Override
 	protected <T> DefaultNoticeableFuture<T> newTaskFor(
 		Runnable runnable, T value) {
 
-		return new DefaultNoticeableFuture<T>(runnable, value);
+		return new DefaultNoticeableFuture<>(runnable, value);
 	}
 
 	private void _addWorkerThread() {
@@ -583,7 +587,10 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 				_runState = _TERMINATED;
 
 				_terminationCondition.signalAll();
+
 				_threadPoolHandler.terminated();
+
+				_terminationDefaultNoticeableFuture.run();
 
 				return;
 			}
@@ -614,6 +621,18 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 	private volatile int _runState;
 	private final TaskQueue<Runnable> _taskQueue;
 	private final Condition _terminationCondition = _mainLock.newCondition();
+
+	private final DefaultNoticeableFuture<Void>
+		_terminationDefaultNoticeableFuture =
+			new DefaultNoticeableFuture<Void>() {
+
+				@Override
+				public boolean cancel(boolean mayInterruptIfRunning) {
+					return false;
+				}
+
+			};
+
 	private volatile ThreadFactory _threadFactory;
 	private volatile ThreadPoolHandler _threadPoolHandler;
 	private final Set<WorkerTask> _workerTasks;

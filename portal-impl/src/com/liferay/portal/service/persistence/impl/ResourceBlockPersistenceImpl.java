@@ -57,7 +57,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see ResourceBlockPersistence
- * @see ResourceBlockUtil
+ * @see com.liferay.portal.service.persistence.ResourceBlockUtil
  * @generated
  */
 @ProviderType
@@ -2353,7 +2353,7 @@ public class ResourceBlockPersistenceImpl extends BasePersistenceImpl<ResourceBl
 		MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

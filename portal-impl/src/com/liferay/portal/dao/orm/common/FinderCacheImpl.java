@@ -19,6 +19,7 @@ import com.liferay.portal.kernel.cache.CacheRegistryItem;
 import com.liferay.portal.kernel.cache.CacheRegistryUtil;
 import com.liferay.portal.kernel.cache.MultiVMPool;
 import com.liferay.portal.kernel.cache.PortalCache;
+import com.liferay.portal.kernel.cache.PortalCacheHelperUtil;
 import com.liferay.portal.kernel.cache.PortalCacheManager;
 import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
 import com.liferay.portal.kernel.dao.orm.FinderCache;
@@ -79,7 +80,7 @@ public class FinderCacheImpl
 
 	@Override
 	public void clearLocalCache() {
-		if (_localCacheAvailable) {
+		if (_LOCAL_CACHE_AVAILABLE) {
 			_localCache.remove();
 		}
 	}
@@ -112,7 +113,7 @@ public class FinderCacheImpl
 
 		Serializable localCacheKey = null;
 
-		if (_localCacheAvailable) {
+		if (_LOCAL_CACHE_AVAILABLE) {
 			localCache = _localCache.get();
 
 			localCacheKey = finderPath.encodeLocalCacheKey(args);
@@ -129,7 +130,7 @@ public class FinderCacheImpl
 			primaryKey = portalCache.get(cacheKey);
 
 			if (primaryKey != null) {
-				if (_localCacheAvailable) {
+				if (_LOCAL_CACHE_AVAILABLE) {
 					localCache.put(localCacheKey, primaryKey);
 				}
 			}
@@ -180,7 +181,7 @@ public class FinderCacheImpl
 
 		Serializable primaryKey = _resultToPrimaryKey((Serializable)result);
 
-		if (_localCacheAvailable) {
+		if (_LOCAL_CACHE_AVAILABLE) {
 			Map<Serializable, Serializable> localCache = _localCache.get();
 
 			Serializable localCacheKey = finderPath.encodeLocalCacheKey(args);
@@ -194,7 +195,8 @@ public class FinderCacheImpl
 		Serializable cacheKey = finderPath.encodeCacheKey(args);
 
 		if (quiet) {
-			portalCache.putQuiet(cacheKey, primaryKey);
+			PortalCacheHelperUtil.putWithoutReplicator(
+				portalCache, cacheKey, primaryKey);
 		}
 		else {
 			portalCache.put(cacheKey, primaryKey);
@@ -219,7 +221,7 @@ public class FinderCacheImpl
 			return;
 		}
 
-		if (_localCacheAvailable) {
+		if (_LOCAL_CACHE_AVAILABLE) {
 			Map<Serializable, Serializable> localCache = _localCache.get();
 
 			Serializable localCacheKey = finderPath.encodeLocalCacheKey(args);
@@ -280,8 +282,7 @@ public class FinderCacheImpl
 				return (Serializable)Collections.emptyList();
 			}
 
-			Set<Serializable> primaryKeysSet = new HashSet<Serializable>(
-				primaryKeys);
+			Set<Serializable> primaryKeysSet = new HashSet<>(primaryKeys);
 
 			Map<Serializable, ? extends BaseModel<?>> map =
 				basePersistenceImpl.fetchByPrimaryKeys(primaryKeysSet);
@@ -290,8 +291,7 @@ public class FinderCacheImpl
 				return null;
 			}
 
-			List<Serializable> list = new ArrayList<Serializable>(
-				primaryKeys.size());
+			List<Serializable> list = new ArrayList<>(primaryKeys.size());
 
 			for (Serializable curPrimaryKey : primaryKeys) {
 				list.add(map.get(curPrimaryKey));
@@ -323,8 +323,7 @@ public class FinderCacheImpl
 				return (Serializable)Collections.emptyList();
 			}
 
-			ArrayList<Serializable> cachedList = new ArrayList<Serializable>(
-				list.size());
+			ArrayList<Serializable> cachedList = new ArrayList<>(list.size());
 
 			for (Serializable curResult : list) {
 				Serializable primaryKey = _resultToPrimaryKey(curResult);
@@ -341,24 +340,29 @@ public class FinderCacheImpl
 	private static final String _GROUP_KEY_PREFIX = CACHE_NAME.concat(
 		StringPool.PERIOD);
 
-	private static ThreadLocal<LRUMap> _localCache;
-	private static boolean _localCacheAvailable;
+	private static final boolean _LOCAL_CACHE_AVAILABLE;
+
+	private static final ThreadLocal<LRUMap> _localCache;
 
 	static {
 		if (PropsValues.VALUE_OBJECT_FINDER_THREAD_LOCAL_CACHE_MAX_SIZE > 0) {
+			_LOCAL_CACHE_AVAILABLE = true;
+
 			_localCache = new AutoResetThreadLocal<LRUMap>(
 				FinderCacheImpl.class + "._localCache",
 				new LRUMap(
 					PropsValues.
 						VALUE_OBJECT_FINDER_THREAD_LOCAL_CACHE_MAX_SIZE));
-			_localCacheAvailable = true;
+		}
+		else {
+			_LOCAL_CACHE_AVAILABLE = false;
+
+			_localCache = null;
 		}
 	}
 
 	private MultiVMPool _multiVMPool;
-	private ConcurrentMap<String, PortalCache<Serializable, Serializable>>
-		_portalCaches =
-			new ConcurrentHashMap
-				<String, PortalCache<Serializable, Serializable>>();
+	private final ConcurrentMap<String, PortalCache<Serializable, Serializable>>
+		_portalCaches = new ConcurrentHashMap<>();
 
 }

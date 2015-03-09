@@ -18,12 +18,11 @@ import com.liferay.portal.kernel.search.util.SearchUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
+import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Locale;
-
-import javax.portlet.PortletURL;
 
 /**
  * @author Brian Wing Shun Chan
@@ -32,22 +31,21 @@ import javax.portlet.PortletURL;
  */
 public class Summary {
 
-	public Summary(
-		Locale locale, String title, String content, PortletURL portletURL) {
-
+	public Summary(Locale locale, String title, String content) {
 		_locale = locale;
 		_title = title;
 		_content = content;
-		_portletURL = portletURL;
 	}
 
-	public Summary(String title, String content, PortletURL portletURL) {
-		this(
-			LocaleThreadLocal.getThemeDisplayLocale(), title, content,
-			portletURL);
+	public Summary(String title, String content) {
+		this(LocaleThreadLocal.getThemeDisplayLocale(), title, content);
 	}
 
 	public String getContent() {
+		if (Validator.isNull(_content)) {
+			return StringPool.BLANK;
+		}
+
 		return _content;
 	}
 
@@ -67,15 +65,15 @@ public class Summary {
 		return _maxContentLength;
 	}
 
-	public PortletURL getPortletURL() {
-		return _portletURL;
-	}
-
 	public String[] getQueryTerms() {
 		return _queryTerms;
 	}
 
 	public String getTitle() {
+		if (Validator.isNull(_title)) {
+			return StringPool.BLANK;
+		}
+
 		return _title;
 	}
 
@@ -105,10 +103,6 @@ public class Summary {
 		_maxContentLength = maxContentLength;
 
 		setContent(_content);
-	}
-
-	public void setPortletURL(PortletURL portletURL) {
-		_portletURL = portletURL;
 	}
 
 	public void setQueryTerms(String[] queryTerms) {
@@ -147,7 +141,6 @@ public class Summary {
 	private boolean _highlight;
 	private Locale _locale;
 	private int _maxContentLength;
-	private PortletURL _portletURL;
 	private String[] _queryTerms;
 	private String _title;
 

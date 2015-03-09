@@ -163,20 +163,20 @@ public interface ExportImportConfigurationLocalService extends BaseLocalService,
 		com.liferay.portal.kernel.util.OrderByComparator<T> orderByComparator);
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery);
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,
@@ -216,6 +216,11 @@ public interface ExportImportConfigurationLocalService extends BaseLocalService,
 	public java.util.List<com.liferay.portal.model.ExportImportConfiguration> getExportImportConfigurations(
 		long groupId, int type, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator<com.liferay.portal.model.ExportImportConfiguration> orderByComparator);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public java.util.List<com.liferay.portal.model.ExportImportConfiguration> getExportImportConfigurations(
+		com.liferay.portal.kernel.search.Hits hits)
+		throws com.liferay.portal.kernel.exception.PortalException;
 
 	/**
 	* Returns a range of all the export import configurations.
@@ -260,6 +265,19 @@ public interface ExportImportConfigurationLocalService extends BaseLocalService,
 	@com.liferay.portal.kernel.search.Indexable(type = IndexableType.REINDEX)
 	public com.liferay.portal.model.ExportImportConfiguration restoreExportImportConfigurationFromTrash(
 		long userId, long exportImportConfigurationId)
+		throws com.liferay.portal.kernel.exception.PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public com.liferay.portal.kernel.search.BaseModelSearchResult<com.liferay.portal.model.ExportImportConfiguration> searchExportImportConfigurations(
+		long companyId, long groupId, int type, java.lang.String keywords,
+		int start, int end, com.liferay.portal.kernel.search.Sort sort)
+		throws com.liferay.portal.kernel.exception.PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public com.liferay.portal.kernel.search.BaseModelSearchResult<com.liferay.portal.model.ExportImportConfiguration> searchExportImportConfigurations(
+		long companyId, long groupId, int type, java.lang.String name,
+		java.lang.String description, boolean andSearch, int start, int end,
+		com.liferay.portal.kernel.search.Sort sort)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	/**

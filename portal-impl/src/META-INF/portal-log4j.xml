@@ -260,6 +260,10 @@
 		<priority value="INFO" />
 	</category>
 
+	<category name="com.liferay.portal.fabric">
+		<priority value="INFO" />
+	</category>
+
 	<category name="com.liferay.portal.image.HookFactory">
 		<priority value="ERROR" />
 	</category>
@@ -476,15 +480,7 @@
 		<priority value="ERROR" />
 	</category>
 
-	<category name="com.liferay.portal.security.auth.CASAutoLogin">
-		<priority value="WARN" />
-	</category>
-
 	<category name="com.liferay.portal.security.auth.LDAPAuth">
-		<priority value="WARN" />
-	</category>
-
-	<category name="com.liferay.portal.security.auth.OpenSSOAutoLogin">
 		<priority value="WARN" />
 	</category>
 
@@ -996,12 +992,16 @@
 		<priority value="WARN" />
 	</category>
 
+	<category name="com.liferay.portlet.documentlibrary.messaging">
+		<priority value="WARN" />
+	</category>
+
 	<category name="com.liferay.portlet.documentlibrary.sharepoint">
 		<priority value="WARN" />
 	</category>
 
-	<category name="com.liferay.portlet.documentlibrary.store.StoreFactory">
-		<priority value="WARN" />
+	<category name="com.liferay.portlet.documentlibrary.store">
+		<priority value="INFO" />
 	</category>
 
 	<category name="com.liferay.portlet.documentlibrary.util">
@@ -1028,6 +1028,10 @@
 		<priority value="INFO" />
 	</category>
 
+	<category name="com.liferay.portlet.journal.util.JournalContentUtil">
+		<priority value="ERROR" />
+	</category>
+
 	<category name="com.liferay.portlet.journal.util.JournalUtil">
 		<priority value="ERROR" />
 	</category>
@@ -1038,14 +1042,6 @@
 
 	<category name="com.liferay.portlet.journal.util.RegexTransformerUtil">
 		<priority value="INFO" />
-	</category>
-
-	<category name="com.liferay.portlet.journalcontent.JournalContentPortletLayoutListener">
-		<priority value="ERROR" />
-	</category>
-
-	<category name="com.liferay.portlet.journalcontent.util.JournalContentUtil">
-		<priority value="ERROR" />
 	</category>
 
 	<category name="com.liferay.portlet.mail">
@@ -1092,14 +1088,6 @@
 		<priority value="INFO" />
 	</category>
 
-	<category name="com.liferay.portlet.wiki.action.ExportPageAction">
-		<priority value="ERROR" />
-	</category>
-
-	<category name="com.liferay.portlet.wiki.importers">
-		<priority value="WARN" />
-	</category>
-
 	<category name="com.liferay.resourcesimporter">
 		<priority value="INFO" />
 	</category>
@@ -1110,6 +1098,10 @@
 
 	<category name="com.liferay.sampletest">
 		<priority value="INFO" />
+	</category>
+
+	<category name="com.liferay.taglib.util.IncludeTag">
+		<priority value="WARN" />
 	</category>
 
 	<category name="com.liferay.testhook">
@@ -1306,6 +1298,10 @@
 
 	<category name="org.springframework.aop.support.AopUtils">
 		<priority value="INFO" />
+	</category>
+
+	<category name="osgi.logging">
+		<priority value="WARN" />
 	</category>
 
 	<category name="portal-web.docroot.errors.404.jsp">

@@ -17,6 +17,8 @@
 <%@ include file="/html/taglib/init.jsp" %>
 
 <%
+LiferayPortletResponse liferayPortletResponse = (LiferayPortletResponse)portletResponse;
+
 String portletId = portletDisplay.getRootPortletId();
 
 String mainPath = themeDisplay.getPathMain();
@@ -44,6 +46,7 @@ if (!ckEditorConfigFileName.equals("ckconfig.jsp")) {
 boolean hideImageResizing = ParamUtil.getBoolean(request, "hideImageResizing");
 
 boolean allowBrowseDocuments = GetterUtil.getBoolean((String)request.getAttribute("liferay-ui:input-editor:allowBrowseDocuments"));
+boolean autoCreate = GetterUtil.getBoolean((String)request.getAttribute("liferay-ui:input-editor:autoCreate"));
 Map<String, String> configParamsMap = (Map<String, String>)request.getAttribute("liferay-ui:input-editor:configParams");
 Map<String, String> fileBrowserParamsMap = (Map<String, String>)request.getAttribute("liferay-ui:input-editor:fileBrowserParams");
 
@@ -77,7 +80,14 @@ if (Validator.isNotNull(onFocusMethod)) {
 	onFocusMethod = namespace + onFocusMethod;
 }
 
+String onInitMethod = (String)request.getAttribute("liferay-ui:input-editor:onInitMethod");
+
+if (Validator.isNotNull(onInitMethod)) {
+	onInitMethod = namespace + onInitMethod;
+}
+
 boolean resizable = GetterUtil.getBoolean((String)request.getAttribute("liferay-ui:input-editor:resizable"));
+boolean showSource = GetterUtil.getBoolean((String)request.getAttribute("liferay-ui:input-editor:showSource"));
 boolean skipEditorLoading = GetterUtil.getBoolean((String)request.getAttribute("liferay-ui:input-editor:skipEditorLoading"));
 String toolbarSet = (String)request.getAttribute("liferay-ui:input-editor:toolbarSet");
 
@@ -120,16 +130,93 @@ if (!inlineEdit) {
 
 		<script type="text/javascript">
 			Liferay.namespace('EDITORS')['<%= editorImpl %>'] = true;
+
+			CKEDITOR.scriptLoader.loadScripts = function(scripts, success, failure) {
+				AUI().use(
+					'aui-base',
+					function(A) {
+						scripts = A.Array.filter(
+							scripts,
+							function(item) {
+								return !A.one('script[src=' + item + ']');
+							}
+						);
+
+						if (scripts.length) {
+							CKEDITOR.scriptLoader.load(scripts, success, failure);
+						}
+						else {
+							success();
+						}
+					}
+				);
+			};
 		</script>
 	</liferay-util:html-top>
 </c:if>
 
-<aui:script>
+<%
+String textareaName = name;
+
+String modules = "aui-node-base";
+
+if (inlineEdit && Validator.isNotNull(inlineEditSaveURL)) {
+	textareaName = name + "_original";
+
+	modules += ",inline-editor-ckeditor";
+}
+%>
+
+<liferay-util:buffer var="editor">
+	<textarea id="<%= textareaName %>" name="<%= textareaName %>" style="display: none;"></textarea>
+</liferay-util:buffer>
+
+<div class="<%= cssClass %>" id="<%= name %>Container">
+	<c:if test="<%= autoCreate %>">
+		<%= editor %>
+	</c:if>
+</div>
+
+<script type="text/javascript">
+	CKEDITOR.disableAutoInline = true;
+
+	CKEDITOR.env.isCompatible = true;
+</script>
+
+<aui:script use="<%= modules %>">
 	window['<%= name %>'] = {
+		create: function() {
+			if (!window['<%= name %>'].instanceReady) {
+				var editorNode = A.Node.create('<%= HtmlUtil.escapeJS(editor) %>');
+
+				var editorContainer = A.one('#<%= name %>Container');
+
+				editorContainer.appendChild(editorNode);
+
+				createEditor();
+			}
+		},
+
 		destroy: function() {
-			CKEDITOR.instances['<%= name %>'].destroy();
+			window['<%= name %>'].dispose();
 
 			window['<%= name %>'] = null;
+		},
+
+		dispose: function() {
+			var editor = CKEDITOR.instances['<%= name %>'];
+
+			if (editor) {
+				editor.destroy();
+
+				window['<%= name %>'].instanceReady = false;
+			}
+
+			var editorEl = document.getElementById('<%= name %>');
+
+			if (editorEl) {
+				editorEl.parentNode.removeChild(editorEl);
+			}
 		},
 
 		focus: function() {
@@ -205,31 +292,7 @@ if (!inlineEdit) {
 			window['<%= name %>']._setStyles();
 		}
 	};
-</aui:script>
 
-<%
-String textareaName = name;
-
-String modules = "aui-node-base";
-
-if (inlineEdit && Validator.isNotNull(inlineEditSaveURL)) {
-	textareaName = name + "_original";
-
-	modules += ",inline-editor-ckeditor";
-}
-%>
-
-<div class="<%= cssClass %>">
-	<textarea id="<%= textareaName %>" name="<%= textareaName %>" style="display: none;"></textarea>
-</div>
-
-<script type="text/javascript">
-	CKEDITOR.disableAutoInline = true;
-
-	CKEDITOR.env.isCompatible = true;
-</script>
-
-<aui:script use="<%= modules %>">
 	var addAUIClass = function(iframe) {
 		if (iframe) {
 			var iframeWin = iframe.getDOM().contentWindow;
@@ -253,7 +316,7 @@ if (inlineEdit && Validator.isNotNull(inlineEditSaveURL)) {
 			var ckePanelDelegate = Liferay.Data['<%= name %>Handle'];
 
 			if (!ckePanelDelegate) {
-				var ckePanelDelegate = ckEditor.delegate(
+				ckePanelDelegate = ckEditor.delegate(
 					'click',
 					function(event) {
 						var panelFrame = A.one('.cke_combopanel .cke_panel_frame');
@@ -288,8 +351,6 @@ if (inlineEdit && Validator.isNotNull(inlineEditSaveURL)) {
 						inlineEditor.destroy();
 						ckEditor.destroy();
 
-						ckEditor = null;
-
 						var editorNode = A.one('#<%= name %>');
 
 						editorNode.removeAttribute('contenteditable');
@@ -300,93 +361,115 @@ if (inlineEdit && Validator.isNotNull(inlineEditSaveURL)) {
 		);
 	</c:if>
 
-	var createEditor = function() {
+	var ckEditorContent;
+	var currentToolbarSet;
+
+	var initialToolbarSet = '<%= TextFormatter.format(HtmlUtil.escapeJS(toolbarSet), TextFormatter.M) %>';
+
+	function getToolbarSet(toolbarSet) {
 		var Util = Liferay.Util;
 
+		if (Util.isPhone()) {
+			toolbarSet = 'phone';
+		}
+		else if (Util.isTablet()) {
+			toolbarSet = 'tablet';
+		}
+
+		return toolbarSet;
+	}
+
+	var createEditor = function() {
 		var editorNode = A.one('#<%= name %>');
 
-		editorNode.setAttribute('contenteditable', true);
-
+		editorNode.attr('contenteditable', true);
 		editorNode.addClass('lfr-editable');
-
-		function getToolbarSet(toolbarSet) {
-			if (Util.isPhone()) {
-				toolbarSet = 'phone';
-			}
-			else if (Util.isTablet()) {
-				toolbarSet = 'tablet';
-			}
-
-			return toolbarSet;
-		}
 
 		function initData() {
 			<c:if test="<%= Validator.isNotNull(initMethod) && !(inlineEdit && Validator.isNotNull(inlineEditSaveURL)) %>">
-				ckEditor.setData(
+				if (!ckEditorContent) {
 					<c:choose>
 						<c:when test="<%= (contents != null) %>">
-							'<%= UnicodeFormatter.toString(contents) %>',
+							ckEditorContent = '<%= UnicodeFormatter.toString(contents) %>';
 						</c:when>
 						<c:otherwise>
-							window['<%= HtmlUtil.escapeJS(namespace + initMethod) %>'](),
+							ckEditorContent = window['<%= HtmlUtil.escapeJS(namespace + initMethod) %>']();
 						</c:otherwise>
 					</c:choose>
+				}
+
+				ckEditor.setData(
+					ckEditorContent,
 					function() {
 						ckEditor.resetDirty();
+
+						ckEditorContent = '';
 					}
 				);
 			</c:if>
 
 			window['<%= name %>']._setStyles();
 
+			<c:if test="<%= Validator.isNotNull(onInitMethod) %>">
+				window['<%= HtmlUtil.escapeJS(onInitMethod) %>']();
+			</c:if>
+
 			window['<%= name %>'].instanceReady = true;
 		}
 
-		<c:choose>
-			<c:when test="<%= inlineEdit %>">
-				CKEDITOR.inline(
-			</c:when>
-			<c:otherwise>
-				CKEDITOR.replace(
-			</c:otherwise>
-		</c:choose>
+		currentToolbarSet = getToolbarSet(initialToolbarSet);
 
+		var filebrowserBrowseUrl = '';
+		var filebrowserImageBrowseUrl = '';
+		var filebrowserImageBrowseLinkUrl = '';
+		var filebrowserFlashBrowseUrl = '';
+
+		<c:if test="<%= allowBrowseDocuments %>">
+			<liferay-portlet:renderURL portletName="<%= PortletKeys.DOCUMENT_SELECTOR %>" varImpl="documentSelectorURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
+				<portlet:param name="mvcPath" value="/view.jsp" />
+				<portlet:param name="groupId" value="<%= String.valueOf(scopeGroupId) %>" />
+				<portlet:param name="eventName" value='<%= name + "selectDocument" %>' />
+				<portlet:param name="showGroupsSelector" value="true" />
+			</liferay-portlet:renderURL>
+
+			<%
+			if (fileBrowserParamsMap != null) {
+				for (Map.Entry<String, String> entry : fileBrowserParamsMap.entrySet()) {
+					documentSelectorURL.setParameter(entry.getKey(), entry.getValue());
+				}
+			}
+			%>
+
+			filebrowserBrowseUrl = '<%= documentSelectorURL %>';
+
+			<%
+			PortletURL imageDocumentSelectorURL = PortletURLUtil.clone(documentSelectorURL, liferayPortletResponse);
+
+			imageDocumentSelectorURL.setParameter("type", "image");
+			%>
+
+			filebrowserImageBrowseUrl = '<%= imageDocumentSelectorURL %>';
+			filebrowserImageBrowseLinkUrl = '<%= imageDocumentSelectorURL %>';
+
+			<%
+			PortletURL flashDocumentSelectorURL = PortletURLUtil.clone(documentSelectorURL, liferayPortletResponse);
+
+			flashDocumentSelectorURL.setParameter("type", "flash");
+			%>
+
+			filebrowserFlashBrowseUrl = '<%= flashDocumentSelectorURL %>';
+		</c:if>
+
+		CKEDITOR.<%= inlineEdit ? "inline" : "replace" %>(
 			'<%= name %>',
 			{
-				customConfig: '<%= PortalUtil.getPathContext() %>/html/js/editor/ckeditor/<%= HtmlUtil.escapeJS(ckEditorConfigFileName) %>?p_p_id=<%= HttpUtil.encodeURL(portletId) %>&p_main_path=<%= HttpUtil.encodeURL(mainPath) %>&contentsLanguageId=<%= HttpUtil.encodeURL(contentsLanguageId) %>&colorSchemeCssClass=<%= HttpUtil.encodeURL(themeDisplay.getColorScheme().getCssClass()) %>&cssClasses=<%= HttpUtil.encodeURL(cssClasses) %>&cssPath=<%= HttpUtil.encodeURL(themeDisplay.getPathThemeCss()) %>&doAsGroupId=<%= HttpUtil.encodeURL(String.valueOf(doAsGroupId)) %>&doAsUserId=<%= HttpUtil.encodeURL(doAsUserId) %>&imagesPath=<%= HttpUtil.encodeURL(themeDisplay.getPathThemeImages()) %>&inlineEdit=<%= inlineEdit %><%= configParams %>&languageId=<%= HttpUtil.encodeURL(LocaleUtil.toLanguageId(locale)) %>&name=<%= name %>&resizable=<%= resizable %>',
-
-				<c:choose>
-					<c:when test="<%= allowBrowseDocuments %>">
-						<liferay-portlet:renderURL portletName="<%= PortletKeys.DOCUMENT_SELECTOR %>" varImpl="documentSelectorURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-							<portlet:param name="struts_action" value="/document_selector/view" />
-							<portlet:param name="groupId" value="<%= String.valueOf(scopeGroupId) %>" />
-							<portlet:param name="eventName" value='<%= name + "selectDocument" %>' />
-							<portlet:param name="showGroupsSelector" value="true" />
-						</liferay-portlet:renderURL>
-
-						<%
-						if (fileBrowserParamsMap != null) {
-							for (Map.Entry<String, String> entry : fileBrowserParamsMap.entrySet()) {
-								documentSelectorURL.setParameter(entry.getKey(), entry.getValue());
-							}
-						}
-						%>
-
-						filebrowserBrowseUrl: '<%= documentSelectorURL %>',
-						filebrowserImageBrowseUrl: '<%= documentSelectorURL %>&Type=image',
-						filebrowserImageBrowseLinkUrl: '<%= documentSelectorURL %>&Type=image',
-						filebrowserFlashBrowseUrl: '<%= documentSelectorURL %>&Type=flash',
-					</c:when>
-					<c:otherwise>
-						filebrowserBrowseUrl: '',
-						filebrowserImageBrowseUrl: '',
-						filebrowserImageBrowseLinkUrl: '',
-						filebrowserFlashBrowseUrl: '',
-					</c:otherwise>
-				</c:choose>
-
+				customConfig: '<%= PortalUtil.getPathContext() %>/html/js/editor/ckeditor/<%= HtmlUtil.escapeJS(ckEditorConfigFileName) %>?p_p_id=<%= HttpUtil.encodeURL(portletId) %>&p_main_path=<%= HttpUtil.encodeURL(mainPath) %>&contentsLanguageId=<%= HttpUtil.encodeURL(contentsLanguageId) %>&colorSchemeCssClass=<%= HttpUtil.encodeURL(themeDisplay.getColorScheme().getCssClass()) %>&cssClasses=<%= HttpUtil.encodeURL(cssClasses) %>&cssPath=<%= HttpUtil.encodeURL(themeDisplay.getPathThemeCss()) %>&doAsGroupId=<%= HttpUtil.encodeURL(String.valueOf(doAsGroupId)) %>&doAsUserId=<%= HttpUtil.encodeURL(doAsUserId) %>&imagesPath=<%= HttpUtil.encodeURL(themeDisplay.getPathThemeImages()) %>&inlineEdit=<%= inlineEdit %><%= configParams %>&languageId=<%= HttpUtil.encodeURL(LocaleUtil.toLanguageId(locale)) %>&name=<%= name %>&resizable=<%= resizable %>&showSource=<%= showSource %>',
+				filebrowserBrowseUrl: filebrowserBrowseUrl,
+				filebrowserFlashBrowseUrl: filebrowserFlashBrowseUrl,
+				filebrowserImageBrowseLinkUrl: filebrowserImageBrowseLinkUrl,
+				filebrowserImageBrowseUrl: filebrowserImageBrowseUrl,
 				filebrowserUploadUrl: null,
-				toolbar: getToolbarSet('<%= TextFormatter.format(HtmlUtil.escapeJS(toolbarSet), TextFormatter.M) %>')
+				toolbar: currentToolbarSet
 			}
 		);
 
@@ -495,7 +578,7 @@ if (inlineEdit && Validator.isNotNull(inlineEditSaveURL)) {
 								}
 							);
 						}
-						catch (error) {
+						catch (e) {
 						}
 
 						Liferay.detach('destroyPortlet', destroyInstance);
@@ -512,65 +595,60 @@ if (inlineEdit && Validator.isNotNull(inlineEditSaveURL)) {
 		if (toolbarSet.equals("creole")) {
 		%>
 
-			Liferay.provide(
-				window,
-				'<%= name %>creoleDialogHandlers',
-				function(event) {
-					var A = AUI();
+		window['<%= name %>creoleDialogHandlers'] = function(event) {
+			var A = AUI();
 
-					var MODIFIED = 'modified';
+			var MODIFIED = 'modified';
 
-					var SELECTOR_HBOX_FIRST = '.cke_dialog_ui_hbox_first';
+			var SELECTOR_HBOX_FIRST = '.cke_dialog_ui_hbox_first';
 
-					var dialog = event.data.definition.dialog;
+			var dialog = event.data.definition.dialog;
 
-					if (dialog.getName() == 'image') {
-						var lockButton = A.one('.cke_btn_locked');
+			if (dialog.getName() == 'image') {
+				var lockButton = A.one('.cke_btn_locked');
 
-						if (lockButton) {
-							var imageProperties = lockButton.ancestor(SELECTOR_HBOX_FIRST);
+				if (lockButton) {
+					var imageProperties = lockButton.ancestor(SELECTOR_HBOX_FIRST);
 
-							if (imageProperties) {
-								imageProperties.hide();
+					if (imageProperties) {
+						imageProperties.hide();
+					}
+				}
+
+				var imagePreviewBox = A.one('.ImagePreviewBox');
+
+				if (imagePreviewBox) {
+					imagePreviewBox.setStyle('width', 410);
+				}
+			}
+			else if (dialog.getName() == 'cellProperties') {
+				var containerNode = A.one('#' + dialog.getElement('cellType').$.id);
+
+				if (!containerNode.getData(MODIFIED)) {
+					containerNode.one(SELECTOR_HBOX_FIRST).hide();
+
+					containerNode.one('.cke_dialog_ui_hbox_child').hide();
+
+					var cellTypeWrapper = containerNode.one('.cke_dialog_ui_hbox_last');
+
+					cellTypeWrapper.replaceClass('cke_dialog_ui_hbox_last', 'cke_dialog_ui_hbox_first');
+
+					cellTypeWrapper.setStyle('width', '100%');
+
+					cellTypeWrapper.all('tr').each(
+						function(item, index, collection) {
+							if (index > 0) {
+								item.hide();
 							}
 						}
+					);
 
-						var imagePreviewBox = A.one('.ImagePreviewBox');
+					containerNode.setData(MODIFIED, true);
+				}
+			}
+		};
 
-						if (imagePreviewBox) {
-							imagePreviewBox.setStyle('width', 410);
-						}
-					}
-					else if (dialog.getName() == 'cellProperties') {
-						var containerNode = A.one('#' + dialog.getElement('cellType').$.id);
-
-						if (!containerNode.getData(MODIFIED)) {
-							containerNode.one(SELECTOR_HBOX_FIRST).hide();
-
-							containerNode.one('.cke_dialog_ui_hbox_child').hide();
-
-							var cellTypeWrapper = containerNode.one('.cke_dialog_ui_hbox_last');
-
-							cellTypeWrapper.replaceClass('cke_dialog_ui_hbox_last', 'cke_dialog_ui_hbox_first');
-
-							cellTypeWrapper.setStyle('width', '100%');
-
-							cellTypeWrapper.all('tr').each(
-								function(item, index, collection) {
-									if (index > 0) {
-										item.hide();
-									}
-								}
-							);
-
-							containerNode.setData(MODIFIED, true);
-						}
-					}
-				},
-				['aui-base']
-			);
-
-			ckEditor.on('dialogShow', window['<%= name %>creoleDialogHandlers']);
+		ckEditor.on('dialogShow', window['<%= name %>creoleDialogHandlers']);
 
 		<%
 		}
@@ -582,26 +660,45 @@ if (inlineEdit && Validator.isNotNull(inlineEditSaveURL)) {
 	String toogleControlsStatus = GetterUtil.getString(SessionClicks.get(request, "liferay_toggle_controls", "visible"));
 	%>
 
-	<c:if test='<%= (inlineEdit && toogleControlsStatus.equals("visible")) || !inlineEdit %>'>;
+	<c:if test='<%= autoCreate && ((inlineEdit && toogleControlsStatus.equals("visible")) || !inlineEdit) %>'>
 		createEditor();
 	</c:if>
 
-	CKEDITOR.scriptLoader.loadScripts = function(scripts, success, failure) {
-		scripts = A.Array.filter(
-			scripts,
-			function(item) {
-				return !A.one('script[src=' + item + ']');
-			}
+	<c:if test="<%= !(inlineEdit && Validator.isNotNull(inlineEditSaveURL)) %>">
+		var initialEditor = CKEDITOR.instances['<%= name %>'].id;
+
+		A.getWin().on(
+			'resize',
+			A.debounce(
+				function() {
+					if (currentToolbarSet != getToolbarSet(initialToolbarSet)) {
+						var ckeditorInstance = CKEDITOR.instances['<%= name %>'];
+
+						if (ckeditorInstance) {
+							var currentEditor = ckeditorInstance.id;
+
+							if (currentEditor === initialEditor) {
+								var currentDialog = CKEDITOR.dialog.getCurrent();
+
+								if (currentDialog) {
+									currentDialog.hide();
+								}
+
+								ckEditorContent = ckeditorInstance.getData();
+
+								window['<%= name %>'].dispose();
+
+								window['<%= name %>'].create();
+
+								initialEditor = CKEDITOR.instances['<%= name %>'].id;
+							}
+						}
+					}
+				},
+				250
+			)
 		);
-
-		if (scripts.length) {
-			CKEDITOR.scriptLoader.load(scripts, success, failure);
-		}
-		else {
-			success();
-		}
-	};
-
+	</c:if>
 </aui:script>
 
 <%!

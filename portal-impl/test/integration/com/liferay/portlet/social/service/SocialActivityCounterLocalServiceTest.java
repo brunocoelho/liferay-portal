@@ -14,11 +14,11 @@
 
 package com.liferay.portlet.social.service;
 
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
-import com.liferay.portal.test.Sync;
-import com.liferay.portal.test.SynchronousDestinationExecutionTestListener;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.Sync;
+import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portlet.social.model.SocialActivityCounter;
 import com.liferay.portlet.social.model.SocialActivityCounterConstants;
 import com.liferay.portlet.social.model.SocialActivityLimit;
@@ -29,21 +29,23 @@ import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Zsolt Berentey
  */
-@ExecutionTestListeners(
-	listeners = {
-		MainServletExecutionTestListener.class,
-		SynchronousDestinationExecutionTestListener.class
-	})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 @Sync
 public class SocialActivityCounterLocalServiceTest
 	extends BaseSocialActivityTestCase {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE,
+			SynchronousDestinationTestRule.INSTANCE);
 
 	@Before
 	@Override

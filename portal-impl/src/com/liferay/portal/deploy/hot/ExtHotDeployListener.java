@@ -30,7 +30,6 @@ import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.tools.WebXMLBuilder;
 import com.liferay.portal.util.ExtRegistry;
 import com.liferay.portal.util.PortalUtil;
-import com.liferay.taglib.FileAvailabilityUtil;
 import com.liferay.util.ant.CopyTask;
 
 import java.io.File;
@@ -160,8 +159,6 @@ public class ExtHotDeployListener extends BaseHotDeployListener {
 
 		installExt(servletContext, hotDeployEvent.getContextClassLoader());
 
-		FileAvailabilityUtil.reset();
-
 		if (_log.isInfoEnabled()) {
 			_log.info(
 				"Extension environment for " + servletContextName +
@@ -255,6 +252,7 @@ public class ExtHotDeployListener extends BaseHotDeployListener {
 		FileUtil.deltree(tmpDir);
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(ExtHotDeployListener.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		ExtHotDeployListener.class);
 
 }

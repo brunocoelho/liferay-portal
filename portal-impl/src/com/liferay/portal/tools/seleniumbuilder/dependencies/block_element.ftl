@@ -28,7 +28,7 @@
 
 		<#assign message = element.attributeValue("message")>
 
-		${selenium}.sendMacroDescriptionLogger(RuntimeVariables.evaluateVariable("${seleniumBuilderFileUtil.escapeJava(message)}", ${variableContext}));
+		${selenium}.sendMacroDescriptionLogger(HtmlUtil.escape(RuntimeVariables.evaluateVariable("${seleniumBuilderFileUtil.escapeJava(message)}", ${variableContext})));
 
 		<#assign lineNumber = element.attributeValue("line-number")>
 
@@ -101,6 +101,41 @@
 
 				${selenium}.sendLogger(${lineId} + "${lineNumber}", "pass");
 			</#if>
+		<#elseif element.attributeValue("function")??>
+			<#assign function = element.attributeValue("function")>
+
+			<#if testCaseName??>
+				selenium
+			<#else>
+				liferaySelenium
+			</#if>
+
+			.pauseLoggerCheck();
+
+			<#if function?starts_with("Is") || function?contains("#is")>
+				try {
+			</#if>
+
+			<#assign functionElement = element>
+
+			<#include "function_log_element.ftl">
+
+			${selenium}.saveScreenshotBeforeAction(false);
+
+			<#include "function_element.ftl">
+
+			<#if function?starts_with("Is") || function?contains("#is")>
+				}
+				finally {
+					<#assign lineNumber = element.attributeValue("line-number")>
+
+					${selenium}.sendLogger(${lineId} + "${lineNumber}", "pass");
+				}
+			<#else>
+				<#assign lineNumber = element.attributeValue("line-number")>
+
+				${selenium}.sendLogger(${lineId} + "${lineNumber}", "pass");
+			</#if>
 		<#elseif element.attributeValue("macro")??>
 			<#assign macroElement = element>
 
@@ -147,6 +182,8 @@
 
 		${selenium}.sendLogger(${lineId} + "${lineNumber}", "pass");
 	<#elseif name == "if">
+		<#assign variableContext = variableContextStack.peek()>
+
 		executeScopeVariables = new HashMap<String, String>();
 
 		executeScopeVariables.putAll(${variableContext});

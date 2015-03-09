@@ -36,6 +36,7 @@ languageId = LocaleUtil.toLanguageId(locale);
 
 String name = ParamUtil.getString(request, "name");
 boolean resizable = ParamUtil.getBoolean(request, "resizable");
+boolean showSource = ParamUtil.getBoolean(request, "showSource");
 long wikiPageResourcePrimKey = ParamUtil.getLong(request, "wikiPageResourcePrimKey");
 
 response.setContentType(ContentTypes.TEXT_JAVASCRIPT);
@@ -46,7 +47,7 @@ response.setContentType(ContentTypes.TEXT_JAVASCRIPT);
 
 	var config = ckEditor.config;
 
-	config.allowedContent = true;
+	config.allowedContent = 'b strong i hr h1 h2 h3 h4 h5 h6 em ul ol li pre table tr th; img a[*]';
 
 	config.attachmentURLPrefix = '<%= HtmlUtil.escapeJS(attachmentURLPrefix) %>';
 
@@ -110,40 +111,50 @@ response.setContentType(ContentTypes.TEXT_JAVASCRIPT);
 	config.resize_enabled = <%= resizable %>;
 
 	config.toolbar_creole = [
-		['Cut','Copy','Paste','PasteText','PasteFromWord'],
-		['Undo','Redo'],
-		['Bold', 'Italic', '-', 'NumberedList', 'BulletedList', '-', 'Outdent', 'Indent'],
+		['Bold', 'Italic', '-' ,'RemoveFormat'],
+		['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent'],
 		['Format'],
+		['Link', 'Unlink'],
+		['Table', '-', <c:if test="<%= (wikiPageResourcePrimKey > 0) %>">'Image', '-', </c:if> 'HorizontalRule', '-', 'SpecialChar' ],
+		'/',
+		['Cut', 'Copy', 'Paste', '-', 'PasteText', 'PasteFromWord', '-', 'SelectAll', '-', 'Undo', 'Redo'],
+		['Find','Replace'],
 
-		<%
-		String linkButtonBar = "['Link', 'Unlink']";
+		<c:if test="<%= showSource %>">
+			['Source'],
+		</c:if>
 
-		if (wikiPageResourcePrimKey > 0) {
-			linkButtonBar = "['Link', 'Unlink', 'Image']";
-		}
-		%>
-
-		<%= linkButtonBar %>,
-
-		['Table', '-', 'HorizontalRule', 'SpecialChar' ],
-		['Find','Replace','-','SelectAll','RemoveFormat'],
-		['Source'],
 		['A11YBtn']
 	];
 
 	config.toolbar_phone = [
-		['Bold', 'Italic', 'Underline'],
+		['Bold', 'Italic'],
 		['NumberedList', 'BulletedList'],
-		['Image', 'Link', 'Unlink']
+		['Link', 'Unlink']
 	];
 
+	<c:if test="<%= (wikiPageResourcePrimKey > 0) %>">
+		config.toolbar_phone.push(['Image']);
+	</c:if>
+
+	<c:if test="<%= showSource %>">
+		config.toolbar_phone.push(['Source']);
+	</c:if>
+
 	config.toolbar_tablet = [
-		['Bold', 'Italic', 'Underline', 'Strike'],
-		['NumberedList', 'BulletedList'],
-		['Image', 'Link', 'Unlink'],
-		['JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'],
-		['Styles', 'FontSize']
+		['Bold', 'Italic'],
+		['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent'],
+		['Format'],
+		['Link', 'Unlink']
 	];
+
+	<c:if test="<%= (wikiPageResourcePrimKey > 0) %>">
+		config.toolbar_tablet.push(['Image']);
+	</c:if>
+
+	<c:if test="<%= showSource %>">
+		config.toolbar_tablet.push(['Source']);
+	</c:if>
 
 	ckEditor.on(
 		'dialogDefinition',

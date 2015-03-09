@@ -59,7 +59,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see UserNotificationEventPersistence
- * @see UserNotificationEventUtil
+ * @see com.liferay.portal.service.persistence.UserNotificationEventUtil
  * @generated
  */
 @ProviderType
@@ -7665,7 +7665,7 @@ public class UserNotificationEventPersistenceImpl extends BasePersistenceImpl<Us
 		MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

@@ -10,11 +10,13 @@
 </#if>
 
 <@aui["field-wrapper"] data=data>
-	<label>
-		<@liferay_ui.message key=escape(label) />
-	</label>
+	<#if hasFieldValue || showEmptyFieldLabel>
+		<label>
+			<@liferay_ui.message key=escape(label) />
+		</label>
+	</#if>
 
-	<#if (fields??) && (fieldValue != "")>
+	<#if hasFieldValue>
 		[ <a href="javascript:;" id="${portletNamespace}${namespacedFieldName}ToggleImage" onClick="${portletNamespace}${namespacedFieldName}ToggleImage();">${languageUtil.get(locale, "show")}</a> ]
 
 		<div class="hide wcm-image-preview" id="${portletNamespace}${namespacedFieldName}Container">
@@ -32,24 +34,17 @@
 </@>
 
 <@aui.script>
-	Liferay.provide(
-		window,
-		'${portletNamespace}${namespacedFieldName}ToggleImage',
-		function() {
-			var A = AUI();
+	function ${portletNamespace}${namespacedFieldName}ToggleImage() {
+		var toggleText = '${languageUtil.get(locale, "show")}';
 
-			var toggleText = '${languageUtil.get(locale, "show")}';
+		var containerNode = AUI.$('#${portletNamespace}${namespacedFieldName}Container');
 
-			var containerNode = A.one('#${portletNamespace}${namespacedFieldName}Container');
+		if (containerNode.hasClass('hide')) {
+			toggleText = '${languageUtil.get(locale, "hide")}';
+		}
 
-			if (containerNode.test(':hidden')) {
-				toggleText = '${languageUtil.get(locale, "hide")}';
-			}
+		AUI.$('#${portletNamespace}${namespacedFieldName}ToggleImage').html(toggleText);
 
-			A.one('#${portletNamespace}${namespacedFieldName}ToggleImage').setContent(toggleText);
-
-			containerNode.toggle();
-		},
-		['aui-base']
-	);
+		containerNode.toggleClass('hide');
+	}
 </@>

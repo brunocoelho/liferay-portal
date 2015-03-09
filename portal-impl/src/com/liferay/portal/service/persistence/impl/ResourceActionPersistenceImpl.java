@@ -57,7 +57,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see ResourceActionPersistence
- * @see ResourceActionUtil
+ * @see com.liferay.portal.service.persistence.ResourceActionUtil
  * @generated
  */
 @ProviderType
@@ -1619,7 +1619,7 @@ public class ResourceActionPersistenceImpl extends BasePersistenceImpl<ResourceA
 		MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

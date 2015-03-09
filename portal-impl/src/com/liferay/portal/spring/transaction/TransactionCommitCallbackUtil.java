@@ -92,7 +92,7 @@ public class TransactionCommitCallbackUtil {
 			List<Callable<?>> callableList = callbackListList.get(index);
 
 			if (callableList == Collections.<Callable<?>>emptyList()) {
-				callableList = new ArrayList<Callable<?>>();
+				callableList = new ArrayList<>();
 
 				callbackListList.set(index, callableList);
 			}
@@ -115,10 +115,10 @@ public class TransactionCommitCallbackUtil {
 		callbackListList.add(Collections.<Callable<?>>emptyList());
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		TransactionCommitCallbackUtil.class);
 
-	private static ThreadLocal<List<List<Callable<?>>>>
+	private static final ThreadLocal<List<List<Callable<?>>>>
 		_callbackListListThreadLocal =
 			new AutoResetThreadLocal<List<List<Callable<?>>>>(
 				TransactionCommitCallbackUtil.class +
@@ -126,7 +126,7 @@ public class TransactionCommitCallbackUtil {
 
 				@Override
 				protected List<List<Callable<?>>> initialValue() {
-					return new ArrayList<List<Callable<?>>>();
+					return new ArrayList<>();
 				}
 
 			};

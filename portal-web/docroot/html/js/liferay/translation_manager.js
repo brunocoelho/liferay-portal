@@ -5,8 +5,6 @@ AUI.add(
 		var Lang = A.Lang;
 		var Node = A.Node;
 
-		var CSS_HELPER_HIDDEN = 'hide';
-
 		var CSS_ACTIONS = 'lfr-actions';
 
 		var CSS_AVAILABLE_TRANSLATIONS = 'lfr-translation-manager-available-translations';
@@ -29,6 +27,8 @@ AUI.add(
 
 		var CSS_EXTENDED = 'lfr-extended';
 
+		var CSS_HELPER_HIDDEN = 'hide';
+
 		var CSS_ICON_MENU = 'lfr-translation-manager-icon-menu';
 
 		var CSS_SHOW_ARROW = 'show-arrow';
@@ -47,19 +47,19 @@ AUI.add(
 
 		var STR_SPACE = ' ';
 
+		var TPL_LOCALE_IMAGE = '<img src="' + themeDisplay.getPathThemeImages() + '/language/{locale}.png" />';
+
+		var TPL_AVAILABLE_TRANSLATIONS_LINKS_NODE = '<span class="' + CSS_AVAILABLE_TRANSLATIONS_LINKS + '"></span>';
+
+		var TPL_AVAILABLE_TRANSLATIONS_NODE = '<div class="' + CSS_AVAILABLE_TRANSLATIONS + '"><label>' + Liferay.Language.get('available-translations') + '</label></div>';
+
+		var TPL_AVAILABLE_TRANSLATION_LINK = '<span class="' + CSS_TRANSLATION + ' {cssClass}" locale="{locale}">' + TPL_LOCALE_IMAGE + '{displayName} <i class="' + CSS_DELETE_TRANSLATION + ' icon icon-remove"></i></span>';
+
 		var TPL_CHANGE_DEFAULT_LOCALE = '<a href="javascript:;">' +  Liferay.Language.get('change') + '</a>';
 
 		var TPL_DEFAULT_LOCALE_LABEL_NODE = '<label>' + Liferay.Language.get('default-language') + ':</label>';
 
 		var TPL_DEFAULT_LOCALE_NODE = '<select class="' + [CSS_HELPER_HIDDEN, 'field-input-menu'].join(STR_SPACE) + '"></select>';
-
-		var TPL_LOCALE_IMAGE = '<img src="' + themeDisplay.getPathThemeImages() + '/language/{locale}.png" />';
-
-		var TPL_AVAILABLE_TRANSLATION_LINK = '<span class="' + CSS_TRANSLATION + ' {cssClass}" locale="{locale}">' + TPL_LOCALE_IMAGE + '{displayName} <a class="' + CSS_DELETE_TRANSLATION + ' icon icon-remove" href="javascript:;"></a></span>';
-
-		var TPL_AVAILABLE_TRANSLATIONS_LINKS_NODE = '<span class="' + CSS_AVAILABLE_TRANSLATIONS_LINKS + '"></span>';
-
-		var TPL_AVAILABLE_TRANSLATIONS_NODE = '<div class="' + CSS_AVAILABLE_TRANSLATIONS + '"><label>' + Liferay.Language.get('available-translations') + '</label></div>';
 
 		var TPL_DEFAULT_LOCALE_TEXT_NODE = '<span class="' + CSS_TRANSLATION + '">' + TPL_LOCALE_IMAGE + '{displayName}</span>';
 
@@ -108,7 +108,7 @@ AUI.add(
 
 					editingLocale: {
 						lazyAdd: false,
-						validator: Lang.isString,
+						setter: '_setEditingLocale',
 						valueFn: '_valueEditingLocale'
 					},
 
@@ -350,6 +350,14 @@ AUI.add(
 						var instance = this;
 
 						instance.set('editingLocale', instance.get('defaultLocale'));
+					},
+
+					_setEditingLocale: function(val) {
+						var instance = this;
+
+						var localesMap = instance.get('localesMap');
+
+						return A.Object.hasKey(localesMap, val) ? val : instance._valueEditingLocale();
 					},
 
 					_setLocalesMap: function(val) {

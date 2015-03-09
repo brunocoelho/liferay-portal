@@ -101,7 +101,7 @@ long orderId = BeanParamUtil.getLong(order, request, "orderId");
 
 	<div class="well">
 		<c:choose>
-			<c:when test="<%= shoppingSettings.usePayPal() %>">
+			<c:when test="<%= shoppingGroupServiceSettings.usePayPal() %>">
 				<aui:model-context bean="<%= order %>" model="<%= ShoppingOrder.class %>" />
 
 				<aui:fieldset label="PayPal">
@@ -131,7 +131,7 @@ long orderId = BeanParamUtil.getLong(order, request, "orderId");
 						<aui:field-wrapper label="paypal-order">
 
 							<%
-							String payPalLinkOpen = "<a href=\"" + ShoppingUtil.getPayPalRedirectURL(shoppingSettings, order, ShoppingUtil.calculateTotal(order), ShoppingUtil.getPayPalReturnURL(renderResponse.createActionURL(), order), ShoppingUtil.getPayPalNotifyURL(themeDisplay)) + "\"><strong><u>";
+							String payPalLinkOpen = "<a href=\"" + ShoppingUtil.getPayPalRedirectURL(shoppingGroupServiceSettings, order, ShoppingUtil.calculateTotal(order), ShoppingUtil.getPayPalReturnURL(renderResponse.createActionURL(), order), ShoppingUtil.getPayPalNotifyURL(themeDisplay)) + "\"><strong><u>";
 							String payPalLinkClose = "</u></strong></a>";
 							%>
 
@@ -337,16 +337,7 @@ long orderId = BeanParamUtil.getLong(order, request, "orderId");
 				<td>
 					<%= currencyFormat.format(order.getCouponDiscount()) %>
 
-					<portlet:renderURL var="viewCouponURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-						<portlet:param name="struts_action" value="/shopping/view_coupon" />
-						<portlet:param name="code" value="<%= order.getCouponCodes() %>" />
-					</portlet:renderURL>
-
-					<%
-					String taglibOpenCouponWindow = "var viewCouponWindow = window.open('" + viewCouponURL + "', 'viewCoupon', 'directories=no,height=200,location=no,menubar=no,resizable=no,scrollbars=yes,status=no,toolbar=no,width=280'); void(''); viewCouponWindow.focus();";
-					%>
-
-					<aui:a href='<%= "javascript:" + taglibOpenCouponWindow %>' label='<%= "(" + LanguageUtil.get(request, order.getCouponCodes()) + ")" %>' />
+					<aui:a href="javascript:;" label='<%= "(" + LanguageUtil.get(request, order.getCouponCodes()) + ")" %>' onClick='<%= renderResponse.getNamespace() + "viewCoupon();" %>' />
 				</td>
 			</tr>
 		</c:if>
@@ -364,7 +355,7 @@ long orderId = BeanParamUtil.getLong(order, request, "orderId");
 
 	<c:if test="<%= !windowState.equals(LiferayWindowState.POP_UP) %>">
 		<aui:button-row>
-			<c:if test="<%= shoppingSettings.usePayPal() %>">
+			<c:if test="<%= shoppingGroupServiceSettings.usePayPal() %>">
 				<aui:button onClick='<%= renderResponse.getNamespace() + "saveOrder();" %>' value="save" />
 			</c:if>
 
@@ -407,11 +398,16 @@ long orderId = BeanParamUtil.getLong(order, request, "orderId");
 				<portlet:param name="struts_action" value="/shopping/edit_order_discussion" />
 			</portlet:actionURL>
 
+			<portlet:resourceURL var="discussionPaginationURL">
+				<portlet:param name="struts_action" value="/shopping/edit_order_discussion" />
+			</portlet:resourceURL>
+
 			<liferay-ui:discussion
 				className="<%= ShoppingOrder.class.getName() %>"
 				classPK="<%= order.getOrderId() %>"
 				formAction="<%= discussionURL %>"
 				formName="fm2"
+				paginationURL="<%= discussionPaginationURL %>"
 				redirect="<%= currentURL %>"
 				userId="<%= order.getUserId() %>"
 			/>
@@ -438,5 +434,20 @@ long orderId = BeanParamUtil.getLong(order, request, "orderId");
 		document.<portlet:namespace />fm.<portlet:namespace />emailType.value = emailType;
 
 		submitForm(document.<portlet:namespace />fm);
+	}
+
+	function <portlet:namespace />viewCoupon() {
+		Liferay.Util.openWindow(
+			{
+				dialog: {
+					height: 200,
+					width: 280
+				},
+				id: '<portlet:namespace />viewCoupon',
+				refreshWindow: window,
+				title: '<%= UnicodeLanguageUtil.get(request, "coupons") %>',
+				uri: '<portlet:renderURL windowState="<%= LiferayWindowState.POP_UP.toString() %>"><portlet:param name="struts_action" value="/shopping/view_coupon" /><portlet:param name="code" value="<%= order.getCouponCodes() %>" /></portlet:renderURL>'
+			}
+		);
 	}
 </aui:script>

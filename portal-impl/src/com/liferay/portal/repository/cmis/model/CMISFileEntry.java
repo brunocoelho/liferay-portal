@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.repository.RepositoryException;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.repository.model.Folder;
+import com.liferay.portal.kernel.repository.model.RepositoryModelOperation;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -103,8 +104,15 @@ public class CMISFileEntry extends CMISModel implements FileEntry {
 	}
 
 	@Override
+	public void execute(RepositoryModelOperation repositoryModelOperation)
+		throws PortalException {
+
+		repositoryModelOperation.execute(this);
+	}
+
+	@Override
 	public Map<String, Serializable> getAttributes() {
-		return new HashMap<String, Serializable>();
+		return new HashMap<>();
 	}
 
 	@Override
@@ -170,6 +178,11 @@ public class CMISFileEntry extends CMISModel implements FileEntry {
 	}
 
 	@Override
+	public String getFileName() {
+		return DLUtil.getSanitizedFileName(getTitle(), getExtension());
+	}
+
+	@Override
 	public FileVersion getFileVersion() throws PortalException {
 		return getLatestFileVersion();
 	}
@@ -197,8 +210,7 @@ public class CMISFileEntry extends CMISModel implements FileEntry {
 		try {
 			List<Document> documents = getAllVersions();
 
-			List<FileVersion> fileVersions = new ArrayList<FileVersion>(
-				documents.size());
+			List<FileVersion> fileVersions = new ArrayList<>(documents.size());
 
 			for (Document document : documents) {
 				FileVersion fileVersion =
@@ -695,13 +707,13 @@ public class CMISFileEntry extends CMISModel implements FileEntry {
 		return _cmisRepository;
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(CMISFileEntry.class);
+	private static final Log _log = LogFactoryUtil.getLog(CMISFileEntry.class);
 
 	private List<Document> _allVersions;
-	private CMISRepository _cmisRepository;
+	private final CMISRepository _cmisRepository;
 	private Document _document;
 	private long _fileEntryId;
 	private FileVersion _latestFileVersion;
-	private String _uuid;
+	private final String _uuid;
 
 }

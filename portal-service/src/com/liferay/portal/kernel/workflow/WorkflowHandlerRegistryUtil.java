@@ -74,6 +74,24 @@ public class WorkflowHandlerRegistryUtil {
 		_instance._register(workflowHandler);
 	}
 
+	public static <T> void startWorkflowInstance(
+			long companyId, long groupId, long userId, String className,
+			long classPK, T model, ServiceContext serviceContext)
+		throws PortalException {
+
+		Map<String, Serializable> workflowContext =
+			(Map<String, Serializable>)serviceContext.removeAttribute(
+				"workflowContext");
+
+		if (workflowContext == null) {
+			workflowContext = Collections.emptyMap();
+		}
+
+		startWorkflowInstance(
+			companyId, groupId, userId, className, classPK, model,
+			serviceContext, workflowContext);
+	}
+
 	public static <T> T startWorkflowInstance(
 			final long companyId, final long groupId, final long userId,
 			String className, final long classPK, final T model,
@@ -129,7 +147,7 @@ public class WorkflowHandlerRegistryUtil {
 			status = WorkflowConstants.STATUS_APPROVED;
 		}
 
-		workflowContext = new HashMap<String, Serializable>(workflowContext);
+		workflowContext = new HashMap<>(workflowContext);
 
 		workflowContext.put(
 			WorkflowConstants.CONTEXT_COMPANY_ID, String.valueOf(companyId));
@@ -172,24 +190,6 @@ public class WorkflowHandlerRegistryUtil {
 		}
 
 		return updatedModel;
-	}
-
-	public static <T> void startWorkflowInstance(
-			long companyId, long groupId, long userId, String className,
-			long classPK, T model, ServiceContext serviceContext)
-		throws PortalException {
-
-		Map<String, Serializable> workflowContext =
-			(Map<String, Serializable>)serviceContext.removeAttribute(
-				"workflowContext");
-
-		if (workflowContext == null) {
-			workflowContext = Collections.emptyMap();
-		}
-
-		startWorkflowInstance(
-			companyId, groupId, userId, className, classPK, model,
-			serviceContext, workflowContext);
 	}
 
 	public static <T> void startWorkflowInstance(
@@ -312,20 +312,20 @@ public class WorkflowHandlerRegistryUtil {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		WorkflowHandlerRegistryUtil.class);
 
-	private static WorkflowHandlerRegistryUtil _instance =
+	private static final WorkflowHandlerRegistryUtil _instance =
 		new WorkflowHandlerRegistryUtil();
 
-	private Map<String, WorkflowHandler<?>> _scopeableWorkflowHandlerMap =
-		new ConcurrentSkipListMap<String, WorkflowHandler<?>>();
-	private ServiceRegistrationMap<WorkflowHandler<?>> _serviceRegistrations =
-		new ServiceRegistrationMap<WorkflowHandler<?>>();
-	private ServiceTracker<WorkflowHandler<?>, WorkflowHandler<?>>
+	private final Map<String, WorkflowHandler<?>> _scopeableWorkflowHandlerMap =
+		new ConcurrentSkipListMap<>();
+	private final ServiceRegistrationMap<WorkflowHandler<?>>
+		_serviceRegistrations = new ServiceRegistrationMap<>();
+	private final ServiceTracker<WorkflowHandler<?>, WorkflowHandler<?>>
 		_serviceTracker;
-	private Map<String, WorkflowHandler<?>> _workflowHandlerMap =
-		new TreeMap<String, WorkflowHandler<?>>();
+	private final Map<String, WorkflowHandler<?>> _workflowHandlerMap =
+		new TreeMap<>();
 
 	private class WorkflowHandlerServiceTrackerCustomizer
 		implements

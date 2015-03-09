@@ -57,7 +57,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see LayoutRevisionPersistence
- * @see LayoutRevisionUtil
+ * @see com.liferay.portal.service.persistence.LayoutRevisionUtil
  * @generated
  */
 @ProviderType
@@ -6511,7 +6511,7 @@ public class LayoutRevisionPersistenceImpl extends BasePersistenceImpl<LayoutRev
 		MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

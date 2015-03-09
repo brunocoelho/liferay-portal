@@ -66,7 +66,7 @@ public class ServiceReferenceWrapper<T> implements ServiceReference<T> {
 
 	@Override
 	public Map<String, Object> getProperties() {
-		Map<String, Object> properties = new HashMap<String, Object>();
+		Map<String, Object> properties = new HashMap<>();
 
 		for (String key : getPropertyKeys()) {
 			Object value = getProperty(key);
@@ -101,6 +101,6 @@ public class ServiceReferenceWrapper<T> implements ServiceReference<T> {
 		return _serviceReference.toString();
 	}
 
-	private org.osgi.framework.ServiceReference<T> _serviceReference;
+	private final org.osgi.framework.ServiceReference<T> _serviceReference;
 
 }

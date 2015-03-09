@@ -72,7 +72,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see BlogsEntryPersistence
- * @see BlogsEntryUtil
+ * @see com.liferay.portlet.blogs.service.persistence.BlogsEntryUtil
  * @generated
  */
 @ProviderType
@@ -18143,7 +18143,10 @@ public class BlogsEntryPersistenceImpl extends BasePersistenceImpl<BlogsEntry>
 		blogsEntryImpl.setAllowPingbacks(blogsEntry.isAllowPingbacks());
 		blogsEntryImpl.setAllowTrackbacks(blogsEntry.isAllowTrackbacks());
 		blogsEntryImpl.setTrackbacks(blogsEntry.getTrackbacks());
+		blogsEntryImpl.setCoverImageFileEntryId(blogsEntry.getCoverImageFileEntryId());
+		blogsEntryImpl.setCoverImageURL(blogsEntry.getCoverImageURL());
 		blogsEntryImpl.setSmallImage(blogsEntry.isSmallImage());
+		blogsEntryImpl.setSmallImageFileEntryId(blogsEntry.getSmallImageFileEntryId());
 		blogsEntryImpl.setSmallImageId(blogsEntry.getSmallImageId());
 		blogsEntryImpl.setSmallImageURL(blogsEntry.getSmallImageURL());
 		blogsEntryImpl.setStatus(blogsEntry.getStatus());

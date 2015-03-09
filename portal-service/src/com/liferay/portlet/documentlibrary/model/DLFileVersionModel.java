@@ -267,6 +267,21 @@ public interface DLFileVersionModel extends BaseModel<DLFileVersion>,
 	public void setTreePath(String treePath);
 
 	/**
+	 * Returns the file name of this document library file version.
+	 *
+	 * @return the file name of this document library file version
+	 */
+	@AutoEscape
+	public String getFileName();
+
+	/**
+	 * Sets the file name of this document library file version.
+	 *
+	 * @param fileName the file name of this document library file version
+	 */
+	public void setFileName(String fileName);
+
+	/**
 	 * Returns the extension of this document library file version.
 	 *
 	 * @return the extension of this document library file version
@@ -603,19 +618,20 @@ public interface DLFileVersionModel extends BaseModel<DLFileVersion>,
 	public Object clone();
 
 	@Override
-	public int compareTo(DLFileVersion dlFileVersion);
+	public int compareTo(
+		com.liferay.portlet.documentlibrary.model.DLFileVersion dlFileVersion);
 
 	@Override
 	public int hashCode();
 
 	@Override
-	public CacheModel<DLFileVersion> toCacheModel();
+	public CacheModel<com.liferay.portlet.documentlibrary.model.DLFileVersion> toCacheModel();
 
 	@Override
-	public DLFileVersion toEscapedModel();
+	public com.liferay.portlet.documentlibrary.model.DLFileVersion toEscapedModel();
 
 	@Override
-	public DLFileVersion toUnescapedModel();
+	public com.liferay.portlet.documentlibrary.model.DLFileVersion toUnescapedModel();
 
 	@Override
 	public String toString();

@@ -31,14 +31,15 @@ import com.liferay.portal.security.permission.PermissionChecker;
 import com.liferay.portal.theme.PortletDisplay;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.PortalUtil;
-import com.liferay.portal.util.PortletKeys;
 import com.liferay.portlet.asset.AssetRendererFactoryRegistryUtil;
-import com.liferay.portlet.asset.service.AssetEntryLocalServiceUtil;
-import com.liferay.portlet.assetpublisher.util.AssetPublisherUtil;
-import com.liferay.portlet.dynamicdatamapping.storage.Fields;
+import com.liferay.portlet.dynamicdatamapping.model.DDMForm;
+import com.liferay.portlet.dynamicdatamapping.storage.DDMFormFieldValue;
+import com.liferay.portlet.dynamicdatamapping.storage.DDMFormValues;
 import com.liferay.portlet.trash.util.TrashUtil;
 
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 import javax.portlet.PortletMode;
@@ -56,9 +57,13 @@ import javax.portlet.WindowState;
  */
 public abstract class BaseAssetRenderer implements AssetRenderer {
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public String getAddToPagePortletId() throws Exception {
-		return PortletKeys.ASSET_PUBLISHER;
+		return StringPool.BLANK;
 	}
 
 	public AssetRendererFactory getAssetRendererFactory() {
@@ -93,8 +98,8 @@ public abstract class BaseAssetRenderer implements AssetRenderer {
 	}
 
 	@Override
-	public DDMFieldReader getDDMFieldReader() {
-		return _nullDDMFieldReader;
+	public DDMFormValuesReader getDDMFormValuesReader() {
+		return _nullDDMFormValuesReader;
 	}
 
 	@Override
@@ -131,7 +136,7 @@ public abstract class BaseAssetRenderer implements AssetRenderer {
 			PortletRequest portletRequest, PortletResponse PortletResponse)
 		throws Exception {
 
-		return "/html/portlet/asset_publisher/display/preview.jsp";
+		return "/display/preview.jsp";
 	}
 
 	@Override
@@ -341,24 +346,15 @@ public abstract class BaseAssetRenderer implements AssetRenderer {
 		return null;
 	}
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public void setAddToPagePreferences(
-			PortletPreferences preferences, String portletId,
+			PortletPreferences portletPreferences, String portletId,
 			ThemeDisplay themeDisplay)
 		throws Exception {
-
-		preferences.setValue("displayStyle", "full-content");
-		preferences.setValue(
-			"emailAssetEntryAddedEnabled", Boolean.FALSE.toString());
-		preferences.setValue("selectionStyle", "manual");
-		preferences.setValue("showAddContentButton", Boolean.FALSE.toString());
-
-		AssetEntry entry = AssetEntryLocalServiceUtil.getEntry(
-			getClassName(), getClassPK());
-
-		AssetPublisherUtil.addSelection(
-			themeDisplay, preferences, portletId, entry.getEntryId(), -1,
-			entry.getClassName());
 	}
 
 	public void setAssetRendererType(int assetRendererType) {
@@ -418,22 +414,25 @@ public abstract class BaseAssetRenderer implements AssetRenderer {
 
 	private static final String[] _AVAILABLE_LANGUAGE_IDS = new String[0];
 
-	private static DDMFieldReader _nullDDMFieldReader =
-		new NullDDMFieldReader();
+	private static final DDMFormValuesReader _nullDDMFormValuesReader =
+		new NullDDMFormValuesReader();
 
 	private AssetRendererFactory _assetRendererFactory;
 	private int _assetRendererType = AssetRendererFactory.TYPE_LATEST_APPROVED;
 
-	private static final class NullDDMFieldReader implements DDMFieldReader {
+	private static final class NullDDMFormValuesReader
+		implements DDMFormValuesReader {
 
 		@Override
-		public Fields getFields() {
-			return new Fields();
+		public List<DDMFormFieldValue> getDDMFormFieldValues(
+			String ddmFormFieldType) {
+
+			return Collections.emptyList();
 		}
 
 		@Override
-		public Fields getFields(String ddmType) {
-			return getFields();
+		public DDMFormValues getDDMFormValues() {
+			return new DDMFormValues(new DDMForm());
 		}
 
 	}

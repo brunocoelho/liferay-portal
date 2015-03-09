@@ -30,7 +30,7 @@ public class VariableNamesExtractor {
 			return Collections.emptyList();
 		}
 
-		List<String> variableNames = new ArrayList<String>();
+		List<String> variableNames = new ArrayList<>();
 
 		Matcher matcher = _pattern.matcher(expressionString);
 
@@ -41,7 +41,7 @@ public class VariableNamesExtractor {
 		return variableNames;
 	}
 
-	private static Pattern _pattern = Pattern.compile(
+	private static final Pattern _pattern = Pattern.compile(
 		"\\b([a-zA-Z]+[\\w\\._]*)(?!\\()\\b", Pattern.MULTILINE);
 
 }

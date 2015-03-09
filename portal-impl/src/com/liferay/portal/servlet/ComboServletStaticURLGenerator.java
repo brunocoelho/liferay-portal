@@ -34,7 +34,7 @@ import java.util.Set;
 public class ComboServletStaticURLGenerator {
 
 	public List<String> generate(List<Portlet> portlets) {
-		List<String> urls = new ArrayList<String>();
+		List<String> urls = new ArrayList<>();
 
 		StringBundler sb = new StringBundler();
 
@@ -112,7 +112,7 @@ public class ComboServletStaticURLGenerator {
 		_visitedURLs = visitedURLs;
 	}
 
-	private static PortletNameComparator _portletNameComparator =
+	private static final PortletNameComparator _portletNameComparator =
 		new PortletNameComparator();
 
 	private PortletResourceAccessor[] _portletResourceAccessors;

@@ -42,7 +42,7 @@ public class PortalCacheCacheEventListener<K extends Serializable, V>
 
 	@Override
 	public Object clone() {
-		return new PortalCacheCacheEventListener<K, V>(
+		return new PortalCacheCacheEventListener<>(
 			_cacheListener, _portalCache);
 	}
 
@@ -138,10 +138,10 @@ public class PortalCacheCacheEventListener<K extends Serializable, V>
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		PortalCacheCacheEventListener.class);
 
-	private CacheListener<K, V> _cacheListener;
-	private PortalCache<K, V> _portalCache;
+	private final CacheListener<K, V> _cacheListener;
+	private final PortalCache<K, V> _portalCache;
 
 }

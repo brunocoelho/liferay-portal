@@ -92,7 +92,7 @@ public class ExportImportAction extends ImportLayoutsAction {
 
 				if (cmd.equals(Constants.ADD_TEMP)) {
 					addTempFileEntry(
-						actionRequest, actionResponse,
+						actionRequest,
 						ExportImportHelper.TEMP_FOLDER_NAME +
 							portlet.getPortletId());
 
@@ -201,9 +201,15 @@ public class ExportImportAction extends ImportLayoutsAction {
 
 		renderRequest = ActionUtil.getWrappedRenderRequest(renderRequest, null);
 
-		return actionMapping.findForward(
-			getForward(
-				renderRequest, "portlet.portlet_configuration.export_import"));
+		String cmd = ParamUtil.getString(renderRequest, Constants.CMD);
+
+		String forward = "portlet.portlet_configuration.export_import";
+
+		if (cmd.equals(Constants.PUBLISH_TO_LIVE)) {
+			forward = "portlet.portlet_configuration.staging";
+		}
+
+		return actionMapping.findForward(getForward(renderRequest, forward));
 	}
 
 	@Override
@@ -306,6 +312,7 @@ public class ExportImportAction extends ImportLayoutsAction {
 			actionRequest.getParameterMap(), inputStream);
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(ExportImportAction.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		ExportImportAction.class);
 
 }

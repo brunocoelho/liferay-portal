@@ -14,8 +14,7 @@
 
 package com.liferay.portal.kernel.util;
 
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.exception.LoggedExceptionInInitializerError;
 import com.liferay.portal.kernel.memory.EqualityWeakReference;
 
 import java.io.IOException;
@@ -44,7 +43,7 @@ public class AggregateClassLoader extends ClassLoader {
 		ClassLoader parentClassLoader, ClassLoader[] classLoaders) {
 
 		if (ArrayUtil.isEmpty(classLoaders)) {
-			return null;
+			return parentClassLoader;
 		}
 
 		if (classLoaders.length == 1) {
@@ -72,8 +71,7 @@ public class AggregateClassLoader extends ClassLoader {
 	}
 
 	public AggregateClassLoader(ClassLoader classLoader) {
-		_parentClassLoaderReference = new WeakReference<ClassLoader>(
-			classLoader);
+		_parentClassLoaderReference = new WeakReference<>(classLoader);
 	}
 
 	public void addClassLoader(ClassLoader classLoader) {
@@ -139,7 +137,7 @@ public class AggregateClassLoader extends ClassLoader {
 	}
 
 	public List<ClassLoader> getClassLoaders() {
-		List<ClassLoader> classLoaders = new ArrayList<ClassLoader>(
+		List<ClassLoader> classLoaders = new ArrayList<>(
 			_classLoaderReferences.size());
 
 		Iterator<EqualityWeakReference<ClassLoader>> itr =
@@ -182,7 +180,7 @@ public class AggregateClassLoader extends ClassLoader {
 
 	@Override
 	public Enumeration<URL> getResources(String name) throws IOException {
-		List<URL> urls = new ArrayList<URL>();
+		List<URL> urls = new ArrayList<>();
 
 		for (ClassLoader classLoader : getClassLoaders()) {
 			urls.addAll(Collections.list(_getResources(classLoader, name)));
@@ -258,7 +256,7 @@ public class AggregateClassLoader extends ClassLoader {
 		throws ClassNotFoundException {
 
 		try {
-			return (Class<?>) _findClassMethod.invoke(classLoader, name);
+			return (Class<?>) _FIND_CLASS_METHOD.invoke(classLoader, name);
 		}
 		catch (InvocationTargetException ite) {
 			throw new ClassNotFoundException(
@@ -271,7 +269,7 @@ public class AggregateClassLoader extends ClassLoader {
 
 	private static URL _getResource(ClassLoader classLoader, String name) {
 		try {
-			return (URL)_getResourceMethod.invoke(classLoader, name);
+			return (URL)_GET_RESOURCE_METHOD.invoke(classLoader, name);
 		}
 		catch (InvocationTargetException ite) {
 			return null;
@@ -286,7 +284,7 @@ public class AggregateClassLoader extends ClassLoader {
 		throws IOException {
 
 		try {
-			return (Enumeration<URL>)_getResourcesMethod.invoke(
+			return (Enumeration<URL>)_GET_RESOURCES_METHOD.invoke(
 				classLoader, name);
 		}
 		catch (InvocationTargetException ite) {
@@ -304,7 +302,7 @@ public class AggregateClassLoader extends ClassLoader {
 		throws ClassNotFoundException {
 
 		try {
-			return (Class<?>)_loadClassMethod.invoke(
+			return (Class<?>)_LOAD_CLASS_METHOD.invoke(
 				classLoader, name, resolve);
 		}
 		catch (InvocationTargetException ite) {
@@ -316,33 +314,35 @@ public class AggregateClassLoader extends ClassLoader {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(AggregateClassLoader.class);
+	private static final Method _FIND_CLASS_METHOD;
 
-	private static Method _findClassMethod;
-	private static Method _getResourceMethod;
-	private static Method _getResourcesMethod;
-	private static Method _loadClassMethod;
+	private static final Method _GET_RESOURCE_METHOD;
 
-	private List<EqualityWeakReference<ClassLoader>> _classLoaderReferences =
-		new ArrayList<EqualityWeakReference<ClassLoader>>();
-	private WeakReference<ClassLoader> _parentClassLoaderReference;
+	private static final Method _GET_RESOURCES_METHOD;
+
+	private static final Method _LOAD_CLASS_METHOD;
 
 	static {
 		try {
-			_findClassMethod = ReflectionUtil.getDeclaredMethod(
+			_FIND_CLASS_METHOD = ReflectionUtil.getDeclaredMethod(
 				ClassLoader.class, "findClass", String.class);
-			_getResourceMethod = ReflectionUtil.getDeclaredMethod(
+
+			_GET_RESOURCE_METHOD = ReflectionUtil.getDeclaredMethod(
 				ClassLoader.class, "getResource", String.class);
-			_getResourcesMethod = ReflectionUtil.getDeclaredMethod(
+
+			_GET_RESOURCES_METHOD = ReflectionUtil.getDeclaredMethod(
 				ClassLoader.class, "getResources", String.class);
-			_loadClassMethod = ReflectionUtil.getDeclaredMethod(
+
+			_LOAD_CLASS_METHOD = ReflectionUtil.getDeclaredMethod(
 				ClassLoader.class, "loadClass", String.class, boolean.class);
 		}
 		catch (Exception e) {
-			if (_log.isErrorEnabled()) {
-				_log.error("Unable to locate required methods", e);
-			}
+			throw new LoggedExceptionInInitializerError(e);
 		}
 	}
+
+	private final List<EqualityWeakReference<ClassLoader>>
+		_classLoaderReferences = new ArrayList<>();
+	private final WeakReference<ClassLoader> _parentClassLoaderReference;
 
 }

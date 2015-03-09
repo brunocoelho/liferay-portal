@@ -232,7 +232,7 @@ public interface UserLocalService extends BaseLocalService,
 		java.lang.String screenName, java.lang.String emailAddress,
 		long facebookId, java.lang.String openId, java.util.Locale locale,
 		java.lang.String firstName, java.lang.String middleName,
-		java.lang.String lastName, int prefixId, int suffixId, boolean male,
+		java.lang.String lastName, long prefixId, long suffixId, boolean male,
 		int birthdayMonth, int birthdayDay, int birthdayYear,
 		java.lang.String jobTitle, long[] groupIds, long[] organizationIds,
 		long[] roleIds, long[] userGroupIds, boolean sendEmail,
@@ -321,7 +321,7 @@ public interface UserLocalService extends BaseLocalService,
 		java.lang.String emailAddress, long facebookId,
 		java.lang.String openId, java.util.Locale locale,
 		java.lang.String firstName, java.lang.String middleName,
-		java.lang.String lastName, int prefixId, int suffixId, boolean male,
+		java.lang.String lastName, long prefixId, long suffixId, boolean male,
 		int birthdayMonth, int birthdayDay, int birthdayYear,
 		java.lang.String jobTitle, long[] groupIds, long[] organizationIds,
 		long[] roleIds, long[] userGroupIds, boolean sendEmail,
@@ -760,20 +760,20 @@ public interface UserLocalService extends BaseLocalService,
 		com.liferay.portal.kernel.util.OrderByComparator<T> orderByComparator);
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery);
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,
@@ -793,6 +793,16 @@ public interface UserLocalService extends BaseLocalService,
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public com.liferay.portal.model.User fetchUser(long userId);
+
+	/**
+	* Returns the user with the contact ID.
+	*
+	* @param contactId the user's contact ID
+	* @return the user with the contact ID, or <code>null</code> if a user with
+	the contact ID could not be found
+	*/
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public com.liferay.portal.model.User fetchUserByContactId(long contactId);
 
 	/**
 	* Returns the user with the email address.
@@ -1193,7 +1203,7 @@ public interface UserLocalService extends BaseLocalService,
 	* @throws PortalException if a user with the primary key could not be
 	found
 	* @deprecated As of 7.0.0, replaced by {@link #getSocialUsers(long, int,
-	boolean, int, int, OrderByComparator)}
+	String, int, int, OrderByComparator)}
 	*/
 	@java.lang.Deprecated
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -1791,6 +1801,15 @@ public interface UserLocalService extends BaseLocalService,
 		boolean andSearch, int start, int end,
 		com.liferay.portal.kernel.search.Sort sort);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public com.liferay.portal.kernel.search.Hits search(long companyId,
+		java.lang.String firstName, java.lang.String middleName,
+		java.lang.String lastName, java.lang.String screenName,
+		java.lang.String emailAddress, int status,
+		java.util.LinkedHashMap<java.lang.String, java.lang.Object> params,
+		boolean andSearch, int start, int end,
+		com.liferay.portal.kernel.search.Sort[] sorts);
+
 	/**
 	* Returns an ordered range of all the users who match the keywords and
 	* status, without using the indexer. It is preferable to use the indexed
@@ -1864,6 +1883,12 @@ public interface UserLocalService extends BaseLocalService,
 		java.lang.String keywords, int status,
 		java.util.LinkedHashMap<java.lang.String, java.lang.Object> params,
 		int start, int end, com.liferay.portal.kernel.search.Sort sort);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public com.liferay.portal.kernel.search.Hits search(long companyId,
+		java.lang.String keywords, int status,
+		java.util.LinkedHashMap<java.lang.String, java.lang.Object> params,
+		int start, int end, com.liferay.portal.kernel.search.Sort[] sorts);
 
 	/**
 	* Returns the number of users with the status, and whose first name, middle
@@ -1940,9 +1965,26 @@ public interface UserLocalService extends BaseLocalService,
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public com.liferay.portal.kernel.search.BaseModelSearchResult<com.liferay.portal.model.User> searchUsers(
+		long companyId, java.lang.String firstName,
+		java.lang.String middleName, java.lang.String lastName,
+		java.lang.String screenName, java.lang.String emailAddress, int status,
+		java.util.LinkedHashMap<java.lang.String, java.lang.Object> params,
+		boolean andSearch, int start, int end,
+		com.liferay.portal.kernel.search.Sort[] sorts)
+		throws com.liferay.portal.kernel.exception.PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public com.liferay.portal.kernel.search.BaseModelSearchResult<com.liferay.portal.model.User> searchUsers(
 		long companyId, java.lang.String keywords, int status,
 		java.util.LinkedHashMap<java.lang.String, java.lang.Object> params,
 		int start, int end, com.liferay.portal.kernel.search.Sort sort)
+		throws com.liferay.portal.kernel.exception.PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public com.liferay.portal.kernel.search.BaseModelSearchResult<com.liferay.portal.model.User> searchUsers(
+		long companyId, java.lang.String keywords, int status,
+		java.util.LinkedHashMap<java.lang.String, java.lang.Object> params,
+		int start, int end, com.liferay.portal.kernel.search.Sort[] sorts)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	/**
@@ -1984,14 +2026,75 @@ public interface UserLocalService extends BaseLocalService,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
+	/**
+	* Sends a password notification email to the user matching the email
+	* address. The portal's settings determine whether a password is sent
+	* explicitly or whether a link for resetting the user's password is sent.
+	* The method sends the email asynchronously and returns before the email is
+	* sent.
+	*
+	* <p>
+	* The content of the notification email is specified with the
+	* <code>admin.email.password</code> portal property keys. They can be
+	* overridden via a <code>portal-ext.properties</code> file or modified
+	* through the Portal Settings UI.
+	* </p>
+	*
+	* @param companyId the primary key of the user's company
+	* @param emailAddress the user's email address
+	* @return <code>true</code> if the notification email includes a new
+	password; <code>false</code> if the notification email only
+	contains a reset link
+	* @throws PortalException if a user with the email address could not be
+	found
+	*/
 	public boolean sendPasswordByEmailAddress(long companyId,
 		java.lang.String emailAddress)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
+	/**
+	* Sends a password notification email to the user matching the screen name.
+	* The portal's settings determine whether a password is sent explicitly or
+	* whether a link for resetting the user's password is sent. The method
+	* sends the email asynchronously and returns before the email is sent.
+	*
+	* <p>
+	* The content of the notification email is specified with the
+	* <code>admin.email.password</code> portal property keys. They can be
+	* overridden via a <code>portal-ext.properties</code> file or modified
+	* through the Portal Settings UI.
+	* </p>
+	*
+	* @param companyId the primary key of the user's company
+	* @param screenName the user's screen name
+	* @return <code>true</code> if the notification email includes a new
+	password; <code>false</code> if the notification email only
+	contains a reset link
+	* @throws PortalException if a user with the screen name could not be found
+	*/
 	public boolean sendPasswordByScreenName(long companyId,
 		java.lang.String screenName)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
+	/**
+	* Sends a password notification email to the user matching the ID. The
+	* portal's settings determine whether a password is sent explicitly or
+	* whether a link for resetting the user's password is sent. The method
+	* sends the email asynchronously and returns before the email is sent.
+	*
+	* <p>
+	* The content of the notification email is specified with the
+	* <code>admin.email.password</code> portal property keys. They can be
+	* overridden via a <code>portal-ext.properties</code> file or modified
+	* through the Portal Settings UI.
+	* </p>
+	*
+	* @param userId the user's primary key
+	* @return <code>true</code> if the notification email includes a new
+	password; <code>false</code> if the notification email only
+	contains a reset link
+	* @throws PortalException if a user with the user ID could not be found
+	*/
 	public boolean sendPasswordByUserId(long userId)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
@@ -2257,7 +2360,7 @@ public interface UserLocalService extends BaseLocalService,
 		java.lang.String emailAddress, long facebookId,
 		java.lang.String openId, java.util.Locale locale,
 		java.lang.String firstName, java.lang.String middleName,
-		java.lang.String lastName, int prefixId, int suffixId, boolean male,
+		java.lang.String lastName, long prefixId, long suffixId, boolean male,
 		int birthdayMonth, int birthdayDay, int birthdayYear,
 		java.lang.String jobTitle, boolean updateUserInformation,
 		boolean sendEmail,
@@ -2581,11 +2684,11 @@ public interface UserLocalService extends BaseLocalService,
 	found or if the new information was invalid
 	* @deprecated As of 7.0.0, replaced by {@link #updateUser(long, String,
 	String, String, boolean, String, String, String, String,
-	long, String, String, String, String, String, String, String,
-	String, int, int, boolean, int, int, int, String, String,
-	String, String, String, String, String, String, String,
-	String, String, long[], long[], long[], java.util.List,
-	long[], boolean, byte[], ServiceContext)}
+	long, String, boolean, byte[], String, String, String,
+	String, String, String, String, int, int, boolean, int, int,
+	int, String, String, String, String, String, String, String,
+	String, String, String, String, long[], long[], long[],
+	java.util.List, long[], ServiceContext)}
 	*/
 	@java.lang.Deprecated
 	public com.liferay.portal.model.User updateUser(long userId,
@@ -2597,8 +2700,8 @@ public interface UserLocalService extends BaseLocalService,
 		java.lang.String openId, java.lang.String languageId,
 		java.lang.String timeZoneId, java.lang.String greeting,
 		java.lang.String comments, java.lang.String firstName,
-		java.lang.String middleName, java.lang.String lastName, int prefixId,
-		int suffixId, boolean male, int birthdayMonth, int birthdayDay,
+		java.lang.String middleName, java.lang.String lastName, long prefixId,
+		long suffixId, boolean male, int birthdayMonth, int birthdayDay,
 		int birthdayYear, java.lang.String smsSn, java.lang.String aimSn,
 		java.lang.String facebookSn, java.lang.String icqSn,
 		java.lang.String jabberSn, java.lang.String msnSn,
@@ -2678,7 +2781,7 @@ public interface UserLocalService extends BaseLocalService,
 		java.lang.String languageId, java.lang.String timeZoneId,
 		java.lang.String greeting, java.lang.String comments,
 		java.lang.String firstName, java.lang.String middleName,
-		java.lang.String lastName, int prefixId, int suffixId, boolean male,
+		java.lang.String lastName, long prefixId, long suffixId, boolean male,
 		int birthdayMonth, int birthdayDay, int birthdayYear,
 		java.lang.String smsSn, java.lang.String aimSn,
 		java.lang.String facebookSn, java.lang.String icqSn,

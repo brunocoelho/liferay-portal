@@ -32,7 +32,7 @@ public abstract class BasePortalCacheClusterChannel
 			this,
 			"PortalCacheClusterChannel dispatch thread-" +
 				_dispatchThreadCounter.getAndIncrement());
-		_eventQueue = new CoalescedPipe<PortalCacheClusterEvent>(
+		_eventQueue = new CoalescedPipe<>(
 			new PortalCacheClusterEventCoalesceComparator());
 	}
 
@@ -120,10 +120,11 @@ public abstract class BasePortalCacheClusterChannel
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		BasePortalCacheClusterChannel.class);
 
-	private static AtomicInteger _dispatchThreadCounter = new AtomicInteger(0);
+	private static final AtomicInteger _dispatchThreadCounter =
+		new AtomicInteger(0);
 
 	private volatile boolean _destroy = false;
 	private final Thread _dispatchThread;

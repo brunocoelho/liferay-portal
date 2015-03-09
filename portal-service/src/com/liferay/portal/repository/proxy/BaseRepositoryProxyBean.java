@@ -59,18 +59,57 @@ public class BaseRepositoryProxyBean
 
 	@Override
 	public FileEntry addFileEntry(
+			long userId, long folderId, String sourceFileName, String mimeType,
+			String title, String description, String changeLog, File file,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		FileEntry fileEntry = _baseRepository.addFileEntry(
+			userId, folderId, sourceFileName, mimeType, title, description,
+			changeLog, file, serviceContext);
+
+		return newFileEntryProxyBean(fileEntry);
+	}
+
+	@Override
+	public FileEntry addFileEntry(
+			long userId, long folderId, String sourceFileName, String mimeType,
+			String title, String description, String changeLog, InputStream is,
+			long size, ServiceContext serviceContext)
+		throws PortalException {
+
+		FileEntry fileEntry = _baseRepository.addFileEntry(
+			userId, folderId, sourceFileName, mimeType, title, description,
+			changeLog, is, size, serviceContext);
+
+		return newFileEntryProxyBean(fileEntry);
+	}
+
+	/**
+	 * @deprecated As of 7.0.0, see {@link #addFileEntry(long, long, String,
+	 *             String, String, String, String, File, ServiceContext)}
+	 */
+	@Deprecated
+	@Override
+	public FileEntry addFileEntry(
 			long folderId, String sourceFileName, String mimeType, String title,
 			String description, String changeLog, File file,
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		FileEntry fileEntry = _baseRepository.addFileEntry(
+		return addFileEntry(
+			com.liferay.portal.kernel.repository.util.RepositoryUserUtil.
+				getUserId(),
 			folderId, sourceFileName, mimeType, title, description, changeLog,
 			file, serviceContext);
-
-		return newFileEntryProxyBean(fileEntry);
 	}
 
+	/**
+	 * @deprecated As of 7.0.0, see {@link #addFileEntry(long, long, String,
+	 *             String, String, String, String, InputStream, long,
+	 *             ServiceContext)}
+	 */
+	@Deprecated
 	@Override
 	public FileEntry addFileEntry(
 			long folderId, String sourceFileName, String mimeType, String title,
@@ -78,23 +117,40 @@ public class BaseRepositoryProxyBean
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		FileEntry fileEntry = _baseRepository.addFileEntry(
+		return addFileEntry(
+			com.liferay.portal.kernel.repository.util.RepositoryUserUtil.
+				getUserId(),
 			folderId, sourceFileName, mimeType, title, description, changeLog,
 			is, size, serviceContext);
-
-		return newFileEntryProxyBean(fileEntry);
 	}
 
 	@Override
 	public Folder addFolder(
-			long parentFolderId, String title, String description,
+			long userId, long parentFolderId, String name, String description,
 			ServiceContext serviceContext)
 		throws PortalException {
 
 		Folder folder = _baseRepository.addFolder(
-			parentFolderId, title, description, serviceContext);
+			userId, parentFolderId, name, description, serviceContext);
 
 		return newFolderProxyBean(folder);
+	}
+
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #addFolder(long, long,
+	 *             String, String, ServiceContext)}
+	 */
+	@Deprecated
+	@Override
+	public Folder addFolder(
+			long parentFolderId, String name, String description,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		return addFolder(
+			com.liferay.portal.kernel.repository.util.RepositoryUserUtil.
+				getUserId(),
+			parentFolderId, name, description, serviceContext);
 	}
 
 	@Override
@@ -102,6 +158,11 @@ public class BaseRepositoryProxyBean
 		return _baseRepository.cancelCheckOut(fileEntryId);
 	}
 
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #checkInFileEntry(long, long,
+	 *             boolean, String, ServiceContext)}
+	 */
+	@Deprecated
 	@Override
 	public void checkInFileEntry(
 			long fileEntryId, boolean major, String changeLog,
@@ -110,6 +171,26 @@ public class BaseRepositoryProxyBean
 
 		_baseRepository.checkInFileEntry(
 			fileEntryId, major, changeLog, serviceContext);
+	}
+
+	@Override
+	public void checkInFileEntry(
+			long userId, long fileEntryId, boolean major, String changeLog,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		_baseRepository.checkInFileEntry(
+			userId, fileEntryId, major, changeLog, serviceContext);
+	}
+
+	@Override
+	public void checkInFileEntry(
+			long userId, long fileEntryId, String lockUuid,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		_baseRepository.checkInFileEntry(
+			userId, fileEntryId, lockUuid, serviceContext);
 	}
 
 	/**
@@ -124,6 +205,11 @@ public class BaseRepositoryProxyBean
 		_baseRepository.checkInFileEntry(fileEntryId, lockUuid);
 	}
 
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #checkInFileEntry(long, long,
+	 *             String, ServiceContext)}
+	 */
+	@Deprecated
 	@Override
 	public void checkInFileEntry(
 			long fileEntryId, String lockUuid, ServiceContext serviceContext)
@@ -157,12 +243,34 @@ public class BaseRepositoryProxyBean
 
 	@Override
 	public FileEntry copyFileEntry(
-			long groupId, long fileEntryId, long destFolderId,
+			long userId, long groupId, long fileEntryId, long destFolderId,
 			ServiceContext serviceContext)
 		throws PortalException {
 
 		return _baseRepository.copyFileEntry(
+			userId, groupId, fileEntryId, destFolderId, serviceContext);
+	}
+
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #copyFileEntry(long, long,
+	 *             long, long, ServiceContext)}
+	 */
+	@Deprecated
+	@Override
+	public FileEntry copyFileEntry(
+			long groupId, long fileEntryId, long destFolderId,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		return copyFileEntry(
+			com.liferay.portal.kernel.repository.util.RepositoryUserUtil.
+				getUserId(),
 			groupId, fileEntryId, destFolderId, serviceContext);
+	}
+
+	@Override
+	public void deleteAll() throws PortalException {
+		_baseRepository.deleteAll();
 	}
 
 	@Override
@@ -190,10 +298,10 @@ public class BaseRepositoryProxyBean
 	}
 
 	@Override
-	public void deleteFolder(long parentFolderId, String title)
+	public void deleteFolder(long parentFolderId, String name)
 		throws PortalException {
 
-		_baseRepository.deleteFolder(parentFolderId, title);
+		_baseRepository.deleteFolder(parentFolderId, name);
 	}
 
 	@Override
@@ -323,10 +431,10 @@ public class BaseRepositoryProxyBean
 	}
 
 	@Override
-	public Folder getFolder(long parentFolderId, String title)
+	public Folder getFolder(long parentFolderId, String name)
 		throws PortalException {
 
-		Folder folder = _baseRepository.getFolder(parentFolderId, title);
+		Folder folder = _baseRepository.getFolder(parentFolderId, name);
 
 		return newFolderProxyBean(folder);
 	}
@@ -587,25 +695,59 @@ public class BaseRepositoryProxyBean
 
 	@Override
 	public FileEntry moveFileEntry(
-			long fileEntryId, long newFolderId, ServiceContext serviceContext)
+			long userId, long fileEntryId, long newFolderId,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		FileEntry fileEntry = _baseRepository.moveFileEntry(
-			fileEntryId, newFolderId, serviceContext);
+			userId, fileEntryId, newFolderId, serviceContext);
 
 		return newFileEntryProxyBean(fileEntry);
 	}
 
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #moveFileEntry(long, long,
+	 *             long, ServiceContext)}
+	 */
+	@Deprecated
+	@Override
+	public FileEntry moveFileEntry(
+			long fileEntryId, long newFolderId, ServiceContext serviceContext)
+		throws PortalException {
+
+		return moveFileEntry(
+			com.liferay.portal.kernel.repository.util.RepositoryUserUtil.
+				getUserId(),
+			fileEntryId, newFolderId, serviceContext);
+	}
+
+	@Override
+	public Folder moveFolder(
+			long userId, long folderId, long parentFolderId,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		Folder folder = _baseRepository.moveFolder(
+			userId, folderId, parentFolderId, serviceContext);
+
+		return newFolderProxyBean(folder);
+	}
+
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #moveFolder(long, long, long,
+	 *             ServiceContext)}
+	 */
+	@Deprecated
 	@Override
 	public Folder moveFolder(
 			long folderId, long newParentFolderId,
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		Folder folder = _baseRepository.moveFolder(
+		return moveFolder(
+			com.liferay.portal.kernel.repository.util.RepositoryUserUtil.
+				getUserId(),
 			folderId, newParentFolderId, serviceContext);
-
-		return newFolderProxyBean(folder);
 	}
 
 	@Override
@@ -630,6 +772,21 @@ public class BaseRepositoryProxyBean
 		return (Lock)newProxyInstance(lock, Lock.class);
 	}
 
+	@Override
+	public void revertFileEntry(
+			long userId, long fileEntryId, String version,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		_baseRepository.revertFileEntry(
+			userId, fileEntryId, version, serviceContext);
+	}
+
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #revertFileEntry(long, long,
+	 *             String, ServiceContext)}
+	 */
+	@Deprecated
 	@Override
 	public void revertFileEntry(
 			long fileEntryId, String version, ServiceContext serviceContext)
@@ -731,12 +888,47 @@ public class BaseRepositoryProxyBean
 	}
 
 	@Override
-	public void unlockFolder(long parentFolderId, String title, String lockUuid)
+	public void unlockFolder(long parentFolderId, String name, String lockUuid)
 		throws PortalException {
 
-		_baseRepository.unlockFolder(parentFolderId, title, lockUuid);
+		_baseRepository.unlockFolder(parentFolderId, name, lockUuid);
 	}
 
+	@Override
+	public FileEntry updateFileEntry(
+			long userId, long fileEntryId, String sourceFileName,
+			String mimeType, String title, String description, String changeLog,
+			boolean majorVersion, File file, ServiceContext serviceContext)
+		throws PortalException {
+
+		FileEntry fileEntry = _baseRepository.updateFileEntry(
+			userId, fileEntryId, sourceFileName, mimeType, title, description,
+			changeLog, majorVersion, file, serviceContext);
+
+		return newFileEntryProxyBean(fileEntry);
+	}
+
+	@Override
+	public FileEntry updateFileEntry(
+			long userId, long fileEntryId, String sourceFileName,
+			String mimeType, String title, String description, String changeLog,
+			boolean majorVersion, InputStream is, long size,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		FileEntry fileEntry = _baseRepository.updateFileEntry(
+			userId, fileEntryId, sourceFileName, mimeType, title, description,
+			changeLog, majorVersion, is, size, serviceContext);
+
+		return newFileEntryProxyBean(fileEntry);
+	}
+
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #updateFileEntry(long, long,
+	 *             String, String, String, String, String, boolean, File,
+	 *             ServiceContext)}
+	 */
+	@Deprecated
 	@Override
 	public FileEntry updateFileEntry(
 			long fileEntryId, String sourceFileName, String mimeType,
@@ -751,6 +943,12 @@ public class BaseRepositoryProxyBean
 		return newFileEntryProxyBean(fileEntry);
 	}
 
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #updateFileEntry(long, long,
+	 *             String, String, String, String, String, boolean, InputStream,
+	 *             long, ServiceContext)}
+	 */
+	@Deprecated
 	@Override
 	public FileEntry updateFileEntry(
 			long fileEntryId, String sourceFileName, String mimeType,
@@ -768,12 +966,24 @@ public class BaseRepositoryProxyBean
 
 	@Override
 	public Folder updateFolder(
-			long folderId, String title, String description,
+			long folderId, long parentFolderId, String name, String description,
 			ServiceContext serviceContext)
 		throws PortalException {
 
 		Folder folder = _baseRepository.updateFolder(
-			folderId, title, description, serviceContext);
+			folderId, parentFolderId, name, description, serviceContext);
+
+		return newFolderProxyBean(folder);
+	}
+
+	@Override
+	public Folder updateFolder(
+			long folderId, String name, String description,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		Folder folder = _baseRepository.updateFolder(
+			folderId, name, description, serviceContext);
 
 		return newFolderProxyBean(folder);
 	}
@@ -799,6 +1009,6 @@ public class BaseRepositoryProxyBean
 		return _baseRepository.verifyInheritableLock(folderId, lockUuid);
 	}
 
-	private BaseRepository _baseRepository;
+	private final BaseRepository _baseRepository;
 
 }

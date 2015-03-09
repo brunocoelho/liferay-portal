@@ -41,8 +41,7 @@ import java.util.concurrent.Callable;
 public abstract class BaseActionableDynamicQuery
 	implements ActionableDynamicQuery {
 
-	public static final TransactionAttribute
-		REQUIRES_NEW_TRANSACTION_ATTRIBUTE;
+	public static final TransactionAttribute REQUIRES_NEW_TRANSACTION_ATTRIBUTE;
 
 	static {
 		TransactionAttribute.Builder builder =
@@ -58,7 +57,7 @@ public abstract class BaseActionableDynamicQuery
 	@Override
 	public void addDocument(Document document) throws PortalException {
 		if (_documents == null) {
-			_documents = new ArrayList<Document>();
+			_documents = new ArrayList<>();
 		}
 
 		_documents.add(document);
@@ -228,7 +227,7 @@ public abstract class BaseActionableDynamicQuery
 		throws PortalException {
 
 		if (_documents == null) {
-			_documents = new ArrayList<Document>();
+			_documents = new ArrayList<>();
 		}
 
 		_documents.addAll(documents);

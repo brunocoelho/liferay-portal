@@ -14,35 +14,41 @@
 
 package com.liferay.portlet.messageboards.lar;
 
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
-import com.liferay.portal.lar.BaseStagedModelDataHandlerTestCase;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.TransactionalTestRule;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.lar.test.BaseStagedModelDataHandlerTestCase;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.model.StagedModel;
-import com.liferay.portal.test.TransactionalTestRule;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
+import com.liferay.portal.model.User;
+import com.liferay.portal.service.ServiceContext;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portlet.messageboards.model.MBBan;
 import com.liferay.portlet.messageboards.service.MBBanLocalServiceUtil;
-import com.liferay.portlet.messageboards.util.test.MBTestUtil;
 
 import java.util.List;
 import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
-import org.junit.runner.RunWith;
+import org.junit.Rule;
 
 /**
  * @author Daniel Kocsis
  */
-@ExecutionTestListeners(listeners = {MainServletExecutionTestListener.class})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 public class MBBanStagedModelDataHandlerTest
 	extends BaseStagedModelDataHandlerTestCase {
 
 	@ClassRule
-	public static TransactionalTestRule transactionalTestRule =
-		new TransactionalTestRule();
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE,
+			TransactionalTestRule.INSTANCE);
 
 	@Override
 	protected StagedModel addStagedModel(
@@ -50,7 +56,15 @@ public class MBBanStagedModelDataHandlerTest
 			Map<String, List<StagedModel>> dependentStagedModelsMap)
 		throws Exception {
 
-		return MBTestUtil.addBan(group.getGroupId());
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				group.getGroupId(), TestPropsValues.getUserId());
+
+		User user = UserTestUtil.addUser(
+			RandomTestUtil.randomString(), TestPropsValues.getGroupId());
+
+		return MBBanLocalServiceUtil.addBan(
+			TestPropsValues.getUserId(), user.getUserId(), serviceContext);
 	}
 
 	@Override

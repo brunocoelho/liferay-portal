@@ -14,36 +14,37 @@
 
 package com.liferay.portlet.usergroupsadmin.lar;
 
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
-import com.liferay.portal.lar.BaseStagedModelDataHandlerTestCase;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.rule.TransactionalTestRule;
+import com.liferay.portal.kernel.test.util.UserGroupTestUtil;
+import com.liferay.portal.lar.test.BaseStagedModelDataHandlerTestCase;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.model.StagedModel;
 import com.liferay.portal.model.UserGroup;
 import com.liferay.portal.service.UserGroupLocalServiceUtil;
-import com.liferay.portal.test.DeleteAfterTestRun;
-import com.liferay.portal.test.TransactionalTestRule;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
-import com.liferay.portal.util.test.UserGroupTestUtil;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 
 import java.util.List;
 import java.util.Map;
 
 import org.junit.After;
 import org.junit.ClassRule;
-import org.junit.runner.RunWith;
+import org.junit.Rule;
 
 /**
  * @author David Mendez Gonzalez
  */
-@ExecutionTestListeners(listeners = {MainServletExecutionTestListener.class})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 public class UserGroupStagedModelDataHandlerTest
 	extends BaseStagedModelDataHandlerTestCase {
 
 	@ClassRule
-	public static TransactionalTestRule transactionalTestRule =
-		new TransactionalTestRule();
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE,
+			TransactionalTestRule.INSTANCE);
 
 	@After
 	@Override

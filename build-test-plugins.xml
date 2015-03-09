@@ -3,7 +3,20 @@
 <project name="portal-test-plugins" basedir="." default="test" xmlns:antelope="antlib:ise.antelope.tasks">
 	<import file="build-test.xml" />
 
+	<target name="deploy-extra-apps">
+		<fail message="Please set the property ${extra.apps.zip.file.name}" unless="extra.apps.zip.file.name" />
+
+		<get-auto-deploy-dir />
+
+		<unzip
+			dest="${auto.deploy.dir}"
+			src="${extra.apps.zip.file.name}"
+		/>
+	</target>
+
 	<target name="deploy-simple-server-plugins">
+		<get-auto-deploy-dir />
+
 		<if>
 			<equals arg1="${app.server.type}" arg2="jboss" />
 			<then>
@@ -11,7 +24,7 @@
 app.server.type=${app.server.type}
 app.server.jboss.dir=${app.server.dir}
 
-auto.deploy.dir=${liferay.home}/deploy
+auto.deploy.dir=${auto.deploy.dir}
 
 plugins.includes=${plugins.includes}</echo>
 			</then>
@@ -19,7 +32,7 @@ plugins.includes=${plugins.includes}</echo>
 				<echo file="${lp.plugins.dir}/build.${user.name}.properties">app.server.parent.dir=${app.server.parent.dir}
 app.server.type=${app.server.type}
 
-auto.deploy.dir=${liferay.home}/deploy
+auto.deploy.dir=${auto.deploy.dir}
 
 plugins.includes=${plugins.includes}</echo>
 			</else>
@@ -55,6 +68,8 @@ app.server.tomcat.dir=${app.server.parent.dir}/tomcat-7.0.27</echo>
 
 		<for list="${plugins.includes}" param="plugin">
 			<sequential>
+				<get-testcase-property property.name="portlet.properties.@{plugin}" />
+
 				<if>
 					<isset property="portlet.properties.@{plugin}" />
 					<then>
@@ -69,6 +84,13 @@ app.server.tomcat.dir=${app.server.parent.dir}/tomcat-7.0.27</echo>
 					<else>
 						<delete file="${lp.plugins.dir}/${plugin.types}/@{plugin}/docroot/WEB-INF/src/portlet-ext.properties" />
 					</else>
+				</if>
+
+				<if>
+					<equals arg1="@{plugin}" arg2="so-portlet" />
+					<then>
+						<echo file="${lp.plugins.dir}/${plugin.types}/@{plugin}/overwrite/META-INF/custom_jsps/html/portlet/dockbar/license_warning.jsp" />
+					</then>
 				</if>
 			</sequential>
 		</for>
@@ -98,7 +120,9 @@ app.server.tomcat.dir=${app.server.parent.dir}/tomcat-7.0.27</echo>
 						<if>
 							<isset property="plugin.war" />
 							<then>
-								<copy file="${plugin.war}" todir="${liferay.home}/deploy" />
+								<get-auto-deploy-dir />
+
+								<copy file="${plugin.war}" todir="${auto.deploy.dir}" />
 
 								<var name="plugin.war" unset="true" />
 							</then>
@@ -143,5 +167,78 @@ app.server.tomcat.dir=${app.server.parent.dir}/tomcat-7.0.27</echo>
 
 		<delete dir="${lp.plugins.dir}/dist" />
 		<mkdir dir="${lp.plugins.dir}/dist" />
+	</target>
+
+	<target name="test-plugin">
+		<if>
+			<contains string="${test.plugin}" substring="layouttpl" />
+			<then>
+				<var name="select" value="\2" />
+			</then>
+			<else>
+				<var name="select" value="\2s" />
+			</else>
+		</if>
+
+		<propertyregex
+			input="${test.plugin}"
+			override="true"
+			property="test.plugin.type"
+			regexp="(\w+-)+(\w+)"
+			select="${select}"
+		/>
+
+		<get-auto-deploy-dir />
+
+		<echo file="${lp.plugins.dir}/build.${user.name}.properties">app.server.parent.dir=${app.server.parent.dir}
+app.server.type=${app.server.type}
+
+auto.deploy.dir=${auto.deploy.dir}
+
+plugins.includes=${test.plugin}</echo>
+
+		<ant-execute
+			ant.dir="${lp.plugins.dir}/${test.plugin.type}/${test.plugin}"
+			ant.target="clean"
+		/>
+
+		<if>
+			<contains string="${test.plugin}" substring="portlet" />
+			<then>
+				<ant-execute
+					ant.dir="${lp.plugins.dir}/${test.plugin.type}/${test.plugin}"
+					ant.target="compile-jsp"
+				/>
+			</then>
+			<else>
+				<ant-execute
+					ant.dir="${lp.plugins.dir}/${test.plugin.type}/${test.plugin}"
+					ant.target="compile"
+				/>
+			</else>
+		</if>
+	</target>
+
+	<target name="test-plugin-group">
+		<if>
+			<not>
+				<isset property="test.plugin.group.index" />
+			</not>
+			<then>
+				<fail>Use "ant test-plugin-group -Dtest.plugin.group.index=0".</fail>
+			</then>
+		</if>
+
+		<property file="${project.dir}/test.plugin.names.properties" />
+
+		<propertycopy from="TEST_PLUGIN_GROUP_${test.plugin.group.index}" name="test.plugins" />
+
+		<for list="${test.plugins}" param="test.plugin">
+			<sequential>
+				<antcall target="test-plugin">
+					<param name="test.plugin" value="@{test.plugin}" />
+				</antcall>
+			</sequential>
+		</for>
 	</target>
 </project>

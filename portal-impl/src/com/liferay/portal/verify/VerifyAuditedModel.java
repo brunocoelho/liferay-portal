@@ -15,6 +15,7 @@
 package com.liferay.portal.verify;
 
 import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
+import com.liferay.portal.kernel.concurrent.ThrowableAwareRunnable;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -43,13 +44,16 @@ public class VerifyAuditedModel extends VerifyProcess {
 	public void verify(VerifiableAuditedModel ... verifiableAuditedModels)
 		throws Exception {
 
-		List<String> unverifiedTableNames = new ArrayList<String>();
+		List<String> unverifiedTableNames = new ArrayList<>();
 
 		for (VerifiableAuditedModel verifiableAuditedModel :
 				verifiableAuditedModels) {
 
 			unverifiedTableNames.add(verifiableAuditedModel.getTableName());
 		}
+
+		List<VerifyAuditedModelRunnable> verifyAuditedModelRunnables =
+			new ArrayList<>(unverifiedTableNames.size());
 
 		while (!unverifiedTableNames.isEmpty()) {
 			int count = unverifiedTableNames.size();
@@ -65,7 +69,10 @@ public class VerifyAuditedModel extends VerifyProcess {
 					continue;
 				}
 
-				verifyAuditedModel(verifiableAuditedModel);
+				VerifyAuditedModelRunnable verifyAuditedModelRunnable =
+					new VerifyAuditedModelRunnable(verifiableAuditedModel);
+
+				verifyAuditedModelRunnables.add(verifyAuditedModelRunnable);
 
 				unverifiedTableNames.remove(
 					verifiableAuditedModel.getTableName());
@@ -76,6 +83,8 @@ public class VerifyAuditedModel extends VerifyProcess {
 					"Circular dependency detected " + unverifiedTableNames);
 			}
 		}
+
+		doVerify(verifyAuditedModelRunnables);
 	}
 
 	@Override
@@ -347,6 +356,24 @@ public class VerifyAuditedModel extends VerifyProcess {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(VerifyAuditedModel.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		VerifyAuditedModel.class);
+
+	private class VerifyAuditedModelRunnable extends ThrowableAwareRunnable {
+
+		public VerifyAuditedModelRunnable(
+			VerifiableAuditedModel verifiableAuditedModel) {
+
+			_verifiableAuditedModel = verifiableAuditedModel;
+		}
+
+		@Override
+		protected void doRun() throws Exception {
+			verifyAuditedModel(_verifiableAuditedModel);
+		}
+
+		private final VerifiableAuditedModel _verifiableAuditedModel;
+
+	}
 
 }

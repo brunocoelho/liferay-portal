@@ -25,13 +25,13 @@ import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchEngineUtil;
 import com.liferay.portal.kernel.search.Summary;
+import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.util.PortalUtil;
-import com.liferay.portal.util.PortletKeys;
 import com.liferay.portlet.softwarecatalog.model.SCProductEntry;
 import com.liferay.portlet.softwarecatalog.model.SCProductVersion;
 import com.liferay.portlet.softwarecatalog.service.SCProductEntryLocalServiceUtil;
@@ -40,7 +40,6 @@ import java.util.Locale;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
 
 /**
  * @author Jorge Ferrer
@@ -49,11 +48,10 @@ import javax.portlet.PortletURL;
  * @author Bruno Farache
  * @author Raymond Augé
  */
+@OSGiBeanProperties
 public class SCIndexer extends BaseIndexer {
 
-	public static final String[] CLASS_NAMES = {SCProductEntry.class.getName()};
-
-	public static final String PORTLET_ID = PortletKeys.SOFTWARE_CATALOG;
+	public static final String CLASS_NAME = SCProductEntry.class.getName();
 
 	public SCIndexer() {
 		setDefaultSelectedFieldNames(
@@ -63,13 +61,8 @@ public class SCIndexer extends BaseIndexer {
 	}
 
 	@Override
-	public String[] getClassNames() {
-		return CLASS_NAMES;
-	}
-
-	@Override
-	public String getPortletId() {
-		return PORTLET_ID;
+	public String getClassName() {
+		return CLASS_NAME;
 	}
 
 	@Override
@@ -84,7 +77,7 @@ public class SCIndexer extends BaseIndexer {
 	protected Document doGetDocument(Object obj) throws Exception {
 		SCProductEntry productEntry = (SCProductEntry)obj;
 
-		Document document = getBaseModelDocument(PORTLET_ID, productEntry);
+		Document document = getBaseModelDocument(CLASS_NAME, productEntry);
 
 		StringBundler sb = new StringBundler(15);
 
@@ -143,19 +136,12 @@ public class SCIndexer extends BaseIndexer {
 
 	@Override
 	protected Summary doGetSummary(
-		Document document, Locale locale, String snippet, PortletURL portletURL,
+		Document document, Locale locale, String snippet,
 		PortletRequest portletRequest, PortletResponse portletResponse) {
-
-		String productEntryId = document.get(Field.ENTRY_CLASS_PK);
-
-		portletURL.setParameter(
-			"struts_action", "/software_catalog/view_product_entry");
-		portletURL.setParameter("productEntryId", productEntryId);
 
 		Summary summary = createSummary(document, Field.TITLE, Field.CONTENT);
 
 		summary.setMaxContentLength(200);
-		summary.setPortletURL(portletURL);
 
 		return summary;
 	}
@@ -184,11 +170,6 @@ public class SCIndexer extends BaseIndexer {
 		long companyId = GetterUtil.getLong(ids[0]);
 
 		reindexProductEntries(companyId);
-	}
-
-	@Override
-	protected String getPortletId(SearchContext searchContext) {
-		return PORTLET_ID;
 	}
 
 	@Override

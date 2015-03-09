@@ -25,6 +25,11 @@
 			</bean>
 		</property>
 	</bean>
+	<bean id="com.liferay.portal.kernel.lar.lifecycle.ExportImportLifecycleEventFactoryUtil" class="com.liferay.portal.kernel.lar.lifecycle.ExportImportLifecycleEventFactoryUtil">
+		<property name="exportImportLifecycleEventFactory">
+			<bean class="com.liferay.portal.lar.lifecycle.ExportImportLifecycleEventFactoryImpl" />
+		</property>
+	</bean>
 	<bean id="com.liferay.portal.kernel.staging.LayoutStagingUtil" class="com.liferay.portal.kernel.staging.LayoutStagingUtil">
 		<property name="layoutStaging">
 			<bean class="com.liferay.portal.staging.LayoutStagingImpl" />
@@ -40,6 +45,10 @@
 			<bean class="com.liferay.portal.staging.permission.StagingPermissionImpl" />
 		</property>
 	</bean>
+	<bean id="com.liferay.portal.lar.lifecycle.IndexingExportImportLifecycleListener" class="com.liferay.portal.lar.lifecycle.IndexingExportImportLifecycleListener" />
+	<bean id="com.liferay.portal.lar.lifecycle.LoggerExportImportLifecycleListener" class="com.liferay.portal.lar.lifecycle.LoggerExportImportLifecycleListener" />
+	<bean id="com.liferay.portal.model.adapter.builder.StagedGroupModelAdapterBuilder" class="com.liferay.portal.model.adapter.builder.StagedGroupModelAdapterBuilder" />
+	<bean id="com.liferay.portal.model.adapter.builder.StagedThemeModelAdapterBuilder" class="com.liferay.portal.model.adapter.builder.StagedThemeModelAdapterBuilder" />
 	<bean id="com.liferay.portal.service.impl.LayoutLocalServiceStagingAdvice" class="com.liferay.portal.service.impl.LayoutLocalServiceStagingAdvice" />
 	<bean id="com.liferay.portal.service.impl.LayoutSetLocalServiceStagingAdvice" class="com.liferay.portal.service.impl.LayoutSetLocalServiceStagingAdvice" />
 	<bean id="com.liferay.portal.service.impl.PortletPreferencesLocalServiceStagingAdvice" class="com.liferay.portal.service.impl.PortletPreferencesLocalServiceStagingAdvice" />

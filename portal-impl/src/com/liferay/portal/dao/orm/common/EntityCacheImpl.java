@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.cache.CacheRegistryItem;
 import com.liferay.portal.kernel.cache.CacheRegistryUtil;
 import com.liferay.portal.kernel.cache.MultiVMPool;
 import com.liferay.portal.kernel.cache.PortalCache;
+import com.liferay.portal.kernel.cache.PortalCacheHelperUtil;
 import com.liferay.portal.kernel.cache.PortalCacheManager;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.Session;
@@ -84,7 +85,7 @@ public class EntityCacheImpl
 
 	@Override
 	public void clearLocalCache() {
-		if (_localCacheAvailable) {
+		if (_LOCAL_CACHE_AVAILABLE) {
 			_localCache.remove();
 		}
 	}
@@ -122,7 +123,7 @@ public class EntityCacheImpl
 
 		Serializable localCacheKey = null;
 
-		if (_localCacheAvailable) {
+		if (_LOCAL_CACHE_AVAILABLE) {
 			localCache = _localCache.get();
 
 			localCacheKey = _encodeLocalCacheKey(clazz, primaryKey);
@@ -142,7 +143,7 @@ public class EntityCacheImpl
 				result = StringPool.BLANK;
 			}
 
-			if (_localCacheAvailable) {
+			if (_LOCAL_CACHE_AVAILABLE) {
 				localCache.put(localCacheKey, result);
 			}
 		}
@@ -185,7 +186,7 @@ public class EntityCacheImpl
 
 		Serializable localCacheKey = null;
 
-		if (_localCacheAvailable) {
+		if (_LOCAL_CACHE_AVAILABLE) {
 			localCache = _localCache.get();
 
 			localCacheKey = _encodeLocalCacheKey(clazz, primaryKey);
@@ -224,13 +225,14 @@ public class EntityCacheImpl
 						result = ((BaseModel<?>)loadResult).toCacheModel();
 					}
 
-					portalCache.putQuiet(cacheKey, result);
+					PortalCacheHelperUtil.putWithoutReplicator(
+						portalCache, cacheKey, result);
 
 					sessionFactory.closeSession(session);
 				}
 			}
 
-			if (_localCacheAvailable) {
+			if (_LOCAL_CACHE_AVAILABLE) {
 				localCache.put(localCacheKey, result);
 			}
 		}
@@ -273,7 +275,7 @@ public class EntityCacheImpl
 
 		result = ((BaseModel<?>)result).toCacheModel();
 
-		if (_localCacheAvailable) {
+		if (_LOCAL_CACHE_AVAILABLE) {
 			Map<Serializable, Serializable> localCache = _localCache.get();
 
 			Serializable localCacheKey = _encodeLocalCacheKey(
@@ -288,7 +290,8 @@ public class EntityCacheImpl
 		Serializable cacheKey = _encodeCacheKey(primaryKey);
 
 		if (quiet) {
-			portalCache.putQuiet(cacheKey, result);
+			PortalCacheHelperUtil.putWithoutReplicator(
+				portalCache, cacheKey, result);
 		}
 		else {
 			portalCache.put(cacheKey, result);
@@ -314,7 +317,7 @@ public class EntityCacheImpl
 			return;
 		}
 
-		if (_localCacheAvailable) {
+		if (_LOCAL_CACHE_AVAILABLE) {
 			Map<Serializable, Serializable> localCache = _localCache.get();
 
 			Serializable localCacheKey = _encodeLocalCacheKey(
@@ -411,31 +414,36 @@ public class EntityCacheImpl
 	private static final String _GROUP_KEY_PREFIX = CACHE_NAME.concat(
 		StringPool.PERIOD);
 
-	private static Log _log = LogFactoryUtil.getLog(EntityCacheImpl.class);
+	private static final boolean _LOCAL_CACHE_AVAILABLE;
 
-	private static ThreadLocal<LRUMap> _localCache;
-	private static boolean _localCacheAvailable;
+	private static final Log _log = LogFactoryUtil.getLog(
+		EntityCacheImpl.class);
+
+	private static final ThreadLocal<LRUMap> _localCache;
 
 	static {
 		if (PropsValues.VALUE_OBJECT_ENTITY_THREAD_LOCAL_CACHE_MAX_SIZE > 0) {
+			_LOCAL_CACHE_AVAILABLE = true;
+
 			_localCache = new AutoResetThreadLocal<LRUMap>(
 				EntityCacheImpl.class + "._localCache",
 				new LRUMap(
 					PropsValues.
 						VALUE_OBJECT_ENTITY_THREAD_LOCAL_CACHE_MAX_SIZE));
-			_localCacheAvailable = true;
+		}
+		else {
+			_LOCAL_CACHE_AVAILABLE = false;
+
+			_localCache = null;
 		}
 	}
 
 	private MultiVMPool _multiVMPool;
-	private ConcurrentMap<String, PortalCache<Serializable, Serializable>>
-		_portalCaches =
-			new ConcurrentHashMap
-				<String, PortalCache<Serializable, Serializable>>();
+	private final ConcurrentMap<String, PortalCache<Serializable, Serializable>>
+		_portalCaches = new ConcurrentHashMap<>();
 
 	private static class CacheKey implements Externalizable {
 
-		@SuppressWarnings("unused")
 		public CacheKey() {
 		}
 

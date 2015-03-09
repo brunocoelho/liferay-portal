@@ -70,15 +70,10 @@ String keywords = ParamUtil.getString(request, "keywords");
 		Hits hits = indexer.search(searchContext);
 
 		searchContainer.setTotal(hits.getLength());
-
-		PortletURL hitURL = renderResponse.createRenderURL();
-
-		hitURL.setParameter("struts_action", "/blogs/view_entry");
-		hitURL.setParameter("redirect", currentURL);
 		%>
 
 		<liferay-ui:search-container-results
-			results="<%= SearchResultUtil.getSearchResults(hits, locale, hitURL) %>"
+			results="<%= SearchResultUtil.getSearchResults(hits, locale) %>"
 		/>
 
 		<liferay-ui:search-container-row
@@ -105,7 +100,7 @@ String keywords = ParamUtil.getString(request, "keywords");
 				description="<%= (summary != null) ? summary.getContent() : entry.getDescription() %>"
 				mbMessages="<%= searchResult.getMBMessages() %>"
 				queryTerms="<%= hits.getQueryTerms() %>"
-				thumbnailSrc="<%= Validator.isNotNull(entry.getEntryImageURL(themeDisplay)) ? entry.getEntryImageURL(themeDisplay) : StringPool.BLANK %>"
+				thumbnailSrc="<%= Validator.isNotNull(entry.getSmallImageURL(themeDisplay)) ? entry.getSmallImageURL(themeDisplay) : StringPool.BLANK %>"
 				title="<%= (summary != null) ? summary.getTitle() : entry.getTitle() %>"
 				url="<%= rowURL %>"
 			/>

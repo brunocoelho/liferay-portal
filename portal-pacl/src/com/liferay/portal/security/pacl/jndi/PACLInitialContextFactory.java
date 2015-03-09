@@ -41,7 +41,10 @@ public class PACLInitialContextFactory implements InitialContextFactory {
 		_initialContextFactoryBuilder = initialContextFactoryBuilder;
 
 		if (environment != null) {
-			_environment = new Hashtable<Object, Object>(environment);
+			_environment = new Hashtable<>(environment);
+		}
+		else {
+			_environment = null;
 		}
 	}
 
@@ -122,7 +125,7 @@ public class PACLInitialContextFactory implements InitialContextFactory {
 
 		// In Websphere the javax.naming.ldap.LdapContext interface on the
 		// instance comes from a different class loader, and so the instanceof
-		// check fails. To wokaround this, we check by the class name.
+		// check fails. To workaround this, we check by the class name.
 
 		Class<? extends Context> clazz = context.getClass();
 
@@ -138,7 +141,7 @@ public class PACLInitialContextFactory implements InitialContextFactory {
 			}
 		}
 
-		if ((context instanceof LdapContext) && !ldapContext) {
+		if ((context instanceof LdapContext) || ldapContext) {
 			return context;
 		}
 
@@ -156,12 +159,12 @@ public class PACLInitialContextFactory implements InitialContextFactory {
 		return new PACLContext(context, paclPolicy);
 	}
 
-	private Hashtable<?, ?> _environment;
-	private InitialContextFactoryBuilder _initialContextFactoryBuilder;
+	private final Hashtable<?, ?> _environment;
+	private final InitialContextFactoryBuilder _initialContextFactoryBuilder;
 
 	// This must not be static because of LPS-33404
 
-	private Log _log = LogFactoryUtil.getLog(
+	private final Log _log = LogFactoryUtil.getLog(
 		PACLInitialContextFactory.class.getName());
 
 }

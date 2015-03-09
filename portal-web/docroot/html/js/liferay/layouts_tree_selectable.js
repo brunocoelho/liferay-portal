@@ -56,7 +56,7 @@ AUI.add(
 								currentRetVal,
 								{
 									checked: instance.get(STR_DEFAULT_STATE),
-									type: 'task'
+									type: 'liferay-task'
 								}
 							)
 						);
@@ -86,7 +86,7 @@ AUI.add(
 								{
 									checked: instance.get(STR_DEFAULT_STATE),
 									label: rootConfig.label,
-									type: 'task'
+									type: 'liferay-task'
 								}
 							)
 						);
@@ -113,12 +113,14 @@ AUI.add(
 
 						var host = instance.get(STR_HOST);
 
-						host.fire(
-							'selectableNodeChildrenChange',
-							{
-								node: event.target
-							}
-						);
+						if (event.src !== A.Widget.UI_SRC) {
+							host.fire(
+								'selectableNodeChildrenChange',
+								{
+									node: event.target
+								}
+							);
+						}
 					},
 
 					_onTreeAppend: function(event) {
@@ -149,6 +151,6 @@ AUI.add(
 	},
 	'',
 	{
-		requires: ['aui-base']
+		requires: ['liferay-layouts-tree-node-task']
 	}
 );

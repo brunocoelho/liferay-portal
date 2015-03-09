@@ -34,7 +34,7 @@ public class MessageBatch implements Serializable {
 
 	public MessageBatch(String messageBatchId, int initialSize) {
 		_messageBatchId = messageBatchId;
-		_messages = new ArrayList<Message>(initialSize);
+		_messages = new ArrayList<>(initialSize);
 	}
 
 	public void addMessage(Message message) {
@@ -49,7 +49,7 @@ public class MessageBatch implements Serializable {
 		return _messages;
 	}
 
-	private String _messageBatchId;
-	private List<Message> _messages;
+	private final String _messageBatchId;
+	private final List<Message> _messages;
 
 }

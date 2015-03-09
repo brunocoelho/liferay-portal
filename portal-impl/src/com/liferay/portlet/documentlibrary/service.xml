@@ -132,6 +132,7 @@
 		<column name="folderId" type="long" />
 		<column name="treePath" type="String" />
 		<column name="name" type="String" />
+		<column name="fileName" type="String" />
 		<column name="extension" type="String" />
 		<column name="mimeType" type="String" />
 		<column name="title" type="String" />
@@ -162,6 +163,9 @@
 		<finder name="CompanyId" return-type="Collection">
 			<finder-column name="companyId" />
 		</finder>
+		<finder name="RepositoryId" return-type="Collection">
+			<finder-column name="repositoryId" />
+		</finder>
 		<finder name="MimeType" return-type="Collection">
 			<finder-column name="mimeType" />
 		</finder>
@@ -176,6 +180,10 @@
 			<finder-column name="groupId" />
 			<finder-column name="folderId" arrayable-operator="OR" />
 		</finder>
+		<finder name="R_F" return-type="Collection">
+			<finder-column name="repositoryId" />
+			<finder-column name="folderId" />
+		</finder>
 		<finder name="F_N" return-type="Collection">
 			<finder-column name="folderId" />
 			<finder-column name="name" />
@@ -189,6 +197,11 @@
 			<finder-column name="groupId" />
 			<finder-column name="folderId" />
 			<finder-column name="name" />
+		</finder>
+		<finder name="G_F_FN" return-type="DLFileEntry" unique="true">
+			<finder-column name="groupId" />
+			<finder-column name="folderId" />
+			<finder-column name="fileName" />
 		</finder>
 		<finder name="G_F_T" return-type="DLFileEntry" unique="true">
 			<finder-column name="groupId" />
@@ -466,6 +479,7 @@
 		<column name="folderId" type="long" />
 		<column name="fileEntryId" type="long" />
 		<column name="treePath" type="String" />
+		<column name="fileName" type="String" />
 		<column name="extension" type="String" />
 		<column name="mimeType" type="String" />
 		<column name="title" type="String" />
@@ -557,7 +571,7 @@
 		<column name="lastPostDate" type="Date" />
 		<column name="defaultFileEntryTypeId" type="long" />
 		<column name="hidden" type="boolean" />
-		<column name="overrideFileEntryTypes" type="boolean" />
+		<column name="restrictionType" type="int" />
 		<column name="status" type="int" />
 		<column name="statusByUserId" type="long" />
 		<column name="statusByUserName" type="String" />
@@ -582,7 +596,7 @@
 		<finder name="CompanyId" return-type="Collection">
 			<finder-column name="companyId" />
 		</finder>
-		<finder name="RepositoryId" return-type="DLFolder">
+		<finder name="RepositoryId" return-type="Collection">
 			<finder-column name="repositoryId" />
 		</finder>
 		<finder name="G_P" return-type="Collection">
@@ -593,9 +607,22 @@
 			<finder-column name="companyId" />
 			<finder-column name="status" comparator="!=" />
 		</finder>
+		<finder name="R_M" return-type="DLFolder">
+			<finder-column name="repositoryId" />
+			<finder-column name="mountPoint" />
+		</finder>
+		<finder name="R_P" return-type="Collection">
+			<finder-column name="repositoryId" />
+			<finder-column name="parentFolderId" />
+		</finder>
 		<finder name="P_N" return-type="Collection">
 			<finder-column name="parentFolderId" />
 			<finder-column name="name" />
+		</finder>
+		<finder name="G_M_P" return-type="Collection">
+			<finder-column name="groupId" />
+			<finder-column name="mountPoint" />
+			<finder-column name="parentFolderId" />
 		</finder>
 		<finder name="G_P_N" return-type="DLFolder" unique="true">
 			<finder-column name="groupId" />
@@ -632,6 +659,7 @@
 
 		<reference package-path="com.liferay.portal" entity="Group" />
 		<reference package-path="com.liferay.portal" entity="Lock" />
+		<reference package-path="com.liferay.portal" entity="Repository" />
 		<reference package-path="com.liferay.portal" entity="Resource" />
 		<reference package-path="com.liferay.portal" entity="User" />
 		<reference package-path="com.liferay.portal" entity="WebDAVProps" />
@@ -693,6 +721,7 @@
 		<exception>ImageSize</exception>
 		<exception>InvalidFileEntryType</exception>
 		<exception>InvalidFileVersion</exception>
+		<exception>InvalidFolder</exception>
 		<exception>NoSuchDirectory</exception>
 		<exception>NoSuchFile</exception>
 		<exception>NoSuchMetadataSet</exception>

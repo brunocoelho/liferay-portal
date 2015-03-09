@@ -343,9 +343,10 @@ public class LayoutTemplateImpl
 		_wapTemplatePath = wapTemplatePath;
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(LayoutTemplateImpl.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		LayoutTemplateImpl.class);
 
-	private List<String> _columns = new ArrayList<String>();
+	private List<String> _columns = new ArrayList<>();
 	private String _content;
 	private final String _layoutTemplateId;
 	private String _name;

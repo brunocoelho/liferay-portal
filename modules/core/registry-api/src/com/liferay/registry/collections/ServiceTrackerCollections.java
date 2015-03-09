@@ -19,10 +19,7 @@ import com.liferay.registry.Registry;
 import com.liferay.registry.RegistryUtil;
 import com.liferay.registry.ServiceReference;
 import com.liferay.registry.ServiceTrackerCustomizer;
-import com.liferay.registry.collections.internal.MultiValueServiceTrackerBucketFactory;
 import com.liferay.registry.collections.internal.ServiceTrackerCollectionImpl;
-import com.liferay.registry.collections.internal.ServiceTrackerMapImpl;
-import com.liferay.registry.collections.internal.SingleValueServiceTrackerBucketFactory;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -35,21 +32,21 @@ import java.util.Map;
 public class ServiceTrackerCollections {
 
 	public static <S> ServiceTrackerList<S> list(Class<S> clazz) {
-		return new ServiceTrackerCollectionImpl<S>(
+		return new ServiceTrackerCollectionImpl<>(
 			clazz, (Filter)null, null, new HashMap<String, Object>());
 	}
 
 	public static <S> ServiceTrackerList<S> list(
 		Class<S> clazz, Filter filter) {
 
-		return new ServiceTrackerCollectionImpl<S>(
+		return new ServiceTrackerCollectionImpl<>(
 			clazz, filter, null, new HashMap<String, Object>());
 	}
 
 	public static <S> ServiceTrackerList<S> list(
 		Class<S> clazz, Filter filter, Map<String, Object> properties) {
 
-		return new ServiceTrackerCollectionImpl<S>(
+		return new ServiceTrackerCollectionImpl<>(
 			clazz, filter, null, properties);
 	}
 
@@ -67,14 +64,14 @@ public class ServiceTrackerCollections {
 		ServiceTrackerCustomizer<S, S> serviceTrackerCustomizer,
 		Map<String, Object> properties) {
 
-		return new ServiceTrackerCollectionImpl<S>(
+		return new ServiceTrackerCollectionImpl<>(
 			clazz, filter, serviceTrackerCustomizer, properties);
 	}
 
 	public static <S> ServiceTrackerList<S> list(
 		Class<S> clazz, Map<String, Object> properties) {
 
-		return new ServiceTrackerCollectionImpl<S>(
+		return new ServiceTrackerCollectionImpl<>(
 			clazz, (Filter)null, null, properties);
 	}
 
@@ -91,7 +88,7 @@ public class ServiceTrackerCollections {
 		Class<S> clazz, ServiceTrackerCustomizer<S, S> serviceTrackerCustomizer,
 		Map<String, Object> properties) {
 
-		return new ServiceTrackerCollectionImpl<S>(
+		return new ServiceTrackerCollectionImpl<>(
 			clazz, (Filter)null, serviceTrackerCustomizer, properties);
 	}
 
@@ -106,7 +103,7 @@ public class ServiceTrackerCollections {
 	public static <S> ServiceTrackerList<S> list(
 		Class<S> clazz, String filterString, Map<String, Object> properties) {
 
-		return new ServiceTrackerCollectionImpl<S>(
+		return new ServiceTrackerCollectionImpl<>(
 			clazz, _getFilter(filterString), null, properties);
 	}
 
@@ -132,129 +129,141 @@ public class ServiceTrackerCollections {
 	public static <S> ServiceTrackerMap<String, List<S>> multiValueMap(
 		Class<S> clazz, String propertyKey) {
 
-		return new ServiceTrackerMapImpl<String, S, List<S>>(
-			clazz,"(" + propertyKey + "=*)",
-			new PropertyServiceReferenceMapper<String>(propertyKey),
-			new MultiValueServiceTrackerBucketFactory<S>());
+		ServiceTrackerMapFactory serviceTrackerMapFactory =
+			ServiceTrackerMapFactoryUtil.getServiceTrackerMapFactory();
+
+		return serviceTrackerMapFactory.multiValueMap(clazz, propertyKey);
 	}
 
 	public static <K, S> ServiceTrackerMap<K, List<S>> multiValueMap(
 		Class<S> clazz, String filterString,
-		ServiceReferenceMapper<K> serviceReferenceMapper) {
+		ServiceReferenceMapper<K, S> serviceReferenceMapper) {
 
-		return new ServiceTrackerMapImpl<K, S, List<S>>(
-			clazz, filterString, serviceReferenceMapper,
-			new MultiValueServiceTrackerBucketFactory<S>());
+		ServiceTrackerMapFactory serviceTrackerMapFactory =
+			ServiceTrackerMapFactoryUtil.getServiceTrackerMapFactory();
+
+		return serviceTrackerMapFactory.multiValueMap(
+			clazz, filterString, serviceReferenceMapper);
 	}
 
 	public static <K, S> ServiceTrackerMap<K, List<S>> multiValueMap(
 		Class<S> clazz, String filterString,
-		ServiceReferenceMapper<K> serviceReferenceMapper,
+		ServiceReferenceMapper<K, S> serviceReferenceMapper,
 		Comparator<ServiceReference<S>> comparator) {
 
-		return new ServiceTrackerMapImpl<K, S, List<S>>(
+		ServiceTrackerMapFactory serviceTrackerMapFactory =
+			ServiceTrackerMapFactoryUtil.getServiceTrackerMapFactory();
+
+		return serviceTrackerMapFactory.multiValueMap(
+			clazz, filterString, serviceReferenceMapper, comparator);
+	}
+
+	public static <K, SR, S> ServiceTrackerMap<K, List<S>> multiValueMap(
+		Class<SR> clazz, String filterString,
+		ServiceReferenceMapper<K, SR> serviceReferenceMapper,
+		ServiceTrackerCustomizer<SR, S> serviceTrackerCustomizer) {
+
+		ServiceTrackerMapFactory serviceTrackerMapFactory =
+			ServiceTrackerMapFactoryUtil.getServiceTrackerMapFactory();
+
+		return serviceTrackerMapFactory.multiValueMap(
 			clazz, filterString, serviceReferenceMapper,
-			new MultiValueServiceTrackerBucketFactory<S>(comparator));
+			serviceTrackerCustomizer);
+	}
+
+	public static <K, SR, S> ServiceTrackerMap<K, List<S>> multiValueMap(
+		Class<SR> clazz, String filterString,
+		ServiceReferenceMapper<K, SR> serviceReferenceMapper,
+		ServiceTrackerCustomizer<SR, S> serviceTrackerCustomizer,
+		Comparator<ServiceReference<SR>> comparator) {
+
+		ServiceTrackerMapFactory serviceTrackerMapFactory =
+			ServiceTrackerMapFactoryUtil.getServiceTrackerMapFactory();
+
+		return serviceTrackerMapFactory.multiValueMap(
+			clazz, filterString, serviceReferenceMapper,
+			serviceTrackerCustomizer, comparator);
+	}
+
+	public static <SR, S> ServiceTrackerMap<String, List<S>> multiValueMap(
+		Class<SR> clazz, String propertyKey,
+		ServiceTrackerCustomizer<SR, S> serviceTrackerCustomizer) {
+
+		ServiceTrackerMapFactory serviceTrackerMapFactory =
+			ServiceTrackerMapFactoryUtil.getServiceTrackerMapFactory();
+
+		return serviceTrackerMapFactory.multiValueMap(
+			clazz, propertyKey, serviceTrackerCustomizer);
 	}
 
 	public static <S> ServiceTrackerMap<String, S> singleValueMap(
 		Class<S> clazz, String propertyKey) {
 
-		return new ServiceTrackerMapImpl<String, S, S>(
-			clazz, "(" + propertyKey + "=*)",
-			new PropertyServiceReferenceMapper<String>(propertyKey),
-			new SingleValueServiceTrackerBucketFactory<S>());
+		ServiceTrackerMapFactory serviceTrackerMapFactory =
+			ServiceTrackerMapFactoryUtil.getServiceTrackerMapFactory();
+
+		return serviceTrackerMapFactory.singleValueMap(clazz, propertyKey);
 	}
 
 	public static <K, S> ServiceTrackerMap<K, S> singleValueMap(
 		Class<S> clazz, String filterString,
-		ServiceReferenceMapper<K> serviceReferenceMapper) {
+		ServiceReferenceMapper<K, S> serviceReferenceMapper) {
 
-		return new ServiceTrackerMapImpl<K, S, S>(
-			clazz, filterString, serviceReferenceMapper,
-			new SingleValueServiceTrackerBucketFactory<S>());
+		ServiceTrackerMapFactory serviceTrackerMapFactory =
+			ServiceTrackerMapFactoryUtil.getServiceTrackerMapFactory();
+
+		return serviceTrackerMapFactory.singleValueMap(
+			clazz, filterString, serviceReferenceMapper);
 	}
 
 	public static <K, S> ServiceTrackerMap<K, S> singleValueMap(
 		Class<S> clazz, String filterString,
-		ServiceReferenceMapper<K> serviceReferenceMapper,
+		ServiceReferenceMapper<K, S> serviceReferenceMapper,
 		Comparator<ServiceReference<S>> comparator) {
 
-		return new ServiceTrackerMapImpl<K, S, S>(
+		ServiceTrackerMapFactory serviceTrackerMapFactory =
+			ServiceTrackerMapFactoryUtil.getServiceTrackerMapFactory();
+
+		return serviceTrackerMapFactory.singleValueMap(
+			clazz, filterString, serviceReferenceMapper, comparator);
+	}
+
+	public static <K, SR, S> ServiceTrackerMap<K, S> singleValueMap(
+		Class<SR> clazz, String filterString,
+		ServiceReferenceMapper<K, SR> serviceReferenceMapper,
+		ServiceTrackerCustomizer<SR, S> serviceTrackerCustomizer) {
+
+		ServiceTrackerMapFactory serviceTrackerMapFactory =
+			ServiceTrackerMapFactoryUtil.getServiceTrackerMapFactory();
+
+		return serviceTrackerMapFactory.singleValueMap(
 			clazz, filterString, serviceReferenceMapper,
-			new SingleValueServiceTrackerBucketFactory<S>(comparator));
+			serviceTrackerCustomizer);
 	}
 
-	public static class PropertyServiceReferenceComparator <T>
-		implements Comparator<ServiceReference<T>> {
+	public static <K, SR, S> ServiceTrackerMap<K, S> singleValueMap(
+		Class<SR> clazz, String filterString,
+		ServiceReferenceMapper<K, SR> serviceReferenceMapper,
+		ServiceTrackerCustomizer<SR, S> serviceTrackerCustomizer,
+		Comparator<ServiceReference<SR>> comparator) {
 
-		public PropertyServiceReferenceComparator(String propertyKey) {
-			_propertyKey = propertyKey;
-		}
+		ServiceTrackerMapFactory serviceTrackerMapFactory =
+			ServiceTrackerMapFactoryUtil.getServiceTrackerMapFactory();
 
-		@Override
-		public int compare(
-			ServiceReference<T> serviceReference1,
-			ServiceReference<T> serviceReference2) {
-
-			if (serviceReference1 == null) {
-				if (serviceReference2 == null) {
-					return 0;
-				}
-				else {
-					return -1;
-				}
-			}
-			else if (serviceReference2 == null) {
-				return 1;
-			}
-
-			Object propertyValue1 = serviceReference1.getProperty(_propertyKey);
-
-			if (!(propertyValue1 instanceof Comparable)) {
-				return -(serviceReference1.compareTo(serviceReference2));
-			}
-
-			Comparable<Object> propertyValueComparable1 =
-				(Comparable<Object>)propertyValue1;
-
-			Object propertyValue2 = serviceReference2.getProperty(_propertyKey);
-
-			if (propertyValue1 == null) {
-				if (propertyValue2 != null) {
-					return -1;
-				}
-
-				return -(serviceReference1.compareTo(serviceReference2));
-			}
-
-			return -(propertyValueComparable1.compareTo(propertyValue2));
-		}
-
-		private String _propertyKey;
-
+		return serviceTrackerMapFactory.singleValueMap(
+			clazz, filterString, serviceReferenceMapper,
+			serviceTrackerCustomizer, comparator);
 	}
 
-	public static class PropertyServiceReferenceMapper <T>
-		implements ServiceReferenceMapper<T> {
+	public static <SR, S> ServiceTrackerMap<String, S> singleValueMap(
+		Class<SR> clazz, String propertyKey,
+		ServiceTrackerCustomizer<SR, S> serviceTrackerCustomizer) {
 
-		public PropertyServiceReferenceMapper(String propertyKey) {
-			_propertyKey = propertyKey;
-		}
+		ServiceTrackerMapFactory serviceTrackerMapFactory =
+			ServiceTrackerMapFactoryUtil.getServiceTrackerMapFactory();
 
-		@Override
-		public void map(
-			ServiceReference<?> serviceReference, Emitter<T> emitter) {
-
-			T propertyValue = (T)serviceReference.getProperty(_propertyKey);
-
-			if (propertyValue != null) {
-				emitter.emit(propertyValue);
-			}
-		}
-
-		private String _propertyKey;
-
+		return serviceTrackerMapFactory.singleValueMap(
+			clazz, propertyKey, serviceTrackerCustomizer);
 	}
 
 	private static Filter _getFilter(String filterString) {

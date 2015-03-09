@@ -45,7 +45,7 @@
 			<aui:input name="tabs2" type="hidden" value="<%= tabs2 %>" />
 			<aui:input name="tabs3" type="hidden" value="<%= tabs3 %>" />
 			<aui:input name="redirect" type="hidden" value="<%= redirectURL %>" />
-			<aui:input name="portletId" type="hidden" />
+			<aui:input name="className" type="hidden" />
 
 			<c:if test="<%= showTabs1 %>">
 				<liferay-ui:tabs
@@ -81,7 +81,6 @@
 					}
 
 					boolean showEditPluginHREF = false;
-					boolean showReindexButton = true;
 					%>
 
 					<%@ include file="/html/portlet/plugins_admin/plugins.jspf" %>
@@ -89,22 +88,39 @@
 			</c:choose>
 		</aui:form>
 
-		<aui:script use="aui-base">
-			A.one('#<portlet:namespace />fm').delegate(
+		<portlet:renderURL var="redirectURL">
+			<portlet:param name="struts_action" value="/admin/view" />
+			<portlet:param name="tabs1" value="<%= tabs1 %>" />
+			<portlet:param name="tabs2" value="<%= tabs2 %>" />
+			<portlet:param name="tabs3" value="<%= tabs3 %>" />
+			<portlet:param name="<%= SearchContainer.DEFAULT_CUR_PARAM %>" value="<%= String.valueOf(cur) %>" />
+			<portlet:param name="<%= SearchContainer.DEFAULT_DELTA_PARAM %>" value="<%= String.valueOf(delta) %>" />
+		</portlet:renderURL>
+
+		<portlet:actionURL var="editServerURL">
+			<portlet:param name="struts_action" value="/admin/edit_server" />
+		</portlet:actionURL>
+
+		<aui:script>
+			AUI.$('#<portlet:namespace />fm').on(
 				'click',
+				'.save-server-button',
 				function(event) {
-					document.<portlet:namespace />fm.<portlet:namespace /><%= Constants.CMD %>.value = event.currentTarget.attr('data-cmd');
-					document.<portlet:namespace />fm.<portlet:namespace />redirect.value = '<portlet:renderURL><portlet:param name="struts_action" value="/admin/view" /><portlet:param name="tabs1" value="<%= tabs1 %>" /><portlet:param name="tabs2" value="<%= tabs2 %>" /><portlet:param name="tabs3" value="<%= tabs3 %>" /><portlet:param name="<%= SearchContainer.DEFAULT_CUR_PARAM %>" value="<%= String.valueOf(cur) %>" /><portlet:param name="<%= SearchContainer.DEFAULT_DELTA_PARAM %>" value="<%= String.valueOf(delta) %>" /></portlet:renderURL>';
+					var currentTarget = AUI.$(event.currentTarget);
 
-					var portletId = event.currentTarget.attr('data-portletid');
+					var form = document.<portlet:namespace />fm;
 
-					if (portletId) {
-						document.<portlet:namespace />fm.<portlet:namespace />portletId.value = portletId;
+					form.<portlet:namespace /><%= Constants.CMD %>.value = currentTarget.data('cmd');
+					form.<portlet:namespace />redirect.value = '<%= redirectURL %>';
+
+					var className = currentTarget.data('classname');
+
+					if (className) {
+						form.<portlet:namespace />className.value = className;
 					}
 
-					submitForm(document.<portlet:namespace />fm, '<portlet:actionURL><portlet:param name="struts_action" value="/admin/edit_server" /></portlet:actionURL>');
-				},
-				'.save-server-button'
+					submitForm(form, '<%= editServerURL %>');
+				}
 			);
 		</aui:script>
 	</c:when>

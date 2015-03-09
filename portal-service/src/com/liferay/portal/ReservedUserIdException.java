@@ -18,11 +18,13 @@ import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
+ * @deprecated As of 7.0.0, replaced by {@link
+ *             UserIdException.MustNotBeReserved}
  */
+@Deprecated
 public class ReservedUserIdException extends PortalException {
 
 	public ReservedUserIdException() {
-		super();
 	}
 
 	public ReservedUserIdException(String msg) {

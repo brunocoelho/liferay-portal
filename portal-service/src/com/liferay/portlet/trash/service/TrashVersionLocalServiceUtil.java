@@ -164,10 +164,10 @@ public class TrashVersionLocalServiceUtil {
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public static long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery) {
@@ -175,11 +175,11 @@ public class TrashVersionLocalServiceUtil {
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public static long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,
@@ -192,6 +192,15 @@ public class TrashVersionLocalServiceUtil {
 		return getService().fetchTrashVersion(versionId);
 	}
 
+	public static com.liferay.portlet.trash.model.TrashVersion fetchVersion(
+		java.lang.String className, long classPK) {
+		return getService().fetchVersion(className, classPK);
+	}
+
+	/**
+	* @deprecated As of 7.0.0, replaced by {@link #fetchVersion(String, long)}
+	*/
+	@Deprecated
 	public static com.liferay.portlet.trash.model.TrashVersion fetchVersion(
 		long entryId, java.lang.String className, long classPK) {
 		return getService().fetchVersion(entryId, className, classPK);

@@ -14,7 +14,6 @@
 
 package com.liferay.portal.tools.sourceformatter;
 
-import com.liferay.portal.kernel.util.ReleaseInfo;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Tuple;
 
@@ -22,6 +21,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author Hugo Huijser
@@ -35,8 +35,8 @@ public class SourceFormatter {
 
 			sourceFormatter.format();
 		}
-		catch (Exception e) {
-			e.printStackTrace();
+		catch (Throwable t) {
+			t.printStackTrace();
 		}
 	}
 
@@ -49,11 +49,12 @@ public class SourceFormatter {
 		_throwException = throwException;
 		_printErrors = printErrors;
 		_autoFix = autoFix;
-
-		_setVersion();
 	}
 
-	public void format() throws Exception {
+	public void format() throws Throwable {
+		final AtomicReference<Throwable> exceptionReference1 =
+			new AtomicReference<Throwable>();
+
 		Thread thread1 = new Thread () {
 
 			@Override
@@ -81,12 +82,17 @@ public class SourceFormatter {
 						_runSourceProcessor(sourceProcessor);
 					}
 				}
-				catch (Exception e) {
-					e.printStackTrace();
+				catch (Throwable t) {
+					t.printStackTrace();
+
+					exceptionReference1.set(t);
 				}
 			}
 
 		};
+
+		final AtomicReference<Throwable> exceptionReference2 =
+			new AtomicReference<Throwable>();
 
 		Thread thread2 = new Thread () {
 
@@ -105,8 +111,10 @@ public class SourceFormatter {
 						_runSourceProcessor(sourceProcessor);
 					}
 				}
-				catch (Exception e) {
-					e.printStackTrace();
+				catch (Throwable t) {
+					t.printStackTrace();
+
+					exceptionReference2.set(t);
 				}
 			}
 
@@ -117,6 +125,20 @@ public class SourceFormatter {
 
 		thread1.join();
 		thread2.join();
+
+		Throwable throwable1 = exceptionReference1.get();
+		Throwable throwable2 = exceptionReference2.get();
+
+		if (throwable1 != null) {
+			if (throwable2 != null) {
+				throwable1.addSuppressed(throwable2);
+			}
+
+			throw throwable1;
+		}
+		else if (throwable2 != null) {
+			throw throwable2;
+		}
 
 		if (_throwException) {
 			if (!_errorMessages.isEmpty()) {
@@ -135,6 +157,12 @@ public class SourceFormatter {
 		if (fileName.endsWith(".testjava")) {
 			sourceProcessor = JavaSourceProcessor.class.newInstance();
 		}
+		else if (fileName.endsWith(".testsql")) {
+			sourceProcessor = SQLSourceProcessor.class.newInstance();
+		}
+		else if (fileName.endsWith(".testtld")) {
+			sourceProcessor = TLDSourceProcessor.class.newInstance();
+		}
 		else if (fileName.endsWith(".testxml")) {
 			sourceProcessor = XMLSourceProcessor.class.newInstance();
 		}
@@ -144,21 +172,15 @@ public class SourceFormatter {
 		}
 
 		String newContent = sourceProcessor.format(
-			fileName, _useProperties, _printErrors, _autoFix,
-			_mainReleaseVersion);
+			fileName, _useProperties, _printErrors, _autoFix);
 
 		return new Tuple(newContent, sourceProcessor.getErrorMessages());
-	}
-
-	public String getMainReleaseVersion() {
-		return _mainReleaseVersion;
 	}
 
 	private void _runSourceProcessor(SourceProcessor sourceProcessor)
 		throws Exception {
 
-		sourceProcessor.format(
-			_useProperties, _printErrors, _autoFix, _mainReleaseVersion);
+		sourceProcessor.format(_useProperties, _printErrors, _autoFix);
 
 		_errorMessages.addAll(sourceProcessor.getErrorMessages());
 
@@ -168,33 +190,11 @@ public class SourceFormatter {
 		}
 	}
 
-	private void _setVersion() throws Exception {
-		String releaseInfoVersion = ReleaseInfo.getVersion();
-
-		if (releaseInfoVersion.startsWith("6.1")) {
-			_mainReleaseVersion =
-				BaseSourceProcessor.MAIN_RELEASE_VERSION_6_1_0;
-		}
-		else if (releaseInfoVersion.startsWith("6.2")) {
-			_mainReleaseVersion =
-				BaseSourceProcessor.MAIN_RELEASE_VERSION_6_2_0;
-		}
-		else if (releaseInfoVersion.startsWith("7.0")) {
-			_mainReleaseVersion =
-				BaseSourceProcessor.MAIN_RELEASE_VERSION_7_0_0;
-		}
-		else {
-			throw new Exception(
-				"Invalid release information: " + ReleaseInfo.getVersion());
-		}
-	}
-
-	private boolean _autoFix;
-	private Set<String> _errorMessages = new LinkedHashSet<String>();
+	private final boolean _autoFix;
+	private final Set<String> _errorMessages = new LinkedHashSet<String>();
 	private SourceMismatchException _firstSourceMismatchException;
-	private String _mainReleaseVersion;
-	private boolean _printErrors;
-	private boolean _throwException;
-	private boolean _useProperties;
+	private final boolean _printErrors;
+	private final boolean _throwException;
+	private final boolean _useProperties;
 
 }

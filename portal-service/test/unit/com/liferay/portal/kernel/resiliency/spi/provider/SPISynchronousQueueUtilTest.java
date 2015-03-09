@@ -16,8 +16,8 @@ package com.liferay.portal.kernel.resiliency.spi.provider;
 
 import com.liferay.portal.kernel.resiliency.spi.MockSPI;
 import com.liferay.portal.kernel.resiliency.spi.SPI;
-import com.liferay.portal.kernel.test.CodeCoverageAssertor;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 
 import java.util.Map;
 import java.util.concurrent.SynchronousQueue;
@@ -32,8 +32,8 @@ import org.junit.Test;
 public class SPISynchronousQueueUtilTest {
 
 	@ClassRule
-	public static CodeCoverageAssertor codeCoverageAssertor =
-		new CodeCoverageAssertor();
+	public static final CodeCoverageAssertor codeCoverageAssertor =
+		CodeCoverageAssertor.INSTANCE;
 
 	@Test
 	public void testConstructor() {
@@ -51,9 +51,8 @@ public class SPISynchronousQueueUtilTest {
 			SPISynchronousQueueUtil.createSynchronousQueue(spiUUID);
 
 		Map<String, SynchronousQueue<SPI>> synchronizerRegistry =
-			(Map<String, SynchronousQueue<SPI>>)
-				ReflectionTestUtil.getFieldValue(
-					SPISynchronousQueueUtil.class, "_synchronousQueues");
+			ReflectionTestUtil.getFieldValue(
+				SPISynchronousQueueUtil.class, "_synchronousQueues");
 
 		Assert.assertSame(synchronousQueue, synchronizerRegistry.get(spiUUID));
 
@@ -92,6 +91,8 @@ public class SPISynchronousQueueUtilTest {
 		notifyThread.start();
 
 		Assert.assertSame(mockSPI, synchronousQueue.take());
+
+		notifyThread.join();
 
 		// Destroy
 

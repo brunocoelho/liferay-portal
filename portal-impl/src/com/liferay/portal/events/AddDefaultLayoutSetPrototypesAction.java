@@ -69,8 +69,8 @@ public class AddDefaultLayoutSetPrototypesAction
 			}
 		}
 
-		Map<Locale, String> nameMap = new HashMap<Locale, String>();
-		Map<Locale, String> descriptionMap = new HashMap<Locale, String>();
+		Map<Locale, String> nameMap = new HashMap<>();
+		Map<Locale, String> descriptionMap = new HashMap<>();
 
 		Locale[] locales = LanguageUtil.getAvailableLocales();
 
@@ -115,108 +115,17 @@ public class AddDefaultLayoutSetPrototypesAction
 
 		Layout layout = addLayout(layoutSet, "home", "/home", "2_columns_i");
 
-		String portletId = addPortletId(layout, PortletKeys.SEARCH, "column-2");
-
-		Map<String, String> preferences = new HashMap<String, String>();
-
-		preferences.put("portletSetupShowBorders", Boolean.FALSE.toString());
-
-		updatePortletSetup(layout, portletId, preferences);
-
-		portletId = addPortletId(layout, PortletKeys.LANGUAGE, "column-2");
-
-		preferences = new HashMap<String, String>();
-
-		preferences.put("displayStyle", "3");
-
-		updatePortletSetup(layout, portletId, preferences);
-
-		portletId = addPortletId(
-			layout, PortletKeys.ASSET_PUBLISHER, "column-2");
-
-		preferences = new HashMap<String, String>();
-
-		Locale[] locales = LanguageUtil.getAvailableLocales();
-
-		for (Locale locale : locales) {
-			preferences.put(
-				"portletSetupTitle_" + locale,
-				LanguageUtil.get(locale, "recent-content"));
-		}
-
-		preferences.put("portletSetupUseCustomTitle", Boolean.TRUE.toString());
-
-		updatePortletSetup(layout, portletId, preferences);
-
 		// Documents layout
 
 		layout = addLayout(
 			layoutSet, "documents-and-media", "/documents", "1_column");
 
-		portletId = addPortletId(
+		String portletId = addPortletId(
 			layout, PortletKeys.DOCUMENT_LIBRARY, "column-1");
 
-		preferences = new HashMap<String, String>();
+		Map<String, String> preferences = new HashMap<>();
 
 		preferences.put("portletSetupShowBorders", Boolean.FALSE.toString());
-
-		updatePortletSetup(layout, portletId, preferences);
-
-		portletId = addPortletId(
-			layout, PortletKeys.ASSET_PUBLISHER, "column-2");
-
-		preferences = new HashMap<String, String>();
-
-		preferences.put("anyAssetType", Boolean.FALSE.toString());
-
-		for (Locale locale : locales) {
-			preferences.put(
-				"portletSetupTitle_" + locale,
-				LanguageUtil.get(locale, "upcoming-events"));
-		}
-
-		preferences.put("portletSetupUseCustomTitle", Boolean.TRUE.toString());
-
-		updatePortletSetup(layout, portletId, preferences);
-
-		// News layout
-
-		layout = addLayout(layoutSet, "news", "/news", "2_columns_iii");
-
-		portletId = addPortletId(layout, PortletKeys.RSS, "column-1");
-
-		preferences = new HashMap<String, String>();
-
-		preferences.put("expandedEntriesPerFeed", "3");
-
-		for (Locale locale : locales) {
-			preferences.put(
-				"portletSetupTitle_" + locale,
-				LanguageUtil.get(locale, "technology-news"));
-		}
-
-		preferences.put("portletSetupUseCustomTitle", Boolean.TRUE.toString());
-		preferences.put(
-			"urls", "http://partners.userland.com/nytRss/technology.xml");
-
-		updatePortletSetup(layout, portletId, preferences);
-
-		portletId = addPortletId(layout, PortletKeys.RSS, "column-2");
-
-		preferences = new HashMap<String, String>();
-
-		preferences.put("expandedEntriesPerFeed", "0");
-
-		for (Locale locale : locales) {
-			preferences.put(
-				"portletSetupTitle_" + locale,
-				LanguageUtil.get(locale, "liferay-news"));
-		}
-
-		preferences.put("portletSetupUseCustomTitle", Boolean.TRUE.toString());
-		preferences.put(
-			"urls", "http://www.liferay.com/en/about-us/news/-/blogs/rss");
-		preferences.put("titles", "Liferay Press Releases");
 
 		updatePortletSetup(layout, portletId, preferences);
 	}
@@ -242,44 +151,11 @@ public class AddDefaultLayoutSetPrototypesAction
 
 		addPortletId(layout, PortletKeys.MESSAGE_BOARDS, "column-1");
 
-		String portletId = addPortletId(layout, PortletKeys.SEARCH, "column-2");
-
-		Map<String, String> preferences = new HashMap<String, String>();
-
-		preferences.put("portletSetupShowBorders", Boolean.FALSE.toString());
-
-		updatePortletSetup(layout, portletId, preferences);
-
-		addPortletId(layout, PortletKeys.POLLS_DISPLAY, "column-2");
 		addPortletId(layout, PortletKeys.USER_STATISTICS, "column-2");
-
-		portletId = addPortletId(
-			layout, PortletKeys.ASSET_PUBLISHER, "column-2");
-
-		preferences = new HashMap<String, String>();
-
-		preferences.put("anyAssetType", Boolean.FALSE.toString());
-
-		Locale[] locales = LanguageUtil.getAvailableLocales();
-
-		for (Locale locale : locales) {
-			preferences.put(
-				"portletSetupTitle_" + locale,
-				LanguageUtil.get(locale, "upcoming-events"));
-		}
-
-		preferences.put("portletSetupUseCustomTitle", Boolean.TRUE.toString());
-
-		updatePortletSetup(layout, portletId, preferences);
 
 		// Wiki layout
 
-		layout = addLayout(layoutSet, "wiki", "/wiki", "2_columns_iii");
-
-		addPortletId(layout, PortletKeys.WIKI, "column-1");
-		addPortletId(
-			layout, PortletKeys.ASSET_CATEGORIES_NAVIGATION, "column-2");
-		addPortletId(layout, PortletKeys.TAGS_CLOUD, "column-2");
+		addLayout(layoutSet, "wiki", "/wiki", "2_columns_iii");
 	}
 
 	protected void doRun(long companyId) throws Exception {

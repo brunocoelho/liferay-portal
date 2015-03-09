@@ -250,7 +250,7 @@ public class VerifySQLServer extends VerifyProcess {
 	}
 
 	protected List<String> getPrimaryKeyColumnNames(String indexName) {
-		List<String> columnNames = new ArrayList<String>();
+		List<String> columnNames = new ArrayList<>();
 
 		Connection con = null;
 		PreparedStatement ps = null;
@@ -302,8 +302,9 @@ public class VerifySQLServer extends VerifyProcess {
 		"((systypes.name = 'ntext') OR (systypes.name = 'text') OR " +
 			"(systypes.name = 'varchar'))";
 
-	private static Log _log = LogFactoryUtil.getLog(VerifySQLServer.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		VerifySQLServer.class);
 
-	private List<String> _addPrimaryKeySQLs = new ArrayList<String>();
+	private final List<String> _addPrimaryKeySQLs = new ArrayList<>();
 
 }

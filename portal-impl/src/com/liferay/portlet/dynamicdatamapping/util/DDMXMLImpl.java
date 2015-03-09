@@ -24,6 +24,7 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.xml.Attribute;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.DocumentException;
@@ -33,7 +34,9 @@ import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.kernel.xml.XMLSchema;
 import com.liferay.portal.kernel.xml.XPath;
 import com.liferay.portlet.dynamicdatamapping.StructureDefinitionException;
+import com.liferay.portlet.dynamicdatamapping.StructureDuplicateElementException;
 import com.liferay.portlet.dynamicdatamapping.model.DDMStructure;
+import com.liferay.portlet.dynamicdatamapping.model.DDMStructureConstants;
 import com.liferay.portlet.dynamicdatamapping.storage.Field;
 import com.liferay.portlet.dynamicdatamapping.storage.FieldConstants;
 import com.liferay.portlet.dynamicdatamapping.storage.Fields;
@@ -43,9 +46,11 @@ import java.io.IOException;
 import java.io.Serializable;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 /**
  * @author Bruno Basto
@@ -105,6 +110,10 @@ public class DDMXMLImpl implements DDMXML {
 			document = SAXReaderUtil.read(xml);
 		}
 		catch (DocumentException de) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(de.getMessage(), de);
+			}
+
 			return null;
 		}
 
@@ -277,14 +286,22 @@ public class DDMXMLImpl implements DDMXML {
 		try {
 			Document document = SAXReaderUtil.read(xml, _xmlSchema);
 
+			validate(document);
+
 			return document.asXML();
+		}
+		catch (StructureDefinitionException sde) {
+			throw sde;
+		}
+		catch (StructureDuplicateElementException sdee) {
+			throw sdee;
 		}
 		catch (Exception e) {
 			if (_log.isDebugEnabled()) {
 				_log.debug("Invalid XML content " + e.getMessage(), e);
 			}
 
-			throw new StructureDefinitionException();
+			throw new StructureDefinitionException(e);
 		}
 	}
 
@@ -373,6 +390,39 @@ public class DDMXMLImpl implements DDMXML {
 		dynamicContentElement.addCDATA(valueString.trim());
 	}
 
+	protected void validate(Document document) throws Exception {
+		XPath xPathSelector = SAXReaderUtil.createXPath("//dynamic-element");
+
+		List<Node> nodes = xPathSelector.selectNodes(document);
+
+		Set<String> elementNames = new HashSet<>();
+
+		for (Node node : nodes) {
+			Element element = (Element)node;
+
+			String name = StringUtil.toLowerCase(
+				element.attributeValue("name"));
+
+			if (Validator.isNull(name)) {
+				throw new StructureDefinitionException(
+					"Element must have a name attribute " +
+						element.formattedString());
+			}
+
+			if (name.startsWith(DDMStructureConstants.XSD_NAME_RESERVED)) {
+				throw new StructureDefinitionException(
+					"Element name " + name + " is reserved");
+			}
+
+			if (elementNames.contains(name)) {
+				throw new StructureDuplicateElementException(
+					"Element with name " + name + " already exists");
+			}
+
+			elementNames.add(name);
+		}
+	}
+
 	private static final String _AVAILABLE_LOCALES = "available-locales";
 
 	private static final String _DEFAULT_LOCALE = "default-locale";
@@ -383,7 +433,7 @@ public class DDMXMLImpl implements DDMXML {
 
 	private static final String _XML_INDENT = "  ";
 
-	private static Log _log = LogFactoryUtil.getLog(DDMXMLImpl.class);
+	private static final Log _log = LogFactoryUtil.getLog(DDMXMLImpl.class);
 
 	private XMLSchema _xmlSchema;
 

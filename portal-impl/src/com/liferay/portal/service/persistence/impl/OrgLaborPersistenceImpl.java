@@ -56,7 +56,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see OrgLaborPersistence
- * @see OrgLaborUtil
+ * @see com.liferay.portal.service.persistence.OrgLaborUtil
  * @generated
  */
 @ProviderType
@@ -1240,7 +1240,7 @@ public class OrgLaborPersistenceImpl extends BasePersistenceImpl<OrgLabor>
 		MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

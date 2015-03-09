@@ -30,13 +30,8 @@ public interface SettingsFactory {
 	public Settings getCompanyServiceSettings(
 		long companyId, String serviceName);
 
-	public Settings getGroupServiceCompanyDefaultSettings(
-		long companyId, String serviceName);
-
 	public Settings getGroupServiceSettings(long groupId, String serviceName)
 		throws PortalException;
-
-	public List<String> getMultiValuedKeys(String settingsId);
 
 	public ArchivedSettings getPortletInstanceArchivedSettings(
 			long groupId, String portletId, String name)
@@ -45,18 +40,15 @@ public interface SettingsFactory {
 	public List<ArchivedSettings> getPortletInstanceArchivedSettingsList(
 		long groupId, String portletId);
 
-	public Settings getPortletInstanceCompanyDefaultSettings(
-		long companyId, String portletId);
-
-	public Settings getPortletInstanceGroupDefaultSettings(
-			long groupId, String portletId)
-		throws PortalException;
-
 	public Settings getPortletInstanceSettings(Layout layout, String portletId)
 		throws PortalException;
 
+	public Settings getServerSettings(String settingsId);
+
+	public SettingsDescriptor<?> getSettingsDescriptor(String settingsId);
+
 	public void registerSettingsMetadata(
-		String settingsId, FallbackKeys fallbackKeys,
-		String[] multiValuedKeysArray);
+		Class<?> settingsClass, Object serviceConfigurationBean,
+		FallbackKeys fallbackKeys);
 
 }

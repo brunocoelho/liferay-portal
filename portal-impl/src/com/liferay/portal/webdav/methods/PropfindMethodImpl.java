@@ -80,7 +80,7 @@ public class PropfindMethodImpl extends BasePropMethodImpl implements Method {
 		throws InvalidRequestException {
 
 		try {
-			Set<QName> props = new HashSet<QName>();
+			Set<QName> props = new HashSet<>();
 
 			HttpServletRequest request = webDAVRequest.getHttpServletRequest();
 
@@ -133,6 +133,7 @@ public class PropfindMethodImpl extends BasePropMethodImpl implements Method {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(PropfindMethodImpl.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		PropfindMethodImpl.class);
 
 }

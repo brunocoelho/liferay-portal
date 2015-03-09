@@ -34,6 +34,7 @@ import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.theme.ThemeDisplay;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 
@@ -46,6 +47,10 @@ public class PortletDataContextFactoryImpl
 	@Override
 	public PortletDataContext clonePortletDataContext(
 		PortletDataContext portletDataContext) {
+
+		if (portletDataContext == null) {
+			return null;
+		}
 
 		PortletDataContext clonePortletDataContext =
 			new PortletDataContextImpl();
@@ -66,6 +71,7 @@ public class PortletDataContextFactoryImpl
 
 		clonePortletDataContext.setParameterMap(
 			portletDataContext.getParameterMap());
+		clonePortletDataContext.setPortletId(portletDataContext.getPortletId());
 		clonePortletDataContext.setScopeGroupId(
 			portletDataContext.getScopeGroupId());
 		clonePortletDataContext.setSourceCompanyId(
@@ -121,8 +127,6 @@ public class PortletDataContextFactoryImpl
 
 		portletDataContext.setNewLayouts(new ArrayList<Layout>());
 		portletDataContext.setParameterMap(parameterMap);
-		portletDataContext.setPortetDataContextListener(
-			new PortletDataContextListenerImpl(portletDataContext));
 		portletDataContext.setUserIdStrategy(userIdStrategy);
 		portletDataContext.setZipReader(zipReader);
 
@@ -142,6 +146,8 @@ public class PortletDataContextFactoryImpl
 			companyId, groupId);
 
 		portletDataContext.setEndDate(endDate);
+		portletDataContext.setParameterMap(
+			Collections.<String, String[]>emptyMap());
 		portletDataContext.setStartDate(startDate);
 
 		return portletDataContext;

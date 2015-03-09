@@ -37,11 +37,13 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.liveusers.LiveUsers;
 import com.liferay.portal.model.Layout;
 import com.liferay.portal.model.LayoutConstants;
+import com.liferay.portal.model.PasswordPolicy;
 import com.liferay.portal.model.Portlet;
 import com.liferay.portal.model.PortletPreferencesIds;
 import com.liferay.portal.model.User;
 import com.liferay.portal.model.UserTracker;
 import com.liferay.portal.model.UserTrackerPath;
+import com.liferay.portal.security.auth.InterruptedPortletRequestWhitelistUtil;
 import com.liferay.portal.security.auth.PrincipalException;
 import com.liferay.portal.security.permission.ActionKeys;
 import com.liferay.portal.security.permission.PermissionChecker;
@@ -111,7 +113,7 @@ public class PortalRequestProcessor extends TilesRequestProcessor {
 
 		// auth.forward.last.path.
 
-		_lastPaths = new HashSet<String>();
+		_lastPaths = new HashSet<>();
 
 		_lastPaths.add(_PATH_PORTAL_LAYOUT);
 
@@ -119,7 +121,7 @@ public class PortalRequestProcessor extends TilesRequestProcessor {
 
 		// auth.public.path.
 
-		_publicPaths = new HashSet<String>();
+		_publicPaths = new HashSet<>();
 
 		_publicPaths.add(_PATH_C);
 		_publicPaths.add(_PATH_PORTAL_API_JSONWS);
@@ -131,11 +133,12 @@ public class PortalRequestProcessor extends TilesRequestProcessor {
 		_publicPaths.add(_PATH_PORTAL_RENDER_PORTLET);
 		_publicPaths.add(_PATH_PORTAL_RESILIENCY);
 		_publicPaths.add(_PATH_PORTAL_TCK);
+		_publicPaths.add(_PATH_PORTAL_UPDATE_LANGUAGE);
 		_publicPaths.add(_PATH_PORTAL_UPDATE_PASSWORD);
 		_publicPaths.add(_PATH_PORTAL_VERIFY_EMAIL_ADDRESS);
 		_publicPaths.add(PropsValues.AUTH_LOGIN_DISABLED_PATH);
 
-		_trackerIgnorePaths = new HashSet<String>();
+		_trackerIgnorePaths = new HashSet<>();
 
 		addPaths(_trackerIgnorePaths, PropsKeys.SESSION_TRACKER_IGNORE_PATHS);
 	}
@@ -721,10 +724,17 @@ public class PortalRequestProcessor extends TilesRequestProcessor {
 			return _PATH_PORTAL_ERROR;
 		}
 
+		long companyId = PortalUtil.getCompanyId(request);
+		String portletId = ParamUtil.getString(request, "p_p_id");
+
 		if (!path.equals(_PATH_PORTAL_JSON_SERVICE) &&
 			!path.equals(_PATH_PORTAL_RENDER_PORTLET) &&
 			!ParamUtil.getBoolean(request, "wsrp") &&
-			!themeDisplay.isImpersonated()) {
+			!themeDisplay.isImpersonated() &&
+			!InterruptedPortletRequestWhitelistUtil.
+				isPortletInvocationWhitelisted(
+					companyId, portletId,
+					PortalUtil.getStrutsAction(request))) {
 
 			// Authenticated users should agree to Terms of Use
 
@@ -745,7 +755,20 @@ public class PortalRequestProcessor extends TilesRequestProcessor {
 			// Authenticated users must have a current password
 
 			if ((user != null) && user.isPasswordReset()) {
-				return _PATH_PORTAL_UPDATE_PASSWORD;
+				try {
+					PasswordPolicy passwordPolicy = user.getPasswordPolicy();
+
+					if ((passwordPolicy == null) ||
+						passwordPolicy.isChangeRequired()) {
+
+						return _PATH_PORTAL_UPDATE_PASSWORD;
+					}
+				}
+				catch (Exception e) {
+					_log.error(e, e);
+
+					return _PATH_PORTAL_UPDATE_PASSWORD;
+				}
 			}
 			else if ((user != null) && !user.isPasswordReset() &&
 					 path.equals(_PATH_PORTAL_UPDATE_PASSWORD)) {
@@ -798,9 +821,6 @@ public class PortalRequestProcessor extends TilesRequestProcessor {
 			try {
 				Portlet portlet = null;
 
-				long companyId = PortalUtil.getCompanyId(request);
-				String portletId = ParamUtil.getString(request, "p_p_id");
-
 				if (Validator.isNotNull(portletId)) {
 					portlet = PortletLocalServiceUtil.getPortletById(
 						companyId, portletId);
@@ -850,8 +870,8 @@ public class PortalRequestProcessor extends TilesRequestProcessor {
 
 		Map<String, String[]> oldParameterMap = request.getParameterMap();
 
-		Map<String, String[]> newParameterMap =
-			new LinkedHashMap<String, String[]>(oldParameterMap.size());
+		Map<String, String[]> newParameterMap = new LinkedHashMap<>(
+			oldParameterMap.size());
 
 		for (Map.Entry<String, String[]> entry : oldParameterMap.entrySet()) {
 			String name = entry.getKey();
@@ -1028,6 +1048,9 @@ public class PortalRequestProcessor extends TilesRequestProcessor {
 	private static final String _PATH_PORTAL_UPDATE_EMAIL_ADDRESS =
 		"/portal/update_email_address";
 
+	private static final String _PATH_PORTAL_UPDATE_LANGUAGE =
+		"/portal/update_language";
+
 	private static final String _PATH_PORTAL_UPDATE_PASSWORD =
 		"/portal/update_password";
 
@@ -1040,14 +1063,14 @@ public class PortalRequestProcessor extends TilesRequestProcessor {
 	private static final String _PATH_PORTAL_VERIFY_EMAIL_ADDRESS =
 		"/portal/verify_email_address";
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		PortalRequestProcessor.class);
 
-	private static Pattern _strutsPortletIgnoredParamtersPattern =
+	private static final Pattern _strutsPortletIgnoredParamtersPattern =
 		Pattern.compile(PropsValues.STRUTS_PORTLET_IGNORED_PARAMETERS_REGEXP);
 
-	private Set<String> _lastPaths;
-	private Set<String> _publicPaths;
-	private Set<String> _trackerIgnorePaths;
+	private final Set<String> _lastPaths;
+	private final Set<String> _publicPaths;
+	private final Set<String> _trackerIgnorePaths;
 
 }

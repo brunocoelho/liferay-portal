@@ -105,10 +105,20 @@
 			<liferay-ui:error exception="<%= CookieNotSupportedException.class %>" message="authentication-failed-please-enable-browser-cookies" />
 			<liferay-ui:error exception="<%= NoSuchUserException.class %>" message="authentication-failed" />
 			<liferay-ui:error exception="<%= PasswordExpiredException.class %>" message="your-password-has-expired" />
-			<liferay-ui:error exception="<%= UserEmailAddressException.class %>" message="authentication-failed" />
-			<liferay-ui:error exception="<%= UserLockoutException.class %>" message="this-account-has-been-locked" />
+			<liferay-ui:error exception="<%= UserEmailAddressException.MustNotBeNull.class %>" message="please-enter-an-email-address" />
+			<liferay-ui:error exception="<%= UserLockoutException.LDAPLockout.class %>" message="this-account-is-locked" />
+
+			<liferay-ui:error exception="<%= UserLockoutException.PasswordPolicyLockout.class %>">
+
+				<%
+				UserLockoutException.PasswordPolicyLockout ule = (UserLockoutException.PasswordPolicyLockout)errorException;
+				%>
+
+				<liferay-ui:message arguments="<%= ule.user.getUnlockDate() %>" key="this-account-is-locked-until-x" translateArguments="<%= false %>" />
+			</liferay-ui:error>
+
 			<liferay-ui:error exception="<%= UserPasswordException.class %>" message="authentication-failed" />
-			<liferay-ui:error exception="<%= UserScreenNameException.class %>" message="authentication-failed" />
+			<liferay-ui:error exception="<%= UserScreenNameException.MustNotBeNull.class %>" message="the-screen-name-cannot-be-blank" />
 
 			<aui:fieldset>
 
@@ -148,17 +158,13 @@
 
 		<liferay-util:include page="/html/portlet/login/navigation.jsp" />
 
-		<aui:script use="aui-base">
-			var password = A.one('#<portlet:namespace />password');
-
-			if (password) {
-				password.on(
-					'keypress',
-					function(event) {
-						Liferay.Util.showCapsLock(event, '<portlet:namespace />passwordCapsLockSpan');
-					}
-				);
-			}
+		<aui:script>
+			AUI.$('#<portlet:namespace />password').on(
+				'keypress',
+				function(event) {
+					Liferay.Util.showCapsLock(event, '<portlet:namespace />passwordCapsLockSpan');
+				}
+			);
 		</aui:script>
 	</c:otherwise>
 </c:choose>

@@ -14,34 +14,36 @@
 
 package com.liferay.portlet.journal.notifications;
 
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.Sync;
+import com.liferay.portal.kernel.test.rule.SynchronousMailTestRule;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.model.BaseModel;
-import com.liferay.portal.test.Sync;
-import com.liferay.portal.test.SynchronousMailExecutionTestListener;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
-import com.liferay.portal.util.BaseUserNotificationTestCase;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portal.util.PortletKeys;
-import com.liferay.portal.util.test.RandomTestUtil;
 import com.liferay.portlet.journal.model.JournalArticle;
 import com.liferay.portlet.journal.model.JournalFolder;
 import com.liferay.portlet.journal.service.JournalFolderLocalServiceUtil;
 import com.liferay.portlet.journal.util.test.JournalTestUtil;
+import com.liferay.portlet.notifications.test.BaseUserNotificationTestCase;
 
-import org.junit.runner.RunWith;
+import org.junit.ClassRule;
+import org.junit.Rule;
 
 /**
  * @author Roberto Díaz
  * @author Sergio González
  */
-@ExecutionTestListeners(
-	listeners = {
-		MainServletExecutionTestListener.class,
-		SynchronousMailExecutionTestListener.class
-	})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 @Sync
 public class JournalUserNotificationTest extends BaseUserNotificationTestCase {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE,
+			SynchronousMailTestRule.INSTANCE);
 
 	@Override
 	protected BaseModel<?> addBaseModel() throws Exception {

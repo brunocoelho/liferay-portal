@@ -90,8 +90,7 @@ public class ImportLayoutsAction extends PortletAction {
 		try {
 			if (cmd.equals(Constants.ADD_TEMP)) {
 				addTempFileEntry(
-					actionRequest, actionResponse,
-					ExportImportHelper.TEMP_FOLDER_NAME);
+					actionRequest, ExportImportHelper.TEMP_FOLDER_NAME);
 
 				validateFile(
 					actionRequest, actionResponse,
@@ -198,8 +197,7 @@ public class ImportLayoutsAction extends PortletAction {
 	}
 
 	protected void addTempFileEntry(
-			ActionRequest actionRequest, ActionResponse actionResponse,
-			String folderName)
+			ActionRequest actionRequest, String folderName)
 		throws Exception {
 
 		UploadPortletRequest uploadPortletRequest =
@@ -221,7 +219,7 @@ public class ImportLayoutsAction extends PortletAction {
 			String contentType = uploadPortletRequest.getContentType("file");
 
 			LayoutServiceUtil.addTempFileEntry(
-				groupId, sourceFileName, folderName, inputStream, contentType);
+				groupId, folderName, sourceFileName, inputStream, contentType);
 		}
 		catch (Exception e) {
 			UploadException uploadException =
@@ -278,7 +276,7 @@ public class ImportLayoutsAction extends PortletAction {
 			String fileName = ParamUtil.getString(actionRequest, "fileName");
 
 			LayoutServiceUtil.deleteTempFileEntry(
-				themeDisplay.getScopeGroupId(), fileName, folderName);
+				themeDisplay.getScopeGroupId(), folderName, fileName);
 
 			jsonObject.put("deleted", Boolean.TRUE);
 		}
@@ -296,12 +294,12 @@ public class ImportLayoutsAction extends PortletAction {
 	protected void deleteTempFileEntry(long groupId, String folderName)
 		throws PortalException {
 
-		String[] tempFileEntryNames = LayoutServiceUtil.getTempFileEntryNames(
+		String[] tempFileNames = LayoutServiceUtil.getTempFileNames(
 			groupId, folderName);
 
-		for (String tempFileEntryName : tempFileEntryNames) {
+		for (String tempFileEntryName : tempFileNames) {
 			LayoutServiceUtil.deleteTempFileEntry(
-				groupId, tempFileEntryName, folderName);
+				groupId, folderName, tempFileEntryName);
 		}
 	}
 
@@ -434,6 +432,7 @@ public class ImportLayoutsAction extends PortletAction {
 			inputStream);
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(ImportLayoutsAction.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		ImportLayoutsAction.class);
 
 }

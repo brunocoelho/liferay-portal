@@ -68,7 +68,7 @@ public class DefaultLogoutPageAction extends Action {
 		// for forwarding a user to his logout page. See the references to this
 		// class in portal.properties.
 
-		/*Map<String, String[]> params = new HashMap<String, String[]>();
+		/*Map<String, String[]> params = new HashMap<>();
 
 		params.put("p_l_id", new String[] {"1806"});
 
@@ -77,7 +77,7 @@ public class DefaultLogoutPageAction extends Action {
 		session.setAttribute(WebKeys.LAST_PATH, lastPath);*/
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		DefaultLogoutPageAction.class);
 
 }

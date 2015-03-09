@@ -15,15 +15,18 @@
 package com.liferay.portal.lar.backgroundtask;
 
 import com.liferay.portal.NoSuchLayoutException;
-import com.liferay.portal.RemoteExportException;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskResult;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.lar.ExportImportDateUtil;
 import com.liferay.portal.kernel.lar.ExportImportHelperUtil;
+import com.liferay.portal.kernel.lar.ExportImportThreadLocal;
 import com.liferay.portal.kernel.lar.MissingReferences;
 import com.liferay.portal.kernel.lar.PortletDataHandlerKeys;
-import com.liferay.portal.kernel.staging.StagingUtil;
+import com.liferay.portal.kernel.lar.lifecycle.ExportImportLifecycleConstants;
+import com.liferay.portal.kernel.lar.lifecycle.ExportImportLifecycleManager;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.DateRange;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -33,7 +36,6 @@ import com.liferay.portal.model.BackgroundTask;
 import com.liferay.portal.model.ExportImportConfiguration;
 import com.liferay.portal.model.Layout;
 import com.liferay.portal.security.auth.HttpPrincipal;
-import com.liferay.portal.service.ExportImportConfigurationLocalServiceUtil;
 import com.liferay.portal.service.LayoutLocalServiceUtil;
 import com.liferay.portal.service.http.LayoutServiceHttp;
 import com.liferay.portal.service.http.StagingServiceHttp;
@@ -41,7 +43,6 @@ import com.liferay.portal.util.PropsValues;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -64,15 +65,8 @@ public class LayoutRemoteStagingBackgroundTaskExecutor
 	public BackgroundTaskResult execute(BackgroundTask backgroundTask)
 		throws PortalException {
 
-		Map<String, Serializable> taskContextMap =
-			backgroundTask.getTaskContextMap();
-
-		long exportImportConfigurationId = MapUtil.getLong(
-			taskContextMap, "exportImportConfigurationId");
-
 		ExportImportConfiguration exportImportConfiguration =
-			ExportImportConfigurationLocalServiceUtil.
-				getExportImportConfiguration(exportImportConfigurationId);
+			getExportImportConfiguration(backgroundTask);
 
 		Map<String, Serializable> settingsMap =
 			exportImportConfiguration.getSettingsMap();
@@ -80,6 +74,9 @@ public class LayoutRemoteStagingBackgroundTaskExecutor
 		long sourceGroupId = MapUtil.getLong(settingsMap, "sourceGroupId");
 		boolean privateLayout = MapUtil.getBoolean(
 			settingsMap, "privateLayout");
+
+		initThreadLocals(sourceGroupId, privateLayout);
+
 		Map<Long, Boolean> layoutIdMap = (Map<Long, Boolean>)settingsMap.get(
 			"layoutIdMap");
 		Map<String, String[]> parameterMap =
@@ -88,6 +85,10 @@ public class LayoutRemoteStagingBackgroundTaskExecutor
 		DateRange dateRange = ExportImportDateUtil.getDateRange(
 			exportImportConfiguration,
 			ExportImportDateUtil.RANGE_FROM_LAST_PUBLISH_DATE);
+
+		Map<String, Serializable> taskContextMap =
+			backgroundTask.getTaskContextMap();
+
 		HttpPrincipal httpPrincipal = (HttpPrincipal)taskContextMap.get(
 			"httpPrincipal");
 
@@ -100,6 +101,13 @@ public class LayoutRemoteStagingBackgroundTaskExecutor
 		MissingReferences missingReferences = null;
 
 		try {
+			ExportImportThreadLocal.setLayoutStagingInProcess(true);
+
+			ExportImportLifecycleManager.fireExportImportLifecycleEvent(
+				ExportImportLifecycleConstants.
+					EVENT_PUBLICATION_LAYOUT_REMOTE_STARTED,
+				exportImportConfiguration);
+
 			file = exportLayoutsAsFile(
 				sourceGroupId, privateLayout, layoutIdMap, parameterMap,
 				remoteGroupId, dateRange.getStartDate(), dateRange.getEndDate(),
@@ -160,14 +168,34 @@ public class LayoutRemoteStagingBackgroundTaskExecutor
 				parameterMap, PortletDataHandlerKeys.UPDATE_LAST_PUBLISH_DATE);
 
 			if (updateLastPublishDate) {
-				StagingUtil.updateLastPublishDate(
-					sourceGroupId, privateLayout, dateRange.getEndDate());
+				ExportImportDateUtil.updateLastPublishDate(
+					sourceGroupId, privateLayout, dateRange,
+					dateRange.getEndDate());
 			}
+
+			ExportImportLifecycleManager.fireExportImportLifecycleEvent(
+				ExportImportLifecycleConstants.
+					EVENT_PUBLICATION_LAYOUT_REMOTE_SUCCEEDED,
+				exportImportConfiguration);
 		}
-		catch (IOException ioe) {
-			throw new SystemException(ioe);
+		catch (Throwable t) {
+			ExportImportLifecycleManager.fireExportImportLifecycleEvent(
+				ExportImportLifecycleConstants.
+					EVENT_PUBLICATION_LAYOUT_REMOTE_FAILED,
+				exportImportConfiguration);
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(t, t);
+			}
+			else if (_log.isWarnEnabled()) {
+				_log.warn("Unable to publish layout: " + t.getMessage());
+			}
+
+			throw new SystemException(t);
 		}
 		finally {
+			ExportImportThreadLocal.setLayoutStagingInProcess(false);
+
 			StreamUtil.cleanUp(fileInputStream);
 
 			FileUtil.delete(file);
@@ -189,14 +217,9 @@ public class LayoutRemoteStagingBackgroundTaskExecutor
 			HttpPrincipal httpPrincipal)
 		throws PortalException {
 
-		if ((layoutIdMap == null) || layoutIdMap.isEmpty()) {
-			return LayoutLocalServiceUtil.exportLayoutsAsFile(
-				sourceGroupId, privateLayout, null, parameterMap, startDate,
-				endDate);
-		}
-		else {
-			List<Layout> layouts = new ArrayList<Layout>();
+		List<Layout> layouts = new ArrayList<>();
 
+		if (layoutIdMap != null) {
 			for (Map.Entry<Long, Boolean> entry : layoutIdMap.entrySet()) {
 				long plid = GetterUtil.getLong(String.valueOf(entry.getKey()));
 				boolean includeChildren = entry.getValue();
@@ -224,18 +247,13 @@ public class LayoutRemoteStagingBackgroundTaskExecutor
 					}
 				}
 			}
-
-			long[] layoutIds = ExportImportHelperUtil.getLayoutIds(layouts);
-
-			if (layoutIds.length <= 0) {
-				throw new RemoteExportException(
-					RemoteExportException.NO_LAYOUTS);
-			}
-
-			return LayoutLocalServiceUtil.exportLayoutsAsFile(
-				sourceGroupId, privateLayout, layoutIds, parameterMap,
-				startDate, endDate);
 		}
+
+		long[] layoutIds = ExportImportHelperUtil.getLayoutIds(layouts);
+
+		return LayoutLocalServiceUtil.exportLayoutsAsFile(
+			sourceGroupId, privateLayout, layoutIds, parameterMap, startDate,
+			endDate);
 	}
 
 	/**
@@ -246,7 +264,7 @@ public class LayoutRemoteStagingBackgroundTaskExecutor
 			HttpPrincipal httpPrincipal, Layout layout, long remoteGroupId)
 		throws PortalException {
 
-		List<Layout> missingRemoteParentLayouts = new ArrayList<Layout>();
+		List<Layout> missingRemoteParentLayouts = new ArrayList<>();
 
 		long parentLayoutId = layout.getParentLayoutId();
 
@@ -272,5 +290,8 @@ public class LayoutRemoteStagingBackgroundTaskExecutor
 
 		return missingRemoteParentLayouts;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		LayoutRemoteStagingBackgroundTaskExecutor.class);
 
 }

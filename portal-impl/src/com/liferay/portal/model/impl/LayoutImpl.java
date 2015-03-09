@@ -18,8 +18,10 @@ import com.liferay.portal.LayoutFriendlyURLException;
 import com.liferay.portal.NoSuchGroupException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.CookieKeys;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -27,6 +29,7 @@ import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
+import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
@@ -38,6 +41,7 @@ import com.liferay.portal.model.LayoutConstants;
 import com.liferay.portal.model.LayoutFriendlyURL;
 import com.liferay.portal.model.LayoutSet;
 import com.liferay.portal.model.LayoutType;
+import com.liferay.portal.model.LayoutTypeController;
 import com.liferay.portal.model.LayoutTypePortlet;
 import com.liferay.portal.model.LayoutTypePortletConstants;
 import com.liferay.portal.model.Theme;
@@ -52,6 +56,7 @@ import com.liferay.portal.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.LayoutClone;
 import com.liferay.portal.util.LayoutCloneFactory;
+import com.liferay.portal.util.LayoutTypePortletFactoryUtil;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.util.WebKeys;
@@ -72,6 +77,7 @@ import javax.portlet.PortletRequest;
 import javax.portlet.WindowState;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * Represents a portal layout, providing access to the layout's URLs, parent
@@ -167,20 +173,16 @@ public class LayoutImpl extends LayoutBaseImpl {
 		}
 	}
 
-	public LayoutImpl() {
-	}
-
 	/**
 	 * Returns all layouts that are direct or indirect children of the current
 	 * layout.
 	 *
 	 * @return the layouts that are direct or indirect children of the current
 	 *         layout
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public List<Layout> getAllChildren() {
-		List<Layout> layouts = new ArrayList<Layout>();
+		List<Layout> layouts = new ArrayList<>();
 
 		for (Layout layout : getChildren()) {
 			layouts.add(layout);
@@ -196,7 +198,6 @@ public class LayoutImpl extends LayoutBaseImpl {
 	 *
 	 * @return the ID of the topmost parent layout of the current layout
 	 * @throws PortalException if a matching layout could not be found
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public long getAncestorLayoutId() throws PortalException {
@@ -226,7 +227,6 @@ public class LayoutImpl extends LayoutBaseImpl {
 	 *
 	 * @return the plid of the topmost parent layout of the current layout
 	 * @throws PortalException if a matching layout could not be found
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public long getAncestorPlid() throws PortalException {
@@ -257,11 +257,10 @@ public class LayoutImpl extends LayoutBaseImpl {
 	 *
 	 * @return the current layout's list of parent layouts
 	 * @throws PortalException if a matching layout could not be found
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public List<Layout> getAncestors() throws PortalException {
-		List<Layout> layouts = new ArrayList<Layout>();
+		List<Layout> layouts = new ArrayList<>();
 
 		Layout layout = this;
 
@@ -281,7 +280,6 @@ public class LayoutImpl extends LayoutBaseImpl {
 	 * access permissions.
 	 *
 	 * @return the list of all child layouts
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public List<Layout> getChildren() {
@@ -297,7 +295,6 @@ public class LayoutImpl extends LayoutBaseImpl {
 	 * @return the list of all child layouts that the user has permission to
 	 *         access
 	 * @throws PortalException if a portal exception occurred
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public List<Layout> getChildren(PermissionChecker permissionChecker)
@@ -330,7 +327,6 @@ public class LayoutImpl extends LayoutBaseImpl {
 	 *         the color scheme  of the layout set that contains the current
 	 *         layout if no color scheme is configured
 	 * @throws PortalException if a portal exception occurred
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public ColorScheme getColorScheme() throws PortalException {
@@ -356,7 +352,6 @@ public class LayoutImpl extends LayoutBaseImpl {
 	 * @return the CSS text for the current layout, or for the layout set if no
 	 *         CSS text is configured in the current layout
 	 * @throws PortalException if a portal exception occurred
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public String getCssText() throws PortalException {
@@ -406,6 +401,25 @@ public class LayoutImpl extends LayoutBaseImpl {
 		String friendlyURL = layout.getFriendlyURL();
 
 		try {
+			Group group = layout.getGroup();
+
+			UnicodeProperties typeSettingsProperties =
+				group.getTypeSettingsProperties();
+
+			if (!GetterUtil.getBoolean(
+					typeSettingsProperties.getProperty("inheritLocales"),
+					true)) {
+
+				String[] locales = StringUtil.split(
+					typeSettingsProperties.getProperty(PropsKeys.LOCALES));
+
+				if (!ArrayUtil.contains(
+						locales, LanguageUtil.getLanguageId(locale))) {
+
+					return friendlyURL;
+				}
+			}
+
 			LayoutFriendlyURL layoutFriendlyURL =
 				LayoutFriendlyURLLocalServiceUtil.getLayoutFriendlyURL(
 					layout.getPlid(), LocaleUtil.toLanguageId(locale));
@@ -422,11 +436,10 @@ public class LayoutImpl extends LayoutBaseImpl {
 	 * Returns the friendly URLs for all configured locales.
 	 *
 	 * @return the friendly URLs for all configured locales
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public Map<Locale, String> getFriendlyURLMap() {
-		Map<Locale, String> friendlyURLMap = new HashMap<Locale, String>();
+		Map<Locale, String> friendlyURLMap = new HashMap<>();
 
 		List<LayoutFriendlyURL> layoutFriendlyURLs =
 			LayoutFriendlyURLLocalServiceUtil.getLayoutFriendlyURLs(getPlid());
@@ -435,6 +448,21 @@ public class LayoutImpl extends LayoutBaseImpl {
 			friendlyURLMap.put(
 				LocaleUtil.fromLanguageId(layoutFriendlyURL.getLanguageId()),
 				layoutFriendlyURL.getFriendlyURL());
+		}
+
+		// If the site/portal default language changes, there may not exist a
+		// value for the new default language. In this situation, we will use
+		// the value from the previous default language.
+
+		Locale defaultSiteLocale = LocaleUtil.getSiteDefault();
+
+		if (Validator.isNull(friendlyURLMap.get(defaultSiteLocale))) {
+			Locale defaultLocale = LocaleUtil.fromLanguageId(
+				getDefaultLanguageId());
+
+			String defaultFriendlyURL = friendlyURLMap.get(defaultLocale);
+
+			friendlyURLMap.put(defaultSiteLocale, defaultFriendlyURL);
 		}
 
 		return friendlyURLMap;
@@ -446,7 +474,7 @@ public class LayoutImpl extends LayoutBaseImpl {
 
 		return LocalizationUtil.updateLocalization(
 			friendlyURLMap, StringPool.BLANK, "FriendlyURL",
-			LocaleUtil.toLanguageId(LocaleUtil.getDefault()));
+			LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()));
 	}
 
 	/**
@@ -459,7 +487,6 @@ public class LayoutImpl extends LayoutBaseImpl {
 	 * @return the current layout's group
 	 * @throws PortalException if a group with the primary key could not be
 	 *         found
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public Group getGroup() throws PortalException {
@@ -523,7 +550,6 @@ public class LayoutImpl extends LayoutBaseImpl {
 	 *
 	 * @return the current layout's layout set
 	 * @throws PortalException if a portal exception occurred
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public LayoutSet getLayoutSet() throws PortalException {
@@ -543,7 +569,7 @@ public class LayoutImpl extends LayoutBaseImpl {
 	@Override
 	public LayoutType getLayoutType() {
 		if (_layoutType == null) {
-			_layoutType = new LayoutTypePortletImpl(this);
+			_layoutType = LayoutTypePortletFactoryUtil.create(this);
 		}
 
 		return _layoutType;
@@ -554,7 +580,6 @@ public class LayoutImpl extends LayoutBaseImpl {
 	 *
 	 * @return the current layout's linked layout, or <code>null</code> if no
 	 *         linked layout could be found
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public Layout getLinkedToLayout() {
@@ -575,7 +600,6 @@ public class LayoutImpl extends LayoutBaseImpl {
 	 * @return the current layout's parent plid, or <code>0</code> if the
 	 *         current layout is the topmost parent layout
 	 * @throws PortalException if a matching layout could not be found
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public long getParentPlid() throws PortalException {
@@ -636,7 +660,6 @@ public class LayoutImpl extends LayoutBaseImpl {
 	 * @return the current layout's theme, or the layout set's theme if no
 	 *         layout theme is configured
 	 * @throws PortalException if a portal exception occurred
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public Theme getTheme() throws PortalException {
@@ -739,7 +762,6 @@ public class LayoutImpl extends LayoutBaseImpl {
 	 *         otherwise
 	 * @throws PortalException if any one of the current layout's acestors could
 	 *         not be retrieved
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public boolean hasAncestor(long layoutId) throws PortalException {
@@ -764,7 +786,6 @@ public class LayoutImpl extends LayoutBaseImpl {
 	 *
 	 * @return <code>true</code> if the current layout has child layouts,
 	 *         <code>false</code> otherwise
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public boolean hasChildren() {
@@ -782,6 +803,20 @@ public class LayoutImpl extends LayoutBaseImpl {
 		else {
 			return false;
 		}
+	}
+
+	@Override
+	public boolean includeLayoutContent(
+			HttpServletRequest request, HttpServletResponse response)
+		throws Exception {
+
+		LayoutType layoutType = getLayoutType();
+
+		LayoutTypeController layoutTypeController =
+			layoutType.getLayoutTypeController();
+
+		return layoutTypeController.includeLayoutContent(
+			request, response, this);
 	}
 
 	@Override
@@ -1045,6 +1080,25 @@ public class LayoutImpl extends LayoutBaseImpl {
 	}
 
 	@Override
+	public boolean isTypeUserPersonalPanel() {
+		if (getType().equals(LayoutConstants.TYPE_USER_PERSONAL_PANEL)) {
+			return true;
+		}
+
+		return false;
+	}
+
+	@Override
+	public boolean matches(HttpServletRequest request, String friendlyURL) {
+		LayoutType layoutType = getLayoutType();
+
+		LayoutTypeController layoutTypeController =
+			layoutType.getLayoutTypeController();
+
+		return layoutTypeController.matches(request, friendlyURL, this);
+	}
+
+	@Override
 	public void setGroupId(long groupId) {
 		super.setGroupId(groupId);
 
@@ -1252,16 +1306,16 @@ public class LayoutImpl extends LayoutBaseImpl {
 		return url;
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(LayoutImpl.class);
+	private static final Log _log = LogFactoryUtil.getLog(LayoutImpl.class);
 
 	private static String[] _friendlyURLKeywords;
-
-	private LayoutSet _layoutSet;
-	private LayoutType _layoutType;
-	private UnicodeProperties _typeSettingsProperties;
 
 	static {
 		_initFriendlyURLKeywords();
 	}
+
+	private LayoutSet _layoutSet;
+	private LayoutType _layoutType;
+	private UnicodeProperties _typeSettingsProperties;
 
 }

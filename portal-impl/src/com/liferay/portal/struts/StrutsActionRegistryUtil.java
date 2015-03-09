@@ -96,7 +96,7 @@ public class StrutsActionRegistryUtil {
 	private void _register(String path, StrutsAction strutsAction) {
 		Registry registry = RegistryUtil.getRegistry();
 
-		Map<String, Object> properties = new HashMap<String, Object>();
+		Map<String, Object> properties = new HashMap<>();
 
 		properties.put("path", path);
 
@@ -112,7 +112,7 @@ public class StrutsActionRegistryUtil {
 
 		Registry registry = RegistryUtil.getRegistry();
 
-		Map<String, Object> properties = new HashMap<String, Object>();
+		Map<String, Object> properties = new HashMap<>();
 
 		properties.put("path", path);
 
@@ -139,18 +139,17 @@ public class StrutsActionRegistryUtil {
 		}
 	}
 
-	private static StrutsActionRegistryUtil _instance =
+	private static final StrutsActionRegistryUtil _instance =
 		new StrutsActionRegistryUtil();
 
-	private Map<String, Action> _actions =
-		new ConcurrentHashMap<String, Action>();
-	private ServiceTracker<?, Action> _serviceTracker;
-	private StringServiceRegistrationMap<StrutsAction>
+	private final Map<String, Action> _actions = new ConcurrentHashMap<>();
+	private final ServiceTracker<?, Action> _serviceTracker;
+	private final StringServiceRegistrationMap<StrutsAction>
 		_strutsActionServiceRegistrations =
-			new StringServiceRegistrationMap<StrutsAction>();
-	private StringServiceRegistrationMap<StrutsPortletAction>
+			new StringServiceRegistrationMap<>();
+	private final StringServiceRegistrationMap<StrutsPortletAction>
 		_strutsPortletActionServiceRegistrations =
-			new StringServiceRegistrationMap<StrutsPortletAction>();
+			new StringServiceRegistrationMap<>();
 
 	private class ActionServiceTrackerCustomizer
 		implements ServiceTrackerCustomizer<Object, Action> {

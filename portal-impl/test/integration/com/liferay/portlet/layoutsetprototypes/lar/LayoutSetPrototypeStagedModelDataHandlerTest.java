@@ -15,7 +15,10 @@
 package com.liferay.portlet.layoutsetprototypes.lar;
 
 import com.liferay.portal.kernel.lar.ExportImportPathUtil;
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.TransactionalTestRule;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.util.StreamUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.xml.Document;
@@ -24,7 +27,7 @@ import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.kernel.zip.ZipReader;
 import com.liferay.portal.kernel.zip.ZipReaderFactoryUtil;
-import com.liferay.portal.lar.BaseStagedModelDataHandlerTestCase;
+import com.liferay.portal.lar.test.BaseStagedModelDataHandlerTestCase;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.model.Layout;
 import com.liferay.portal.model.LayoutConstants;
@@ -36,11 +39,9 @@ import com.liferay.portal.service.LayoutFriendlyURLLocalServiceUtil;
 import com.liferay.portal.service.LayoutLocalServiceUtil;
 import com.liferay.portal.service.LayoutPrototypeLocalServiceUtil;
 import com.liferay.portal.service.LayoutSetPrototypeLocalServiceUtil;
-import com.liferay.portal.test.TransactionalTestRule;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portal.util.test.LayoutTestUtil;
-import com.liferay.portal.util.test.RandomTestUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -53,19 +54,20 @@ import java.util.Map;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.ClassRule;
-import org.junit.runner.RunWith;
+import org.junit.Rule;
 
 /**
  * @author Daniela Zapata Riesco
  */
-@ExecutionTestListeners(listeners = {MainServletExecutionTestListener.class})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 public class LayoutSetPrototypeStagedModelDataHandlerTest
 	extends BaseStagedModelDataHandlerTestCase {
 
 	@ClassRule
-	public static TransactionalTestRule transactionalTestRule =
-		new TransactionalTestRule();
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE,
+			TransactionalTestRule.INSTANCE);
 
 	@After
 	@Override
@@ -94,7 +96,7 @@ public class LayoutSetPrototypeStagedModelDataHandlerTest
 		List<Layout> layouts = _layouts.get(clazz.getSimpleName());
 
 		if (layouts == null) {
-			layouts = new ArrayList<Layout>();
+			layouts = new ArrayList<>();
 
 			_layouts.put(clazz.getSimpleName(), layouts);
 		}
@@ -117,7 +119,7 @@ public class LayoutSetPrototypeStagedModelDataHandlerTest
 			clazz.getSimpleName());
 
 		if (layoutFriendlyURLs == null) {
-			layoutFriendlyURLs = new ArrayList<LayoutFriendlyURL>();
+			layoutFriendlyURLs = new ArrayList<>();
 
 			_layoutFriendlyURLs.put(clazz.getSimpleName(), layoutFriendlyURLs);
 		}
@@ -191,8 +193,7 @@ public class LayoutSetPrototypeStagedModelDataHandlerTest
 			dependentStagedModelsMap);
 
 		Layout prototypedLayout = LayoutTestUtil.addLayout(
-			_layoutSetPrototype.getGroupId(), RandomTestUtil.randomString(),
-			true, layoutPrototype, true);
+			_layoutSetPrototype.getGroupId(), true, layoutPrototype, true);
 
 		addLayout(LayoutSetPrototype.class, prototypedLayout);
 		addLayoutFriendlyURLs(
@@ -297,7 +298,7 @@ public class LayoutSetPrototypeStagedModelDataHandlerTest
 
 		List<Element> elements = layoutElement.elements();
 
-		List<Layout> importedLayouts = new ArrayList<Layout>(elements.size());
+		List<Layout> importedLayouts = new ArrayList<>(elements.size());
 
 		for (Element element : elements) {
 			String layoutPrototypeUuid = element.attributeValue(
@@ -315,7 +316,14 @@ public class LayoutSetPrototypeStagedModelDataHandlerTest
 
 		Assert.assertEquals(1, importedLayouts.size());
 
-		return importedLayouts.get(0);
+		try {
+			return importedLayouts.get(0);
+		}
+		finally {
+			zipReader.close();
+
+			StreamUtil.cleanUp(inputStream);
+		}
 	}
 
 	@Override
@@ -403,11 +411,10 @@ public class LayoutSetPrototypeStagedModelDataHandlerTest
 		}
 	}
 
-	private Map<String, List<LayoutFriendlyURL>> _layoutFriendlyURLs =
-		new HashMap<String, List<LayoutFriendlyURL>>();
+	private final Map<String, List<LayoutFriendlyURL>> _layoutFriendlyURLs =
+		new HashMap<>();
 	private LayoutPrototype _layoutPrototype;
-	private Map<String, List<Layout>> _layouts =
-		new HashMap<String, List<Layout>>();
+	private final Map<String, List<Layout>> _layouts = new HashMap<>();
 	private LayoutSetPrototype _layoutSetPrototype;
 
 }

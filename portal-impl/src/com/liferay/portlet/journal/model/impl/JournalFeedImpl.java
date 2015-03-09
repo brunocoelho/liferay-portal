@@ -19,7 +19,59 @@ package com.liferay.portlet.journal.model.impl;
  */
 public class JournalFeedImpl extends JournalFeedBaseImpl {
 
-	public JournalFeedImpl() {
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #getDDMRendererTemplateKey()}
+	 */
+	@Deprecated
+	@Override
+	public String getRendererTemplateId() {
+		return getDDMRendererTemplateKey();
+	}
+
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #getDDMStructureKey()}
+	 */
+	@Deprecated
+	@Override
+	public String getStructureId() {
+		return getDDMStructureKey();
+	}
+
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #getDDMTemplateKey()}
+	 */
+	@Deprecated
+	@Override
+	public String getTemplateId() {
+		return getDDMTemplateKey();
+	}
+
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link
+	 *             #setDDMRendererTemplateKey(String)}
+	 */
+	@Deprecated
+	@Override
+	public void setRendererTemplateId(String rendererTemplateKey) {
+		setDDMRendererTemplateKey(rendererTemplateKey);
+	}
+
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #setDDMStructureKey(String)}
+	 */
+	@Deprecated
+	@Override
+	public void setStructureId(String structureKey) {
+		setDDMStructureKey(structureKey);
+	}
+
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #setDDMTemplateKey(String)}
+	 */
+	@Deprecated
+	@Override
+	public void setTemplateId(String templateKey) {
+		setDDMTemplateKey(templateKey);
 	}
 
 }

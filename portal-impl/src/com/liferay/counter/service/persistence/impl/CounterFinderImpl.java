@@ -74,7 +74,7 @@ public class CounterFinderImpl
 
 			resultSet = preparedStatement.executeQuery();
 
-			List<String> list = new ArrayList<String>();
+			List<String> list = new ArrayList<>();
 
 			while (resultSet.next()) {
 				list.add(resultSet.getString(1));
@@ -426,9 +426,9 @@ public class CounterFinderImpl
 	private static final String _SQL_UPDATE_NAME_BY_NAME =
 		"update Counter set name = ? where name = ?";
 
-	private Map<String, CounterRegister> _counterRegisterMap =
-		new ConcurrentHashMap<String, CounterRegister>();
-	private Map<String, Integer> _rangeSizeMap =
-		new ConcurrentHashMap<String, Integer>();
+	private final Map<String, CounterRegister> _counterRegisterMap =
+		new ConcurrentHashMap<>();
+	private final Map<String, Integer> _rangeSizeMap =
+		new ConcurrentHashMap<>();
 
 }

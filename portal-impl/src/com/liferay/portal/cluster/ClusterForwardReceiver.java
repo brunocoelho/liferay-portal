@@ -14,48 +14,44 @@
 
 package com.liferay.portal.cluster;
 
-import com.liferay.portal.kernel.cluster.messaging.ClusterForwardMessageListener;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.messaging.Message;
 
 import java.util.List;
 
 import org.jgroups.Address;
-import org.jgroups.Message;
 
 /**
  * @author Shuyang Zhou
  */
-public class ClusterForwardReceiver extends BaseReceiver {
+public class ClusterForwardReceiver extends JGroupsReceiver {
 
-	public ClusterForwardReceiver(
-		List<Address> localTransportAddresses,
-		ClusterForwardMessageListener clusterForwardMessageListener) {
+	public ClusterForwardReceiver(ClusterLinkImpl clusterLinkImpl) {
+		super(clusterLinkImpl.getExecutorService());
 
-		_localTransportAddresses = localTransportAddresses;
-		_clusterForwardMessageListener = clusterForwardMessageListener;
+		_clusterLinkImpl = clusterLinkImpl;
 	}
 
 	@Override
-	public void receive(Message message) {
-		if (!_localTransportAddresses.contains(message.getSrc()) ||
-			(message.getDest() != null)) {
+	protected void doReceive(org.jgroups.Message jGroupsMessage) {
+		List<Address> localTransportAddresses =
+			_clusterLinkImpl.getLocalTransportAddresses();
 
-			_clusterForwardMessageListener.receive(
-				(com.liferay.portal.kernel.messaging.Message)
-					message.getObject());
+		if (localTransportAddresses.contains(jGroupsMessage.getSrc())) {
+			if (_log.isDebugEnabled()) {
+				_log.debug("Block received message " + jGroupsMessage);
+			}
 		}
 		else {
-			if (_log.isDebugEnabled()) {
-				_log.debug("Block received message " + message);
-			}
+			_clusterLinkImpl.sendLocalMessage(
+				(Message)jGroupsMessage.getObject());
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		ClusterForwardReceiver.class);
 
-	private ClusterForwardMessageListener _clusterForwardMessageListener;
-	private List<org.jgroups.Address> _localTransportAddresses;
+	private final ClusterLinkImpl _clusterLinkImpl;
 
 }

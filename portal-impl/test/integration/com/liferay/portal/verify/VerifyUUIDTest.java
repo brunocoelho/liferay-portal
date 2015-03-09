@@ -14,32 +14,37 @@
 
 package com.liferay.portal.verify;
 
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
+import com.liferay.portal.kernel.exception.BulkException;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portal.verify.model.LayoutVerifiableModel;
 import com.liferay.portal.verify.model.VerifiableUUIDModel;
+import com.liferay.portal.verify.test.BaseVerifyProcessTestCase;
 
-import java.sql.SQLException;
-
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Manuel de la Peña
  */
-@ExecutionTestListeners(listeners = {MainServletExecutionTestListener.class})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
-public class VerifyUUIDTest extends BaseVerifyTestCase {
+public class VerifyUUIDTest extends BaseVerifyProcessTestCase {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE);
 
 	@Test
 	public void testVerifyModel() throws Exception {
-		VerifyUUID.verifyUUID(new LayoutVerifiableModel());
+		VerifyUUID.verify(new LayoutVerifiableModel());
 	}
 
-	@Test(expected = SQLException.class)
+	@Test(expected = BulkException.class)
 	public void testVerifyModelWithUnknownPKColumnName() throws Exception {
-		VerifyUUID.verifyUUID(
+		VerifyUUID.verify(
 			new VerifiableUUIDModel() {
 
 				@Override
@@ -55,11 +60,11 @@ public class VerifyUUIDTest extends BaseVerifyTestCase {
 			});
 	}
 
-	@Test(expected = SQLException.class)
+	@Test(expected = BulkException.class)
 	public void testVerifyUnknownModelWithUnknownPKColumnName()
 		throws Exception {
 
-		VerifyUUID.verifyUUID(
+		VerifyUUID.verify(
 			new VerifiableUUIDModel() {
 
 				@Override

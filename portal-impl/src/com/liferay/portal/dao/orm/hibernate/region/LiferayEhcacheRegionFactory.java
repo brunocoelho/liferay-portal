@@ -303,7 +303,7 @@ public class LiferayEhcacheRegionFactory extends EhCacheRegionFactory {
 	private static final String _DEFAULT_CLUSTERED_EHCACHE_CONFIG_FILE =
 		"/ehcache/hibernate-clustered.xml";
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		LiferayEhcacheRegionFactory.class);
 
 	private MBeanRegisteringPortalLifecycle _mBeanRegisteringPortalLifecycle;
@@ -345,9 +345,7 @@ public class LiferayEhcacheRegionFactory extends EhCacheRegionFactory {
 
 					Cache cache = _cacheManager.getCache(name);
 
-					portalCache =
-						new EhcachePortalCache<Serializable, Serializable>(
-							this, cache);
+					portalCache = new EhcachePortalCache<>(this, cache);
 
 					_portalCaches.put(name, portalCache);
 				}
@@ -407,10 +405,9 @@ public class LiferayEhcacheRegionFactory extends EhCacheRegionFactory {
 			throw new UnsupportedOperationException();
 		}
 
-		private CacheManager _cacheManager;
-		private Map<String, PortalCache<Serializable, Serializable>>
-			_portalCaches =
-				new HashMap<String, PortalCache<Serializable, Serializable>>();
+		private final CacheManager _cacheManager;
+		private final Map<String, PortalCache<Serializable, Serializable>>
+			_portalCaches = new HashMap<>();
 
 	}
 

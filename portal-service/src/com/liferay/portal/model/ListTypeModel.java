@@ -49,14 +49,14 @@ public interface ListTypeModel extends BaseModel<ListType>, MVCCModel {
 	 *
 	 * @return the primary key of this list type
 	 */
-	public int getPrimaryKey();
+	public long getPrimaryKey();
 
 	/**
 	 * Sets the primary key of this list type.
 	 *
 	 * @param primaryKey the primary key of this list type
 	 */
-	public void setPrimaryKey(int primaryKey);
+	public void setPrimaryKey(long primaryKey);
 
 	/**
 	 * Returns the mvcc version of this list type.
@@ -79,14 +79,14 @@ public interface ListTypeModel extends BaseModel<ListType>, MVCCModel {
 	 *
 	 * @return the list type ID of this list type
 	 */
-	public int getListTypeId();
+	public long getListTypeId();
 
 	/**
 	 * Sets the list type ID of this list type.
 	 *
 	 * @param listTypeId the list type ID of this list type
 	 */
-	public void setListTypeId(int listTypeId);
+	public void setListTypeId(long listTypeId);
 
 	/**
 	 * Returns the name of this list type.
@@ -155,19 +155,19 @@ public interface ListTypeModel extends BaseModel<ListType>, MVCCModel {
 	public Object clone();
 
 	@Override
-	public int compareTo(ListType listType);
+	public int compareTo(com.liferay.portal.model.ListType listType);
 
 	@Override
 	public int hashCode();
 
 	@Override
-	public CacheModel<ListType> toCacheModel();
+	public CacheModel<com.liferay.portal.model.ListType> toCacheModel();
 
 	@Override
-	public ListType toEscapedModel();
+	public com.liferay.portal.model.ListType toEscapedModel();
 
 	@Override
-	public ListType toUnescapedModel();
+	public com.liferay.portal.model.ListType toUnescapedModel();
 
 	@Override
 	public String toString();

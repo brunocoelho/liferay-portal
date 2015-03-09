@@ -179,11 +179,10 @@ public class ServiceMonitorAdvice extends ChainableMethodAdvice {
 	}
 
 	private static boolean _active;
-	private static Set<String> _monitoredClasses = new HashSet<String>();
-	private static Set<MethodSignature> _monitoredMethods =
-		new HashSet<MethodSignature>();
+	private static Set<String> _monitoredClasses = new HashSet<>();
+	private static Set<MethodSignature> _monitoredMethods = new HashSet<>();
 	private static boolean _permissiveMode;
-	private static ThreadLocal<ServiceRequestDataSample>
+	private static final ThreadLocal<ServiceRequestDataSample>
 		_serviceRequestDataSampleThreadLocal =
 			new AutoResetThreadLocal<ServiceRequestDataSample>(
 				ServiceRequestDataSample.class +

@@ -7,7 +7,6 @@
 <#assign fieldRawValue = paramUtil.getString(request, "${namespacedFieldName}", fieldRawValue)>
 
 <#assign fileEntryTitle = "">
-<#assign folderId = "">
 
 <#if (fieldRawValue != "")>
 	<#assign fileJSONObject = getFileJSONObject(fieldRawValue)>
@@ -16,104 +15,31 @@
 
 	<#if (fileEntry != "")>
 		<#assign fileEntryTitle = fileEntry.getTitle()>
-		<#assign folderId = fileEntry.getFolderId()>
 	</#if>
 </#if>
 
 <@aui["field-wrapper"] data=data>
-	<@aui.input helpMessage=escape(fieldStructure.tip) inlineField=true label=escape(label) name="${namespacedFieldName}Title" readonly="readonly" type="text" value=fileEntryTitle>
+	<div class="hide" id="${portletNamespace}${namespacedFieldName}UploadContainer"></div>
+
+	<@aui.input helpMessage=escape(fieldStructure.tip) inlineField=true label=escape(label) name="${namespacedFieldName}Title" readonly="readonly" type="text" value=(fileEntryTitle?has_content)?string(fileEntryTitle, languageUtil.get(locale, "drag-file-here"))>
 		<#if required>
 			<@aui.validator name="required" />
 		</#if>
 	</@aui.input>
 
-	<@aui["button-row"]>
-		<@aui.button id=namespacedFieldName value="select" />
-
-		<@aui.button onClick="window['${portletNamespace}${namespacedFieldName}clearFileEntry']();" value="clear" />
-	</@>
+	<div class="file-entry-upload-progress hide" id="${portletNamespace}${namespacedFieldName}Progress">
+		<div aria-valuemax="100" aria-valuemin="0" aria-valuenow="0" class="progress-bar" role="progressbar"></div>
+	</div>
 
 	<@aui.input name=namespacedFieldName type="hidden" value=fieldRawValue />
 
+	<@aui["button-row"]>
+		<@aui.button cssClass="upload-button" id="${namespacedFieldName}UploadButton" value="upload" />
+
+		<@aui.button cssClass="select-button" id="${namespacedFieldName}SelectButton" value="choose-from-document-library" />
+
+		<@aui.button cssClass="clear-button ${(fieldRawValue?has_content)?string('', 'hide')}" id="${namespacedFieldName}ClearButton" value="clear" />
+	</@>
+
 	${fieldStructure.children}
-</@>
-
-<@aui.script>
-	window['${portletNamespace}${namespacedFieldName}clearFileEntry'] = function() {
-		window['${portletNamespace}${namespacedFieldName}setFileEntry']('', '', '', '', '');
-	};
-
-	Liferay.provide(
-		window,
-		'${portletNamespace}${namespacedFieldName}setFileEntry',
-		function(url, uuid, groupId, title, version) {
-			var A = AUI();
-
-			var inputNode = A.one('#${portletNamespace}${namespacedFieldName}');
-
-			if (inputNode) {
-				if (uuid) {
-					inputNode.val(
-						A.JSON.stringify(
-							{
-								groupId: groupId,
-								uuid: uuid,
-								version: version
-							}
-						)
-					);
-				}
-				else {
-					inputNode.val('');
-				}
-			}
-
-			var titleNode = A.one('#${portletNamespace}${namespacedFieldName}Title');
-
-			if (titleNode) {
-				titleNode.val(title);
-			}
-		},
-		['json']
-	);
-</@>
-
-<@aui.script use="liferay-portlet-url">
-	var namespacedField = A.one('#${namespacedFieldName}');
-
-	if (namespacedField) {
-		namespacedField.on(
-			'click',
-			function(event) {
-				var portletURL = Liferay.PortletURL.createURL('${themeDisplay.getURLControlPanel()}');
-
-				portletURL.setDoAsGroupId(${scopeGroupId?c});
-				portletURL.setParameter('eventName', '${portletNamespace}selectDocumentLibrary');
-				portletURL.setParameter('folderId', '${folderId}');
-				portletURL.setParameter('groupId', ${scopeGroupId?c});
-				portletURL.setParameter('refererPortletName', '${themeDisplay.getPortletDisplay().getId()}');
-				portletURL.setParameter('struts_action', '/document_selector/view');
-				portletURL.setParameter('tabs1Names', 'documents');
-				portletURL.setPortletId('200');
-				portletURL.setWindowState('pop_up');
-
-				Liferay.Util.selectEntity(
-					{
-						dialog: {
-							constrain: true,
-							destroyOnHide: true,
-							modal: true
-						},
-						eventName: '${portletNamespace}selectDocumentLibrary',
-						id: '${portletNamespace}selectDocumentLibrary',
-						title: '${languageUtil.get(locale, "select-document")}',
-						uri: portletURL.toString()
-					},
-					function(event) {
-						window['${portletNamespace}${namespacedFieldName}setFileEntry'](event.url, event.uuid, event.groupid, event.title, event.version);
-					}
-				);
-			}
-		);
-	}
 </@>

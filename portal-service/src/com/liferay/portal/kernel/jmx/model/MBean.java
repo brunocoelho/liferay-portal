@@ -94,7 +94,7 @@ public class MBean implements Serializable {
 		if (_path == null) {
 			String[] parts = StringUtil.split(_mBeanName);
 
-			_path = new ArrayList<String>(parts.length);
+			_path = new ArrayList<>(parts.length);
 
 			for (String part : parts) {
 				String[] kvp = StringUtil.split(part, CharPool.EQUAL);
@@ -125,7 +125,7 @@ public class MBean implements Serializable {
 		return _loaded;
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(MBean.class);
+	private static final Log _log = LogFactoryUtil.getLog(MBean.class);
 
 	private final String _domainName;
 	private final boolean _loaded;

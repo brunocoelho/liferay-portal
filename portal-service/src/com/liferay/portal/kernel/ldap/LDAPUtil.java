@@ -295,9 +295,21 @@ public class LDAPUtil {
 		}
 	}
 
-	private static Pattern _pattern1 = Pattern.compile(".*[~<>]*=[~<>]*=.*");
-	private static Pattern _pattern2 = Pattern.compile("\\([~<>]*=.*");
-	private static Pattern _pattern3 = Pattern.compile("\\([^~<>=]*\\)");
-	private static Pattern _pattern4 = Pattern.compile(".*[^~<>=]*[~<>]*=\\)");
+	public static void validateFilter(String filter, String filterPropertyName)
+		throws PortalException {
+
+		if (!isValidFilter(filter)) {
+			throw new LDAPFilterException(
+				"Invalid filter " + filter + " defined by " +
+					filterPropertyName);
+		}
+	}
+
+	private static final Pattern _pattern1 = Pattern.compile(
+		".*[~<>]*=[~<>]*=.*");
+	private static final Pattern _pattern2 = Pattern.compile("\\([~<>]*=.*");
+	private static final Pattern _pattern3 = Pattern.compile("\\([^~<>=]*\\)");
+	private static final Pattern _pattern4 = Pattern.compile(
+		".*[^~<>=]*[~<>]*=\\)");
 
 }

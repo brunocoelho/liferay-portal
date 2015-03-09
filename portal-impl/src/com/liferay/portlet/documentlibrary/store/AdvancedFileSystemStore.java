@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.documentlibrary.util.DLUtil;
 
 import java.io.File;
@@ -46,7 +47,7 @@ public class AdvancedFileSystemStore extends FileSystemStore {
 
 		String[] directories = FileUtil.listDirs(repositoryDir);
 
-		List<String> fileNames = new ArrayList<String>();
+		List<String> fileNames = new ArrayList<>();
 
 		for (String directory : directories) {
 			fileNames.addAll(
@@ -114,14 +115,12 @@ public class AdvancedFileSystemStore extends FileSystemStore {
 				}
 			}
 		}
-
-		return;
 	}
 
 	protected List<String> getAdvancedFileNames(
 		long companyId, long repositoryId, String fileName) {
 
-		List<String> fileNames = new ArrayList<String>();
+		List<String> fileNames = new ArrayList<>();
 
 		String shortFileName = FileUtil.getShortFileName(fileName);
 
@@ -279,6 +278,11 @@ public class AdvancedFileSystemStore extends FileSystemStore {
 		}
 
 		return headVersionLabel;
+	}
+
+	@Override
+	protected String getRootDirName() {
+		return PropsValues.DL_STORE_ADVANCED_FILE_SYSTEM_ROOT_DIR;
 	}
 
 	private static final String _HOOK_EXTENSION = "afsh";

@@ -36,16 +36,16 @@ public enum Propagation {
 		return _propagations.get(value);
 	}
 
-	Propagation(int value) {
-		_value = value;
-	}
-
 	public int value() {
 		return _value;
 	}
 
-	private static Map<Integer, Propagation> _propagations =
-		new HashMap<Integer, Propagation>();
+	private Propagation(int value) {
+		_value = value;
+	}
+
+	private static final Map<Integer, Propagation> _propagations =
+		new HashMap<>();
 
 	static {
 		for (Propagation propagation : EnumSet.allOf(Propagation.class)) {
@@ -53,6 +53,6 @@ public enum Propagation {
 		}
 	}
 
-	private int _value;
+	private final int _value;
 
 }

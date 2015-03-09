@@ -22,7 +22,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.upgrade.UpgradeException;
+import com.liferay.portal.kernel.upgrade.OlderVersionException;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.upgrade.util.UpgradeProcessUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -242,7 +242,7 @@ public class ReleaseLocalServiceImpl extends ReleaseLocalServiceBaseImpl {
 			}
 		}
 		else if (buildNumber < release.getBuildNumber()) {
-			throw new UpgradeException(
+			throw new OlderVersionException(
 				"Skipping upgrade processes for " + servletContextName +
 					" because you are trying to upgrade with an older version");
 		}
@@ -364,7 +364,7 @@ public class ReleaseLocalServiceImpl extends ReleaseLocalServiceBaseImpl {
 	private static final String _TEST_DATABASE_STRING_CASE_SENSITIVITY =
 		"select count(*) from Release_ where releaseId = ? and testString = ?";
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		ReleaseLocalServiceImpl.class);
 
 }

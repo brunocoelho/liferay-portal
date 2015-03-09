@@ -42,6 +42,17 @@ import javax.portlet.PortletRequest;
 @ProviderType
 public class ExportImportHelperUtil {
 
+	public static long[] getAllLayoutIds(long groupId, boolean privateLayout) {
+		return getExportImportHelper().getAllLayoutIds(groupId, privateLayout);
+	}
+
+	public static Map<Long, Boolean> getAllLayoutIdsMap(
+		long groupId, boolean privateLayout) {
+
+		return getExportImportHelper().getAllLayoutIdsMap(
+			groupId, privateLayout);
+	}
+
 	/**
 	 * @deprecated As of 7.0.0, moved to {@link
 	 *             ExportImportDateUtil#getCalendar(PortletRequest, String,
@@ -531,14 +542,6 @@ public class ExportImportHelperUtil {
 			portletDataContext, portletPreferences, key, clazz, companyGroupId);
 	}
 
-	public static MissingReferences validateMissingReferences(
-			final PortletDataContext portletDataContext)
-		throws Exception {
-
-		return getExportImportHelper().validateMissingReferences(
-			portletDataContext);
-	}
-
 	/**
 	 * @deprecated As of 7.0.0, replaced by {@link
 	 *             #validateMissingReferences(PortletDataContext)}
@@ -551,6 +554,14 @@ public class ExportImportHelperUtil {
 
 		return getExportImportHelper().validateMissingReferences(
 			userId, groupId, parameterMap, file);
+	}
+
+	public static MissingReferences validateMissingReferences(
+			final PortletDataContext portletDataContext)
+		throws Exception {
+
+		return getExportImportHelper().validateMissingReferences(
+			portletDataContext);
 	}
 
 	public static void writeManifestSummary(

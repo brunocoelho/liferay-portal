@@ -290,10 +290,10 @@ public class MBMessageLocalServiceUtil {
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public static long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery) {
@@ -301,11 +301,11 @@ public class MBMessageLocalServiceUtil {
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public static long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,
@@ -386,6 +386,21 @@ public class MBMessageLocalServiceUtil {
 			classPK, status);
 	}
 
+	public static com.liferay.portlet.messageboards.model.MBMessageDisplay getDiscussionMessageDisplay(
+		long userId, long groupId, java.lang.String className, long classPK,
+		int status,
+		java.util.Comparator<com.liferay.portlet.messageboards.model.MBMessage> comparator)
+		throws com.liferay.portal.kernel.exception.PortalException {
+		return getService()
+				   .getDiscussionMessageDisplay(userId, groupId, className,
+			classPK, status, comparator);
+	}
+
+	/**
+	* @deprecated As of 7.0.0, replaced by {@link
+	#getDiscussionMessageDisplay(long, long, String, long, int)}
+	*/
+	@Deprecated
 	public static com.liferay.portlet.messageboards.model.MBMessageDisplay getDiscussionMessageDisplay(
 		long userId, long groupId, java.lang.String className, long classPK,
 		int status, java.lang.String threadView)
@@ -492,11 +507,28 @@ public class MBMessageLocalServiceUtil {
 		return getService().getMBMessages(start, end);
 	}
 
+	/**
+	* Returns all the message-boards messages matching the UUID and company.
+	*
+	* @param uuid the UUID of the message-boards messages
+	* @param companyId the primary key of the company
+	* @return the matching message-boards messages, or an empty list if no matches were found
+	*/
 	public static java.util.List<com.liferay.portlet.messageboards.model.MBMessage> getMBMessagesByUuidAndCompanyId(
 		java.lang.String uuid, long companyId) {
 		return getService().getMBMessagesByUuidAndCompanyId(uuid, companyId);
 	}
 
+	/**
+	* Returns a range of message-boards messages matching the UUID and company.
+	*
+	* @param uuid the UUID of the message-boards messages
+	* @param companyId the primary key of the company
+	* @param start the lower bound of the range of message-boards messages
+	* @param end the upper bound of the range of message-boards messages (not inclusive)
+	* @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	* @return the range of matching message-boards messages, or an empty list if no matches were found
+	*/
 	public static java.util.List<com.liferay.portlet.messageboards.model.MBMessage> getMBMessagesByUuidAndCompanyId(
 		java.lang.String uuid, long companyId, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator<com.liferay.portlet.messageboards.model.MBMessage> orderByComparator) {
@@ -527,6 +559,16 @@ public class MBMessageLocalServiceUtil {
 		return getService()
 				   .getMessageDisplay(userId, message, status, threadView,
 			includePrevAndNext);
+	}
+
+	public static com.liferay.portlet.messageboards.model.MBMessageDisplay getMessageDisplay(
+		long userId, com.liferay.portlet.messageboards.model.MBMessage message,
+		int status, java.lang.String threadView, boolean includePrevAndNext,
+		java.util.Comparator<com.liferay.portlet.messageboards.model.MBMessage> comparator)
+		throws com.liferay.portal.kernel.exception.PortalException {
+		return getService()
+				   .getMessageDisplay(userId, message, status, threadView,
+			includePrevAndNext, comparator);
 	}
 
 	public static com.liferay.portlet.messageboards.model.MBMessageDisplay getMessageDisplay(
@@ -708,10 +750,22 @@ public class MBMessageLocalServiceUtil {
 		return getService().updateMBMessage(mbMessage);
 	}
 
+	/**
+	* @deprecated As of 7.0.0, with no direct replacement
+	*/
+	@Deprecated
 	public static com.liferay.portlet.messageboards.model.MBMessage updateMessage(
 		long messageId, java.lang.String body)
 		throws com.liferay.portal.kernel.exception.PortalException {
 		return getService().updateMessage(messageId, body);
+	}
+
+	public static com.liferay.portlet.messageboards.model.MBMessage updateMessage(
+		long userId, long messageId, java.lang.String body,
+		com.liferay.portal.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+		return getService()
+				   .updateMessage(userId, messageId, body, serviceContext);
 	}
 
 	public static com.liferay.portlet.messageboards.model.MBMessage updateMessage(

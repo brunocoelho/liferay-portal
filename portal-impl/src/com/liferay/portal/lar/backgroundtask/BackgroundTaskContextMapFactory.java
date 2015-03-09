@@ -26,7 +26,9 @@ import java.util.Map;
 
 /**
  * @author Michael C. Han
+ * @deprecated As of 7.0.0, replaced by {@link com.liferay.portal.kernel.lar.exportimportconfiguration.ExportImportConfigurationSettingsMapFactory}
  */
+@Deprecated
 public class BackgroundTaskContextMapFactory {
 
 	public static Map<String, Serializable> buildTaskContextMap(
@@ -34,8 +36,7 @@ public class BackgroundTaskContextMapFactory {
 		Map<String, String[]> parameterMap, String cmd, Date startDate,
 		Date endDate, String fileName) {
 
-		Map<String, Serializable> taskContextMap =
-			new HashMap<String, Serializable>();
+		Map<String, Serializable> taskContextMap = new HashMap<>();
 
 		if (cmd != null) {
 			taskContextMap.put(Constants.CMD, cmd);
@@ -53,8 +54,8 @@ public class BackgroundTaskContextMapFactory {
 		}
 
 		if (parameterMap != null) {
-			HashMap<String, String[]> serializableParameterMap =
-				new HashMap<String, String[]>(parameterMap);
+			HashMap<String, String[]> serializableParameterMap = new HashMap<>(
+				parameterMap);
 
 			taskContextMap.put("parameterMap", serializableParameterMap);
 		}
@@ -75,8 +76,7 @@ public class BackgroundTaskContextMapFactory {
 		Map<String, String[]> parameterMap, String cmd, Date startDate,
 		Date endDate, String fileName) {
 
-		Map<String, Serializable> taskContextMap =
-			new HashMap<String, Serializable>();
+		Map<String, Serializable> taskContextMap = new HashMap<>();
 
 		if (cmd != null) {
 			taskContextMap.put(Constants.CMD, cmd);
@@ -90,8 +90,8 @@ public class BackgroundTaskContextMapFactory {
 		taskContextMap.put("groupId", groupId);
 
 		if (parameterMap != null) {
-			HashMap<String, String[]> serializableParameterMap =
-				new HashMap<String, String[]>(parameterMap);
+			HashMap<String, String[]> serializableParameterMap = new HashMap<>(
+				parameterMap);
 
 			taskContextMap.put("parameterMap", serializableParameterMap);
 		}

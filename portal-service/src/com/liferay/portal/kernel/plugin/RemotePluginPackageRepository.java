@@ -109,7 +109,7 @@ public class RemotePluginPackageRepository {
 			groupId, artifactId);
 
 		if (pluginPackages == null) {
-			pluginPackages = new ArrayList<PluginPackage>();
+			pluginPackages = new ArrayList<>();
 
 			_groupAndArtifactIndex.put(
 				groupId+ StringPool.SLASH + artifactId, pluginPackages);
@@ -139,16 +139,14 @@ public class RemotePluginPackageRepository {
 		}
 	}
 
-	private Map<String, PluginPackage> _artifactURLIndex =
-		new HashMap<String, PluginPackage>();
-	private Map<String, List<PluginPackage>> _groupAndArtifactIndex =
-		new HashMap<String, List<PluginPackage>>();
-	private Map<String, PluginPackage> _moduleIdIndex =
-		new HashMap<String, PluginPackage>();
-	private List<PluginPackage> _pluginPackages =
-		new ArrayList<PluginPackage>();
-	private String _repositoryURL;
+	private final Map<String, PluginPackage> _artifactURLIndex =
+		new HashMap<>();
+	private final Map<String, List<PluginPackage>> _groupAndArtifactIndex =
+		new HashMap<>();
+	private final Map<String, PluginPackage> _moduleIdIndex = new HashMap<>();
+	private final List<PluginPackage> _pluginPackages = new ArrayList<>();
+	private final String _repositoryURL;
 	private Properties _settings = null;
-	private Set<String> _tags = new TreeSet<String>();
+	private final Set<String> _tags = new TreeSet<>();
 
 }

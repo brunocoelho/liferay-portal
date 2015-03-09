@@ -19,6 +19,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.repository.Repository;
 import com.liferay.portal.kernel.repository.capabilities.TrashCapability;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.repository.util.RepositoryTrashUtil;
 import com.liferay.portal.kernel.trash.TrashActionKeys;
 import com.liferay.portal.kernel.trash.TrashHandler;
 import com.liferay.portal.kernel.trash.TrashHandlerRegistryUtil;
@@ -63,7 +64,8 @@ public class DLFileEntryTrashHandler extends DLBaseTrashHandler {
 		DLFileEntry dlFileEntry = getDLFileEntry(classPK);
 
 		checkRestorableEntry(
-			classPK, 0, containerModelId, dlFileEntry.getTitle(), newName);
+			classPK, 0, containerModelId, dlFileEntry.getFileName(),
+			dlFileEntry.getTitle(), newName);
 	}
 
 	@Override
@@ -73,6 +75,7 @@ public class DLFileEntryTrashHandler extends DLBaseTrashHandler {
 
 		checkRestorableEntry(
 			trashEntry.getClassPK(), trashEntry.getEntryId(), containerModelId,
+			trashEntry.getTypeSettingsProperty("fileName"),
 			trashEntry.getTypeSettingsProperty("title"), newName);
 	}
 
@@ -230,8 +233,11 @@ public class DLFileEntryTrashHandler extends DLBaseTrashHandler {
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		DLAppLocalServiceUtil.moveFileEntryFromTrash(
-			userId, classPK, containerModelId, serviceContext);
+		Repository repository = getRepository(classPK);
+
+		RepositoryTrashUtil.moveFileEntryFromTrash(
+			userId, repository.getRepositoryId(), classPK, containerModelId,
+			serviceContext);
 	}
 
 	@Override
@@ -252,18 +258,25 @@ public class DLFileEntryTrashHandler extends DLBaseTrashHandler {
 			return;
 		}
 
-		DLAppLocalServiceUtil.restoreFileEntryFromTrash(userId, classPK);
+		RepositoryTrashUtil.restoreFileEntryFromTrash(
+			userId, dlFileEntry.getRepositoryId(), classPK);
 	}
 
 	@Override
 	public void updateTitle(long classPK, String name) throws PortalException {
 		DLFileEntry dlFileEntry = getDLFileEntry(classPK);
 
+		String fileName = DLUtil.getSanitizedFileName(
+			name, dlFileEntry.getExtension());
+
+		dlFileEntry.setFileName(fileName);
 		dlFileEntry.setTitle(name);
 
 		DLFileEntryLocalServiceUtil.updateDLFileEntry(dlFileEntry);
 
 		DLFileVersion dlFileVersion = dlFileEntry.getFileVersion();
+
+		dlFileVersion.setFileName(fileName);
 
 		dlFileVersion.setTitle(name);
 
@@ -272,7 +285,7 @@ public class DLFileEntryTrashHandler extends DLBaseTrashHandler {
 
 	protected void checkRestorableEntry(
 			long classPK, long entryId, long containerModelId,
-			String originalTitle, String newName)
+			String originalFileName, String originalTitle, String newName)
 		throws PortalException {
 
 		DLFileEntry dlFileEntry = getDLFileEntry(classPK);
@@ -282,12 +295,36 @@ public class DLFileEntryTrashHandler extends DLBaseTrashHandler {
 		}
 
 		if (Validator.isNotNull(newName)) {
+			originalFileName = DLUtil.getSanitizedFileName(
+				newName, dlFileEntry.getExtension());
 			originalTitle = newName;
+		}
+
+		DLFolder duplicateDLFolder = DLFolderLocalServiceUtil.fetchFolder(
+			dlFileEntry.getGroupId(), containerModelId, originalTitle);
+
+		if (duplicateDLFolder != null) {
+			RestoreEntryException ree = new RestoreEntryException(
+				RestoreEntryException.DUPLICATE);
+
+			ree.setDuplicateEntryId(duplicateDLFolder.getFolderId());
+			ree.setOldName(duplicateDLFolder.getName());
+			ree.setOverridable(false);
+			ree.setTrashEntryId(entryId);
+
+			throw ree;
 		}
 
 		DLFileEntry duplicateDLFileEntry =
 			DLFileEntryLocalServiceUtil.fetchFileEntry(
 				dlFileEntry.getGroupId(), containerModelId, originalTitle);
+
+		if (duplicateDLFileEntry == null) {
+			duplicateDLFileEntry =
+				DLFileEntryLocalServiceUtil.fetchFileEntryByFileName(
+					dlFileEntry.getGroupId(), containerModelId,
+					originalFileName);
+		}
 
 		if (duplicateDLFileEntry != null) {
 			RestoreEntryException ree = new RestoreEntryException(

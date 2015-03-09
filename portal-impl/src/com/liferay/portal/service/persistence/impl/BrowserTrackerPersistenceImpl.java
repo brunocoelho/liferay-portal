@@ -56,7 +56,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see BrowserTrackerPersistence
- * @see BrowserTrackerUtil
+ * @see com.liferay.portal.service.persistence.BrowserTrackerUtil
  * @generated
  */
 @ProviderType
@@ -981,7 +981,7 @@ public class BrowserTrackerPersistenceImpl extends BasePersistenceImpl<BrowserTr
 		MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

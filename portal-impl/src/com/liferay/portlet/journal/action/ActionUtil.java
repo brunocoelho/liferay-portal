@@ -17,14 +17,17 @@ package com.liferay.portlet.journal.action;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.util.UnicodeFormatter;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.xml.Document;
@@ -38,6 +41,7 @@ import com.liferay.portal.service.ServiceContextFactory;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portal.util.WebKeys;
+import com.liferay.portlet.documentlibrary.service.DLAppLocalServiceUtil;
 import com.liferay.portlet.dynamicdatamapping.NoSuchStructureException;
 import com.liferay.portlet.dynamicdatamapping.model.DDMStructure;
 import com.liferay.portlet.dynamicdatamapping.model.DDMTemplate;
@@ -84,9 +88,7 @@ public class ActionUtil {
 			ActionRequest actionRequest, String deleteArticleId)
 		throws Exception {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
+		long groupId = ParamUtil.getLong(actionRequest, "groupId");
 		String articleId = deleteArticleId;
 		String articleURL = ParamUtil.getString(actionRequest, "articleURL");
 		double version = 0;
@@ -99,8 +101,7 @@ public class ActionUtil {
 
 		if (pos == -1) {
 			JournalArticleServiceUtil.deleteArticle(
-				themeDisplay.getScopeGroupId(), articleId, articleURL,
-				serviceContext);
+				groupId, articleId, articleURL, serviceContext);
 		}
 		else {
 			articleId = articleId.substring(0, pos);
@@ -109,8 +110,7 @@ public class ActionUtil {
 					pos + EditArticleAction.VERSION_SEPARATOR.length()));
 
 			JournalArticleServiceUtil.deleteArticle(
-				themeDisplay.getScopeGroupId(), articleId, version, articleURL,
-				serviceContext);
+				groupId, articleId, version, articleURL, serviceContext);
 		}
 
 		JournalUtil.removeRecentArticle(actionRequest, articleId, version);
@@ -120,9 +120,7 @@ public class ActionUtil {
 			ActionRequest actionRequest, String expireArticleId)
 		throws Exception {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
+		long groupId = ParamUtil.getLong(actionRequest, "groupId");
 		String articleId = expireArticleId;
 		String articleURL = ParamUtil.getString(actionRequest, "articleURL");
 		double version = 0;
@@ -135,8 +133,7 @@ public class ActionUtil {
 
 		if (pos == -1) {
 			JournalArticleServiceUtil.expireArticle(
-				themeDisplay.getScopeGroupId(), articleId, articleURL,
-				serviceContext);
+				groupId, articleId, articleURL, serviceContext);
 		}
 		else {
 			articleId = articleId.substring(0, pos);
@@ -145,8 +142,7 @@ public class ActionUtil {
 					pos + EditArticleAction.VERSION_SEPARATOR.length()));
 
 			JournalArticleServiceUtil.expireArticle(
-				themeDisplay.getScopeGroupId(), articleId, version, articleURL,
-				serviceContext);
+				groupId, articleId, version, articleURL, serviceContext);
 		}
 
 		JournalUtil.removeRecentArticle(actionRequest, articleId, version);
@@ -184,7 +180,8 @@ public class ActionUtil {
 		long classNameId = ParamUtil.getLong(request, "classNameId");
 		long classPK = ParamUtil.getLong(request, "classPK");
 		String articleId = ParamUtil.getString(request, "articleId");
-		String structureId = ParamUtil.getString(request, "structureId");
+		String ddmStructureKey = ParamUtil.getString(
+			request, "ddmStructureKey");
 		int status = ParamUtil.getInteger(
 			request, "status", WorkflowConstants.STATUS_ANY);
 
@@ -212,7 +209,7 @@ public class ActionUtil {
 			try {
 				ddmStructure = DDMStructureServiceUtil.getStructure(
 					groupId, PortalUtil.getClassNameId(JournalArticle.class),
-					structureId, true);
+					ddmStructureKey, true);
 			}
 			catch (NoSuchStructureException nsse1) {
 				return;
@@ -256,7 +253,7 @@ public class ActionUtil {
 		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		List<JournalArticle> articles = new ArrayList<JournalArticle>();
+		List<JournalArticle> articles = new ArrayList<>();
 
 		String[] articleIds = StringUtil.split(
 			ParamUtil.getString(request, "articleIds"));
@@ -285,14 +282,18 @@ public class ActionUtil {
 	}
 
 	public static Object[] getContentAndImages(
-			DDMStructure ddmStructure, Locale locale,
-			ServiceContext serviceContext)
+			DDMStructure ddmStructure, ServiceContext serviceContext)
 		throws Exception {
 
 		Fields fields = DDMUtil.getFields(
 			ddmStructure.getStructureId(), serviceContext);
 
 		String content = JournalConverterUtil.getContent(ddmStructure, fields);
+
+		String defaultLanguageId = LocalizationUtil.getDefaultLanguageId(
+			content, LocaleUtil.getSiteDefault());
+
+		Locale locale = LanguageUtil.getLocale(defaultLanguageId);
 
 		Map<String, byte[]> images = getImages(content, fields, locale);
 
@@ -354,7 +355,7 @@ public class ActionUtil {
 		long[] folderIds = StringUtil.split(
 			ParamUtil.getString(request, "folderIds"), 0L);
 
-		List<JournalFolder> folders = new ArrayList<JournalFolder>();
+		List<JournalFolder> folders = new ArrayList<>();
 
 		for (long folderId : folderIds) {
 			try {
@@ -384,10 +385,11 @@ public class ActionUtil {
 
 		long groupId = ParamUtil.getLong(request, "groupId");
 		long classNameId = ParamUtil.getLong(request, "classNameId");
-		String structureId = ParamUtil.getString(request, "structureId");
+		String ddmStructureKey = ParamUtil.getString(
+			request, "ddmStructureKey");
 
 		DDMStructure ddmStructure = DDMStructureServiceUtil.getStructure(
-			groupId, classNameId, structureId);
+			groupId, classNameId, ddmStructureKey);
 
 		request.setAttribute(WebKeys.JOURNAL_STRUCTURE, ddmStructure);
 	}
@@ -410,14 +412,14 @@ public class ActionUtil {
 		throws Exception {
 
 		long groupId = ParamUtil.getLong(request, "groupId");
-		String templateId = ParamUtil.getString(request, "templateId");
+		String ddmTemplateKey = ParamUtil.getString(request, "ddmTemplateKey");
 
 		DDMTemplate ddmTemplate = null;
 
-		if (Validator.isNotNull(templateId)) {
+		if (Validator.isNotNull(ddmTemplateKey)) {
 			ddmTemplate = DDMTemplateServiceUtil.getTemplate(
 				groupId, PortalUtil.getClassNameId(DDMStructure.class),
-				templateId, true);
+				ddmTemplateKey, true);
 		}
 
 		request.setAttribute(WebKeys.JOURNAL_TEMPLATE, ddmTemplate);
@@ -464,7 +466,7 @@ public class ActionUtil {
 			String content, Fields fields, Locale locale)
 		throws Exception {
 
-		Map<String, byte[]> images = new HashMap<String, byte[]>();
+		Map<String, byte[]> images = new HashMap<>();
 
 		for (Field field : fields) {
 			String dataType = field.getDataType();
@@ -489,9 +491,19 @@ public class ActionUtil {
 				JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
 					(String)values.get(i));
 
-				String data = jsonObject.getString("data");
+				String uuid = jsonObject.getString("uuid");
+				long groupId = jsonObject.getLong("groupId");
 
-				images.put(sb.toString(), UnicodeFormatter.hexToBytes(data));
+				if (Validator.isNotNull(uuid) && (groupId > 0)) {
+					FileEntry fileEntry =
+						DLAppLocalServiceUtil.getFileEntryByUuidAndGroupId(
+							uuid, groupId);
+
+					byte[] bytes = FileUtil.getBytes(
+						fileEntry.getContentStream());
+
+					images.put(sb.toString(), bytes);
+				}
 			}
 		}
 

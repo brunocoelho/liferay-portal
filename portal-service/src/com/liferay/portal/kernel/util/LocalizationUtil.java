@@ -153,6 +153,14 @@ public class LocalizationUtil {
 		return getLocalization().getLocalizationMap(portletRequest, parameter);
 	}
 
+	public static Map<Locale, String> getLocalizationMap(
+		PortletRequest portletRequest, String parameter,
+		Map<Locale, String> defaultValues) {
+
+		return getLocalization().getLocalizationMap(
+			portletRequest, parameter, defaultValues);
+	}
+
 	public static Map<Locale, String> getLocalizationMap(String xml) {
 		return getLocalization().getLocalizationMap(xml);
 	}
@@ -223,7 +231,7 @@ public class LocalizationUtil {
 			return Collections.emptyList();
 		}
 
-		List<Locale> modifiedLocales = new ArrayList<Locale>();
+		List<Locale> modifiedLocales = new ArrayList<>();
 
 		Locale[] locales = LanguageUtil.getAvailableLocales();
 
@@ -239,6 +247,11 @@ public class LocalizationUtil {
 		return modifiedLocales;
 	}
 
+	/**
+	 * @deprecated As of 7.0.0 replaced by {@link #getLocalizedName(String,
+	 *             String)}
+	 */
+	@Deprecated
 	public static String getPreferencesKey(String key, String languageId) {
 		return getLocalization().getPreferencesKey(key, languageId);
 	}

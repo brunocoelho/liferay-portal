@@ -18,6 +18,7 @@ import aQute.bnd.annotation.ProviderType;
 
 /**
  * @author Brian Wing Shun Chan
+ * @generated
  */
 @ProviderType
 public interface DLFileEntryFinder {
@@ -97,6 +98,9 @@ public interface DLFileEntryFinder {
 	public java.util.List<com.liferay.portlet.documentlibrary.model.DLFileEntry> findByDDMStructureIds(
 		long[] ddmStructureIds, int start, int end);
 
+	public java.util.List<com.liferay.portlet.documentlibrary.model.DLFileEntry> findByDDMStructureIds(
+		long groupId, long[] ddmStructureIds, int start, int end);
+
 	public java.util.List<com.liferay.portlet.documentlibrary.model.DLFileEntry> findByExtraSettings(
 		int start, int end);
 
@@ -117,6 +121,12 @@ public interface DLFileEntryFinder {
 
 	public java.util.List<com.liferay.portlet.documentlibrary.model.DLFileEntry> findByG_U_F(
 		long groupId, long userId, java.util.List<java.lang.Long> folderIds,
+		com.liferay.portal.kernel.dao.orm.QueryDefinition<com.liferay.portlet.documentlibrary.model.DLFileEntry> queryDefinition);
+
+	public java.util.List<com.liferay.portlet.documentlibrary.model.DLFileEntry> findByG_U_R_F(
+		long groupId, long userId,
+		java.util.List<java.lang.Long> repositoryIds,
+		java.util.List<java.lang.Long> folderIds,
 		com.liferay.portal.kernel.dao.orm.QueryDefinition<com.liferay.portlet.documentlibrary.model.DLFileEntry> queryDefinition);
 
 	public java.util.List<com.liferay.portlet.documentlibrary.model.DLFileEntry> findByG_U_F_M(

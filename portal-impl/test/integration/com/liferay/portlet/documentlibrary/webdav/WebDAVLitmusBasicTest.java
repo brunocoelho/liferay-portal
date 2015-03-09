@@ -15,11 +15,11 @@
 package com.liferay.portlet.documentlibrary.webdav;
 
 import com.liferay.portal.kernel.servlet.HttpHeaders;
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Tuple;
 import com.liferay.portal.kernel.webdav.methods.Method;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,8 +27,9 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * <p>
@@ -38,9 +39,14 @@ import org.junit.runner.RunWith;
  *
  * @author Alexander Chow
  */
-@ExecutionTestListeners(listeners = {WebDAVEnvironmentConfigTestListener.class})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 public class WebDAVLitmusBasicTest extends BaseWebDAVTestCase {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			WebDAVEnvironmentConfigTestRule.INSTANCE);
 
 	@Test
 	public void test02Options() {
@@ -65,8 +71,22 @@ public class WebDAVLitmusBasicTest extends BaseWebDAVTestCase {
 	}
 
 	@Test
-	public void test04PutGetUTF8() {
+	public void test04UTF8() {
+
+		// Create
+
 		putGet("res-\u20AC");
+
+		// Modify
+
+		assertCode(
+			HttpServletResponse.SC_METHOD_NOT_ALLOWED,
+			service(Method.MKCOL, "res-\u20AC", null, null));
+
+		// Delete
+
+		assertCode(
+			HttpServletResponse.SC_NO_CONTENT, serviceDelete("res-\u20AC"));
 	}
 
 	@Test
@@ -80,25 +100,12 @@ public class WebDAVLitmusBasicTest extends BaseWebDAVTestCase {
 	}
 
 	@Test
-	public void test06MkcolOverPlain() {
-		assertCode(
-			HttpServletResponse.SC_METHOD_NOT_ALLOWED,
-			service(Method.MKCOL, "res-\u20AC", null, null));
-	}
-
-	@Test
-	public void test07Delete() {
-		assertCode(
-			HttpServletResponse.SC_NO_CONTENT, serviceDelete("res-\u20AC"));
-	}
-
-	@Test
-	public void test08DeleteNull() {
+	public void test06DeleteNull() {
 		assertCode(HttpServletResponse.SC_NOT_FOUND, serviceDelete("404me"));
 	}
 
 	@Test
-	public void test09DeleteFragment() {
+	public void test07DeleteFragment() {
 		assertCode(
 			HttpServletResponse.SC_CREATED,
 			service(Method.MKCOL, "frag", null, null));
@@ -108,34 +115,35 @@ public class WebDAVLitmusBasicTest extends BaseWebDAVTestCase {
 	}
 
 	@Test
-	public void test10Mkcol() {
+	public void test08Col() {
+
+		// Create
+
 		assertCode(
 			HttpServletResponse.SC_CREATED,
 			service(Method.MKCOL, "col", null, null));
-	}
 
-	@Test
-	public void test11MkcolAgain() {
+		// Create duplicate
+
 		assertCode(
 			HttpServletResponse.SC_METHOD_NOT_ALLOWED,
 			service(Method.MKCOL, "col", null, null));
-	}
 
-	@Test
-	public void test12DeleteColl() {
+		// Delete
+
 		assertCode(HttpServletResponse.SC_NO_CONTENT, serviceDelete("col"));
 	}
 
 	@Test
-	public void test13MkcolNoParent() {
+	public void test09MkcolNoParent() {
 		assertCode(
 			HttpServletResponse.SC_CONFLICT,
 			service(Method.MKCOL, "409me/col", null, null));
 	}
 
 	@Test
-	public void test14MkcolWithBody() {
-		Map<String, String> headers = new HashMap<String, String>();
+	public void test10MkcolWithBody() {
+		Map<String, String> headers = new HashMap<>();
 
 		headers.put(HttpHeaders.CONTENT_TYPE, "xyz-foo/bar-512");
 

@@ -16,6 +16,7 @@ package com.liferay.portal.model.impl;
 
 import aQute.bnd.annotation.ProviderType;
 
+import com.liferay.portal.kernel.util.HashUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.CacheModel;
@@ -39,6 +40,33 @@ import java.util.Date;
 @ProviderType
 public class LayoutSetCacheModel implements CacheModel<LayoutSet>,
 	Externalizable, MVCCModel {
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+
+		if (!(obj instanceof LayoutSetCacheModel)) {
+			return false;
+		}
+
+		LayoutSetCacheModel layoutSetCacheModel = (LayoutSetCacheModel)obj;
+
+		if ((layoutSetId == layoutSetCacheModel.layoutSetId) &&
+				(mvccVersion == layoutSetCacheModel.mvccVersion)) {
+			return true;
+		}
+
+		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		int hashCode = HashUtil.hash(0, layoutSetId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
 	@Override
 	public long getMvccVersion() {
 		return mvccVersion;
@@ -173,6 +201,8 @@ public class LayoutSetCacheModel implements CacheModel<LayoutSet>,
 
 		layoutSetImpl.resetOriginalValues();
 
+		layoutSetImpl.setCompanyFallbackVirtualHostname(_companyFallbackVirtualHostname);
+
 		layoutSetImpl.setVirtualHostname(_virtualHostname);
 
 		return layoutSetImpl;
@@ -199,6 +229,7 @@ public class LayoutSetCacheModel implements CacheModel<LayoutSet>,
 		layoutSetPrototypeUuid = objectInput.readUTF();
 		layoutSetPrototypeLinkEnabled = objectInput.readBoolean();
 
+		_companyFallbackVirtualHostname = (java.lang.String)objectInput.readObject();
 		_virtualHostname = (java.lang.String)objectInput.readObject();
 	}
 
@@ -267,6 +298,7 @@ public class LayoutSetCacheModel implements CacheModel<LayoutSet>,
 
 		objectOutput.writeBoolean(layoutSetPrototypeLinkEnabled);
 
+		objectOutput.writeObject(_companyFallbackVirtualHostname);
 		objectOutput.writeObject(_virtualHostname);
 	}
 
@@ -287,5 +319,6 @@ public class LayoutSetCacheModel implements CacheModel<LayoutSet>,
 	public String settings;
 	public String layoutSetPrototypeUuid;
 	public boolean layoutSetPrototypeLinkEnabled;
+	public java.lang.String _companyFallbackVirtualHostname;
 	public java.lang.String _virtualHostname;
 }

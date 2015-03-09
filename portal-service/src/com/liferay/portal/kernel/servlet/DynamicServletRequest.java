@@ -49,7 +49,7 @@ public class DynamicServletRequest extends HttpServletRequestWrapper {
 		HttpServletRequest request, Map<String, String[]> parameterMap,
 		String queryString, boolean inherit) {
 
-		parameterMap = new HashMap<String, String[]>(parameterMap);
+		parameterMap = new HashMap<>(parameterMap);
 
 		String[] parameters = StringUtil.split(queryString, CharPool.AMPERSAND);
 
@@ -121,7 +121,7 @@ public class DynamicServletRequest extends HttpServletRequestWrapper {
 
 		super(request);
 
-		_params = new HashMap<String, String[]>();
+		_params = new HashMap<>();
 		_inherit = inherit;
 
 		if (params != null) {
@@ -132,7 +132,7 @@ public class DynamicServletRequest extends HttpServletRequestWrapper {
 			DynamicServletRequest dynamicRequest =
 				(DynamicServletRequest)request;
 
-			setRequest(dynamicRequest.getRequest());
+			dynamicRequest.injectInto(this);
 
 			params = dynamicRequest.getDynamicParameterMap();
 
@@ -195,7 +195,7 @@ public class DynamicServletRequest extends HttpServletRequestWrapper {
 
 	@Override
 	public Map<String, String[]> getParameterMap() {
-		Map<String, String[]> map = new HashMap<String, String[]>();
+		Map<String, String[]> map = new HashMap<>();
 
 		if (_inherit) {
 			map.putAll(super.getParameterMap());
@@ -208,7 +208,7 @@ public class DynamicServletRequest extends HttpServletRequestWrapper {
 
 	@Override
 	public Enumeration<String> getParameterNames() {
-		Set<String> names = new LinkedHashSet<String>();
+		Set<String> names = new LinkedHashSet<>();
 
 		if (_inherit) {
 			Enumeration<String> enu = super.getParameterNames();
@@ -242,7 +242,11 @@ public class DynamicServletRequest extends HttpServletRequestWrapper {
 		_params.put(name, values);
 	}
 
-	private boolean _inherit;
-	private Map<String, String[]> _params;
+	protected void injectInto(DynamicServletRequest dynamicServletRequest) {
+		dynamicServletRequest.setRequest(getRequest());
+	}
+
+	private final boolean _inherit;
+	private final Map<String, String[]> _params;
 
 }

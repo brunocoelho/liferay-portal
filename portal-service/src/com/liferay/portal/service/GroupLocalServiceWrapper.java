@@ -67,8 +67,8 @@ public class GroupLocalServiceWrapper implements GroupLocalService,
 	found, or if a valid friendly URL could not be created for
 	the group
 	* @deprecated As of 6.2.0, replaced by {@link #addGroup(long, long, String,
-	long, long, String, String, int, boolean, int, String,
-	boolean, boolean, ServiceContext)}
+	long, long, Map, Map, int, boolean, int, String, boolean,
+	boolean, ServiceContext)}
 	*/
 	@Deprecated
 	@Override
@@ -106,8 +106,8 @@ public class GroupLocalServiceWrapper implements GroupLocalService,
 	found, or if a valid friendly URL could not be created for
 	the group
 	* @deprecated As of 6.2.0, replaced by {@link #addGroup(long, long, String,
-	long, long, String, String, int, boolean, int, String,
-	boolean, boolean, ServiceContext)}
+	long, long, Map, Map, int, boolean, int, String, boolean,
+	boolean, ServiceContext)}
 	*/
 	@Deprecated
 	@Override
@@ -146,10 +146,15 @@ public class GroupLocalServiceWrapper implements GroupLocalService,
 	<code>null</code>). Can set asset category IDs and asset tag
 	names for the group, and whether the group is for staging.
 	* @return the group
-	* @throws PortalException if a creator could not be found, if the group's
-	information was invalid, if a layout could not be found, or if a
-	valid friendly URL could not be created for the group
+	* @throws PortalException if a creator could not be found, if the
+	group's information was invalid, if a layout could not be
+	found, or if a valid friendly URL could not be created for
+	the group
+	* @deprecated As of 7.0.0, replaced by {@link #addGroup(long, long, String,
+	long, long, Map, Map, int, boolean, int, String, boolean,
+	boolean, ServiceContext)}
 	*/
+	@Deprecated
 	@Override
 	public com.liferay.portal.model.Group addGroup(long userId,
 		long parentGroupId, java.lang.String className, long classPK,
@@ -161,6 +166,38 @@ public class GroupLocalServiceWrapper implements GroupLocalService,
 		return _groupLocalService.addGroup(userId, parentGroupId, className,
 			classPK, liveGroupId, name, description, type, manualMembership,
 			membershipRestriction, friendlyURL, site, active, serviceContext);
+	}
+
+	@Override
+	public com.liferay.portal.model.Group addGroup(long userId,
+		long parentGroupId, java.lang.String className, long classPK,
+		long liveGroupId,
+		java.util.Map<java.util.Locale, java.lang.String> nameMap,
+		java.util.Map<java.util.Locale, java.lang.String> descriptionMap,
+		int type, boolean manualMembership, int membershipRestriction,
+		java.lang.String friendlyURL, boolean site, boolean active,
+		com.liferay.portal.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+		return _groupLocalService.addGroup(userId, parentGroupId, className,
+			classPK, liveGroupId, nameMap, descriptionMap, type,
+			manualMembership, membershipRestriction, friendlyURL, site, active,
+			serviceContext);
+	}
+
+	@Override
+	public com.liferay.portal.model.Group addGroup(long userId,
+		long parentGroupId, java.lang.String className, long classPK,
+		long liveGroupId,
+		java.util.Map<java.util.Locale, java.lang.String> nameMap,
+		java.util.Map<java.util.Locale, java.lang.String> descriptionMap,
+		int type, boolean manualMembership, int membershipRestriction,
+		java.lang.String friendlyURL, boolean site, boolean inheritContent,
+		boolean active, com.liferay.portal.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+		return _groupLocalService.addGroup(userId, parentGroupId, className,
+			classPK, liveGroupId, nameMap, descriptionMap, type,
+			manualMembership, membershipRestriction, friendlyURL, site,
+			inheritContent, active, serviceContext);
 	}
 
 	/**
@@ -187,8 +224,8 @@ public class GroupLocalServiceWrapper implements GroupLocalService,
 	found, or if a valid friendly URL could not be created for
 	the group
 	* @deprecated As of 6.2.0, replaced by {@link #addGroup(long, long, String,
-	long, long, String, String, int, boolean, int, String,
-	boolean, boolean, ServiceContext)}
+	long, long, Map, Map, int, boolean, int, String, boolean,
+	boolean, ServiceContext)}
 	*/
 	@Deprecated
 	@Override
@@ -540,10 +577,10 @@ public class GroupLocalServiceWrapper implements GroupLocalService,
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	@Override
 	public long dynamicQueryCount(
@@ -552,11 +589,11 @@ public class GroupLocalServiceWrapper implements GroupLocalService,
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	@Override
 	public long dynamicQueryCount(
@@ -598,18 +635,18 @@ public class GroupLocalServiceWrapper implements GroupLocalService,
 	}
 
 	/**
-	* Returns the group with the matching group name by first searching the
+	* Returns the group with the matching group key by first searching the
 	* system groups and then using the finder cache.
 	*
 	* @param companyId the primary key of the company
-	* @param name the group's name
-	* @return the group with the name and associated company, or
+	* @param groupKey the group key
+	* @return the group with the group key and associated company, or
 	<code>null</code> if a matching group could not be found
 	*/
 	@Override
 	public com.liferay.portal.model.Group fetchGroup(long companyId,
-		java.lang.String name) {
-		return _groupLocalService.fetchGroup(companyId, name);
+		java.lang.String groupKey) {
+		return _groupLocalService.fetchGroup(companyId, groupKey);
 	}
 
 	@Override
@@ -628,6 +665,12 @@ public class GroupLocalServiceWrapper implements GroupLocalService,
 	public com.liferay.portal.model.Group fetchGroupByUuidAndCompanyId(
 		java.lang.String uuid, long companyId) {
 		return _groupLocalService.fetchGroupByUuidAndCompanyId(uuid, companyId);
+	}
+
+	@Override
+	public com.liferay.portal.model.Group fetchUserGroup(long companyId,
+		long userId) {
+		return _groupLocalService.fetchUserGroup(companyId, userId);
 	}
 
 	/**
@@ -727,18 +770,18 @@ public class GroupLocalServiceWrapper implements GroupLocalService,
 	}
 
 	/**
-	* Returns the group with the matching group name.
+	* Returns the group with the matching group key.
 	*
 	* @param companyId the primary key of the company
-	* @param name the group's name
-	* @return the group with the name
+	* @param groupKey the group key
+	* @return the group with the group key
 	* @throws PortalException if a matching group could not be found
 	*/
 	@Override
 	public com.liferay.portal.model.Group getGroup(long companyId,
-		java.lang.String name)
+		java.lang.String groupKey)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		return _groupLocalService.getGroup(companyId, name);
+		return _groupLocalService.getGroup(companyId, groupKey);
 	}
 
 	/**
@@ -769,6 +812,11 @@ public class GroupLocalServiceWrapper implements GroupLocalService,
 		return _groupLocalService.getGroupByUuidAndCompanyId(uuid, companyId);
 	}
 
+	/**
+	* @deprecated As of 7.0.0, replaced by {@link
+	Group#getDescriptiveName(Locale)}
+	*/
+	@Deprecated
 	@Override
 	public java.lang.String getGroupDescriptiveName(
 		com.liferay.portal.model.Group group, java.util.Locale locale)
@@ -776,6 +824,11 @@ public class GroupLocalServiceWrapper implements GroupLocalService,
 		return _groupLocalService.getGroupDescriptiveName(group, locale);
 	}
 
+	/**
+	* @deprecated As of 7.0.0, replaced by {@link
+	Group#getDescriptiveName(Locale)}
+	*/
+	@Deprecated
 	@Override
 	public java.lang.String getGroupDescriptiveName(long groupId,
 		java.util.Locale locale)
@@ -831,6 +884,13 @@ public class GroupLocalServiceWrapper implements GroupLocalService,
 	public java.util.List<com.liferay.portal.model.Group> getGroups(
 		long companyId, long parentGroupId, boolean site) {
 		return _groupLocalService.getGroups(companyId, parentGroupId, site);
+	}
+
+	@Override
+	public java.util.List<com.liferay.portal.model.Group> getGroups(
+		long companyId, long parentGroupId, boolean site, boolean inheritContent) {
+		return _groupLocalService.getGroups(companyId, parentGroupId, site,
+			inheritContent);
 	}
 
 	/**
@@ -1232,11 +1292,11 @@ public class GroupLocalServiceWrapper implements GroupLocalService,
 	}
 
 	/**
-	* Returns the group associated with the user.
+	* Returns the group directly associated with the user.
 	*
 	* @param companyId the primary key of the company
 	* @param userId the primary key of the user
-	* @return the group associated with the user
+	* @return the group directly associated with the user
 	* @throws PortalException if a matching group could not be found
 	*/
 	@Override
@@ -1546,33 +1606,33 @@ public class GroupLocalServiceWrapper implements GroupLocalService,
 	}
 
 	/**
-	* Returns the group with the matching group name by first searching the
+	* Returns the group with the matching group key by first searching the
 	* system groups and then using the finder cache.
 	*
 	* @param companyId the primary key of the company
-	* @param name the group's name
-	* @return the group with the name and associated company, or
+	* @param groupKey the group key
+	* @return the group with the group key and associated company, or
 	<code>null</code> if a matching group could not be found
 	*/
 	@Override
 	public com.liferay.portal.model.Group loadFetchGroup(long companyId,
-		java.lang.String name) {
-		return _groupLocalService.loadFetchGroup(companyId, name);
+		java.lang.String groupKey) {
+		return _groupLocalService.loadFetchGroup(companyId, groupKey);
 	}
 
 	/**
-	* Returns the group with the matching group name.
+	* Returns the group with the matching group key.
 	*
 	* @param companyId the primary key of the company
-	* @param name the group's name
-	* @return the group with the name and associated company
+	* @param groupKey the group key
+	* @return the group with the group key and associated company
 	* @throws PortalException if a matching group could not be found
 	*/
 	@Override
 	public com.liferay.portal.model.Group loadGetGroup(long companyId,
-		java.lang.String name)
+		java.lang.String groupKey)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		return _groupLocalService.loadGetGroup(companyId, name);
+		return _groupLocalService.loadGetGroup(companyId, groupKey);
 	}
 
 	/**
@@ -2666,7 +2726,7 @@ public class GroupLocalServiceWrapper implements GroupLocalService,
 	*
 	* @param groupId the primary key of the group
 	* @param parentGroupId the primary key of the parent group
-	* @param name the group's new name
+	* @param name the name's key
 	* @param description the group's new description (optionally
 	<code>null</code>)
 	* @param type the group's new type. For more information see {@link
@@ -2685,17 +2745,36 @@ public class GroupLocalServiceWrapper implements GroupLocalService,
 	* @throws PortalException if a group with the primary key could not be
 	found or if the friendly URL was invalid or could one not be
 	created
+	* @deprecated As of 7.0.0, replaced by {@link #updateGroup(long, long, Map,
+	Map, int, boolean, int, String, boolean, boolean,
+	ServiceContext)}
 	*/
+	@Deprecated
 	@Override
 	public com.liferay.portal.model.Group updateGroup(long groupId,
 		long parentGroupId, java.lang.String name,
 		java.lang.String description, int type, boolean manualMembership,
 		int membershipRestriction, java.lang.String friendlyURL,
-		boolean active, com.liferay.portal.service.ServiceContext serviceContext)
+		boolean inheritContent, boolean active,
+		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 		return _groupLocalService.updateGroup(groupId, parentGroupId, name,
 			description, type, manualMembership, membershipRestriction,
-			friendlyURL, active, serviceContext);
+			friendlyURL, inheritContent, active, serviceContext);
+	}
+
+	@Override
+	public com.liferay.portal.model.Group updateGroup(long groupId,
+		long parentGroupId,
+		java.util.Map<java.util.Locale, java.lang.String> nameMap,
+		java.util.Map<java.util.Locale, java.lang.String> descriptionMap,
+		int type, boolean manualMembership, int membershipRestriction,
+		java.lang.String friendlyURL, boolean inheritContent, boolean active,
+		com.liferay.portal.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+		return _groupLocalService.updateGroup(groupId, parentGroupId, nameMap,
+			descriptionMap, type, manualMembership, membershipRestriction,
+			friendlyURL, inheritContent, active, serviceContext);
 	}
 
 	/**

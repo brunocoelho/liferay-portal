@@ -190,7 +190,7 @@ public class SecurityPortletContainerWrapper implements PortletContainer {
 			throw new PrincipalException();
 		}
 
-		if (portlet.isUndeployedPortlet()) {
+		if (portlet.isSystem() || portlet.isUndeployedPortlet()) {
 			return;
 		}
 
@@ -605,7 +605,7 @@ public class SecurityPortletContainerWrapper implements PortletContainer {
 				continue;
 			}
 
-			if (c == CharPool.UNDERLINE) {
+			if ((c == CharPool.POUND) || (c == CharPool.UNDERLINE)) {
 				continue;
 			}
 
@@ -681,9 +681,9 @@ public class SecurityPortletContainerWrapper implements PortletContainer {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		SecurityPortletContainerWrapper.class);
 
-	private PortletContainer _portletContainer;
+	private final PortletContainer _portletContainer;
 
 }

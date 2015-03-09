@@ -34,7 +34,7 @@ import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.util.WebKeys;
 import com.liferay.portlet.asset.model.AssetRendererFactory;
 import com.liferay.portlet.asset.model.BaseAssetRenderer;
-import com.liferay.portlet.asset.model.DDMFieldReader;
+import com.liferay.portlet.asset.model.DDMFormValuesReader;
 import com.liferay.portlet.documentlibrary.model.DLFileEntry;
 import com.liferay.portlet.documentlibrary.model.DLFileEntryConstants;
 import com.liferay.portlet.documentlibrary.service.permission.DLFileEntryPermission;
@@ -45,7 +45,6 @@ import com.liferay.portlet.trash.util.TrashUtil;
 import java.util.Date;
 import java.util.Locale;
 
-import javax.portlet.PortletPreferences;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
 import javax.portlet.PortletURL;
@@ -89,8 +88,8 @@ public class DLFileEntryAssetRenderer
 	}
 
 	@Override
-	public DDMFieldReader getDDMFieldReader() {
-		return new DLFileEntryDDMFieldReader(_fileEntry, _fileVersion);
+	public DDMFormValuesReader getDDMFormValuesReader() {
+		return new DLFileEntryDDMFormValuesReader(_fileEntry, _fileVersion);
 	}
 
 	@Override
@@ -172,8 +171,7 @@ public class DLFileEntryAssetRenderer
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		String thumbnailSrc = DLUtil.getThumbnailSrc(
-			_fileEntry, null, themeDisplay);
+		String thumbnailSrc = DLUtil.getThumbnailSrc(_fileEntry, themeDisplay);
 
 		if (Validator.isNotNull(thumbnailSrc)) {
 			return thumbnailSrc;
@@ -228,12 +226,15 @@ public class DLFileEntryAssetRenderer
 
 	@Override
 	public PortletURL getURLExport(
-		LiferayPortletRequest liferayPortletRequest,
-		LiferayPortletResponse liferayPortletResponse) {
+			LiferayPortletRequest liferayPortletRequest,
+			LiferayPortletResponse liferayPortletResponse)
+		throws Exception {
 
-		PortletURL portletURL = liferayPortletResponse.createActionURL();
+		PortletURL portletURL = liferayPortletResponse.createLiferayPortletURL(
+			getControlPanelPlid(liferayPortletRequest),
+			PortletKeys.DOCUMENT_LIBRARY, PortletRequest.ACTION_PHASE);
 
-		portletURL.setParameter("struts_action", "/asset_publisher/get_file");
+		portletURL.setParameter("struts_action", "/document_library/get_file");
 		portletURL.setParameter(
 			"groupId", String.valueOf(_fileEntry.getRepositoryId()));
 		portletURL.setParameter(
@@ -372,19 +373,7 @@ public class DLFileEntryAssetRenderer
 		}
 	}
 
-	@Override
-	public void setAddToPagePreferences(
-			PortletPreferences preferences, String portletId,
-			ThemeDisplay themeDisplay)
-		throws Exception {
-
-		preferences.setValue("showAssetTitle", Boolean.FALSE.toString());
-		preferences.setValue("showExtraInfo", Boolean.FALSE.toString());
-
-		super.setAddToPagePreferences(preferences, portletId, themeDisplay);
-	}
-
-	private FileEntry _fileEntry;
+	private final FileEntry _fileEntry;
 	private FileVersion _fileVersion;
 
 }

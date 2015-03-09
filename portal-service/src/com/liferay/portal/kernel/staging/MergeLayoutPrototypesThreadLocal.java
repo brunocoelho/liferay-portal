@@ -56,10 +56,10 @@ public class MergeLayoutPrototypesThreadLocal {
 		setInProgress(false);
 	}
 
-	private static ThreadLocal<Boolean> _inProgress =
-		new AutoResetThreadLocal<Boolean>(
+	private static final ThreadLocal<Boolean> _inProgress =
+		new AutoResetThreadLocal<>(
 			MergeLayoutPrototypesThreadLocal.class + "._inProgress", false);
-	private static ThreadLocal<Set<MethodKey>> _mergeComplete =
+	private static final ThreadLocal<Set<MethodKey>> _mergeComplete =
 		new AutoResetThreadLocal<Set<MethodKey>>(
 			MergeLayoutPrototypesThreadLocal.class + "._mergeComplete",
 			new HashSet<MethodKey>());

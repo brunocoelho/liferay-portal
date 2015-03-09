@@ -63,6 +63,14 @@ public class FriendlyURLMapperTrackerImpl implements FriendlyURLMapperTracker {
 
 	@Override
 	public void close() {
+		for (Map.Entry<FriendlyURLMapper, ServiceRegistration<?>> entry :
+				_serviceRegistrations.entrySet()) {
+
+			ServiceRegistration<?> serviceRegistration = entry.getValue();
+
+			serviceRegistration.unregister();
+		}
+
 		_serviceTracker.close();
 	}
 
@@ -75,7 +83,7 @@ public class FriendlyURLMapperTrackerImpl implements FriendlyURLMapperTracker {
 	public void register(FriendlyURLMapper friendlyURLMapper) {
 		Registry registry = RegistryUtil.getRegistry();
 
-		Map<String, Object> properties = new HashMap<String, Object>();
+		Map<String, Object> properties = new HashMap<>();
 
 		properties.put("javax.portlet.name", _portlet.getPortletId());
 
@@ -95,14 +103,13 @@ public class FriendlyURLMapperTrackerImpl implements FriendlyURLMapperTracker {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		FriendlyURLMapperTrackerImpl.class);
 
-	private Portlet _portlet;
-	private Map<FriendlyURLMapper, ServiceRegistration<?>>
-		_serviceRegistrations =
-			new ConcurrentHashMap<FriendlyURLMapper, ServiceRegistration<?>>();
-	private ServiceTracker<FriendlyURLMapper, FriendlyURLMapper>
+	private final Portlet _portlet;
+	private final Map<FriendlyURLMapper, ServiceRegistration<?>>
+		_serviceRegistrations = new ConcurrentHashMap<>();
+	private final ServiceTracker<FriendlyURLMapper, FriendlyURLMapper>
 		_serviceTracker;
 
 	private class FriendlyURLMapperServiceTrackerCustomizer

@@ -52,7 +52,7 @@ public class ServiceContextThreadLocal {
 		serviceContextStack.push(serviceContext);
 	}
 
-	private static ThreadLocal<LinkedList<ServiceContext>>
+	private static final ThreadLocal<LinkedList<ServiceContext>>
 		_serviceContextThreadLocal =
 			new AutoResetThreadLocal<LinkedList<ServiceContext>>(
 				ServiceContextThreadLocal.class + "._serviceContextThreadLocal",
@@ -63,7 +63,7 @@ public class ServiceContextThreadLocal {
 						LinkedList<ServiceContext> serviceContexts) {
 
 						LinkedList<ServiceContext> cloneServiceContexts =
-							new LinkedList<ServiceContext>();
+							new LinkedList<>();
 
 						for (ServiceContext serviceContext : serviceContexts) {
 							ServiceContext cloneServiceContext =

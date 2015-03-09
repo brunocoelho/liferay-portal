@@ -59,7 +59,7 @@ public class PhoneLocalServiceUtil {
 	@Deprecated
 	public static com.liferay.portal.model.Phone addPhone(long userId,
 		java.lang.String className, long classPK, java.lang.String number,
-		java.lang.String extension, int typeId, boolean primary)
+		java.lang.String extension, long typeId, boolean primary)
 		throws com.liferay.portal.kernel.exception.PortalException {
 		return getService()
 				   .addPhone(userId, className, classPK, number, extension,
@@ -68,7 +68,7 @@ public class PhoneLocalServiceUtil {
 
 	public static com.liferay.portal.model.Phone addPhone(long userId,
 		java.lang.String className, long classPK, java.lang.String number,
-		java.lang.String extension, int typeId, boolean primary,
+		java.lang.String extension, long typeId, boolean primary,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 		return getService()
@@ -178,10 +178,10 @@ public class PhoneLocalServiceUtil {
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public static long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery) {
@@ -189,11 +189,11 @@ public class PhoneLocalServiceUtil {
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public static long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,
@@ -322,7 +322,7 @@ public class PhoneLocalServiceUtil {
 	}
 
 	public static com.liferay.portal.model.Phone updatePhone(long phoneId,
-		java.lang.String number, java.lang.String extension, int typeId,
+		java.lang.String number, java.lang.String extension, long typeId,
 		boolean primary)
 		throws com.liferay.portal.kernel.exception.PortalException {
 		return getService()

@@ -317,14 +317,14 @@ public interface OrganizationModel extends BaseModel<Organization>, MVCCModel,
 	 *
 	 * @return the status ID of this organization
 	 */
-	public int getStatusId();
+	public long getStatusId();
 
 	/**
 	 * Sets the status ID of this organization.
 	 *
 	 * @param statusId the status ID of this organization
 	 */
-	public void setStatusId(int statusId);
+	public void setStatusId(long statusId);
 
 	/**
 	 * Returns the comments of this organization.
@@ -392,19 +392,19 @@ public interface OrganizationModel extends BaseModel<Organization>, MVCCModel,
 	public Object clone();
 
 	@Override
-	public int compareTo(Organization organization);
+	public int compareTo(com.liferay.portal.model.Organization organization);
 
 	@Override
 	public int hashCode();
 
 	@Override
-	public CacheModel<Organization> toCacheModel();
+	public CacheModel<com.liferay.portal.model.Organization> toCacheModel();
 
 	@Override
-	public Organization toEscapedModel();
+	public com.liferay.portal.model.Organization toEscapedModel();
 
 	@Override
-	public Organization toUnescapedModel();
+	public com.liferay.portal.model.Organization toUnescapedModel();
 
 	@Override
 	public String toString();

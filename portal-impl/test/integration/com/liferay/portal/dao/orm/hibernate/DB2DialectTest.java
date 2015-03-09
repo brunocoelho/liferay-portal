@@ -21,8 +21,9 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.SQLQuery;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.dao.orm.SessionFactory;
-import com.liferay.portal.test.TransactionalTestRule;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.TransactionalTestRule;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.List;
 
@@ -30,18 +31,19 @@ import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Laszlo Csontos
  */
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 public class DB2DialectTest {
 
 	@ClassRule
-	public static TransactionalTestRule transactionalTestRule =
-		new TransactionalTestRule();
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), TransactionalTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -85,7 +87,7 @@ public class DB2DialectTest {
 		"SELECT tabname FROM syscat.tables WHERE tabschema = 'SYSIBM' ORDER " +
 			"BY tabname";
 
-	private SessionFactory _sessionFactory =
+	private final SessionFactory _sessionFactory =
 		(SessionFactory)PortalBeanLocatorUtil.locate("liferaySessionFactory");
 
 }

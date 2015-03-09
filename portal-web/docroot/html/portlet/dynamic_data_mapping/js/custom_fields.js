@@ -21,6 +21,10 @@ AUI.add(
 		var isValue = Lang.isValue;
 		var trim = Lang.trim;
 
+		var DEFAULTS_FORM_VALIDATOR = A.config.FormValidator;
+
+		var LOCALIZABLE_FIELD_ATTRS = Liferay.FormBuilder.LOCALIZABLE_FIELD_ATTRS;
+
 		var STR_BLANK = '';
 
 		var STR_DASH = '-';
@@ -32,7 +36,7 @@ AUI.add(
 						'<div>';
 
 		var TPL_GEOLOCATION = '<div class="field-labels-inline">' +
-									'<input type="button" value="' + A.Escape.html(Liferay.Language.get('geolocate')) + '" />' +
+									'<img src="' + themeDisplay.getPathThemeImages() + '/common/geolocation.png" title="' + A.Escape.html(Liferay.Language.get('geolocate')) + '" />' +
 								'<div>';
 
 		var TPL_LINK_TO_PAGE = '<div class="lfr-ddm-link-to-page">' +
@@ -46,10 +50,6 @@ AUI.add(
 		var TPL_TEXT_HTML = '<textarea class="form-builder-field-node lfr-ddm-text-html"></textarea>';
 
 		var TPL_WCM_IMAGE = '<div class="lfr-wcm-image"></div>';
-
-		var DEFAULTS_FORM_VALIDATOR = A.config.FormValidator;
-
-		var LOCALIZABLE_FIELD_ATTRS = Liferay.FormBuilder.LOCALIZABLE_FIELD_ATTRS;
 
 		var UNIQUE_FIELD_NAMES_MAP = Liferay.FormBuilder.UNIQUE_FIELD_NAMES_MAP;
 
@@ -76,7 +76,7 @@ AUI.add(
 		DEFAULTS_FORM_VALIDATOR.STRINGS.structureFieldName = Liferay.Language.get('please-enter-only-alphanumeric-characters');
 
 		DEFAULTS_FORM_VALIDATOR.RULES.structureFieldName = function(value) {
-			return (/^[\w]+$/).test(value);
+			return LiferayFormBuilderUtil.validateFieldName(value);
 		};
 
 		var applyStyles = function(node, styleContent) {
@@ -149,9 +149,9 @@ AUI.add(
 						portletURL.setParameter('eventName', 'selectDocumentLibrary');
 						portletURL.setParameter('groupId', themeDisplay.getScopeGroupId());
 						portletURL.setParameter('refererPortletName', '167');
-						portletURL.setParameter('struts_action', '/document_selector/view');
+						portletURL.setParameter('mvcPath', '/view.jsp');
 						portletURL.setParameter('tabs1Names', 'documents');
-						portletURL.setPortletId('200');
+						portletURL.setPortletId(Liferay.PortletKeys.DOCUMENT_SELECTOR);
 						portletURL.setWindowState('pop_up');
 
 						Liferay.Util.selectEntity(
@@ -192,6 +192,21 @@ AUI.add(
 								}
 							)
 						);
+					},
+
+					_syncElementsFocus: function() {
+						var instance = this;
+
+						var boundingBox = instance.toolbar.get('boundingBox');
+
+						var button = boundingBox.one('button');
+
+						if (button) {
+							button.focus();
+						}
+						else {
+							DLFileEntryCellEditor.superclass._syncElementsFocus.apply(instance, arguments);
+						}
 					},
 
 					_syncFileLabel: function(title, url) {
@@ -897,17 +912,21 @@ AUI.add(
 						instance.datePicker = new A.DatePicker(
 							{
 								calendar: {
-									locale: Liferay.ThemeDisplay.getLanguageId(),
-									strings: {
-										next: Liferay.Language.get('next'),
-										none: Liferay.Language.get('none'),
-										previous: Liferay.Language.get('previous'),
-										today: Liferay.Language.get('today')
-									}
+									locale: Liferay.ThemeDisplay.getLanguageId()
 								},
 								trigger: instance.get('templateNode')
 							}
 						).render();
+
+						instance.datePicker.calendar.set(
+							'strings',
+							{
+								next: Liferay.Language.get('next'),
+								none: Liferay.Language.get('none'),
+								previous: Liferay.Language.get('previous'),
+								today: Liferay.Language.get('today')
+							}
+						);
 					},
 
 					getPropertyModel: function() {
@@ -925,7 +944,18 @@ AUI.add(
 										attributeName: attributeName,
 										editor: new A.DateCellEditor(
 											{
-												dateFormat: '%m/%d/%Y'
+												dateFormat: '%m/%d/%Y',
+												inputFormatter: function(val) {
+													var instance = this;
+
+													var value = STR_BLANK;
+
+													if (val && val.length) {
+														value = instance.formatDate(val[0]);
+													}
+
+													return value;
+												}
 											}
 										),
 										name: Liferay.Language.get('predefined-value')
@@ -1039,16 +1069,32 @@ AUI.add(
 
 					fieldNamespace: {
 						value: 'ddm'
+					},
+
+					localizable: {
+						setter: booleanParse,
+						value: false
 					}
 				},
 
-				EXTENDS: A.FormBuilderTextField,
+				EXTENDS: A.FormBuilderField,
 
 				NAME: 'ddm-geolocation',
 
 				prototype: {
 					getHTML: function() {
 						return TPL_GEOLOCATION;
+					},
+
+					getPropertyModel: function() {
+						var instance = this;
+
+						return AArray.filter(
+							DDMGeolocationField.superclass.getPropertyModel.apply(instance, arguments),
+							function(item, index) {
+								return item.attributeName !== 'predefinedValue';
+							}
+						);
 					}
 				}
 			}

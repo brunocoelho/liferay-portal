@@ -38,7 +38,7 @@ public class WebsiteLocalServiceWrapper implements WebsiteLocalService,
 	@Override
 	public com.liferay.portal.model.Website addWebsite(long userId,
 		java.lang.String className, long classPK, java.lang.String url,
-		int typeId, boolean primary)
+		long typeId, boolean primary)
 		throws com.liferay.portal.kernel.exception.PortalException {
 		return _websiteLocalService.addWebsite(userId, className, classPK, url,
 			typeId, primary);
@@ -47,7 +47,7 @@ public class WebsiteLocalServiceWrapper implements WebsiteLocalService,
 	@Override
 	public com.liferay.portal.model.Website addWebsite(long userId,
 		java.lang.String className, long classPK, java.lang.String url,
-		int typeId, boolean primary,
+		long typeId, boolean primary,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 		return _websiteLocalService.addWebsite(userId, className, classPK, url,
@@ -177,10 +177,10 @@ public class WebsiteLocalServiceWrapper implements WebsiteLocalService,
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	@Override
 	public long dynamicQueryCount(
@@ -189,11 +189,11 @@ public class WebsiteLocalServiceWrapper implements WebsiteLocalService,
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	@Override
 	public long dynamicQueryCount(
@@ -339,7 +339,7 @@ public class WebsiteLocalServiceWrapper implements WebsiteLocalService,
 
 	@Override
 	public com.liferay.portal.model.Website updateWebsite(long websiteId,
-		java.lang.String url, int typeId, boolean primary)
+		java.lang.String url, long typeId, boolean primary)
 		throws com.liferay.portal.kernel.exception.PortalException {
 		return _websiteLocalService.updateWebsite(websiteId, url, typeId,
 			primary);

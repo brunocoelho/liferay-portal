@@ -66,7 +66,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see RolePersistence
- * @see RoleUtil
+ * @see com.liferay.portal.service.persistence.RoleUtil
  * @generated
  */
 @ProviderType
@@ -9693,7 +9693,7 @@ public class RolePersistenceImpl extends BasePersistenceImpl<Role>
 	private static class NullCacheModel implements CacheModel<Role>, MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

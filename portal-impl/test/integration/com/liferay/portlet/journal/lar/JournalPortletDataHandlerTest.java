@@ -15,21 +15,21 @@
 package com.liferay.portlet.journal.lar;
 
 import com.liferay.portal.kernel.lar.PortletDataHandler;
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
-import com.liferay.portal.lar.BasePortletDataHandlerTestCase;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.Sync;
+import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
+import com.liferay.portal.kernel.test.util.GroupTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.lar.test.BasePortletDataHandlerTestCase;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.model.Layout;
 import com.liferay.portal.service.GroupLocalServiceUtil;
-import com.liferay.portal.test.Sync;
-import com.liferay.portal.test.SynchronousDestinationExecutionTestListener;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portal.util.PortletKeys;
-import com.liferay.portal.util.test.GroupTestUtil;
 import com.liferay.portal.util.test.LayoutTestUtil;
-import com.liferay.portal.util.test.RandomTestUtil;
-import com.liferay.portal.util.test.TestPropsValues;
 import com.liferay.portlet.dynamicdatamapping.model.DDMStructure;
 import com.liferay.portlet.dynamicdatamapping.model.DDMTemplate;
 import com.liferay.portlet.dynamicdatamapping.util.test.DDMStructureTestUtil;
@@ -43,21 +43,23 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Zsolt Berentey
  */
-@ExecutionTestListeners(
-	listeners = {
-		MainServletExecutionTestListener.class,
-		SynchronousDestinationExecutionTestListener.class
-	})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 @Sync
 public class JournalPortletDataHandlerTest
 	extends BasePortletDataHandlerTestCase {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE,
+			SynchronousDestinationTestRule.INSTANCE);
 
 	@Test
 	public void testDeleteAllFolders() throws Exception {
@@ -100,8 +102,7 @@ public class JournalPortletDataHandlerTest
 
 	@Override
 	protected void addStagedModels() throws Exception {
-		Layout layout = LayoutTestUtil.addLayout(
-			stagingGroup.getGroupId(), RandomTestUtil.randomString());
+		Layout layout = LayoutTestUtil.addLayout(stagingGroup);
 
 		JournalFolder folder = JournalTestUtil.addFolder(
 			stagingGroup.getGroupId(), RandomTestUtil.randomString());

@@ -15,7 +15,7 @@
 package com.liferay.portal.kernel.process;
 
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
-import com.liferay.portal.kernel.test.CodeCoverageAssertor;
+import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 
 import java.util.Random;
 
@@ -29,8 +29,8 @@ import org.junit.Test;
 public class CollectorOutputProcessorTest extends BaseOutputProcessorTestCase {
 
 	@ClassRule
-	public static CodeCoverageAssertor codeCoverageAssertor =
-		new CodeCoverageAssertor();
+	public static final CodeCoverageAssertor codeCoverageAssertor =
+		CodeCoverageAssertor.INSTANCE;
 
 	@Test
 	public void testCollectFail() {

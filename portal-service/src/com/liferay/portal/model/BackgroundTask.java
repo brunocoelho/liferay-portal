@@ -44,9 +44,9 @@ public interface BackgroundTask extends BackgroundTaskModel, PersistedModel {
 
 	public long getAttachmentsFolderId();
 
-	public java.lang.String getStatusLabel();
+	public com.liferay.portal.kernel.backgroundtask.BackgroundTaskExecutor getBackgroundTaskExecutor();
 
-	public java.util.Map<java.lang.String, java.io.Serializable> getTaskContextMap();
+	public java.lang.String getStatusLabel();
 
 	public boolean isInProgress();
 }

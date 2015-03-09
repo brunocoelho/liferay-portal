@@ -23,7 +23,7 @@ import java.util.List;
 public abstract class CMISJunction implements CMISCriterion {
 
 	public CMISJunction() {
-		_cmisCriterions = new ArrayList<CMISCriterion>();
+		_cmisCriterions = new ArrayList<>();
 	}
 
 	public void add(CMISCriterion cmisCriterion) {
@@ -41,6 +41,6 @@ public abstract class CMISJunction implements CMISCriterion {
 	@Override
 	public abstract String toQueryFragment();
 
-	private List<CMISCriterion> _cmisCriterions;
+	private final List<CMISCriterion> _cmisCriterions;
 
 }

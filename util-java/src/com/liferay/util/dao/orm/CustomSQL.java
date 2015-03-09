@@ -252,7 +252,7 @@ public class CustomSQL {
 
 		keywords = keywords.trim();
 
-		List<String> keywordsList = new ArrayList<String>();
+		List<String> keywordsList = new ArrayList<>();
 
 		for (int i = 0; i < keywords.length(); i++) {
 			char c = keywords.charAt(i);
@@ -433,7 +433,7 @@ public class CustomSQL {
 		}
 
 		if (_sqlPool == null) {
-			_sqlPool = new HashMap<String, String>();
+			_sqlPool = new HashMap<>();
 		}
 		else {
 			_sqlPool.clear();
@@ -798,9 +798,8 @@ public class CustomSQL {
 
 		StringBundler sb = new StringBundler();
 
-		try {
-			UnsyncBufferedReader unsyncBufferedReader =
-				new UnsyncBufferedReader(new UnsyncStringReader(sql));
+		try (UnsyncBufferedReader unsyncBufferedReader =
+				new UnsyncBufferedReader(new UnsyncStringReader(sql))) {
 
 			String line = null;
 
@@ -808,8 +807,6 @@ public class CustomSQL {
 				sb.append(line.trim());
 				sb.append(StringPool.SPACE);
 			}
-
-			unsyncBufferedReader.close();
 		}
 		catch (IOException ioe) {
 			return sql;
@@ -863,7 +860,7 @@ public class CustomSQL {
 
 	private static final String _STATUS_KEYWORD = "[$STATUS$]";
 
-	private static Log _log = LogFactoryUtil.getLog(CustomSQL.class);
+	private static final Log _log = LogFactoryUtil.getLog(CustomSQL.class);
 
 	private String _functionIsNotNull;
 	private String _functionIsNull;

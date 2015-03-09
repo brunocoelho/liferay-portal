@@ -17,6 +17,7 @@ package com.liferay.portal.kernel.lar;
 import aQute.bnd.annotation.ProviderType;
 
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.spring.orm.LastSessionRecorderHelperUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
@@ -28,6 +29,7 @@ import com.liferay.portal.model.TypedModel;
 import com.liferay.portal.service.PortletLocalServiceUtil;
 import com.liferay.portal.util.PortalUtil;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -169,6 +171,10 @@ public class StagedModelDataHandlerUtil {
 		StagedModelDataHandler<StagedModel> stagedModelDataHandler =
 			_getStagedModelDataHandler(stagedModel);
 
+		if (stagedModelDataHandler == null) {
+			return Collections.emptyMap();
+		}
+
 		return stagedModelDataHandler.getReferenceAttributes(
 			portletDataContext, stagedModel);
 	}
@@ -178,8 +184,18 @@ public class StagedModelDataHandlerUtil {
 			Class<?> stagedModelClass, long classPK)
 		throws PortletDataException {
 
+		importReferenceStagedModel(
+			portletDataContext, referrerStagedModel, stagedModelClass.getName(),
+			classPK);
+	}
+
+	public static <T extends StagedModel> void importReferenceStagedModel(
+			PortletDataContext portletDataContext, T referrerStagedModel,
+			String stagedModelClassName, long classPK)
+		throws PortletDataException {
+
 		Element referenceElement = portletDataContext.getReferenceElement(
-			referrerStagedModel, stagedModelClass, classPK);
+			referrerStagedModel, stagedModelClassName, classPK);
 
 		if (referenceElement == null) {
 			return;
@@ -188,11 +204,11 @@ public class StagedModelDataHandlerUtil {
 		boolean missing = GetterUtil.getBoolean(
 			referenceElement.attributeValue("missing"));
 
-		if (missing) {
-			StagedModelDataHandler<?> stagedModelDataHandler =
-				StagedModelDataHandlerRegistryUtil.getStagedModelDataHandler(
-					stagedModelClass.getName());
+		StagedModelDataHandler<?> stagedModelDataHandler =
+			StagedModelDataHandlerRegistryUtil.getStagedModelDataHandler(
+				stagedModelClassName);
 
+		if (missing) {
 			stagedModelDataHandler.importMissingReference(
 				portletDataContext, referenceElement);
 
@@ -228,11 +244,11 @@ public class StagedModelDataHandlerUtil {
 			boolean missing = GetterUtil.getBoolean(
 				referenceElement.attributeValue("missing"));
 
-			if (missing) {
-				StagedModelDataHandler<?> stagedModelDataHandler =
-					StagedModelDataHandlerRegistryUtil.
-						getStagedModelDataHandler(stagedModelClass.getName());
+			StagedModelDataHandler<?> stagedModelDataHandler =
+				StagedModelDataHandlerRegistryUtil.getStagedModelDataHandler(
+					stagedModelClassName);
 
+			if (missing) {
 				stagedModelDataHandler.importMissingReference(
 					portletDataContext, referenceElement);
 
@@ -280,6 +296,8 @@ public class StagedModelDataHandlerUtil {
 
 		stagedModelDataHandler.importStagedModel(
 			portletDataContext, stagedModel);
+
+		LastSessionRecorderHelperUtil.syncLastSessionState();
 	}
 
 	private static StagedModel _getReferenceStagedModel(

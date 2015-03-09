@@ -66,7 +66,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see OrganizationPersistence
- * @see OrganizationUtil
+ * @see com.liferay.portal.service.persistence.OrganizationUtil
  * @generated
  */
 @ProviderType
@@ -7777,7 +7777,7 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 		MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

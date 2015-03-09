@@ -19,10 +19,13 @@ import com.liferay.portal.image.DatabaseHook;
 import com.liferay.portal.image.FileSystemHook;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.dao.shard.ShardUtil;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.image.Hook;
+import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
+import com.liferay.portal.kernel.util.Base64;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.util.StringBundler;
@@ -42,12 +45,14 @@ import com.liferay.portlet.documentlibrary.model.DLFolderConstants;
 import com.liferay.portlet.documentlibrary.store.DLStoreUtil;
 import com.liferay.portlet.documentlibrary.util.ImageProcessorUtil;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 
 import java.util.ArrayList;
@@ -59,16 +64,18 @@ import java.util.Map;
 /**
  * @author Sergio González
  * @author Miguel Pastor
+ * @author Vilmos Papp
  */
 public class UpgradeImageGallery extends UpgradeProcess {
 
 	public UpgradeImageGallery() throws Exception {
 		ClassLoader classLoader = ClassLoaderUtil.getPortalClassLoader();
 
-		_sourceHookClassName = FileSystemHook.class.getName();
-
 		if (Validator.isNotNull(PropsValues.IMAGE_HOOK_IMPL)) {
 			_sourceHookClassName = PropsValues.IMAGE_HOOK_IMPL;
+		}
+		else {
+			_sourceHookClassName = FileSystemHook.class.getName();
 		}
 
 		Class<?> clazz = classLoader.loadClass(_sourceHookClassName);
@@ -442,7 +449,7 @@ public class UpgradeImageGallery extends UpgradeProcess {
 
 			rs = ps.executeQuery();
 
-			Map<String, Long> bitwiseValues = new HashMap<String, Long>();
+			Map<String, Long> bitwiseValues = new HashMap<>();
 
 			while (rs.next()) {
 				String actionId = rs.getString("actionId");
@@ -490,6 +497,39 @@ public class UpgradeImageGallery extends UpgradeProcess {
 		}
 	}
 
+	protected byte[] getDatabaseImageAsBytes(Image image) throws SQLException {
+		Connection con = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+
+		try {
+			con = DataAccess.getUpgradeOptimizedConnection();
+
+			ps = con.prepareStatement(
+				"select text_ from Image where imageId = ?");
+
+			ps.setLong(1, image.getImageId());
+
+			rs = ps.executeQuery();
+
+			if (rs.next()) {
+				String getTextObj = rs.getString("text_");
+
+				return (byte[])Base64.stringToObject(getTextObj);
+			}
+
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"Image " + image.getImageId() + " is not in the database");
+			}
+		}
+		finally {
+			DataAccess.cleanUp(con, ps, rs);
+		}
+
+		return new byte[0];
+	}
+
 	protected long getDefaultUserId(long companyId) throws Exception {
 		Connection con = null;
 		PreparedStatement ps = null;
@@ -516,6 +556,31 @@ public class UpgradeImageGallery extends UpgradeProcess {
 		finally {
 			DataAccess.cleanUp(con, ps, rs);
 		}
+	}
+
+	protected byte[] getHookImageAsBytes(Image image)
+		throws IOException, PortalException, SQLException {
+
+		InputStream is = getHookImageAsStream(image);
+
+		return FileUtil.getBytes(is);
+	}
+
+	protected InputStream getHookImageAsStream(Image image)
+		throws PortalException, SQLException {
+
+		InputStream is = null;
+
+		if (_sourceHook instanceof DatabaseHook) {
+			byte[] bytes = getDatabaseImageAsBytes(image);
+
+			is = new UnsyncByteArrayInputStream(bytes);
+		}
+		else {
+			is = _sourceHook.getImageAsStream(image);
+		}
+
+		return is;
 	}
 
 	protected Object[] getImage(long imageId) throws Exception {
@@ -548,7 +613,7 @@ public class UpgradeImageGallery extends UpgradeProcess {
 	protected List<String> getResourceActionIds(
 		Map<String, Long> bitwiseValues, long actionIdsLong) {
 
-		List<String> actionIds = new ArrayList<String>();
+		List<String> actionIds = new ArrayList<>();
 
 		for (String actionId : bitwiseValues.keySet()) {
 			long bitwiseValue = bitwiseValues.get(actionId);
@@ -565,9 +630,7 @@ public class UpgradeImageGallery extends UpgradeProcess {
 			long repositoryId, long companyId, String name, Image image)
 		throws Exception {
 
-		InputStream is = _sourceHook.getImageAsStream(image);
-
-		byte[] bytes = FileUtil.getBytes(is);
+		byte[] bytes = getHookImageAsBytes(image);
 
 		if (name == null) {
 			name = image.getImageId() + StringPool.PERIOD + image.getType();
@@ -644,8 +707,6 @@ public class UpgradeImageGallery extends UpgradeProcess {
 			ResultSet rs = null;
 
 			try {
-				InputStream is = _sourceHook.getImageAsStream(thumbnailImage);
-
 				con = DataAccess.getUpgradeOptimizedConnection();
 
 				ps = con.prepareStatement(
@@ -656,6 +717,8 @@ public class UpgradeImageGallery extends UpgradeProcess {
 
 				if (rs.next()) {
 					long fileVersionId = rs.getLong(1);
+
+					InputStream is = getHookImageAsStream(thumbnailImage);
 
 					ImageProcessorUtil.storeThumbnail(
 						companyId, groupId, fileEntryId, fileVersionId,
@@ -769,7 +832,7 @@ public class UpgradeImageGallery extends UpgradeProcess {
 
 			rs = ps.executeQuery();
 
-			Map<Long, Long> folderIds = new HashMap<Long, Long>();
+			Map<Long, Long> folderIds = new HashMap<>();
 
 			while (rs.next()) {
 				String uuid = rs.getString("uuid_");
@@ -1049,9 +1112,10 @@ public class UpgradeImageGallery extends UpgradeProcess {
 	private static final String _IG_IMAGE_CLASS_NAME =
 		"com.liferay.portlet.imagegallery.model.IGImage";
 
-	private static Log _log = LogFactoryUtil.getLog(UpgradeImageGallery.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		UpgradeImageGallery.class);
 
-	private Hook _sourceHook;
-	private String _sourceHookClassName;
+	private final Hook _sourceHook;
+	private final String _sourceHookClassName;
 
 }

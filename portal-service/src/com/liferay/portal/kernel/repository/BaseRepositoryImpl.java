@@ -60,8 +60,8 @@ public abstract class BaseRepositoryImpl
 
 	@Override
 	public FileEntry addFileEntry(
-			long folderId, String sourceFileName, String mimeType, String title,
-			String description, String changeLog, File file,
+			long userId, long folderId, String sourceFileName, String mimeType,
+			String title, String description, String changeLog, File file,
 			ServiceContext serviceContext)
 		throws PortalException {
 
@@ -73,7 +73,7 @@ public abstract class BaseRepositoryImpl
 			size = file.length();
 
 			return addFileEntry(
-				folderId, sourceFileName, mimeType, title, description,
+				userId, folderId, sourceFileName, mimeType, title, description,
 				changeLog, is, size, serviceContext);
 		}
 		catch (IOException ioe) {
@@ -91,6 +91,85 @@ public abstract class BaseRepositoryImpl
 	}
 
 	/**
+	 * @deprecated As of 7.0.0, see {@link #addFileEntry(long, long, String,
+	 *             String, String, String, String, File, ServiceContext)}
+	 */
+	@Deprecated
+	@Override
+	public FileEntry addFileEntry(
+			long folderId, String sourceFileName, String mimeType, String title,
+			String description, String changeLog, File file,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		return addFileEntry(
+			com.liferay.portal.kernel.repository.util.RepositoryUserUtil.
+				getUserId(),
+			folderId, sourceFileName, mimeType, title, description, changeLog,
+			file, serviceContext);
+	}
+
+	/**
+	 * @deprecated As of 7.0.0, see {@link #addFileEntry(long, long, String,
+	 *             String, String, String, String, InputStream, long,
+	 *             ServiceContext)}
+	 */
+	@Deprecated
+	@Override
+	public FileEntry addFileEntry(
+			long folderId, String sourceFileName, String mimeType, String title,
+			String description, String changeLog, InputStream is, long size,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		return addFileEntry(
+			com.liferay.portal.kernel.repository.util.RepositoryUserUtil.
+				getUserId(),
+			sourceFileName, mimeType, title, description, changeLog, is, size,
+			serviceContext);
+	}
+
+	@Override
+	public abstract Folder addFolder(
+			long userId, long parentFolderId, String name, String description,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #addFolder(long, long,
+	 *             String, String, ServiceContext)}
+	 */
+	@Deprecated
+	@Override
+	public Folder addFolder(
+			long parentFolderId, String name, String description,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		return addFolder(
+			com.liferay.portal.kernel.repository.util.RepositoryUserUtil.
+				getUserId(),
+			name, description, serviceContext);
+	}
+
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #checkInFileEntry(long, long,
+	 *             boolean, String, ServiceContext)}
+	 */
+	@Deprecated
+	@Override
+	public void checkInFileEntry(
+			long fileEntryId, boolean major, String changeLog,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		checkInFileEntry(
+			com.liferay.portal.kernel.repository.util.RepositoryUserUtil.
+				getUserId(),
+			fileEntryId, major, changeLog, serviceContext);
+	}
+
+	/**
 	 * @deprecated As of 6.2.0, replaced by {@link #checkInFileEntry(long,
 	 *             String, ServiceContext)}
 	 */
@@ -100,6 +179,55 @@ public abstract class BaseRepositoryImpl
 		throws PortalException {
 
 		checkInFileEntry(fileEntryId, lockUuid, new ServiceContext());
+	}
+
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #checkInFileEntry(long, long,
+	 *             String, ServiceContext)}
+	 */
+	@Deprecated
+	@Override
+	public void checkInFileEntry(
+			long fileEntryId, String lockUuid, ServiceContext serviceContext)
+		throws PortalException {
+
+		checkInFileEntry(
+			com.liferay.portal.kernel.repository.util.RepositoryUserUtil.
+				getUserId(),
+			fileEntryId, lockUuid, serviceContext);
+	}
+
+	@Override
+	public abstract FileEntry checkOutFileEntry(
+			long fileEntryId, ServiceContext serviceContext)
+		throws PortalException;
+
+	@Override
+	public abstract FileEntry checkOutFileEntry(
+			long fileEntryId, String owner, long expirationTime,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #copyFileEntry(long, long,
+	 *             long, long, ServiceContext)}
+	 */
+	@Deprecated
+	@Override
+	public FileEntry copyFileEntry(
+			long groupId, long fileEntryId, long destFolderId,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		return copyFileEntry(
+			com.liferay.portal.kernel.repository.util.RepositoryUserUtil.
+				getUserId(),
+			groupId, fileEntryId, destFolderId, serviceContext);
+	}
+
+	@Override
+	public void deleteAll() {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -117,10 +245,10 @@ public abstract class BaseRepositoryImpl
 	}
 
 	@Override
-	public void deleteFolder(long parentFolderId, String title)
+	public void deleteFolder(long parentFolderId, String name)
 		throws PortalException {
 
-		Folder folder = getFolder(parentFolderId, title);
+		Folder folder = getFolder(parentFolderId, name);
 
 		deleteFolder(folder.getFolderId());
 	}
@@ -339,6 +467,55 @@ public abstract class BaseRepositoryImpl
 		return fileEntry.getLock();
 	}
 
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #moveFileEntry(long, long,
+	 *             long, ServiceContext)}
+	 */
+	@Deprecated
+	@Override
+	public FileEntry moveFileEntry(
+			long fileEntryId, long newFolderId, ServiceContext serviceContext)
+		throws PortalException {
+
+		return moveFileEntry(
+			com.liferay.portal.kernel.repository.util.RepositoryUserUtil.
+				getUserId(),
+			fileEntryId, newFolderId, serviceContext);
+	}
+
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #moveFolder(long, long, long,
+	 *             ServiceContext)}
+	 */
+	@Deprecated
+	@Override
+	public Folder moveFolder(
+			long folderId, long newParentFolderId,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		return moveFolder(
+			com.liferay.portal.kernel.repository.util.RepositoryUserUtil.
+				getUserId(),
+			folderId, newParentFolderId, serviceContext);
+	}
+
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #revertFileEntry(long, long,
+	 *             String, ServiceContext)}
+	 */
+	@Deprecated
+	@Override
+	public void revertFileEntry(
+			long fileEntryId, String version, ServiceContext serviceContext)
+		throws PortalException {
+
+		revertFileEntry(
+			com.liferay.portal.kernel.repository.util.RepositoryUserUtil.
+				getUserId(),
+			fileEntryId, version, serviceContext);
+	}
+
 	@Override
 	public Hits search(SearchContext searchContext) throws SearchException {
 		searchContext.setSearchEngineId(SearchEngineUtil.GENERIC_ENGINE_ID);
@@ -405,18 +582,18 @@ public abstract class BaseRepositoryImpl
 	}
 
 	@Override
-	public void unlockFolder(long parentFolderId, String title, String lockUuid)
+	public void unlockFolder(long parentFolderId, String name, String lockUuid)
 		throws PortalException {
 
-		Folder folder = getFolder(parentFolderId, title);
+		Folder folder = getFolder(parentFolderId, name);
 
 		unlockFolder(folder.getFolderId(), lockUuid);
 	}
 
 	@Override
 	public FileEntry updateFileEntry(
-			long fileEntryId, String sourceFileName, String mimeType,
-			String title, String description, String changeLog,
+			long userId, long fileEntryId, String sourceFileName,
+			String mimeType, String title, String description, String changeLog,
 			boolean majorVersion, File file, ServiceContext serviceContext)
 		throws PortalException {
 
@@ -428,8 +605,8 @@ public abstract class BaseRepositoryImpl
 			size = file.length();
 
 			return updateFileEntry(
-				fileEntryId, sourceFileName, mimeType, title, description,
-				changeLog, majorVersion, is, size, serviceContext);
+				userId, fileEntryId, sourceFileName, mimeType, title,
+				description, changeLog, majorVersion, is, size, serviceContext);
 		}
 		catch (IOException ioe) {
 			throw new SystemException(ioe);
@@ -443,6 +620,55 @@ public abstract class BaseRepositoryImpl
 				}
 			}
 		}
+	}
+
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #updateFileEntry(long, long,
+	 *             String, String, String, String, String, boolean, InputStream,
+	 *             long, ServiceContext)}
+	 */
+	@Deprecated
+	@Override
+	public FileEntry updateFileEntry(
+			long fileEntryId, String sourceFileName, String mimeType,
+			String title, String description, String changeLog,
+			boolean majorVersion, File file, ServiceContext serviceContext)
+		throws PortalException {
+
+		return updateFileEntry(
+			com.liferay.portal.kernel.repository.util.RepositoryUserUtil.
+				getUserId(),
+			fileEntryId, sourceFileName, mimeType, title, description,
+			changeLog, majorVersion, file, serviceContext);
+	}
+
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #updateFileEntry(long, long,
+	 *             String, String, String, String, String, boolean, File,
+	 *             ServiceContext)}
+	 */
+	@Deprecated
+	@Override
+	public FileEntry updateFileEntry(
+			long fileEntryId, String sourceFileName, String mimeType,
+			String title, String description, String changeLog,
+			boolean majorVersion, InputStream is, long size,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		return updateFileEntry(
+			com.liferay.portal.kernel.repository.util.RepositoryUserUtil.
+				getUserId(),
+			fileEntryId, sourceFileName, mimeType, title, description,
+			changeLog, majorVersion, is, size, serviceContext);
+	}
+
+	@Override
+	public Folder updateFolder(
+		long folderId, long parentFolderId, String name, String description,
+		ServiceContext serviceContext) {
+
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -503,8 +729,8 @@ public abstract class BaseRepositoryImpl
 
 	private long _companyId;
 	private long _groupId;
-	private LocalRepository _localRepository = new DefaultLocalRepositoryImpl(
-		this);
+	private final LocalRepository _localRepository =
+		new DefaultLocalRepositoryImpl(this);
 	private long _repositoryId;
 	private UnicodeProperties _typeSettingsProperties;
 

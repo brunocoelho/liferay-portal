@@ -268,6 +268,27 @@ public interface AssetEntryModel extends AttachedModel, BaseModel<AssetEntry>,
 	public void setClassTypeId(long classTypeId);
 
 	/**
+	 * Returns the listable of this asset entry.
+	 *
+	 * @return the listable of this asset entry
+	 */
+	public boolean getListable();
+
+	/**
+	 * Returns <code>true</code> if this asset entry is listable.
+	 *
+	 * @return <code>true</code> if this asset entry is listable; <code>false</code> otherwise
+	 */
+	public boolean isListable();
+
+	/**
+	 * Sets whether this asset entry is listable.
+	 *
+	 * @param listable the listable of this asset entry
+	 */
+	public void setListable(boolean listable);
+
+	/**
 	 * Returns the visible of this asset entry.
 	 *
 	 * @return the visible of this asset entry
@@ -795,19 +816,19 @@ public interface AssetEntryModel extends AttachedModel, BaseModel<AssetEntry>,
 	public Object clone();
 
 	@Override
-	public int compareTo(AssetEntry assetEntry);
+	public int compareTo(com.liferay.portlet.asset.model.AssetEntry assetEntry);
 
 	@Override
 	public int hashCode();
 
 	@Override
-	public CacheModel<AssetEntry> toCacheModel();
+	public CacheModel<com.liferay.portlet.asset.model.AssetEntry> toCacheModel();
 
 	@Override
-	public AssetEntry toEscapedModel();
+	public com.liferay.portlet.asset.model.AssetEntry toEscapedModel();
 
 	@Override
-	public AssetEntry toUnescapedModel();
+	public com.liferay.portlet.asset.model.AssetEntry toUnescapedModel();
 
 	@Override
 	public String toString();

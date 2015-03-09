@@ -17,8 +17,8 @@ package com.liferay.portlet.documentlibrary;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.settings.FallbackKeys;
 import com.liferay.portal.kernel.settings.ParameterMapSettings;
+import com.liferay.portal.kernel.settings.PortletInstanceSettings;
 import com.liferay.portal.kernel.settings.Settings;
-import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.settings.SettingsFactoryUtil;
 import com.liferay.portal.kernel.settings.TypedSettings;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -33,15 +33,14 @@ import java.util.Map;
 /**
  * @author Sergio González
  */
-public class DLPortletInstanceSettings {
 
-	public static final String[] ALL_KEYS = {
-		"rootFolderId", "displayViews", "entriesPerPage", "entryColumns",
-		"fileEntriesPerPage", "fileEntryColumns", "folderColumns",
-		"foldersPerPage", "mimeTypes", "enableCommentRatings", "enableRatings",
-		"enableRelatedAssets", "showActions", "showFolderMenu",
-		"showFoldersSearch", "showSubfolders", "showTabs"
-	};
+@Settings.Config(
+	settingsIds = {
+		PortletKeys.DOCUMENT_LIBRARY, PortletKeys.DOCUMENT_LIBRARY_ADMIN,
+		PortletKeys.DOCUMENT_LIBRARY_DISPLAY, PortletKeys.MEDIA_GALLERY_DISPLAY
+	}
+)
+public class DLPortletInstanceSettings implements PortletInstanceSettings {
 
 	public static DLPortletInstanceSettings getInstance(
 			Layout layout, String portletId)
@@ -116,6 +115,10 @@ public class DLPortletInstanceSettings {
 		return _typedSettings.getBooleanValue("enableCommentRatings");
 	}
 
+	public boolean isEnableFileEntryDrafts() {
+		return _typedSettings.getBooleanValue("enableFileEntryDrafts");
+	}
+
 	public boolean isEnableRatings() {
 		return _typedSettings.getBooleanValue("enableRatings");
 	}
@@ -150,6 +153,8 @@ public class DLPortletInstanceSettings {
 		fallbackKeys.add("displayViews", PropsKeys.DL_DISPLAY_VIEWS);
 		fallbackKeys.add(
 			"enableCommentRatings", PropsKeys.DL_COMMENT_RATINGS_ENABLED);
+		fallbackKeys.add(
+			"enableFileEntryDrafts", PropsKeys.DL_FILE_ENTRY_DRAFTS_ENABLED);
 		fallbackKeys.add("enableRatings", PropsKeys.DL_RATINGS_ENABLED);
 		fallbackKeys.add(
 			"enableRelatedAssets", PropsKeys.DL_RELATED_ASSETS_ENABLED);
@@ -176,29 +181,11 @@ public class DLPortletInstanceSettings {
 	private static final String[] _MIME_TYPES_DEFAULT = ArrayUtil.toStringArray(
 		DLUtil.getAllMediaGalleryMimeTypes());
 
-	private static final String[] _MULTI_VALUED_KEYS = {
-		"displayViews", "entryColumns", "fileEntryColumns", "folderColumns",
-		"mimeTypes"
-	};
-
 	static {
-		SettingsFactory settingsFactory =
-			SettingsFactoryUtil.getSettingsFactory();
-
-		settingsFactory.registerSettingsMetadata(
-			PortletKeys.DOCUMENT_LIBRARY, _getFallbackKeys(),
-			_MULTI_VALUED_KEYS);
-		settingsFactory.registerSettingsMetadata(
-			PortletKeys.DOCUMENT_LIBRARY_ADMIN, _getFallbackKeys(),
-			_MULTI_VALUED_KEYS);
-		settingsFactory.registerSettingsMetadata(
-			PortletKeys.DOCUMENT_LIBRARY_DISPLAY, _getFallbackKeys(),
-			_MULTI_VALUED_KEYS);
-		settingsFactory.registerSettingsMetadata(
-			PortletKeys.MEDIA_GALLERY_DISPLAY, _getFallbackKeys(),
-			_MULTI_VALUED_KEYS);
+		SettingsFactoryUtil.registerSettingsMetadata(
+			DLPortletInstanceSettings.class, null, _getFallbackKeys());
 	}
 
-	private TypedSettings _typedSettings;
+	private final TypedSettings _typedSettings;
 
 }

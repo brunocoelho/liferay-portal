@@ -14,47 +14,53 @@
 
 package com.liferay.portlet.journal.subscriptions;
 
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
-import com.liferay.portal.test.Sync;
-import com.liferay.portal.test.SynchronousMailExecutionTestListener;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
-import com.liferay.portal.util.subscriptions.BaseSubscriptionContainerModelTestCase;
-import com.liferay.portal.util.test.RandomTestUtil;
-import com.liferay.portal.util.test.TestPropsValues;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.Sync;
+import com.liferay.portal.kernel.test.rule.SynchronousMailTestRule;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portlet.journal.model.JournalArticle;
 import com.liferay.portlet.journal.model.JournalFolder;
+import com.liferay.portlet.journal.service.JournalArticleLocalServiceUtil;
 import com.liferay.portlet.journal.service.JournalFolderLocalServiceUtil;
 import com.liferay.portlet.journal.util.test.JournalTestUtil;
+import com.liferay.portlet.subscriptions.test.BaseSubscriptionContainerModelTestCase;
 
-import org.junit.runner.RunWith;
+import org.junit.ClassRule;
+import org.junit.Rule;
 
 /**
  * @author Zsolt Berentey
  * @author Roberto Díaz
  */
-@ExecutionTestListeners(
-	listeners = {
-		MainServletExecutionTestListener.class,
-		SynchronousMailExecutionTestListener.class
-	})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 @Sync
 public class JournalSubscriptionContainerModelTest
 	extends BaseSubscriptionContainerModelTestCase {
 
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE,
+			SynchronousMailTestRule.INSTANCE);
+
 	@Override
-	protected long addBaseModel(long containerModelId) throws Exception {
+	protected long addBaseModel(long userId, long containerModelId)
+		throws Exception {
+
 		JournalArticle article = JournalTestUtil.addArticle(
-			group.getGroupId(), containerModelId);
+			userId, group.getGroupId(), containerModelId);
 
 		return article.getResourcePrimKey();
 	}
 
 	@Override
-	protected long addContainerModel(long containerModelId) throws Exception {
+	protected long addContainerModel(long userId, long containerModelId)
+		throws Exception {
+
 		JournalFolder folder = JournalTestUtil.addFolder(
-			group.getGroupId(), containerModelId,
+			userId, group.getGroupId(), containerModelId,
 			RandomTestUtil.randomString());
 
 		return folder.getFolderId();
@@ -65,7 +71,17 @@ public class JournalSubscriptionContainerModelTest
 		throws Exception {
 
 		JournalFolderLocalServiceUtil.subscribe(
-			TestPropsValues.getUserId(), group.getGroupId(), containerModelId);
+			user.getUserId(), group.getGroupId(), containerModelId);
+	}
+
+	@Override
+	protected void updateBaseModel(long userId, long baseModelId)
+		throws Exception {
+
+		JournalArticle article =
+			JournalArticleLocalServiceUtil.getLatestArticle(baseModelId);
+
+		JournalTestUtil.updateArticleWithWorkflow(userId, article, true);
 	}
 
 }

@@ -82,7 +82,7 @@
 		<!-- Finder methods -->
 
 		<finder name="GroupId" return-type="Collection">
-			<finder-column name="groupId" />
+			<finder-column name="groupId" arrayable-operator="OR" />
 		</finder>
 		<finder name="G_R" return-type="DDLRecordSet" unique="true">
 			<finder-column name="groupId" />
@@ -99,7 +99,7 @@
 		<reference package-path="com.liferay.portlet.dynamicdatamapping" entity="DDMStructure" />
 		<reference package-path="com.liferay.portlet.dynamicdatamapping" entity="DDMStructureLink" />
 	</entity>
-	<entity name="DDLRecordVersion" local-service="false" remote-service="false">
+	<entity name="DDLRecordVersion" local-service="true" remote-service="true">
 
 		<!-- PK fields -->
 

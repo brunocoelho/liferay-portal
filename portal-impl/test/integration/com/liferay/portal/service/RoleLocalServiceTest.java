@@ -16,7 +16,11 @@ package com.liferay.portal.service;
 
 import com.liferay.portal.NoSuchGroupException;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.util.GroupTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.model.Layout;
 import com.liferay.portal.model.Organization;
@@ -25,14 +29,10 @@ import com.liferay.portal.model.Role;
 import com.liferay.portal.model.RoleConstants;
 import com.liferay.portal.model.Team;
 import com.liferay.portal.model.User;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.listeners.ResetDatabaseExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portal.util.comparator.RoleRoleIdComparator;
-import com.liferay.portal.util.test.GroupTestUtil;
 import com.liferay.portal.util.test.LayoutTestUtil;
-import com.liferay.portal.util.test.RandomTestUtil;
-import com.liferay.portal.util.test.TestPropsValues;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,22 +40,22 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import org.testng.Assert;
 
 /**
  * @author László Csontos
  */
-@ExecutionTestListeners(
-	listeners = {
-		MainServletExecutionTestListener.class,
-		ResetDatabaseExecutionTestListener.class
-	})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 public class RoleLocalServiceTest {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE);
 
 	@BeforeClass
 	public static void setUpClass() {
@@ -80,7 +80,7 @@ public class RoleLocalServiceTest {
 
 		List<Role> allRoles = RoleLocalServiceUtil.getRoles(companyId);
 
-		List<Role> expectedRoles = new ArrayList<Role>();
+		List<Role> expectedRoles = new ArrayList<>();
 
 		for (Role role : allRoles) {
 			int type = role.getType();
@@ -173,8 +173,7 @@ public class RoleLocalServiceTest {
 		Organization organization = (Organization)organizationAndTeam[0];
 		Team team = (Team)organizationAndTeam[1];
 
-		Layout layout = LayoutTestUtil.addLayout(
-			organization.getGroupId(), RandomTestUtil.randomString());
+		Layout layout = LayoutTestUtil.addLayout(organization.getGroupId());
 
 		Group group = GroupTestUtil.addGroup(
 			TestPropsValues.getUserId(), organization.getGroupId(), layout);
@@ -193,6 +192,8 @@ public class RoleLocalServiceTest {
 				user.getUserId(),
 				OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID,
 				RandomTestUtil.randomString(), false);
+
+		_organizations.add(organization);
 
 		Team team = TeamLocalServiceUtil.addTeam(
 			user.getUserId(), organization.getGroupId(),
@@ -218,5 +219,8 @@ public class RoleLocalServiceTest {
 			Assert.assertFalse(teamRoleMap.containsKey(team));
 		}
 	}
+
+	@DeleteAfterTestRun
+	private final List<Organization> _organizations = new ArrayList<>();
 
 }

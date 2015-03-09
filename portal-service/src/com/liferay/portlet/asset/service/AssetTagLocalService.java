@@ -68,7 +68,7 @@ public interface AssetTagLocalService extends BaseLocalService,
 		com.liferay.portlet.asset.model.AssetTag assetTag);
 
 	public com.liferay.portlet.asset.model.AssetTag addTag(long userId,
-		java.lang.String name, java.lang.String[] tagProperties,
+		java.lang.String name,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
@@ -86,9 +86,7 @@ public interface AssetTagLocalService extends BaseLocalService,
 	*
 	* <p>
 	* For each name, if a tag with that name doesn't already exist for the
-	* group, this method creates a new tag with that name for the group. If a
-	* tag with that name already exists in the company group, this method
-	* copies that company group's tag's properties to the group's new tag.
+	* group, this method creates a new tag with that name for the group.
 	* </p>
 	*
 	* @param userId the primary key of the user
@@ -216,20 +214,20 @@ public interface AssetTagLocalService extends BaseLocalService,
 		com.liferay.portal.kernel.util.OrderByComparator<T> orderByComparator);
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery);
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,
@@ -411,19 +409,16 @@ public interface AssetTagLocalService extends BaseLocalService,
 		long tagId, long classNameId)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
-	public void mergeTags(long fromTagId, long toTagId,
-		boolean overrideProperties)
+	public void mergeTags(long fromTagId, long toTagId)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public java.util.List<com.liferay.portlet.asset.model.AssetTag> search(
-		long groupId, java.lang.String name, java.lang.String[] tagProperties,
-		int start, int end);
+		long groupId, java.lang.String name, int start, int end);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public java.util.List<com.liferay.portlet.asset.model.AssetTag> search(
-		long[] groupIds, java.lang.String name,
-		java.lang.String[] tagProperties, int start, int end);
+		long[] groupIds, java.lang.String name, int start, int end);
 
 	public void setAssetEntryAssetTags(long entryId, long[] tagIds);
 
@@ -445,7 +440,7 @@ public interface AssetTagLocalService extends BaseLocalService,
 		com.liferay.portlet.asset.model.AssetTag assetTag);
 
 	public com.liferay.portlet.asset.model.AssetTag updateTag(long userId,
-		long tagId, java.lang.String name, java.lang.String[] tagProperties,
+		long tagId, java.lang.String name,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException;
 }

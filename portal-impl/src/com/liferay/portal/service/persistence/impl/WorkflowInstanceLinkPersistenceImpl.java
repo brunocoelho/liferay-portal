@@ -56,7 +56,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see WorkflowInstanceLinkPersistence
- * @see WorkflowInstanceLinkUtil
+ * @see com.liferay.portal.service.persistence.WorkflowInstanceLinkUtil
  * @generated
  */
 @ProviderType
@@ -1373,7 +1373,7 @@ public class WorkflowInstanceLinkPersistenceImpl extends BasePersistenceImpl<Wor
 		MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

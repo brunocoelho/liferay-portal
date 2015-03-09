@@ -85,7 +85,7 @@ public class SPIRegistryImpl implements SPIRegistry {
 
 	@Override
 	public void registerSPI(SPI spi) throws RemoteException {
-		List<String> portletIds = new ArrayList<String>();
+		List<String> portletIds = new ArrayList<>();
 
 		SPIConfiguration spiConfiguration = spi.getSPIConfiguration();
 
@@ -190,19 +190,18 @@ public class SPIRegistryImpl implements SPIRegistry {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(SPIRegistryImpl.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		SPIRegistryImpl.class);
 
 	private SPI _errorSPI;
-	private Set<String> _excludedPortletIds = new ConcurrentHashSet<String>();
-	private Lock _lock = new ReentrantLock();
-	private Map<SPI, String[]> _portletIds =
-		new ConcurrentHashMap<SPI, String[]>();
-	private Map<String, SPI> _portletSPIs =
-		new ConcurrentHashMap<String, SPI>();
-	private Map<SPI, String[]> _servletContextNames =
-		new ConcurrentHashMap<SPI, String[]>();
-	private Map<String, SPI> _servletContextSPIs =
-		new ConcurrentHashMap<String, SPI>();
+	private final Set<String> _excludedPortletIds = new ConcurrentHashSet<>();
+	private final Lock _lock = new ReentrantLock();
+	private final Map<SPI, String[]> _portletIds = new ConcurrentHashMap<>();
+	private final Map<String, SPI> _portletSPIs = new ConcurrentHashMap<>();
+	private final Map<SPI, String[]> _servletContextNames =
+		new ConcurrentHashMap<>();
+	private final Map<String, SPI> _servletContextSPIs =
+		new ConcurrentHashMap<>();
 	private SPIRegistryValidator _spiRegistryValidator;
 
 }

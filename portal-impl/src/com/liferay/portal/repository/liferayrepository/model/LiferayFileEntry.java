@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.repository.model.Folder;
+import com.liferay.portal.kernel.repository.model.RepositoryModelOperation;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
@@ -117,6 +118,13 @@ public class LiferayFileEntry extends LiferayModel implements FileEntry {
 	}
 
 	@Override
+	public void execute(RepositoryModelOperation repositoryModelOperation)
+		throws PortalException {
+
+		repositoryModelOperation.execute(this);
+	}
+
+	@Override
 	public Map<String, Serializable> getAttributes() {
 		ExpandoBridge expandoBridge = getExpandoBridge();
 
@@ -193,6 +201,11 @@ public class LiferayFileEntry extends LiferayModel implements FileEntry {
 	@Override
 	public long getFileEntryId() {
 		return _dlFileEntry.getFileEntryId();
+	}
+
+	@Override
+	public String getFileName() {
+		return _dlFileEntry.getFileName();
 	}
 
 	@Override
@@ -572,7 +585,8 @@ public class LiferayFileEntry extends LiferayModel implements FileEntry {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(LiferayFileEntry.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		LiferayFileEntry.class);
 
 	private final DLFileEntry _dlFileEntry;
 	private DLFileVersion _dlFileVersion;

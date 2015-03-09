@@ -15,19 +15,19 @@
 package com.liferay.portlet.journal.service.persistence;
 
 import com.liferay.portal.kernel.dao.orm.QueryDefinition;
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.rule.Sync;
+import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
+import com.liferay.portal.kernel.test.rule.TransactionalTestRule;
+import com.liferay.portal.kernel.test.util.GroupTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.Group;
-import com.liferay.portal.test.DeleteAfterTestRun;
-import com.liferay.portal.test.Sync;
-import com.liferay.portal.test.SynchronousDestinationExecutionTestListener;
-import com.liferay.portal.test.TransactionalTestRule;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portal.util.PortalUtil;
-import com.liferay.portal.util.test.GroupTestUtil;
-import com.liferay.portal.util.test.TestPropsValues;
 import com.liferay.portlet.dynamicdatamapping.model.DDMStructure;
 import com.liferay.portlet.dynamicdatamapping.model.DDMTemplate;
 import com.liferay.portlet.dynamicdatamapping.util.test.DDMStructureTestUtil;
@@ -55,25 +55,23 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Zsolt Berentey
  * @author Laszlo Csontos
  */
-@ExecutionTestListeners(
-	listeners = {
-		MainServletExecutionTestListener.class,
-		SynchronousDestinationExecutionTestListener.class
-	})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 @Sync
 public class JournalArticleFinderTest {
 
 	@ClassRule
-	public static TransactionalTestRule transactionalTestRule =
-		new TransactionalTestRule();
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE,
+			SynchronousDestinationTestRule.INSTANCE,
+			TransactionalTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -84,9 +82,8 @@ public class JournalArticleFinderTest {
 
 		_folder = JournalTestUtil.addFolder(_group.getGroupId(), "Folder 1");
 
-		_basicWebContentDDMStructure =
-			DDMStructureTestUtil.addStructure(
-				_group.getGroupId(), JournalArticle.class.getName());
+		_basicWebContentDDMStructure = DDMStructureTestUtil.addStructure(
+			_group.getGroupId(), JournalArticle.class.getName());
 
 		DDMTemplate basicWebContentTemplate = DDMTemplateTestUtil.addTemplate(
 			_group.getGroupId(), _basicWebContentDDMStructure.getStructureId());
@@ -156,7 +153,7 @@ public class JournalArticleFinderTest {
 	@Test
 	public void testFindByExpirationDate() throws Exception {
 		QueryDefinition<JournalArticle> queryDefinition =
-			new QueryDefinition<JournalArticle>();
+			new QueryDefinition<>();
 
 		queryDefinition.setStatus(WorkflowConstants.STATUS_ANY);
 
@@ -227,7 +224,7 @@ public class JournalArticleFinderTest {
 	@Test
 	public void testQueryByC_G_F_C_A_V_T_D_C_T_S_T_D_R() throws Exception {
 		QueryDefinition<JournalArticle> queryDefinition =
-			new QueryDefinition<JournalArticle>();
+			new QueryDefinition<>();
 
 		queryDefinition.setStatus(WorkflowConstants.STATUS_ANY);
 
@@ -263,7 +260,7 @@ public class JournalArticleFinderTest {
 	@Test
 	public void testQueryByG_C_S() throws Exception {
 		QueryDefinition<JournalArticle> queryDefinition =
-			new QueryDefinition<JournalArticle>();
+			new QueryDefinition<>();
 
 		queryDefinition.setStatus(WorkflowConstants.STATUS_ANY);
 
@@ -296,7 +293,7 @@ public class JournalArticleFinderTest {
 	@Test
 	public void testQueryByG_F() throws Exception {
 		QueryDefinition<JournalArticle> queryDefinition =
-			new QueryDefinition<JournalArticle>();
+			new QueryDefinition<>();
 
 		queryDefinition.setStatus(WorkflowConstants.STATUS_ANY);
 
@@ -329,7 +326,7 @@ public class JournalArticleFinderTest {
 	@Test
 	public void testQueryByG_U_F_C() throws Exception {
 		QueryDefinition<JournalArticle> queryDefinition =
-			new QueryDefinition<JournalArticle>();
+			new QueryDefinition<>();
 
 		queryDefinition.setStatus(WorkflowConstants.STATUS_ANY);
 
@@ -385,20 +382,20 @@ public class JournalArticleFinderTest {
 		throws Exception {
 
 		int actualCount =
-			JournalArticleFinderUtil.countByC_G_F_C_A_V_T_D_C_T_S_T_D_R(
+			JournalArticleFinderUtil.countByC_G_F_C_A_V_T_D_C_S_T_D_R(
 				companyId, groupId, folderIds, classNameId, articleId, version,
-				title, description, content, type, ddmStructureKey,
-				ddmTemplateKey, displayDateGT, displayDateLT, reviewDate,
-				andOperator, queryDefinition);
+				title, description, content, ddmStructureKey, ddmTemplateKey,
+				displayDateGT, displayDateLT, reviewDate, andOperator,
+				queryDefinition);
 
 		Assert.assertEquals(expectedCount, actualCount);
 
 		List<JournalArticle> articles =
-			JournalArticleFinderUtil.findByC_G_F_C_A_V_T_D_C_T_S_T_D_R(
+			JournalArticleFinderUtil.findByC_G_F_C_A_V_T_D_C_S_T_D_R(
 				companyId, groupId, folderIds, classNameId, articleId, version,
-				title, description, content, type, ddmStructureKey,
-				ddmTemplateKey, displayDateGT, displayDateLT, reviewDate,
-				andOperator, queryDefinition);
+				title, description, content, ddmStructureKey, ddmTemplateKey,
+				displayDateGT, displayDateLT, reviewDate, andOperator,
+				queryDefinition);
 
 		actualCount = articles.size();
 
@@ -448,7 +445,7 @@ public class JournalArticleFinderTest {
 		prepareSortedArticles();
 
 		QueryDefinition<JournalArticle> queryDefinition =
-			new QueryDefinition<JournalArticle>();
+			new QueryDefinition<>();
 
 		queryDefinition.setOrderByComparator(orderByComparator);
 
@@ -458,7 +455,7 @@ public class JournalArticleFinderTest {
 			expectedArticles = _articles;
 		}
 		else {
-			expectedArticles = new ArrayList<JournalArticle>(_articles);
+			expectedArticles = new ArrayList<>(_articles);
 
 			Collections.reverse(expectedArticles);
 		}
@@ -491,11 +488,11 @@ public class JournalArticleFinderTest {
 	private static final long _USER_ID = 1234L;
 
 	private JournalArticle _article;
-	private List<JournalArticle> _articles = new ArrayList<JournalArticle>();
+	private final List<JournalArticle> _articles = new ArrayList<>();
 	private DDMStructure _basicWebContentDDMStructure;
 	private DDMStructure _ddmStructure;
 	private JournalFolder _folder;
-	private List<Long> _folderIds = new ArrayList<Long>();
+	private final List<Long> _folderIds = new ArrayList<>();
 
 	@DeleteAfterTestRun
 	private Group _group;

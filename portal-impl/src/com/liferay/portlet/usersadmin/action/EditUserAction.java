@@ -30,8 +30,6 @@ import com.liferay.portal.NoSuchRegionException;
 import com.liferay.portal.NoSuchUserException;
 import com.liferay.portal.PhoneNumberException;
 import com.liferay.portal.RequiredUserException;
-import com.liferay.portal.ReservedUserEmailAddressException;
-import com.liferay.portal.ReservedUserScreenNameException;
 import com.liferay.portal.UserEmailAddressException;
 import com.liferay.portal.UserFieldException;
 import com.liferay.portal.UserIdException;
@@ -42,6 +40,7 @@ import com.liferay.portal.UserSmsException;
 import com.liferay.portal.WebsiteURLException;
 import com.liferay.portal.kernel.bean.BeanParamUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.portlet.DynamicActionRequest;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
@@ -49,7 +48,6 @@ import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.FileUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -63,6 +61,8 @@ import com.liferay.portal.model.Contact;
 import com.liferay.portal.model.EmailAddress;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.model.Layout;
+import com.liferay.portal.model.ListType;
+import com.liferay.portal.model.ListTypeConstants;
 import com.liferay.portal.model.Phone;
 import com.liferay.portal.model.User;
 import com.liferay.portal.model.UserGroupRole;
@@ -70,6 +70,7 @@ import com.liferay.portal.model.Website;
 import com.liferay.portal.security.auth.PrincipalException;
 import com.liferay.portal.security.membershippolicy.MembershipPolicyException;
 import com.liferay.portal.security.permission.ActionKeys;
+import com.liferay.portal.service.ListTypeLocalServiceUtil;
 import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.service.ServiceContextFactory;
 import com.liferay.portal.service.UserLocalServiceUtil;
@@ -128,6 +129,21 @@ public class EditUserAction extends PortletAction {
 			PortletConfig portletConfig, ActionRequest actionRequest,
 			ActionResponse actionResponse)
 		throws Exception {
+
+		DynamicActionRequest dynamicActionRequest = new DynamicActionRequest(
+			actionRequest);
+
+		long prefixId = getListTypeId(
+			actionRequest, "prefixValue", ListTypeConstants.CONTACT_PREFIX);
+
+		dynamicActionRequest.setParameter("prefixId", String.valueOf(prefixId));
+
+		long suffixId = getListTypeId(
+			actionRequest, "suffixValue", ListTypeConstants.CONTACT_SUFFIX);
+
+		dynamicActionRequest.setParameter("suffixId", String.valueOf(suffixId));
+
+		actionRequest = dynamicActionRequest;
 
 		String cmd = ParamUtil.getString(actionRequest, Constants.CMD);
 
@@ -221,8 +237,8 @@ public class EditUserAction extends PortletAction {
 				(UserLocalServiceUtil.fetchUserById(
 					scopeGroup.getClassPK()) == null)) {
 
-				redirect = HttpUtil.setParameter(redirect, "doAsGroupId" , 0);
-				redirect = HttpUtil.setParameter(redirect, "refererPlid" , 0);
+				redirect = HttpUtil.setParameter(redirect, "doAsGroupId", 0);
+				redirect = HttpUtil.setParameter(redirect, "refererPlid", 0);
 			}
 
 			sendRedirect(actionRequest, actionResponse, redirect);
@@ -251,8 +267,6 @@ public class EditUserAction extends PortletAction {
 					 e instanceof NoSuchRegionException ||
 					 e instanceof PhoneNumberException ||
 					 e instanceof RequiredUserException ||
-					 e instanceof ReservedUserEmailAddressException ||
-					 e instanceof ReservedUserScreenNameException ||
 					 e instanceof UserEmailAddressException ||
 					 e instanceof UserFieldException ||
 					 e instanceof UserIdException ||
@@ -273,11 +287,31 @@ public class EditUserAction extends PortletAction {
 					SessionErrors.add(actionRequest, e.getClass(), e);
 				}
 
+				String password1 = actionRequest.getParameter("password1");
+				String password2 = actionRequest.getParameter("password2");
+
+				boolean submittedPassword = false;
+
+				if (!Validator.isBlank(password1) ||
+					!Validator.isBlank(password2)) {
+
+					submittedPassword = true;
+				}
+
 				if (e instanceof CompanyMaxUsersException ||
-					e instanceof RequiredUserException) {
+					e instanceof RequiredUserException ||
+					submittedPassword) {
 
 					String redirect = PortalUtil.escapeRedirect(
 						ParamUtil.getString(actionRequest, "redirect"));
+
+					if (submittedPassword) {
+						User user = PortalUtil.getSelectedUser(actionRequest);
+
+						redirect = HttpUtil.setParameter(
+							redirect, actionResponse.getNamespace() + "p_u_i_d",
+							user.getUserId());
+					}
 
 					if (Validator.isNotNull(redirect)) {
 						actionResponse.sendRedirect(redirect);
@@ -347,8 +381,8 @@ public class EditUserAction extends PortletAction {
 		String firstName = ParamUtil.getString(actionRequest, "firstName");
 		String middleName = ParamUtil.getString(actionRequest, "middleName");
 		String lastName = ParamUtil.getString(actionRequest, "lastName");
-		int prefixId = ParamUtil.getInteger(actionRequest, "prefixId");
-		int suffixId = ParamUtil.getInteger(actionRequest, "suffixId");
+		long prefixId = ParamUtil.getInteger(actionRequest, "prefixId");
+		long suffixId = ParamUtil.getInteger(actionRequest, "suffixId");
 		boolean male = ParamUtil.getBoolean(actionRequest, "male", true);
 		int birthdayMonth = ParamUtil.getInteger(
 			actionRequest, "birthdayMonth");
@@ -366,16 +400,13 @@ public class EditUserAction extends PortletAction {
 		String twitterSn = ParamUtil.getString(actionRequest, "twitterSn");
 		String ymSn = ParamUtil.getString(actionRequest, "ymSn");
 		String jobTitle = ParamUtil.getString(actionRequest, "jobTitle");
-		long[] groupIds = getLongArray(
-			actionRequest, "groupsSearchContainerPrimaryKeys");
-		long[] organizationIds = getLongArray(
-			actionRequest, "organizationsSearchContainerPrimaryKeys");
-		long[] roleIds = getLongArray(
-			actionRequest, "rolesSearchContainerPrimaryKeys");
+		long[] groupIds = UsersAdminUtil.getGroupIds(actionRequest);
+		long[] organizationIds = UsersAdminUtil.getOrganizationIds(
+			actionRequest);
+		long[] roleIds = UsersAdminUtil.getRoleIds(actionRequest);
 		List<UserGroupRole> userGroupRoles = UsersAdminUtil.getUserGroupRoles(
 			actionRequest);
-		long[] userGroupIds = getLongArray(
-			actionRequest, "userGroupsSearchContainerPrimaryKeys");
+		long[] userGroupIds = UsersAdminUtil.getUserGroupIds(actionRequest);
 		List<Address> addresses = UsersAdminUtil.getAddresses(actionRequest);
 		List<EmailAddress> emailAddresses = UsersAdminUtil.getEmailAddresses(
 			actionRequest);
@@ -391,11 +422,11 @@ public class EditUserAction extends PortletAction {
 		User user = UserServiceUtil.addUser(
 			themeDisplay.getCompanyId(), autoPassword, password1, password2,
 			autoScreenName, screenName, emailAddress, facebookId, openId,
-			LocaleUtil.getDefault(), firstName, middleName, lastName, prefixId,
-			suffixId, male, birthdayMonth, birthdayDay, birthdayYear, jobTitle,
-			groupIds, organizationIds, roleIds, userGroupIds, addresses,
-			emailAddresses, phones, websites, announcementsDeliveries,
-			sendEmail, serviceContext);
+			LocaleUtil.fromLanguageId(languageId), firstName, middleName,
+			lastName, prefixId, suffixId, male, birthdayMonth, birthdayDay,
+			birthdayYear, jobTitle, groupIds, organizationIds, roleIds,
+			userGroupIds, addresses, emailAddresses, phones, websites,
+			announcementsDeliveries, sendEmail, serviceContext);
 
 		if (!userGroupRoles.isEmpty()) {
 			for (UserGroupRole userGroupRole : userGroupRoles) {
@@ -469,8 +500,7 @@ public class EditUserAction extends PortletAction {
 	protected List<AnnouncementsDelivery> getAnnouncementsDeliveries(
 		ActionRequest actionRequest) {
 
-		List<AnnouncementsDelivery> announcementsDeliveries =
-			new ArrayList<AnnouncementsDelivery>();
+		List<AnnouncementsDelivery> announcementsDeliveries = new ArrayList<>();
 
 		for (String type : AnnouncementsEntryConstants.TYPES) {
 			boolean email = ParamUtil.getBoolean(
@@ -509,14 +539,17 @@ public class EditUserAction extends PortletAction {
 		return getAnnouncementsDeliveries(actionRequest);
 	}
 
-	protected long[] getLongArray(PortletRequest portletRequest, String name) {
-		String value = portletRequest.getParameter(name);
+	protected long getListTypeId(
+			PortletRequest portletRequest, String parameterName, String type)
+		throws Exception {
 
-		if (value == null) {
-			return null;
-		}
+		String parameterValue = ParamUtil.getString(
+			portletRequest, parameterName);
 
-		return StringUtil.split(GetterUtil.getString(value), 0L);
+		ListType listType = ListTypeLocalServiceUtil.addListType(
+			parameterValue, type);
+
+		return listType.getListTypeId();
 	}
 
 	protected User updateLockout(ActionRequest actionRequest) throws Exception {
@@ -588,9 +621,9 @@ public class EditUserAction extends PortletAction {
 			user, actionRequest, "middleName");
 		String lastName = BeanParamUtil.getString(
 			user, actionRequest, "lastName");
-		int prefixId = BeanParamUtil.getInteger(
+		long prefixId = BeanParamUtil.getInteger(
 			contact, actionRequest, "prefixId");
-		int suffixId = BeanParamUtil.getInteger(
+		long suffixId = BeanParamUtil.getInteger(
 			contact, actionRequest, "suffixId");
 		boolean male = BeanParamUtil.getBoolean(
 			user, actionRequest, "male", true);
@@ -624,12 +657,10 @@ public class EditUserAction extends PortletAction {
 		String ymSn = BeanParamUtil.getString(contact, actionRequest, "ymSn");
 		String jobTitle = BeanParamUtil.getString(
 			user, actionRequest, "jobTitle");
-		long[] groupIds = getLongArray(
-			actionRequest, "groupsSearchContainerPrimaryKeys");
-		long[] organizationIds = getLongArray(
-			actionRequest, "organizationsSearchContainerPrimaryKeys");
-		long[] roleIds = getLongArray(
-			actionRequest, "rolesSearchContainerPrimaryKeys");
+		long[] groupIds = UsersAdminUtil.getGroupIds(actionRequest);
+		long[] organizationIds = UsersAdminUtil.getOrganizationIds(
+			actionRequest);
+		long[] roleIds = UsersAdminUtil.getRoleIds(actionRequest);
 
 		List<UserGroupRole> userGroupRoles = null;
 
@@ -641,8 +672,7 @@ public class EditUserAction extends PortletAction {
 			userGroupRoles = UsersAdminUtil.getUserGroupRoles(actionRequest);
 		}
 
-		long[] userGroupIds = getLongArray(
-			actionRequest, "userGroupsSearchContainerPrimaryKeys");
+		long[] userGroupIds = UsersAdminUtil.getUserGroupIds(actionRequest);
 		List<Address> addresses = UsersAdminUtil.getAddresses(
 			actionRequest, user.getAddresses());
 		List<EmailAddress> emailAddresses = UsersAdminUtil.getEmailAddresses(

@@ -14,40 +14,48 @@
 
 package com.liferay.portlet.blogs.social;
 
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.Sync;
+import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.Constants;
-import com.liferay.portal.kernel.util.StringPool;
-import com.liferay.portal.test.Sync;
-import com.liferay.portal.test.SynchronousDestinationExecutionTestListener;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
-import com.liferay.portal.util.test.RandomTestUtil;
-import com.liferay.portal.util.test.TestPropsValues;
+import com.liferay.portal.service.ServiceContext;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portlet.blogs.model.BlogsEntry;
 import com.liferay.portlet.blogs.service.BlogsEntryLocalServiceUtil;
-import com.liferay.portlet.blogs.util.test.BlogsTestUtil;
-import com.liferay.portlet.social.BaseSocialActivityInterpreterTestCase;
 import com.liferay.portlet.social.model.SocialActivityConstants;
 import com.liferay.portlet.social.model.SocialActivityInterpreter;
+import com.liferay.portlet.social.test.BaseSocialActivityInterpreterTestCase;
 
-import org.junit.runner.RunWith;
+import org.junit.ClassRule;
+import org.junit.Rule;
 
 /**
  * @author Zsolt Berentey
  */
-@ExecutionTestListeners(
-	listeners = {
-		MainServletExecutionTestListener.class,
-		SynchronousDestinationExecutionTestListener.class
-	})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 @Sync
 public class BlogsActivityInterpreterTest
 	extends BaseSocialActivityInterpreterTestCase {
 
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE,
+			SynchronousDestinationTestRule.INSTANCE);
+
 	@Override
 	protected void addActivities() throws Exception {
-		_entry = BlogsTestUtil.addEntry(group, true);
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				group.getGroupId(), TestPropsValues.getUserId());
+
+		_entry = BlogsEntryLocalServiceUtil.addEntry(
+			TestPropsValues.getUserId(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), serviceContext);
 	}
 
 	@Override
@@ -78,9 +86,9 @@ public class BlogsActivityInterpreterTest
 
 		BlogsEntryLocalServiceUtil.updateEntry(
 			_entry.getUserId(), _entry.getEntryId(), _entry.getTitle(),
-			_entry.getDescription(), _entry.getContent(), 1, 1, 2012, 12, 00,
-			true, true, new String[0], _entry.getSmallImage(),
-			_entry.getSmallImageURL(), StringPool.BLANK, null, serviceContext);
+			_entry.getSubtitle(), _entry.getDescription(), _entry.getContent(),
+			1, 1, 2012, 12, 00, true, true, new String[0], null, null,
+			serviceContext);
 	}
 
 	@Override

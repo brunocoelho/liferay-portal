@@ -23,7 +23,6 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.security.permission.ActionKeys;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portal.util.PortletKeys;
@@ -31,6 +30,7 @@ import com.liferay.portlet.dynamicdatamapping.model.DDMStructure;
 import com.liferay.portlet.dynamicdatamapping.model.DDMTemplate;
 import com.liferay.portlet.dynamicdatamapping.model.DDMTemplateConstants;
 import com.liferay.portlet.dynamicdatamapping.util.BaseDDMDisplay;
+import com.liferay.portlet.dynamicdatamapping.util.DDMPermissionHandler;
 import com.liferay.portlet.portletdisplaytemplate.util.PortletDisplayTemplateUtil;
 
 import java.util.Locale;
@@ -42,8 +42,8 @@ import java.util.Set;
 public class PortletDisplayTemplateDDMDisplay extends BaseDDMDisplay {
 
 	@Override
-	public String getAddTemplateActionId() {
-		return ActionKeys.ADD_PORTLET_DISPLAY_TEMPLATE;
+	public DDMPermissionHandler getDDMPermissionHandler() {
+		return _ddmPermissionHandler;
 	}
 
 	@Override
@@ -68,11 +68,6 @@ public class PortletDisplayTemplateDDMDisplay extends BaseDDMDisplay {
 	@Override
 	public String getPortletId() {
 		return PortletKeys.PORTLET_DISPLAY_TEMPLATES;
-	}
-
-	@Override
-	public String getResourceName() {
-		return StringPool.BLANK;
 	}
 
 	@Override
@@ -154,7 +149,10 @@ public class PortletDisplayTemplateDDMDisplay extends BaseDDMDisplay {
 		return LanguageUtil.get(locale, "application-display-templates");
 	}
 
-	private static Set<String> _viewTemplateExcludedColumnNames =
+	private static final Set<String> _viewTemplateExcludedColumnNames =
 		SetUtil.fromArray(new String[] {"language", "mode", "structure"});
+
+	private final DDMPermissionHandler _ddmPermissionHandler =
+		new PortletDisplayTemplateDDMPermissionHandler();
 
 }

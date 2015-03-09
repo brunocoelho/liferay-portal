@@ -27,6 +27,11 @@ import java.util.Map;
 public class DummyIndexSearcher implements IndexSearcher {
 
 	@Override
+	public String getQueryString(SearchContext searchContext, Query query) {
+		return StringPool.BLANK;
+	}
+
+	@Override
 	public Hits search(SearchContext searchContext, Query query) {
 		return _getHits();
 	}
@@ -82,7 +87,7 @@ public class DummyIndexSearcher implements IndexSearcher {
 		return hits;
 	}
 
-	private static Map<String, List<String>> _spellCheckResults =
+	private static final Map<String, List<String>> _spellCheckResults =
 		Collections.emptyMap();
 
 }

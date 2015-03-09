@@ -176,8 +176,8 @@ public class LayoutServiceHttp {
 	}
 
 	public static com.liferay.portal.kernel.repository.model.FileEntry addTempFileEntry(
-		HttpPrincipal httpPrincipal, long groupId, java.lang.String fileName,
-		java.lang.String tempFolderName, java.io.InputStream inputStream,
+		HttpPrincipal httpPrincipal, long groupId, java.lang.String folderName,
+		java.lang.String fileName, java.io.InputStream inputStream,
 		java.lang.String mimeType)
 		throws com.liferay.portal.kernel.exception.PortalException {
 		try {
@@ -185,7 +185,7 @@ public class LayoutServiceHttp {
 					"addTempFileEntry", _addTempFileEntryParameterTypes3);
 
 			MethodHandler methodHandler = new MethodHandler(methodKey, groupId,
-					fileName, tempFolderName, inputStream, mimeType);
+					folderName, fileName, inputStream, mimeType);
 
 			Object returnObj = null;
 
@@ -267,14 +267,14 @@ public class LayoutServiceHttp {
 	}
 
 	public static void deleteTempFileEntry(HttpPrincipal httpPrincipal,
-		long groupId, java.lang.String fileName, java.lang.String tempFolderName)
+		long groupId, java.lang.String folderName, java.lang.String fileName)
 		throws com.liferay.portal.kernel.exception.PortalException {
 		try {
 			MethodKey methodKey = new MethodKey(LayoutServiceUtil.class,
 					"deleteTempFileEntry", _deleteTempFileEntryParameterTypes6);
 
 			MethodHandler methodHandler = new MethodHandler(methodKey, groupId,
-					fileName, tempFolderName);
+					folderName, fileName);
 
 			try {
 				TunnelUtil.invoke(httpPrincipal, methodHandler);
@@ -1003,7 +1003,8 @@ public class LayoutServiceHttp {
 
 	public static java.util.List<com.liferay.portal.model.Layout> getLayouts(
 		HttpPrincipal httpPrincipal, long groupId, boolean privateLayout,
-		long parentLayoutId, boolean incomplete, int start, int end) {
+		long parentLayoutId, boolean incomplete, int start, int end)
+		throws com.liferay.portal.kernel.exception.PortalException {
 		try {
 			MethodKey methodKey = new MethodKey(LayoutServiceUtil.class,
 					"getLayouts", _getLayoutsParameterTypes28);
@@ -1017,6 +1018,10 @@ public class LayoutServiceHttp {
 				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
+				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
+					throw (com.liferay.portal.kernel.exception.PortalException)e;
+				}
+
 				throw new com.liferay.portal.kernel.exception.SystemException(e);
 			}
 
@@ -1056,17 +1061,15 @@ public class LayoutServiceHttp {
 		}
 	}
 
-	public static java.lang.String[] getTempFileEntryNames(
-		HttpPrincipal httpPrincipal, long groupId,
-		java.lang.String tempFolderName)
+	public static java.lang.String[] getTempFileNames(
+		HttpPrincipal httpPrincipal, long groupId, java.lang.String folderName)
 		throws com.liferay.portal.kernel.exception.PortalException {
 		try {
 			MethodKey methodKey = new MethodKey(LayoutServiceUtil.class,
-					"getTempFileEntryNames",
-					_getTempFileEntryNamesParameterTypes30);
+					"getTempFileNames", _getTempFileNamesParameterTypes30);
 
 			MethodHandler methodHandler = new MethodHandler(methodKey, groupId,
-					tempFolderName);
+					folderName);
 
 			Object returnObj = null;
 
@@ -2425,7 +2428,7 @@ public class LayoutServiceHttp {
 	private static final Class<?>[] _getLayoutsCountParameterTypes29 = new Class[] {
 			long.class, boolean.class, long.class
 		};
-	private static final Class<?>[] _getTempFileEntryNamesParameterTypes30 = new Class[] {
+	private static final Class<?>[] _getTempFileNamesParameterTypes30 = new Class[] {
 			long.class, java.lang.String.class
 		};
 	private static final Class<?>[] _importLayoutsParameterTypes31 = new Class[] {

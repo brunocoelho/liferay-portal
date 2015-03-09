@@ -27,7 +27,6 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.upgrade.v6_2_0.util.JournalFeedTable;
 import com.liferay.portal.util.PortalUtil;
-import com.liferay.portal.util.PortletKeys;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portlet.dynamicdatamapping.model.DDMStructure;
@@ -225,6 +224,8 @@ public class UpgradeJournal extends BaseUpgradePortletPreferences {
 		updateStructures();
 		updateTemplates();
 
+		updateAssetEntryClassTypeId();
+
 		super.doUpgrade();
 	}
 
@@ -268,6 +269,37 @@ public class UpgradeJournal extends BaseUpgradePortletPreferences {
 		return new String[] {
 			"56_INSTANCE_%", "62_INSTANCE_%", "101_INSTANCE_%"
 		};
+	}
+
+	protected void updateAssetEntryClassTypeId() throws Exception {
+		Connection con = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+
+		try {
+			con = DataAccess.getUpgradeOptimizedConnection();
+
+			ps = con.prepareStatement(
+				"select groupId, resourcePrimKey, structureId from " +
+					"JournalArticle where structureId != ''");
+
+			rs = ps.executeQuery();
+
+			while (rs.next()) {
+				long groupId = rs.getLong("groupId");
+				long resourcePrimKey = rs.getLong("resourcePrimKey");
+				String structureId = rs.getString("structureId");
+
+				long ddmStructureId = getDDMStructureId(groupId, structureId);
+
+				runSQL(
+					"update AssetEntry set classTypeId = " +
+						ddmStructureId + " where classPK = " + resourcePrimKey);
+			}
+		}
+		finally {
+			DataAccess.cleanUp(con, ps, rs);
+		}
 	}
 
 	protected void updatePreferencesClassPKs(
@@ -366,7 +398,7 @@ public class UpgradeJournal extends BaseUpgradePortletPreferences {
 		_ddmStructureIds.put(groupId + "#" + structureId, ddmStructureId);
 		_ddmStructurePKs.put(id_, ddmStructureId);
 
-		return 0;
+		return ddmStructureId;
 	}
 
 	protected long updateStructure(String structureId) throws Exception {
@@ -494,14 +526,14 @@ public class UpgradeJournal extends BaseUpgradePortletPreferences {
 		PortletPreferences preferences = PortletPreferencesFactoryUtil.fromXML(
 			companyId, ownerId, ownerType, plid, portletId, xml);
 
-		if (portletId.startsWith(PortletKeys.ASSET_PUBLISHER)) {
+		if (portletId.startsWith(_PORTLET_ID_ASSET_PUBLISHER)) {
 			updatePreferencesClassPKs(
 				preferences, "anyClassTypeJournalArticleAssetRendererFactory");
 			updatePreferencesClassPKs(preferences, "classTypeIds");
 			updatePreferencesClassPKs(
 				preferences, "classTypeIdsJournalArticleAssetRendererFactory");
 		}
-		else if (portletId.startsWith(PortletKeys.JOURNAL_CONTENT)) {
+		else if (portletId.startsWith(_PORTLET_ID_JOURNAL_CONTENT)) {
 			String templateId = preferences.getValue(
 				"templateId", StringPool.BLANK);
 
@@ -511,7 +543,7 @@ public class UpgradeJournal extends BaseUpgradePortletPreferences {
 				preferences.setValue("ddmTemplateKey", templateId);
 			}
 		}
-		else if (portletId.startsWith(PortletKeys.JOURNAL_CONTENT_LIST)) {
+		else if (portletId.startsWith(_PORTLET_ID_JOURNAL_CONTENT_LIST)) {
 			String structureId = preferences.getValue(
 				"structureId", StringPool.BLANK);
 
@@ -525,9 +557,15 @@ public class UpgradeJournal extends BaseUpgradePortletPreferences {
 		return PortletPreferencesFactoryUtil.toXML(preferences);
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(UpgradeJournal.class);
+	private static final String _PORTLET_ID_ASSET_PUBLISHER = "101";
 
-	private Map<String, Long> _ddmStructureIds = new HashMap<String, Long>();
-	private Map<Long, Long> _ddmStructurePKs = new HashMap<Long, Long>();
+	private static final String _PORTLET_ID_JOURNAL_CONTENT = "56";
+
+	private static final String _PORTLET_ID_JOURNAL_CONTENT_LIST = "62";
+
+	private static final Log _log = LogFactoryUtil.getLog(UpgradeJournal.class);
+
+	private final Map<String, Long> _ddmStructureIds = new HashMap<>();
+	private final Map<Long, Long> _ddmStructurePKs = new HashMap<>();
 
 }

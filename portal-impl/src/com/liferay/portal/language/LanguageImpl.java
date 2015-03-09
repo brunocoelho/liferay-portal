@@ -297,7 +297,7 @@ public class LanguageImpl implements Language, Serializable {
 	public String format(
 		ResourceBundle resourceBundle, String pattern, Object argument) {
 
-		return format(resourceBundle, pattern, new Object[]{argument}, true);
+		return format(resourceBundle, pattern, new Object[] {argument}, true);
 	}
 
 	@Override
@@ -499,7 +499,7 @@ public class LanguageImpl implements Language, Serializable {
 
 	@Override
 	public String getCharset(Locale locale) {
-		return _getInstance()._getCharset(locale);
+		return _getInstance()._getCharset();
 	}
 
 	@Override
@@ -539,7 +539,7 @@ public class LanguageImpl implements Language, Serializable {
 
 	@Override
 	public Locale[] getSupportedLocales() {
-		List<Locale> supportedLocales = new ArrayList<Locale>();
+		List<Locale> supportedLocales = new ArrayList<>();
 
 		Locale[] locales = getAvailableLocales();
 
@@ -714,17 +714,16 @@ public class LanguageImpl implements Language, Serializable {
 	public boolean isInheritLocales(long groupId) throws PortalException {
 		Group group = GroupLocalServiceUtil.getGroup(groupId);
 
-		Group liveGroup = group;
-
 		if (group.isStagingGroup()) {
-			liveGroup = group.getLiveGroup();
+			group = group.getLiveGroup();
 		}
 
-		UnicodeProperties groupTypeSettings =
-			liveGroup.getTypeSettingsProperties();
+		if (!group.isSite() || group.isCompany()) {
+			return true;
+		}
 
 		return GetterUtil.getBoolean(
-			groupTypeSettings.getProperty("inheritLocales"), true);
+			group.getTypeSettingsProperty("inheritLocales"), true);
 	}
 
 	@Override
@@ -816,11 +815,11 @@ public class LanguageImpl implements Language, Serializable {
 			}
 		}
 
-		_charEncodings = new HashMap<String, String>();
-		_duplicateLanguageCodes = new HashSet<String>();
+		_charEncodings = new HashMap<>();
+		_duplicateLanguageCodes = new HashSet<>();
 		_locales = new Locale[languageIds.length];
-		_localesMap = new HashMap<String, Locale>(languageIds.length);
-		_localesSet = new HashSet<Locale>(languageIds.length);
+		_localesMap = new HashMap<>(languageIds.length);
+		_localesSet = new HashSet<>(languageIds.length);
 
 		for (int i = 0; i < languageIds.length; i++) {
 			String languageId = languageIds[i];
@@ -852,7 +851,7 @@ public class LanguageImpl implements Language, Serializable {
 
 		String[] localesBetaArray = PropsValues.LOCALES_BETA;
 
-		_localesBetaSet = new HashSet<Locale>(localesBetaArray.length);
+		_localesBetaSet = new HashSet<>(localesBetaArray.length);
 
 		for (String languageId : localesBetaArray) {
 			Locale locale = LocaleUtil.fromLanguageId(languageId, false);
@@ -896,7 +895,7 @@ public class LanguageImpl implements Language, Serializable {
 		return null;
 	}
 
-	private String _getCharset(Locale locale) {
+	private String _getCharset() {
 		return StringPool.UTF8;
 	}
 
@@ -941,9 +940,8 @@ public class LanguageImpl implements Language, Serializable {
 		}
 
 		Locale[] locales = new Locale[languageIds.length];
-		Map<String, Locale> localesMap = new HashMap<String, Locale>(
-			languageIds.length);
-		Set<Locale> localesSet = new HashSet<Locale>(languageIds.length);
+		Map<String, Locale> localesMap = new HashMap<>(languageIds.length);
+		Set<Locale> localesSet = new HashSet<>(languageIds.length);
 
 		for (int i = 0; i < languageIds.length; i++) {
 			String languageId = languageIds[i];
@@ -980,14 +978,13 @@ public class LanguageImpl implements Language, Serializable {
 		_portalCache.remove(companyId);
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(LanguageImpl.class);
+	private static final Log _log = LogFactoryUtil.getLog(LanguageImpl.class);
 
-	private static Map<Long, LanguageImpl> _instances =
-		new ConcurrentHashMap<Long, LanguageImpl>();
-	private static Pattern _pattern = Pattern.compile(
+	private static final Map<Long, LanguageImpl> _instances =
+		new ConcurrentHashMap<>();
+	private static final Pattern _pattern = Pattern.compile(
 		"Liferay\\.Language\\.get\\([\"']([^)]+)[\"']\\)");
-
-	private static PortalCache<Long, Serializable> _portalCache =
+	private static final PortalCache<Long, Serializable> _portalCache =
 		MultiVMPoolUtil.getCache(LanguageImpl.class.getName());
 
 	static {
@@ -1006,15 +1003,13 @@ public class LanguageImpl implements Language, Serializable {
 			});
 	}
 
-	private Map<String, String> _charEncodings;
-	private Set<String> _duplicateLanguageCodes;
-	private Map<Long, Locale[]> _groupLocalesMap =
-		new HashMap<Long, Locale[]>();
-	private Map<Long, Set<Locale>> _groupLocalesSet =
-		new HashMap<Long, Set<Locale>>();
-	private Locale[] _locales;
-	private Set<Locale> _localesBetaSet;
-	private Map<String, Locale> _localesMap;
-	private Set<Locale> _localesSet;
+	private final Map<String, String> _charEncodings;
+	private final Set<String> _duplicateLanguageCodes;
+	private final Map<Long, Locale[]> _groupLocalesMap = new HashMap<>();
+	private final Map<Long, Set<Locale>> _groupLocalesSet = new HashMap<>();
+	private final Locale[] _locales;
+	private final Set<Locale> _localesBetaSet;
+	private final Map<String, Locale> _localesMap;
+	private final Set<Locale> _localesSet;
 
 }

@@ -149,20 +149,20 @@ public interface DLFileEntryMetadataLocalService extends BaseLocalService,
 		com.liferay.portal.kernel.util.OrderByComparator<T> orderByComparator);
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery);
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,
@@ -250,6 +250,12 @@ public interface DLFileEntryMetadataLocalService extends BaseLocalService,
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public long getFileVersionFileEntryMetadatasCount(long fileVersionId);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public java.util.List<com.liferay.portlet.documentlibrary.model.DLFileEntryMetadata> getMismatchedCompanyIdFileEntryMetadatas();
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public java.util.List<com.liferay.portlet.documentlibrary.model.DLFileEntryMetadata> getNoStructuresFileEntryMetadatas();
+
 	@Override
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public com.liferay.portal.model.PersistedModel getPersistedModel(
@@ -276,13 +282,13 @@ public interface DLFileEntryMetadataLocalService extends BaseLocalService,
 	public void updateFileEntryMetadata(long companyId,
 		java.util.List<com.liferay.portlet.dynamicdatamapping.model.DDMStructure> ddmStructures,
 		long fileEntryTypeId, long fileEntryId, long fileVersionId,
-		java.util.Map<java.lang.String, com.liferay.portlet.dynamicdatamapping.storage.Fields> fieldsMap,
+		java.util.Map<java.lang.String, com.liferay.portlet.dynamicdatamapping.storage.DDMFormValues> ddmFormValuesMap,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	public void updateFileEntryMetadata(long fileEntryTypeId, long fileEntryId,
 		long fileVersionId,
-		java.util.Map<java.lang.String, com.liferay.portlet.dynamicdatamapping.storage.Fields> fieldsMap,
+		java.util.Map<java.lang.String, com.liferay.portlet.dynamicdatamapping.storage.DDMFormValues> ddmFormValuesMap,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException;
 }

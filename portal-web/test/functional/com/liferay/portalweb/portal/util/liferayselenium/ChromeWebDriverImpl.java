@@ -14,7 +14,7 @@
 
 package com.liferay.portalweb.portal.util.liferayselenium;
 
-import com.liferay.portalweb.portal.util.TestPropsValues;
+import com.liferay.portalweb.util.TestPropsValues;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,12 +32,12 @@ public class ChromeWebDriverImpl extends BaseWebDriverImpl {
 			projectDirName, browserURL, new ChromeDriver(_desiredCapabilities));
 	}
 
-	private static DesiredCapabilities _desiredCapabilities = null;
+	private static final DesiredCapabilities _desiredCapabilities;
 
 	static {
 		_desiredCapabilities = DesiredCapabilities.chrome();
 
-		Map<String, Object> preferences = new HashMap<String, Object>();
+		Map<String, Object> preferences = new HashMap<>();
 
 		preferences.put(
 			"download.default_directory", TestPropsValues.OUTPUT_DIR_NAME);

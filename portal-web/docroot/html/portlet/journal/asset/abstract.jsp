@@ -17,9 +17,8 @@
 <%@ include file="/html/portlet/journal/init.jsp" %>
 
 <%
-AssetRenderer assetRenderer = (AssetRenderer)request.getAttribute(WebKeys.ASSET_RENDERER);
-int abstractLength = (Integer)request.getAttribute(WebKeys.ASSET_PUBLISHER_ABSTRACT_LENGTH);
-String viewURL = (String)request.getAttribute(WebKeys.ASSET_PUBLISHER_VIEW_URL);
+int abstractLength = GetterUtil.getInteger(request.getAttribute(WebKeys.ASSET_ENTRY_ABSTRACT_LENGTH), AssetUtil.ASSET_ENTRY_ABSTRACT_LENGTH);
+String viewURL = (String)request.getAttribute(WebKeys.ASSET_ENTRY_VIEW_URL);
 
 JournalArticle article = (JournalArticle)request.getAttribute(WebKeys.JOURNAL_ARTICLE);
 JournalArticleResource articleResource = JournalArticleResourceLocalServiceUtil.getArticleResource(article.getResourcePrimKey());
@@ -39,27 +38,15 @@ else {
 %>
 
 <c:if test="<%= articleDisplay.isSmallImage() %>">
-
-	<%
-	String src = StringPool.BLANK;
-
-	if (Validator.isNotNull(articleDisplay.getSmallImageURL())) {
-		src = articleDisplay.getSmallImageURL();
-	}
-	else {
-		src = themeDisplay.getPathImage() + "/journal/article?img_id=" + articleDisplay.getSmallImageId() + "&t=" + WebServerServletTokenUtil.getToken(articleDisplay.getSmallImageId()) ;
-	}
-	%>
-
 	<div class="asset-small-image">
 		<c:choose>
 			<c:when test="<%= Validator.isNotNull(viewURL) %>">
 				<a href="<%= viewURL %>">
-					<img alt="<%= HtmlUtil.escapeAttribute(articleDisplay.getTitle()) %>" class="asset-small-image img-thumbnail" src="<%= HtmlUtil.escapeAttribute(src) %>" width="150" />
+					<img alt="<%= HtmlUtil.escapeAttribute(articleDisplay.getTitle()) %>" class="asset-small-image img-thumbnail" src="<%= HtmlUtil.escapeAttribute(articleDisplay.getArticleDisplayImageURL(themeDisplay)) %>" width="150" />
 				</a>
 			</c:when>
 			<c:otherwise>
-				<img alt="" class="asset-small-image img-thumbnail" src="<%= HtmlUtil.escape(src) %>" width="150" />
+				<img alt="" class="asset-small-image img-thumbnail" src="<%= HtmlUtil.escapeAttribute(articleDisplay.getArticleDisplayImageURL(themeDisplay)) %>" width="150" />
 			</c:otherwise>
 		</c:choose>
 	</div>

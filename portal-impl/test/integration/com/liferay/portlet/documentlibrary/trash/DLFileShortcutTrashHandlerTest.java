@@ -16,21 +16,21 @@ package com.liferay.portlet.documentlibrary.trash;
 
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.Sync;
+import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
+import com.liferay.portal.kernel.test.util.GroupTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.BaseModel;
 import com.liferay.portal.model.ClassedModel;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.service.ServiceContext;
-import com.liferay.portal.test.Sync;
-import com.liferay.portal.test.SynchronousDestinationExecutionTestListener;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
-import com.liferay.portal.util.test.GroupTestUtil;
-import com.liferay.portal.util.test.RandomTestUtil;
-import com.liferay.portal.util.test.ServiceContextTestUtil;
-import com.liferay.portal.util.test.TestPropsValues;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portlet.documentlibrary.model.DLFileShortcut;
 import com.liferay.portlet.documentlibrary.model.DLFolder;
 import com.liferay.portlet.documentlibrary.model.DLFolderConstants;
@@ -39,25 +39,27 @@ import com.liferay.portlet.documentlibrary.service.DLAppServiceUtil;
 import com.liferay.portlet.documentlibrary.service.DLFileShortcutLocalServiceUtil;
 import com.liferay.portlet.documentlibrary.service.DLFolderLocalServiceUtil;
 import com.liferay.portlet.documentlibrary.util.test.DLAppTestUtil;
-import com.liferay.portlet.trash.BaseTrashHandlerTestCase;
+import com.liferay.portlet.trash.test.BaseTrashHandlerTestCase;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Zsolt Berentey
  * @author Eudaldo Alonso
  */
-@ExecutionTestListeners(
-	listeners = {
-		MainServletExecutionTestListener.class,
-		SynchronousDestinationExecutionTestListener.class
-	})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 @Sync
 public class DLFileShortcutTrashHandlerTest extends BaseTrashHandlerTestCase {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE,
+			SynchronousDestinationTestRule.INSTANCE);
 
 	@Ignore()
 	@Override
@@ -144,12 +146,10 @@ public class DLFileShortcutTrashHandlerTest extends BaseTrashHandlerTestCase {
 			long groupId, long folderId, ServiceContext serviceContext)
 		throws Exception {
 
-		serviceContext = (ServiceContext)serviceContext.clone();
-
-		serviceContext.setWorkflowAction(WorkflowConstants.ACTION_PUBLISH);
-
-		FileEntry fileEntry = DLAppTestUtil.addFileEntry(
-			groupId, DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, "Text.txt");
+		FileEntry fileEntry = DLAppTestUtil.addFileEntryWithWorkflow(
+			TestPropsValues.getUserId(), groupId,
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, "Text.txt", "Text.txt",
+			true, serviceContext);
 
 		return DLAppServiceUtil.addFileShortcut(
 			groupId, folderId, fileEntry.getFileEntryId(), serviceContext);

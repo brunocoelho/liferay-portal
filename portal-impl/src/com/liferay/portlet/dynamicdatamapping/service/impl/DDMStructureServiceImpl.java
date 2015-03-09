@@ -20,11 +20,13 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.security.permission.ActionKeys;
 import com.liferay.portal.security.permission.PermissionChecker;
 import com.liferay.portal.service.ServiceContext;
+import com.liferay.portlet.dynamicdatamapping.model.DDMForm;
+import com.liferay.portlet.dynamicdatamapping.model.DDMFormLayout;
 import com.liferay.portlet.dynamicdatamapping.model.DDMStructure;
 import com.liferay.portlet.dynamicdatamapping.service.base.DDMStructureServiceBaseImpl;
 import com.liferay.portlet.dynamicdatamapping.service.permission.DDMPermission;
 import com.liferay.portlet.dynamicdatamapping.service.permission.DDMStructurePermission;
-import com.liferay.portlet.dynamicdatamapping.util.DDMDisplay;
+import com.liferay.portlet.dynamicdatamapping.util.DDMPermissionHandler;
 import com.liferay.portlet.dynamicdatamapping.util.DDMUtil;
 
 import java.util.Iterator;
@@ -43,26 +45,52 @@ import java.util.Map;
  */
 public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 
+	@Override
+	public DDMStructure addStructure(
+			long userId, long groupId, long classNameId,
+			Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
+			DDMForm ddmForm, DDMFormLayout ddmFormLayout,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		DDMPermissionHandler ddmPermissionHandler =
+			DDMUtil.getDDMPermissionHandler(classNameId);
+
+		DDMPermission.check(
+			getPermissionChecker(), serviceContext.getScopeGroupId(),
+			ddmPermissionHandler.getResourceName(classNameId),
+			ddmPermissionHandler.getAddStructureActionId());
+
+		return ddmStructureLocalService.addStructure(
+			getUserId(), groupId, classNameId, nameMap, descriptionMap, ddmForm,
+			ddmFormLayout, serviceContext);
+	}
+
 	/**
 	 * Adds a structure referencing a default parent structure, using the portal
 	 * property <code>dynamic.data.lists.storage.type</code> storage type and
 	 * default structure type.
 	 *
-	 * @param  userId the primary key of the structure's creator/owner
-	 * @param  groupId the primary key of the group
-	 * @param  classNameId the primary key of the class name for the structure's
-	 *         related model
-	 * @param  nameMap the structure's locales and localized names
-	 * @param  descriptionMap the structure's locales and localized descriptions
-	 * @param  xsd the structure's XML schema definition
-	 * @param  serviceContext the service context to be applied. Can set the
-	 *         UUID, creation date, modification date, guest permissions, and
-	 *         group permissions for the structure.
-	 * @return the structure
-	 * @throws PortalException if a user with the primary key could not be
-	 *         found, if the user did not have permission to add the structure,
-	 *         if the XSD was not well-formed, or if a portal exception occurred
+	 * @param      userId the primary key of the structure's creator/owner
+	 * @param      groupId the primary key of the group
+	 * @param      classNameId the primary key of the class name for the
+	 *             structure's related model
+	 * @param      nameMap the structure's locales and localized names
+	 * @param      descriptionMap the structure's locales and localized
+	 *             descriptions
+	 * @param      xsd the structure's XML schema definition
+	 * @param      serviceContext the service context to be applied. Can set the
+	 *             UUID, creation date, modification date, guest permissions,
+	 *             and group permissions for the structure.
+	 * @return     the structure
+	 * @throws     PortalException if a user with the primary key could not be
+	 *             found, if the user did not have permission to add the
+	 *             structure, if the XSD was not well-formed, or if a portal
+	 *             exception occurred
+	 * @deprecated As of 7.0.0, replaced by {@link #addStructure(long, long,
+	 *             long, Map, Map, DDMForm, DDMFormLayout, ServiceContext)}
 	 */
+	@Deprecated
 	@Override
 	public DDMStructure addStructure(
 			long userId, long groupId, long classNameId,
@@ -70,44 +98,74 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 			String xsd, ServiceContext serviceContext)
 		throws PortalException {
 
-		DDMDisplay ddmDisplay = DDMUtil.getDDMDisplay(serviceContext);
+		DDMPermissionHandler ddmPermissionHandler =
+			DDMUtil.getDDMPermissionHandler(classNameId);
 
 		DDMPermission.check(
 			getPermissionChecker(), serviceContext.getScopeGroupId(),
-			ddmDisplay.getResourceName(), ddmDisplay.getAddStructureActionId());
+			ddmPermissionHandler.getResourceName(classNameId),
+			ddmPermissionHandler.getAddStructureActionId());
 
 		return ddmStructureLocalService.addStructure(
 			getUserId(), groupId, classNameId, nameMap, descriptionMap, xsd,
 			serviceContext);
 	}
 
+	@Override
+	public DDMStructure addStructure(
+			long groupId, long parentStructureId, long classNameId,
+			String structureKey, Map<Locale, String> nameMap,
+			Map<Locale, String> descriptionMap, DDMForm ddmForm,
+			DDMFormLayout ddmFormLayout, String storageType, int type,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		DDMPermissionHandler ddmPermissionHandler =
+			DDMUtil.getDDMPermissionHandler(classNameId);
+
+		DDMPermission.check(
+			getPermissionChecker(), serviceContext.getScopeGroupId(),
+			ddmPermissionHandler.getResourceName(classNameId),
+			ddmPermissionHandler.getAddStructureActionId());
+
+		return ddmStructureLocalService.addStructure(
+			getUserId(), groupId, parentStructureId, classNameId, structureKey,
+			nameMap, descriptionMap, ddmForm, ddmFormLayout, storageType, type,
+			serviceContext);
+	}
+
 	/**
 	 * Adds a structure referencing its parent structure.
 	 *
-	 * @param  groupId the primary key of the group
-	 * @param  parentStructureId the primary key of the parent structure
-	 *         (optionally {@link
-	 *         com.liferay.portlet.dynamicdatamapping.model.DDMStructureConstants#DEFAULT_PARENT_STRUCTURE_ID})
-	 * @param  classNameId the primary key of the class name for the structure's
-	 *         related model
-	 * @param  structureKey the unique string identifying the structure
-	 *         (optionally <code>null</code>)
-	 * @param  nameMap the structure's locales and localized names
-	 * @param  descriptionMap the structure's locales and localized descriptions
-	 * @param  xsd the structure's XML schema definition
-	 * @param  storageType the structure's storage type. It can be "xml" or
-	 *         "expando". For more information, see {@link
-	 *         com.liferay.portlet.dynamicdatamapping.storage.StorageType}.
-	 * @param  type the structure's type. For more information, see {@link
-	 *         com.liferay.portlet.dynamicdatamapping.model.DDMStructureConstants}.
-	 * @param  serviceContext the service context to be applied. Can set the
-	 *         UUID, creation date, modification date, guest permissions, and
-	 *         group permissions for the structure.
-	 * @return the structure
-	 * @throws PortalException if the user did not have permission to add the
-	 *         structure, if the XSD is not well formed, or if a portal
-	 *         exception occurred
+	 * @param      groupId the primary key of the group
+	 * @param      parentStructureId the primary key of the parent structure
+	 *             (optionally {@link
+	 *             com.liferay.portlet.dynamicdatamapping.model.DDMStructureConstants#DEFAULT_PARENT_STRUCTURE_ID})
+	 * @param      classNameId the primary key of the class name for the
+	 *             structure's related model
+	 * @param      structureKey the unique string identifying the structure
+	 *             (optionally <code>null</code>)
+	 * @param      nameMap the structure's locales and localized names
+	 * @param      descriptionMap the structure's locales and localized
+	 *             descriptions
+	 * @param      xsd the structure's XML schema definition
+	 * @param      storageType the structure's storage type. It can be "xml" or
+	 *             "expando". For more information, see {@link
+	 *             com.liferay.portlet.dynamicdatamapping.storage.StorageType}.
+	 * @param      type the structure's type. For more information, see {@link
+	 *             com.liferay.portlet.dynamicdatamapping.model.DDMStructureConstants}.
+	 * @param      serviceContext the service context to be applied. Can set the
+	 *             UUID, creation date, modification date, guest permissions,
+	 *             and group permissions for the structure.
+	 * @return     the structure
+	 * @throws     PortalException if the user did not have permission to add
+	 *             the structure, if the XSD is not well formed, or if a portal
+	 *             exception occurred
+	 * @deprecated As of 7.0.0, replaced by {@link #addStructure(long, long,
+	 *             long, String, Map, Map, DDMForm, DDMFormLayout, String, int,
+	 *             ServiceContext)}
 	 */
+	@Deprecated
 	@Override
 	public DDMStructure addStructure(
 			long groupId, long parentStructureId, long classNameId,
@@ -116,15 +174,40 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 			int type, ServiceContext serviceContext)
 		throws PortalException {
 
-		DDMDisplay ddmDisplay = DDMUtil.getDDMDisplay(serviceContext);
+		DDMPermissionHandler ddmPermissionHandler =
+			DDMUtil.getDDMPermissionHandler(classNameId);
 
 		DDMPermission.check(
 			getPermissionChecker(), serviceContext.getScopeGroupId(),
-			ddmDisplay.getResourceName(), ddmDisplay.getAddStructureActionId());
+			ddmPermissionHandler.getResourceName(classNameId),
+			ddmPermissionHandler.getAddStructureActionId());
 
 		return ddmStructureLocalService.addStructure(
 			getUserId(), groupId, parentStructureId, classNameId, structureKey,
 			nameMap, descriptionMap, xsd, storageType, type, serviceContext);
+	}
+
+	@Override
+	public DDMStructure addStructure(
+			long userId, long groupId, String parentStructureKey,
+			long classNameId, String structureKey, Map<Locale, String> nameMap,
+			Map<Locale, String> descriptionMap, DDMForm ddmForm,
+			DDMFormLayout ddmFormLayout, String storageType, int type,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		DDMPermissionHandler ddmPermissionHandler =
+			DDMUtil.getDDMPermissionHandler(classNameId);
+
+		DDMPermission.check(
+			getPermissionChecker(), serviceContext.getScopeGroupId(),
+			ddmPermissionHandler.getResourceName(classNameId),
+			ddmPermissionHandler.getAddStructureActionId());
+
+		return ddmStructureLocalService.addStructure(
+			userId, groupId, parentStructureKey, classNameId, structureKey,
+			nameMap, descriptionMap, ddmForm, ddmFormLayout, storageType, type,
+			serviceContext);
 	}
 
 	/**
@@ -132,30 +215,37 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 	 * In case the parent structure is not found, it uses the default parent
 	 * structure ID.
 	 *
-	 * @param  userId the primary key of the structure's creator/owner
-	 * @param  groupId the primary key of the group
-	 * @param  parentStructureKey the unique string identifying the structure
-	 * @param  classNameId the primary key of the class name for the structure's
-	 *         related model
-	 * @param  structureKey unique string identifying the structure (optionally
-	 *         <code>null</code>)
-	 * @param  nameMap the structure's locales and localized names
-	 * @param  descriptionMap the structure's locales and localized descriptions
-	 * @param  xsd the XML schema definition of the structure
-	 * @param  storageType the storage type of the structure. It can be XML or
-	 *         expando. For more information, see {@link
-	 *         com.liferay.portlet.dynamicdatamapping.storage.StorageType}.
-	 * @param  type the structure's type. For more information, see {@link
-	 *         com.liferay.portlet.dynamicdatamapping.model.DDMStructureConstants}.
-	 * @param  serviceContext the service context to be applied. Must have the
-	 *         <code>ddmResource</code> attribute to check permissions. Can set
-	 *         the UUID, creation date, modification date, guest permissions,
-	 *         and group permissions for the structure.
-	 * @return the structure
-	 * @throws PortalException if a user with the primary key could not be
-	 *         found, if the user did not have permission to add the structure,
-	 *         if the XSD was not well-formed, or if a portal exception occurred
+	 * @param      userId the primary key of the structure's creator/owner
+	 * @param      groupId the primary key of the group
+	 * @param      parentStructureKey the unique string identifying the
+	 *             structure
+	 * @param      classNameId the primary key of the class name for the
+	 *             structure's related model
+	 * @param      structureKey unique string identifying the structure
+	 *             (optionally <code>null</code>)
+	 * @param      nameMap the structure's locales and localized names
+	 * @param      descriptionMap the structure's locales and localized
+	 *             descriptions
+	 * @param      xsd the XML schema definition of the structure
+	 * @param      storageType the storage type of the structure. It can be XML
+	 *             or expando. For more information, see {@link
+	 *             com.liferay.portlet.dynamicdatamapping.storage.StorageType}.
+	 * @param      type the structure's type. For more information, see {@link
+	 *             com.liferay.portlet.dynamicdatamapping.model.DDMStructureConstants}.
+	 * @param      serviceContext the service context to be applied. Must have
+	 *             the <code>ddmResource</code> attribute to check permissions.
+	 *             Can set the UUID, creation date, modification date, guest
+	 *             permissions, and group permissions for the structure.
+	 * @return     the structure
+	 * @throws     PortalException if a user with the primary key could not be
+	 *             found, if the user did not have permission to add the
+	 *             structure, if the XSD was not well-formed, or if a portal
+	 *             exception occurred
+	 * @deprecated As of 7.0.0, replaced by {@link #addStructure(long, long,
+	 *             String, long, String, Map, Map, DDMForm, DDMFormLayout,
+	 *             String, int, ServiceContext)}
 	 */
+	@Deprecated
 	@Override
 	public DDMStructure addStructure(
 			long userId, long groupId, String parentStructureKey,
@@ -164,11 +254,13 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 			int type, ServiceContext serviceContext)
 		throws PortalException {
 
-		DDMDisplay ddmDisplay = DDMUtil.getDDMDisplay(serviceContext);
+		DDMPermissionHandler ddmPermissionHandler =
+			DDMUtil.getDDMPermissionHandler(classNameId);
 
 		DDMPermission.check(
 			getPermissionChecker(), serviceContext.getScopeGroupId(),
-			ddmDisplay.getResourceName(), ddmDisplay.getAddStructureActionId());
+			ddmPermissionHandler.getResourceName(classNameId),
+			ddmPermissionHandler.getAddStructureActionId());
 
 		return ddmStructureLocalService.addStructure(
 			userId, groupId, parentStructureKey, classNameId, structureKey,
@@ -197,11 +289,16 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 			Map<Locale, String> descriptionMap, ServiceContext serviceContext)
 		throws PortalException {
 
-		DDMDisplay ddmDisplay = DDMUtil.getDDMDisplay(serviceContext);
+		DDMStructure structure = ddmStructurePersistence.findByPrimaryKey(
+			structureId);
+
+		DDMPermissionHandler ddmPermissionHandler =
+			DDMUtil.getDDMPermissionHandler(structure.getClassNameId());
 
 		DDMPermission.check(
 			getPermissionChecker(), serviceContext.getScopeGroupId(),
-			ddmDisplay.getResourceName(), ddmDisplay.getAddStructureActionId());
+			ddmPermissionHandler.getResourceName(structure.getClassNameId()),
+			ddmPermissionHandler.getAddStructureActionId());
 
 		return ddmStructureLocalService.copyStructure(
 			getUserId(), structureId, nameMap, descriptionMap, serviceContext);
@@ -212,11 +309,16 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 			long structureId, ServiceContext serviceContext)
 		throws PortalException {
 
-		DDMDisplay ddmDisplay = DDMUtil.getDDMDisplay(serviceContext);
+		DDMStructure structure = ddmStructurePersistence.findByPrimaryKey(
+			structureId);
+
+		DDMPermissionHandler ddmPermissionHandler =
+			DDMUtil.getDDMPermissionHandler(structure.getClassNameId());
 
 		DDMPermission.check(
 			getPermissionChecker(), serviceContext.getScopeGroupId(),
-			ddmDisplay.getResourceName(), ddmDisplay.getAddStructureActionId());
+			ddmPermissionHandler.getResourceName(structure.getClassNameId()),
+			ddmPermissionHandler.getAddStructureActionId());
 
 		return ddmStructureLocalService.copyStructure(
 			getUserId(), structureId, serviceContext);
@@ -324,20 +426,23 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 
 	/**
 	 * Returns the structure matching the class name ID, structure key, and
-	 * group, optionally in the global scope.
+	 * group, optionally searching ancestor sites (that have sharing enabled)
+	 * and global scoped sites.
 	 *
 	 * <p>
 	 * This method first searches in the group. If the structure is still not
 	 * found and <code>includeAncestorStructures</code> is set to
-	 * <code>true</code>, this method searches the global group.
+	 * <code>true</code>, this method searches the group's ancestor sites (that
+	 * have sharing enabled) and lastly searches global scoped sites.
 	 * </p>
 	 *
 	 * @param  groupId the primary key of the structure's group
 	 * @param  classNameId the primary key of the class name for the structure's
 	 *         related model
 	 * @param  structureKey the unique string identifying the structure
-	 * @param  includeAncestorStructures whether to include the global scope in
-	 *         the search
+	 * @param  includeAncestorStructures whether to include ancestor sites (that
+	 *         have sharing enabled) and include global scoped sites in the
+	 *         search
 	 * @return the matching structure
 	 * @throws PortalException if the user did not have permission to view the
 	 *         structure or if a matching structure could not be found
@@ -420,8 +525,8 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 	 *
 	 * @param  companyId the primary key of the structure's company
 	 * @param  groupIds the primary keys of the groups
-	 * @param  classNameIds the primary keys of the class names of the models
-	 *         the structures are related to
+	 * @param  classNameId the primary key of the class name of the model the
+	 *         structure is related to
 	 * @param  keywords the keywords (space separated), which may occur in the
 	 *         structure's name or description (optionally <code>null</code>)
 	 * @param  start the lower bound of the range of structures to return
@@ -433,11 +538,11 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 	 */
 	@Override
 	public List<DDMStructure> search(
-		long companyId, long[] groupIds, long[] classNameIds, String keywords,
+		long companyId, long[] groupIds, long classNameId, String keywords,
 		int start, int end, OrderByComparator<DDMStructure> orderByComparator) {
 
 		return ddmStructureFinder.filterFindByKeywords(
-			companyId, groupIds, classNameIds, keywords, start, end,
+			companyId, groupIds, classNameId, keywords, start, end,
 			orderByComparator);
 	}
 
@@ -457,8 +562,8 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 	 *
 	 * @param  companyId the primary key of the structure's company
 	 * @param  groupIds the primary keys of the groups
-	 * @param  classNameIds the primary keys of the class names of the models
-	 *         the structures are related to
+	 * @param  classNameId the primary key of the class name of the model the
+	 *         structure is related to
 	 * @param  name the name keywords
 	 * @param  description the description keywords
 	 * @param  storageType the structure's storage type. It can be "xml" or
@@ -477,12 +582,12 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 	 */
 	@Override
 	public List<DDMStructure> search(
-		long companyId, long[] groupIds, long[] classNameIds, String name,
+		long companyId, long[] groupIds, long classNameId, String name,
 		String description, String storageType, int type, boolean andOperator,
 		int start, int end, OrderByComparator<DDMStructure> orderByComparator) {
 
 		return ddmStructureFinder.filterFindByC_G_C_N_D_S_T(
-			companyId, groupIds, classNameIds, name, description, storageType,
+			companyId, groupIds, classNameId, name, description, storageType,
 			type, andOperator, start, end, orderByComparator);
 	}
 
@@ -492,18 +597,18 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 	 *
 	 * @param  companyId the primary key of the structure's company
 	 * @param  groupIds the primary keys of the groups
-	 * @param  classNameIds the primary keys of the class names of the models
-	 *         the structures are related to
+	 * @param  classNameId the primary key of the class name of the model the
+	 *         structure is related to
 	 * @param  keywords the keywords (space separated), which may occur in the
 	 *         structure's name or description (optionally <code>null</code>)
 	 * @return the number of matching structures
 	 */
 	@Override
 	public int searchCount(
-		long companyId, long[] groupIds, long[] classNameIds, String keywords) {
+		long companyId, long[] groupIds, long classNameId, String keywords) {
 
 		return ddmStructureFinder.filterCountByKeywords(
-			companyId, groupIds, classNameIds, keywords);
+			companyId, groupIds, classNameId, keywords);
 	}
 
 	/**
@@ -512,8 +617,8 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 	 *
 	 * @param  companyId the primary key of the structure's company
 	 * @param  groupIds the primary keys of the groups
-	 * @param  classNameIds the primary keys of the class names of the models
-	 *         the structure's are related to
+	 * @param  classNameId the primary key of the class name of the model the
+	 *         structure is related to
 	 * @param  name the name keywords
 	 * @param  description the description keywords
 	 * @param  storageType the structure's storage type. It can be "xml" or
@@ -527,12 +632,29 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 	 */
 	@Override
 	public int searchCount(
-		long companyId, long[] groupIds, long[] classNameIds, String name,
+		long companyId, long[] groupIds, long classNameId, String name,
 		String description, String storageType, int type, boolean andOperator) {
 
 		return ddmStructureFinder.filterCountByC_G_C_N_D_S_T(
-			companyId, groupIds, classNameIds, name, description, storageType,
+			companyId, groupIds, classNameId, name, description, storageType,
 			type, andOperator);
+	}
+
+	@Override
+	public DDMStructure updateStructure(
+			long groupId, long parentStructureId, long classNameId,
+			String structureKey, Map<Locale, String> nameMap,
+			Map<Locale, String> descriptionMap, DDMForm ddmForm,
+			DDMFormLayout ddmFormLayout, ServiceContext serviceContext)
+		throws PortalException {
+
+		DDMStructurePermission.check(
+			getPermissionChecker(), groupId, classNameId, structureKey,
+			ActionKeys.UPDATE);
+
+		return ddmStructureLocalService.updateStructure(
+			groupId, parentStructureId, classNameId, structureKey, nameMap,
+			descriptionMap, ddmForm, ddmFormLayout, serviceContext);
 	}
 
 	/**
@@ -540,26 +662,30 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 	 * group, replacing its old parent structure, name map, description map, and
 	 * XSD with new ones.
 	 *
-	 * @param  groupId the primary key of the group
-	 * @param  parentStructureId the primary key of the new parent structure
-	 * @param  classNameId the primary key of the class name for the structure's
-	 *         related model
-	 * @param  structureKey the unique string identifying the structure
-	 * @param  nameMap the structure's new locales and localized names
-	 * @param  descriptionMap the structure's new locales and localized
-	 *         description
-	 * @param  xsd the structure's new XML schema definition
-	 * @param  serviceContext the service context to be applied. Can set the
-	 *         modification date.
-	 * @return the updated structure
-	 * @throws PortalException if the user did not have permission to update the
-	 *         structure or if a portal exception occurred
+	 * @param      groupId the primary key of the group
+	 * @param      parentStructureId the primary key of the new parent structure
+	 * @param      classNameId the primary key of the class name for the
+	 *             structure's related model
+	 * @param      structureKey the unique string identifying the structure
+	 * @param      nameMap the structure's new locales and localized names
+	 * @param      descriptionMap the structure's new locales and localized
+	 *             description
+	 * @param      definition the structure's new XML schema definition
+	 * @param      serviceContext the service context to be applied. Can set the
+	 *             modification date.
+	 * @return     the updated structure
+	 * @throws     PortalException if the user did not have permission to update
+	 *             the structure or if a portal exception occurred
+	 * @deprecated As of 7.0.0, replaced by {@link #updateStructure(long, long,
+	 *             long, String, Map, Map, DDMForm, DDMFormLayout,
+	 *             ServiceContext)}
 	 */
+	@Deprecated
 	@Override
 	public DDMStructure updateStructure(
 			long groupId, long parentStructureId, long classNameId,
 			String structureKey, Map<Locale, String> nameMap,
-			Map<Locale, String> descriptionMap, String xsd,
+			Map<Locale, String> descriptionMap, String definition,
 			ServiceContext serviceContext)
 		throws PortalException {
 
@@ -569,37 +695,56 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 
 		return ddmStructureLocalService.updateStructure(
 			groupId, parentStructureId, classNameId, structureKey, nameMap,
-			descriptionMap, xsd, serviceContext);
+			descriptionMap, definition, serviceContext);
 	}
 
-	/**
-	 * Updates the structure matching the structure ID, replacing the old parent
-	 * structure ID, name map, description map, and XSD with the new values.
-	 *
-	 * @param  structureId the primary key of the structure
-	 * @param  parentStructureId the new parent structure primary key
-	 * @param  nameMap the structure's new locales and localized names
-	 * @param  descriptionMap the structure's new locales and localized
-	 *         description
-	 * @param  xsd the new XML schema definition of the structure
-	 * @param  serviceContext the service context to be applied. Can set the
-	 *         modification date.
-	 * @return the updated structure
-	 * @throws PortalException if the user did not have permission to update the
-	 *         structure or if a portal exception occurred
-	 */
 	@Override
 	public DDMStructure updateStructure(
 			long structureId, long parentStructureId,
 			Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
-			String xsd, ServiceContext serviceContext)
+			DDMForm ddmForm, DDMFormLayout ddmFormLayout,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		DDMStructurePermission.check(
 			getPermissionChecker(), structureId, ActionKeys.UPDATE);
 
 		return ddmStructureLocalService.updateStructure(
-			structureId, parentStructureId, nameMap, descriptionMap, xsd,
+			structureId, parentStructureId, nameMap, descriptionMap, ddmForm,
+			ddmFormLayout, serviceContext);
+	}
+
+	/**
+	 * Updates the structure matching the structure ID, replacing the old parent
+	 * structure ID, name map, description map, and XSD with the new values.
+	 *
+	 * @param      structureId the primary key of the structure
+	 * @param      parentStructureId the new parent structure primary key
+	 * @param      nameMap the structure's new locales and localized names
+	 * @param      descriptionMap the structure's new locales and localized
+	 *             description
+	 * @param      definition the new XML schema definition of the structure
+	 * @param      serviceContext the service context to be applied. Can set the
+	 *             modification date.
+	 * @return     the updated structure
+	 * @throws     PortalException if the user did not have permission to update
+	 *             the structure or if a portal exception occurred
+	 * @deprecated As of 7.0.0, replaced by {@link #updateStructure(long, long,
+	 *             Map, Map, DDMForm, DDMFormLayout, ServiceContext)}
+	 */
+	@Deprecated
+	@Override
+	public DDMStructure updateStructure(
+			long structureId, long parentStructureId,
+			Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
+			String definition, ServiceContext serviceContext)
+		throws PortalException {
+
+		DDMStructurePermission.check(
+			getPermissionChecker(), structureId, ActionKeys.UPDATE);
+
+		return ddmStructureLocalService.updateStructure(
+			structureId, parentStructureId, nameMap, descriptionMap, definition,
 			serviceContext);
 	}
 

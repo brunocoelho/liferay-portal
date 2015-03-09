@@ -29,13 +29,25 @@ Map<String, String[]> parameterMap = (Map<String, String[]>)GetterUtil.getObject
 String type = GetterUtil.getString(request.getAttribute("liferay-staging:content:type"));
 
 DateRange dateRange = null;
+String defaultRange = null;
+long exportGroupId = groupId;
 
 if (type.equals(Constants.EXPORT)) {
-	dateRange = ExportImportDateUtil.getDateRange(renderRequest, liveGroupId, privateLayout, 0, null, ExportImportDateUtil.RANGE_ALL);
+	defaultRange = ExportImportDateUtil.RANGE_ALL;
+
+	if (liveGroupId > 0) {
+		exportGroupId = liveGroupId;
+	}
 }
 else {
-	dateRange = ExportImportDateUtil.getDateRange(renderRequest, stagingGroupId, privateLayout, 0, null, ExportImportDateUtil.RANGE_FROM_LAST_PUBLISH_DATE);
+	defaultRange = ExportImportDateUtil.RANGE_FROM_LAST_PUBLISH_DATE;
+
+	if (stagingGroupId > 0) {
+		exportGroupId = stagingGroupId;
+	}
 }
+
+dateRange = ExportImportDateUtil.getDateRange(renderRequest, exportGroupId, privateLayout, 0, null, defaultRange);
 
 Date startDate = dateRange.getStartDate();
 Date endDate = dateRange.getEndDate();

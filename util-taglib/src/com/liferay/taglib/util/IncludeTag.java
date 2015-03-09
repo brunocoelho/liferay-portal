@@ -21,11 +21,16 @@ import com.liferay.portal.kernel.portlet.PortletBag;
 import com.liferay.portal.kernel.portlet.PortletBagPool;
 import com.liferay.portal.kernel.servlet.DirectRequestDispatcherFactoryUtil;
 import com.liferay.portal.kernel.servlet.TrackedServletRequest;
+import com.liferay.portal.kernel.servlet.taglib.TagDynamicIdFactory;
+import com.liferay.portal.kernel.servlet.taglib.TagDynamicIdFactoryRegistry;
+import com.liferay.portal.kernel.servlet.taglib.TagDynamicIncludeUtil;
 import com.liferay.portal.kernel.staging.StagingUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ServerDetector;
+import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -35,6 +40,7 @@ import com.liferay.portal.model.Theme;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.CustomJspRegistryUtil;
 import com.liferay.taglib.FileAvailabilityUtil;
+import com.liferay.taglib.servlet.JspWriterHttpServletResponse;
 import com.liferay.taglib.servlet.PipingServletResponse;
 
 import javax.servlet.RequestDispatcher;
@@ -78,10 +84,12 @@ public class IncludeTag extends AttributesTagSupport {
 			}
 
 			if (!FileAvailabilityUtil.isAvailable(servletContext, page)) {
+				logUnavailablePage(page);
+
 				return processEndTag();
 			}
 
-			doInclude(page);
+			doInclude(page, false);
 
 			return EVAL_PAGE;
 		}
@@ -118,10 +126,12 @@ public class IncludeTag extends AttributesTagSupport {
 			}
 
 			if (!FileAvailabilityUtil.isAvailable(servletContext, page)) {
+				logUnavailablePage(page);
+
 				return processStartTag();
 			}
 
-			doInclude(page);
+			doInclude(page, true);
 
 			return EVAL_BODY_INCLUDE;
 		}
@@ -188,9 +198,12 @@ public class IncludeTag extends AttributesTagSupport {
 		}
 	}
 
-	protected void doInclude(String page) throws JspException {
+	protected void doInclude(
+			String page, boolean dynamicIncludeAscendingPriority)
+		throws JspException {
+
 		try {
-			include(page);
+			include(page, dynamicIncludeAscendingPriority);
 		}
 		catch (Exception e) {
 			String currentURL = (String)request.getAttribute(
@@ -299,7 +312,39 @@ public class IncludeTag extends AttributesTagSupport {
 		return null;
 	}
 
-	protected void include(String page) throws Exception {
+	protected void include(String page, boolean doStartTag) throws Exception {
+		JspWriterHttpServletResponse jspWriterHttpServletResponse = null;
+
+		Class<?> clazz = getClass();
+
+		String tagClassName = clazz.getName();
+
+		String tagDynamicId = null;
+
+		String tagPointPrefix = null;
+
+		if (doStartTag) {
+			tagPointPrefix = "doStartTag#";
+		}
+		else {
+			tagPointPrefix = "doEndTag#";
+		}
+
+		TagDynamicIdFactory tagDynamicIdFactory =
+			TagDynamicIdFactoryRegistry.getTagDynamicIdFactory(tagClassName);
+
+		if (tagDynamicIdFactory != null) {
+			jspWriterHttpServletResponse = new JspWriterHttpServletResponse(
+				pageContext);
+
+			tagDynamicId = tagDynamicIdFactory.getTagDynamicId(
+				request, jspWriterHttpServletResponse, this);
+
+			TagDynamicIncludeUtil.include(
+				request, jspWriterHttpServletResponse, tagClassName,
+				tagDynamicId, tagPointPrefix + "before", doStartTag);
+		}
+
 		RequestDispatcher requestDispatcher =
 			DirectRequestDispatcherFactoryUtil.getRequestDispatcher(
 				servletContext, page);
@@ -312,14 +357,80 @@ public class IncludeTag extends AttributesTagSupport {
 		requestDispatcher.include(request, response);
 
 		request.removeAttribute(WebKeys.SERVLET_CONTEXT_INCLUDE_FILTER_STRICT);
+
+		if (tagDynamicIdFactory != null) {
+			TagDynamicIncludeUtil.include(
+				request, jspWriterHttpServletResponse, tagClassName,
+				tagDynamicId, tagPointPrefix + "after", doStartTag);
+		}
 	}
 
 	protected boolean isCleanUpSetAttributes() {
 		return _CLEAN_UP_SET_ATTRIBUTES;
 	}
 
+	protected boolean isPortalPage(String page) {
+		if (page.startsWith("/html/taglib/") &&
+			(page.endsWith("/end.jsp") || page.endsWith("/page.jsp") ||
+			 page.endsWith("/start.jsp"))) {
+
+			return true;
+		}
+
+		return false;
+	}
+
 	protected boolean isUseCustomPage() {
 		return _useCustomPage;
+	}
+
+	protected void logUnavailablePage(String page) {
+		if ((page == null) || !_log.isWarnEnabled()) {
+			return;
+		}
+
+		String contextPath = servletContext.getContextPath();
+
+		if (contextPath.equals(StringPool.BLANK)) {
+			contextPath = StringPool.SLASH;
+		}
+
+		StringBundler sb = new StringBundler(13);
+
+		sb.append("Unable to find ");
+		sb.append(page);
+		sb.append(" in the context ");
+		sb.append(contextPath);
+		sb.append(".");
+
+		if (isPortalPage(page)) {
+			if (contextPath.equals(StringPool.SLASH)) {
+				sb = null;
+			}
+			else {
+				sb.append(" You must not use a taglib from a module and ");
+				sb.append("set the attribute \"servletContext\". Inline the ");
+				sb.append("content directly where the taglib is invoked.");
+			}
+		}
+		else if (contextPath.equals(StringPool.SLASH)) {
+			Class<?> clazz = getClass();
+
+			if (clazz.equals(IncludeTag.class)) {
+				sb.append(" You must set the attribute \"servletContext\" ");
+				sb.append("with the value \"<%= application %>\" when ");
+				sb.append("invoking a taglib from a module.");
+			}
+			else {
+				sb.append(" You must not use a taglib from a module and ");
+				sb.append("set the attribute \"file\". Inline the content ");
+				sb.append("directly where the taglib is invoked.");
+			}
+		}
+
+		if (sb != null) {
+			_log.warn(sb.toString());
+		}
 	}
 
 	protected int processEndTag() throws Exception {
@@ -373,7 +484,7 @@ public class IncludeTag extends AttributesTagSupport {
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.THEME_JSP_OVERRIDE_ENABLED));
 
-	private static Log _log = LogFactoryUtil.getLog(IncludeTag.class);
+	private static final Log _log = LogFactoryUtil.getLog(IncludeTag.class);
 
 	private String _page;
 	private boolean _strict;

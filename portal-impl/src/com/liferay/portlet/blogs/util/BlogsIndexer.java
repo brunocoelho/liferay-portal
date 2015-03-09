@@ -26,12 +26,12 @@ import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchEngineUtil;
 import com.liferay.portal.kernel.search.Summary;
+import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.security.permission.ActionKeys;
 import com.liferay.portal.security.permission.PermissionChecker;
-import com.liferay.portal.util.PortletKeys;
 import com.liferay.portlet.blogs.model.BlogsEntry;
 import com.liferay.portlet.blogs.service.BlogsEntryLocalServiceUtil;
 import com.liferay.portlet.blogs.service.permission.BlogsEntryPermission;
@@ -41,7 +41,6 @@ import java.util.Locale;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
 
 /**
  * @author Brian Wing Shun Chan
@@ -49,28 +48,23 @@ import javax.portlet.PortletURL;
  * @author Bruno Farache
  * @author Raymond Augé
  */
+@OSGiBeanProperties
 public class BlogsIndexer extends BaseIndexer {
 
-	public static final String[] CLASS_NAMES = {BlogsEntry.class.getName()};
-
-	public static final String PORTLET_ID = PortletKeys.BLOGS;
+	public static final String CLASS_NAME = BlogsEntry.class.getName();
 
 	public BlogsIndexer() {
 		setDefaultSelectedFieldNames(
-			Field.COMPANY_ID, Field.CONTENT, Field.ENTRY_CLASS_NAME,
-			Field.ENTRY_CLASS_PK, Field.TITLE, Field.UID);
+			Field.ASSET_TAG_NAMES, Field.COMPANY_ID, Field.CONTENT,
+			Field.ENTRY_CLASS_NAME, Field.ENTRY_CLASS_PK, Field.GROUP_ID,
+			Field.MODIFIED_DATE, Field.SCOPE_GROUP_ID, Field.TITLE, Field.UID);
 		setFilterSearch(true);
 		setPermissionAware(true);
 	}
 
 	@Override
-	public String[] getClassNames() {
-		return CLASS_NAMES;
-	}
-
-	@Override
-	public String getPortletId() {
-		return PORTLET_ID;
+	public String getClassName() {
+		return CLASS_NAME;
 	}
 
 	@Override
@@ -109,7 +103,7 @@ public class BlogsIndexer extends BaseIndexer {
 	protected Document doGetDocument(Object obj) throws Exception {
 		BlogsEntry entry = (BlogsEntry)obj;
 
-		Document document = getBaseModelDocument(PORTLET_ID, entry);
+		Document document = getBaseModelDocument(CLASS_NAME, entry);
 
 		document.addText(
 			Field.CONTENT, HtmlUtil.extractText(entry.getContent()));
@@ -123,18 +117,12 @@ public class BlogsIndexer extends BaseIndexer {
 
 	@Override
 	protected Summary doGetSummary(
-		Document document, Locale locale, String snippet, PortletURL portletURL,
+		Document document, Locale locale, String snippet,
 		PortletRequest portletRequest, PortletResponse portletResponse) {
-
-		String entryId = document.get(Field.ENTRY_CLASS_PK);
-
-		portletURL.setParameter("struts_action", "/blogs/view_entry");
-		portletURL.setParameter("entryId", entryId);
 
 		Summary summary = createSummary(document);
 
 		summary.setMaxContentLength(200);
-		summary.setPortletURL(portletURL);
 
 		return summary;
 	}
@@ -162,11 +150,6 @@ public class BlogsIndexer extends BaseIndexer {
 		long companyId = GetterUtil.getLong(ids[0]);
 
 		reindexEntries(companyId);
-	}
-
-	@Override
-	protected String getPortletId(SearchContext searchContext) {
-		return PORTLET_ID;
 	}
 
 	protected void reindexEntries(long companyId) throws PortalException {

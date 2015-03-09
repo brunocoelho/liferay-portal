@@ -26,14 +26,14 @@ import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.ElementHandler;
 import com.liferay.portal.kernel.xml.ElementProcessor;
+import com.liferay.portal.security.xml.SecureXMLFactoryProviderUtil;
 
 import java.io.StringReader;
 
 import java.util.Set;
 
-import org.apache.xerces.parsers.SAXParser;
-
 import org.xml.sax.InputSource;
+import org.xml.sax.XMLReader;
 
 /**
  * @author Zsolt Berentey
@@ -63,7 +63,7 @@ public class DeletionSystemEventImporter {
 			return;
 		}
 
-		SAXParser saxParser = new SAXParser();
+		XMLReader xmlReader = SecureXMLFactoryProviderUtil.newXMLReader();
 
 		ElementHandler elementHandler = new ElementHandler(
 			new ElementProcessor() {
@@ -76,9 +76,9 @@ public class DeletionSystemEventImporter {
 			},
 			new String[] {"deletion-system-event"});
 
-		saxParser.setContentHandler(elementHandler);
+		xmlReader.setContentHandler(elementHandler);
 
-		saxParser.parse(new InputSource(new StringReader(xml)));
+		xmlReader.parse(new InputSource(new StringReader(xml)));
 	}
 
 	protected void doImportDeletionSystemEvents(
@@ -116,10 +116,10 @@ public class DeletionSystemEventImporter {
 	private DeletionSystemEventImporter() {
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		DeletionSystemEventImporter.class);
 
-	private static DeletionSystemEventImporter _instance =
+	private static final DeletionSystemEventImporter _instance =
 		new DeletionSystemEventImporter();
 
 }

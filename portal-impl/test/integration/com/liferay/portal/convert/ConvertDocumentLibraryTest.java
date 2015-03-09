@@ -17,7 +17,13 @@ package com.liferay.portal.convert;
 import com.liferay.counter.service.CounterLocalServiceUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.util.GroupTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.InstanceFactory;
 import com.liferay.portal.kernel.util.InstancePool;
@@ -30,33 +36,28 @@ import com.liferay.portal.model.Image;
 import com.liferay.portal.model.User;
 import com.liferay.portal.service.ImageLocalServiceUtil;
 import com.liferay.portal.service.ServiceContext;
-import com.liferay.portal.test.DeleteAfterTestRun;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portal.util.ClassLoaderUtil;
 import com.liferay.portal.util.PropsValues;
-import com.liferay.portal.util.test.GroupTestUtil;
-import com.liferay.portal.util.test.RandomTestUtil;
-import com.liferay.portal.util.test.ServiceContextTestUtil;
-import com.liferay.portal.util.test.TestPropsValues;
 import com.liferay.portlet.documentlibrary.NoSuchContentException;
 import com.liferay.portlet.documentlibrary.model.DLFileEntry;
 import com.liferay.portlet.documentlibrary.model.DLFolderConstants;
+import com.liferay.portlet.documentlibrary.service.DLAppLocalServiceUtil;
+import com.liferay.portlet.documentlibrary.service.DLAppServiceUtil;
 import com.liferay.portlet.documentlibrary.service.DLContentLocalServiceUtil;
 import com.liferay.portlet.documentlibrary.service.DLFileEntryLocalServiceUtil;
 import com.liferay.portlet.documentlibrary.store.DBStore;
 import com.liferay.portlet.documentlibrary.store.FileSystemStore;
 import com.liferay.portlet.documentlibrary.store.Store;
 import com.liferay.portlet.documentlibrary.store.StoreFactory;
-import com.liferay.portlet.documentlibrary.util.test.DLAppTestUtil;
+import com.liferay.portlet.documentlibrary.util.DLPreviewableProcessor;
+import com.liferay.portlet.documentlibrary.util.ImageProcessorUtil;
 import com.liferay.portlet.messageboards.model.MBCategoryConstants;
 import com.liferay.portlet.messageboards.model.MBMessage;
 import com.liferay.portlet.messageboards.model.MBMessageConstants;
 import com.liferay.portlet.messageboards.service.MBMessageLocalServiceUtil;
 import com.liferay.portlet.messageboards.util.test.MBTestUtil;
-import com.liferay.portlet.wiki.model.WikiNode;
-import com.liferay.portlet.wiki.model.WikiPage;
-import com.liferay.portlet.wiki.util.test.WikiTestUtil;
 
 import java.io.InputStream;
 
@@ -66,29 +67,31 @@ import java.util.List;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Roberto Díaz
  * @author Sergio González
  */
-@ExecutionTestListeners(
-	listeners = {
-		MainServletExecutionTestListener.class
-	})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 public class ConvertDocumentLibraryTest {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
 		PropsValues.DL_STORE_IMPL = FileSystemStore.class.getName();
 
-		Store store = (Store)InstanceFactory.newInstance(
+		_sourceStore = (Store)InstanceFactory.newInstance(
 			ClassLoaderUtil.getPortalClassLoader(),
 			FileSystemStore.class.getName());
 
-		StoreFactory.setInstance(store);
+		StoreFactory.setInstance(_sourceStore);
 
 		_group = GroupTestUtil.addGroup();
 
@@ -96,7 +99,7 @@ public class ConvertDocumentLibraryTest {
 			ConvertDocumentLibrary.class.getName());
 
 		_convertProcess.setParameterValues(
-			new String[] {DBStore.class.getName()});
+			new String[] {DBStore.class.getName(), Boolean.TRUE.toString()});
 	}
 
 	@After
@@ -110,10 +113,25 @@ public class ConvertDocumentLibraryTest {
 	}
 
 	@Test
+	public void testMigrateDLAndDeleteFilesInSourceStore() throws Exception {
+		testMigrateAndCheckOldRepositoryFiles(Boolean.TRUE);
+	}
+
+	@Test
+	public void testMigrateDLAndKeepFilesInSourceStore() throws Exception {
+		testMigrateAndCheckOldRepositoryFiles(Boolean.FALSE);
+	}
+
+	@Test
 	public void testMigrateDLWhenFileEntryInFolder() throws Exception {
-		Folder folder = DLAppTestUtil.addFolder(
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				_group.getGroupId(), TestPropsValues.getUserId());
+
+		Folder folder = DLAppServiceUtil.addFolder(
 			_group.getGroupId(), DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-			RandomTestUtil.randomString());
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			serviceContext);
 
 		testMigrateDL(folder.getFolderId());
 	}
@@ -168,32 +186,6 @@ public class ConvertDocumentLibraryTest {
 	}
 
 	@Test
-	public void testMigrateWiki() throws Exception {
-		WikiPage wikiPage = addWikiPage();
-
-		addWikiPageAttachment(wikiPage);
-
-		_convertProcess.convert();
-
-		DLFileEntry dlFileEntry = getDLFileEntry(wikiPage);
-
-		String title = dlFileEntry.getTitle();
-
-		Assert.assertTrue(title.endsWith(".docx"));
-
-		try {
-			DLContentLocalServiceUtil.getContent(
-				dlFileEntry.getCompanyId(),
-				DLFolderConstants.getDataRepositoryId(
-					dlFileEntry.getRepositoryId(), dlFileEntry.getFolderId()),
-				dlFileEntry.getName());
-		}
-		catch (NoSuchContentException nsce) {
-			Assert.fail();
-		}
-	}
-
-	@Test
 	public void testStoreUpdatedAfterConversion() throws Exception {
 		_convertProcess.convert();
 
@@ -201,6 +193,19 @@ public class ConvertDocumentLibraryTest {
 
 		Assert.assertEquals(
 			DBStore.class.getName(), store.getClass().getName());
+	}
+
+	protected FileEntry addFileEntry(
+			long folderId, String fileName, String mimeType, byte[] bytes)
+		throws Exception {
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				_group.getGroupId(), TestPropsValues.getUserId());
+
+		return DLAppLocalServiceUtil.addFileEntry(
+			TestPropsValues.getUserId(), _group.getGroupId(), folderId,
+			fileName, mimeType, bytes, serviceContext);
 	}
 
 	protected Image addImage() throws Exception {
@@ -226,28 +231,11 @@ public class ConvertDocumentLibraryTest {
 			false, serviceContext);
 	}
 
-	protected WikiPage addWikiPage() throws Exception {
-		WikiNode wikiNode = WikiTestUtil.addNode(_group.getGroupId());
-
-		return WikiTestUtil.addPage(
-			wikiNode.getUserId(), _group.getGroupId(), wikiNode.getNodeId(),
-			RandomTestUtil.randomString(), true);
-	}
-
-	protected void addWikiPageAttachment(WikiPage wikiPage) throws Exception {
-		WikiTestUtil.addWikiAttachment(
-			wikiPage.getUserId(), wikiPage.getNodeId(), wikiPage.getTitle(),
-			getClass());
-	}
-
 	protected DLFileEntry getDLFileEntry(Object object) throws Exception {
-		List<FileEntry> fileEntries = new ArrayList<FileEntry>();
+		List<FileEntry> fileEntries = new ArrayList<>();
 
 		if (object instanceof MBMessage) {
 			fileEntries = ((MBMessage)object).getAttachmentsFileEntries(0, 1);
-		}
-		else if (object instanceof WikiPage) {
-			fileEntries = ((WikiPage)object).getAttachmentsFileEntries(0, 1);
 		}
 
 		if (fileEntries.isEmpty()) {
@@ -260,10 +248,64 @@ public class ConvertDocumentLibraryTest {
 			fileEntry.getFileEntryId());
 	}
 
+	protected void testMigrateAndCheckOldRepositoryFiles(Boolean delete)
+		throws Exception {
+
+		_convertProcess.setParameterValues(
+			new String[] {DBStore.class.getName(), delete.toString()});
+
+		FileEntry rootFileEntry = addFileEntry(
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			RandomTestUtil.randomString() + ".txt", ContentTypes.TEXT_PLAIN,
+			RandomTestUtil.randomBytes());
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				_group.getGroupId(), TestPropsValues.getUserId());
+
+		Folder folder = DLAppServiceUtil.addFolder(
+			_group.getGroupId(), DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			serviceContext);
+
+		FileEntry folderFileEntry = addFileEntry(
+			folder.getFolderId(), "liferay.jpg", ContentTypes.IMAGE_JPEG,
+			FileUtil.getBytes(getClass(), "dependencies/liferay.jpg"));
+
+		ImageProcessorUtil.generateImages(
+			null, folderFileEntry.getFileVersion());
+
+		_convertProcess.convert();
+
+		DLFileEntry rootDLFileEntry = (DLFileEntry)rootFileEntry.getModel();
+
+		Assert.assertNotEquals(
+			delete,
+			_sourceStore.hasFile(
+				rootDLFileEntry.getCompanyId(),
+				rootDLFileEntry.getDataRepositoryId(),
+				rootDLFileEntry.getName()));
+
+		DLFileEntry folderDLFileEntry = (DLFileEntry)folderFileEntry.getModel();
+
+		Assert.assertNotEquals(
+			delete,
+			_sourceStore.hasDirectory(
+				folderDLFileEntry.getCompanyId(),
+				DLPreviewableProcessor.REPOSITORY_ID,
+				DLPreviewableProcessor.THUMBNAIL_PATH));
+		Assert.assertNotEquals(
+			delete,
+			_sourceStore.hasFile(
+				folderDLFileEntry.getCompanyId(),
+				folderDLFileEntry.getDataRepositoryId(),
+				folderDLFileEntry.getName()));
+	}
+
 	protected void testMigrateDL(long folderId) throws Exception {
-		FileEntry fileEntry = DLAppTestUtil.addFileEntry(
-			_group.getGroupId(), folderId,
-			RandomTestUtil.randomString() + ".txt");
+		FileEntry fileEntry = addFileEntry(
+			folderId, RandomTestUtil.randomString() + ".txt",
+			ContentTypes.TEXT_PLAIN, RandomTestUtil.randomBytes());
 
 		_convertProcess.convert();
 
@@ -285,5 +327,7 @@ public class ConvertDocumentLibraryTest {
 
 	@DeleteAfterTestRun
 	private Group _group;
+
+	private Store _sourceStore;
 
 }

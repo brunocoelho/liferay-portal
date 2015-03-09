@@ -77,7 +77,7 @@ public class ServletResponseUtil {
 					rangeString);
 		}
 
-		List<Range> ranges = new ArrayList<Range>();
+		List<Range> ranges = new ArrayList<>();
 
 		String[] rangeFields = StringUtil.split(rangeString.substring(6));
 
@@ -349,7 +349,7 @@ public class ServletResponseUtil {
 							range.getContentRange());
 					servletOutputStream.println();
 
-					copyRange(
+					inputStream = copyRange(
 						inputStream, outputStream, range.getStart(),
 						range.getLength());
 				}
@@ -530,9 +530,7 @@ public class ServletResponseUtil {
 		else {
 			FileInputStream fileInputStream = new FileInputStream(file);
 
-			FileChannel fileChannel = fileInputStream.getChannel();
-
-			try {
+			try (FileChannel fileChannel = fileInputStream.getChannel()) {
 				int contentLength = (int)fileChannel.size();
 
 				response.setContentLength(contentLength);
@@ -542,9 +540,6 @@ public class ServletResponseUtil {
 				fileChannel.transferTo(
 					0, contentLength,
 					Channels.newChannel(response.getOutputStream()));
-			}
-			finally {
-				fileChannel.close();
 			}
 		}
 	}
@@ -561,24 +556,20 @@ public class ServletResponseUtil {
 			long contentLength)
 		throws IOException {
 
-		OutputStream outputStream = null;
+		if (response.isCommitted()) {
+			StreamUtil.cleanUp(inputStream);
 
-		try {
-			if (response.isCommitted()) {
-				return;
-			}
-
-			if (contentLength > 0) {
-				response.setContentLength((int)contentLength);
-			}
-
-			response.flushBuffer();
-
-			StreamUtil.transfer(inputStream, response.getOutputStream(), false);
+			return;
 		}
-		finally {
-			StreamUtil.cleanUp(inputStream, outputStream);
+
+		if (contentLength > 0) {
+			response.setHeader(
+				HttpHeaders.CONTENT_LENGTH, String.valueOf(contentLength));
 		}
+
+		response.flushBuffer();
+
+		StreamUtil.transfer(inputStream, response.getOutputStream());
 	}
 
 	public static void write(HttpServletResponse response, String s)
@@ -598,7 +589,7 @@ public class ServletResponseUtil {
 		}
 	}
 
-	protected static void copyRange(
+	protected static InputStream copyRange(
 			InputStream inputStream, OutputStream outputStream, long start,
 			long length)
 		throws IOException {
@@ -610,23 +601,37 @@ public class ServletResponseUtil {
 
 			fileChannel.transferTo(
 				start, length, Channels.newChannel(outputStream));
+
+			return fileInputStream;
 		}
 		else if (inputStream instanceof ByteArrayInputStream) {
 			ByteArrayInputStream byteArrayInputStream =
 				(ByteArrayInputStream)inputStream;
 
+			byteArrayInputStream.reset();
+
 			byteArrayInputStream.skip(start);
 
 			StreamUtil.transfer(byteArrayInputStream, outputStream, length);
+
+			return byteArrayInputStream;
 		}
-		else {
+		else if (inputStream instanceof RandomAccessInputStream) {
 			RandomAccessInputStream randomAccessInputStream =
-				new RandomAccessInputStream(inputStream);
+				(RandomAccessInputStream)inputStream;
 
 			randomAccessInputStream.seek(start);
 
-			StreamUtil.transfer(randomAccessInputStream, outputStream, length);
+			StreamUtil.transfer(
+				randomAccessInputStream, outputStream, StreamUtil.BUFFER_SIZE,
+				false, length);
+
+			return randomAccessInputStream;
 		}
+
+		return copyRange(
+			new RandomAccessInputStream(inputStream), outputStream, start,
+			length);
 	}
 
 	protected static void setHeaders(
@@ -752,6 +757,7 @@ public class ServletResponseUtil {
 	private static final String _RANGE_REGEX =
 		"^bytes=\\d*-\\d*(,\\s?\\d*-\\d*)*$";
 
-	private static Log _log = LogFactoryUtil.getLog(ServletResponseUtil.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		ServletResponseUtil.class);
 
 }

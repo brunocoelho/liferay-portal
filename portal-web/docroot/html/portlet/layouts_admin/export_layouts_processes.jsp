@@ -115,6 +115,7 @@ OrderByComparator<BackgroundTask> orderByComparator = BackgroundTaskComparatorFa
 							iconCssClass="icon-download"
 							label="<%= true %>"
 							message="<%= sb.toString() %>"
+							method="get"
 							url="<%= PortletFileRepositoryUtil.getDownloadPortletFileEntryURL(themeDisplay, fileEntry, StringPool.BLANK) %>"
 						/>
 
@@ -162,7 +163,7 @@ OrderByComparator<BackgroundTask> orderByComparator = BackgroundTaskComparatorFa
 					%>
 
 					<liferay-ui:icon-delete
-						label="true"
+						label="<%= true %>"
 						message='<%= ((completionDate != null) && completionDate.before(new Date())) ? "clear" : "cancel" %>'
 						url="<%= deleteBackgroundTaskURL %>"
 					/>

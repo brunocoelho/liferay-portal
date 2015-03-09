@@ -204,4 +204,10 @@ public class LayoutPrototypeStagedModelDataHandler
 		}
 	}
 
+	@Override
+	protected void importReferenceStagedModels(
+		PortletDataContext portletDataContext,
+		LayoutPrototype layoutPrototype) {
+	}
+
 }

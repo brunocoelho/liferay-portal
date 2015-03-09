@@ -58,7 +58,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see CountryPersistence
- * @see CountryUtil
+ * @see com.liferay.portal.service.persistence.CountryUtil
  * @generated
  */
 @ProviderType
@@ -2037,7 +2037,7 @@ public class CountryPersistenceImpl extends BasePersistenceImpl<Country>
 		MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

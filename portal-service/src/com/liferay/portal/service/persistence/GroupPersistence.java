@@ -26,7 +26,7 @@ import com.liferay.portal.model.Group;
  * </p>
  *
  * @author Brian Wing Shun Chan
- * @see GroupPersistenceImpl
+ * @see com.liferay.portal.service.persistence.impl.GroupPersistenceImpl
  * @see GroupUtil
  * @generated
  */
@@ -755,55 +755,57 @@ public interface GroupPersistence extends BasePersistence<Group> {
 	public int countByC_P(long companyId, long parentGroupId);
 
 	/**
-	* Returns the group where companyId = &#63; and name = &#63; or throws a {@link com.liferay.portal.NoSuchGroupException} if it could not be found.
+	* Returns the group where companyId = &#63; and groupKey = &#63; or throws a {@link com.liferay.portal.NoSuchGroupException} if it could not be found.
 	*
 	* @param companyId the company ID
-	* @param name the name
+	* @param groupKey the group key
 	* @return the matching group
 	* @throws com.liferay.portal.NoSuchGroupException if a matching group could not be found
 	*/
-	public com.liferay.portal.model.Group findByC_N(long companyId,
-		java.lang.String name) throws com.liferay.portal.NoSuchGroupException;
+	public com.liferay.portal.model.Group findByC_GK(long companyId,
+		java.lang.String groupKey)
+		throws com.liferay.portal.NoSuchGroupException;
 
 	/**
-	* Returns the group where companyId = &#63; and name = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	* Returns the group where companyId = &#63; and groupKey = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	*
 	* @param companyId the company ID
-	* @param name the name
+	* @param groupKey the group key
 	* @return the matching group, or <code>null</code> if a matching group could not be found
 	*/
-	public com.liferay.portal.model.Group fetchByC_N(long companyId,
-		java.lang.String name);
+	public com.liferay.portal.model.Group fetchByC_GK(long companyId,
+		java.lang.String groupKey);
 
 	/**
-	* Returns the group where companyId = &#63; and name = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	* Returns the group where companyId = &#63; and groupKey = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
 	*
 	* @param companyId the company ID
-	* @param name the name
+	* @param groupKey the group key
 	* @param retrieveFromCache whether to use the finder cache
 	* @return the matching group, or <code>null</code> if a matching group could not be found
 	*/
-	public com.liferay.portal.model.Group fetchByC_N(long companyId,
-		java.lang.String name, boolean retrieveFromCache);
+	public com.liferay.portal.model.Group fetchByC_GK(long companyId,
+		java.lang.String groupKey, boolean retrieveFromCache);
 
 	/**
-	* Removes the group where companyId = &#63; and name = &#63; from the database.
+	* Removes the group where companyId = &#63; and groupKey = &#63; from the database.
 	*
 	* @param companyId the company ID
-	* @param name the name
+	* @param groupKey the group key
 	* @return the group that was removed
 	*/
-	public com.liferay.portal.model.Group removeByC_N(long companyId,
-		java.lang.String name) throws com.liferay.portal.NoSuchGroupException;
+	public com.liferay.portal.model.Group removeByC_GK(long companyId,
+		java.lang.String groupKey)
+		throws com.liferay.portal.NoSuchGroupException;
 
 	/**
-	* Returns the number of groups where companyId = &#63; and name = &#63;.
+	* Returns the number of groups where companyId = &#63; and groupKey = &#63;.
 	*
 	* @param companyId the company ID
-	* @param name the name
+	* @param groupKey the group key
 	* @return the number of matching groups
 	*/
-	public int countByC_N(long companyId, java.lang.String name);
+	public int countByC_GK(long companyId, java.lang.String groupKey);
 
 	/**
 	* Returns the group where companyId = &#63; and friendlyURL = &#63; or throws a {@link com.liferay.portal.NoSuchGroupException} if it could not be found.
@@ -1573,128 +1575,281 @@ public interface GroupPersistence extends BasePersistence<Group> {
 	public int countByC_P_S(long companyId, long parentGroupId, boolean site);
 
 	/**
-	* Returns the group where companyId = &#63; and liveGroupId = &#63; and name = &#63; or throws a {@link com.liferay.portal.NoSuchGroupException} if it could not be found.
+	* Returns the group where companyId = &#63; and liveGroupId = &#63; and groupKey = &#63; or throws a {@link com.liferay.portal.NoSuchGroupException} if it could not be found.
 	*
 	* @param companyId the company ID
 	* @param liveGroupId the live group ID
-	* @param name the name
+	* @param groupKey the group key
 	* @return the matching group
 	* @throws com.liferay.portal.NoSuchGroupException if a matching group could not be found
 	*/
-	public com.liferay.portal.model.Group findByC_L_N(long companyId,
-		long liveGroupId, java.lang.String name)
+	public com.liferay.portal.model.Group findByC_L_GK(long companyId,
+		long liveGroupId, java.lang.String groupKey)
 		throws com.liferay.portal.NoSuchGroupException;
 
 	/**
-	* Returns the group where companyId = &#63; and liveGroupId = &#63; and name = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	* Returns the group where companyId = &#63; and liveGroupId = &#63; and groupKey = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	*
 	* @param companyId the company ID
 	* @param liveGroupId the live group ID
-	* @param name the name
+	* @param groupKey the group key
 	* @return the matching group, or <code>null</code> if a matching group could not be found
 	*/
-	public com.liferay.portal.model.Group fetchByC_L_N(long companyId,
-		long liveGroupId, java.lang.String name);
+	public com.liferay.portal.model.Group fetchByC_L_GK(long companyId,
+		long liveGroupId, java.lang.String groupKey);
 
 	/**
-	* Returns the group where companyId = &#63; and liveGroupId = &#63; and name = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	* Returns the group where companyId = &#63; and liveGroupId = &#63; and groupKey = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
 	*
 	* @param companyId the company ID
 	* @param liveGroupId the live group ID
-	* @param name the name
+	* @param groupKey the group key
 	* @param retrieveFromCache whether to use the finder cache
 	* @return the matching group, or <code>null</code> if a matching group could not be found
 	*/
-	public com.liferay.portal.model.Group fetchByC_L_N(long companyId,
-		long liveGroupId, java.lang.String name, boolean retrieveFromCache);
+	public com.liferay.portal.model.Group fetchByC_L_GK(long companyId,
+		long liveGroupId, java.lang.String groupKey, boolean retrieveFromCache);
 
 	/**
-	* Removes the group where companyId = &#63; and liveGroupId = &#63; and name = &#63; from the database.
+	* Removes the group where companyId = &#63; and liveGroupId = &#63; and groupKey = &#63; from the database.
 	*
 	* @param companyId the company ID
 	* @param liveGroupId the live group ID
-	* @param name the name
+	* @param groupKey the group key
 	* @return the group that was removed
 	*/
-	public com.liferay.portal.model.Group removeByC_L_N(long companyId,
-		long liveGroupId, java.lang.String name)
+	public com.liferay.portal.model.Group removeByC_L_GK(long companyId,
+		long liveGroupId, java.lang.String groupKey)
 		throws com.liferay.portal.NoSuchGroupException;
 
 	/**
-	* Returns the number of groups where companyId = &#63; and liveGroupId = &#63; and name = &#63;.
+	* Returns the number of groups where companyId = &#63; and liveGroupId = &#63; and groupKey = &#63;.
 	*
 	* @param companyId the company ID
 	* @param liveGroupId the live group ID
-	* @param name the name
+	* @param groupKey the group key
 	* @return the number of matching groups
 	*/
-	public int countByC_L_N(long companyId, long liveGroupId,
-		java.lang.String name);
+	public int countByC_L_GK(long companyId, long liveGroupId,
+		java.lang.String groupKey);
 
 	/**
-	* Returns the group where companyId = &#63; and classNameId = &#63; and liveGroupId = &#63; and name = &#63; or throws a {@link com.liferay.portal.NoSuchGroupException} if it could not be found.
+	* Returns the group where companyId = &#63; and classNameId = &#63; and liveGroupId = &#63; and groupKey = &#63; or throws a {@link com.liferay.portal.NoSuchGroupException} if it could not be found.
 	*
 	* @param companyId the company ID
 	* @param classNameId the class name ID
 	* @param liveGroupId the live group ID
-	* @param name the name
+	* @param groupKey the group key
 	* @return the matching group
 	* @throws com.liferay.portal.NoSuchGroupException if a matching group could not be found
 	*/
-	public com.liferay.portal.model.Group findByC_C_L_N(long companyId,
-		long classNameId, long liveGroupId, java.lang.String name)
+	public com.liferay.portal.model.Group findByC_C_L_GK(long companyId,
+		long classNameId, long liveGroupId, java.lang.String groupKey)
 		throws com.liferay.portal.NoSuchGroupException;
 
 	/**
-	* Returns the group where companyId = &#63; and classNameId = &#63; and liveGroupId = &#63; and name = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	* Returns the group where companyId = &#63; and classNameId = &#63; and liveGroupId = &#63; and groupKey = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	*
 	* @param companyId the company ID
 	* @param classNameId the class name ID
 	* @param liveGroupId the live group ID
-	* @param name the name
+	* @param groupKey the group key
 	* @return the matching group, or <code>null</code> if a matching group could not be found
 	*/
-	public com.liferay.portal.model.Group fetchByC_C_L_N(long companyId,
-		long classNameId, long liveGroupId, java.lang.String name);
+	public com.liferay.portal.model.Group fetchByC_C_L_GK(long companyId,
+		long classNameId, long liveGroupId, java.lang.String groupKey);
 
 	/**
-	* Returns the group where companyId = &#63; and classNameId = &#63; and liveGroupId = &#63; and name = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	* Returns the group where companyId = &#63; and classNameId = &#63; and liveGroupId = &#63; and groupKey = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
 	*
 	* @param companyId the company ID
 	* @param classNameId the class name ID
 	* @param liveGroupId the live group ID
-	* @param name the name
+	* @param groupKey the group key
 	* @param retrieveFromCache whether to use the finder cache
 	* @return the matching group, or <code>null</code> if a matching group could not be found
 	*/
-	public com.liferay.portal.model.Group fetchByC_C_L_N(long companyId,
-		long classNameId, long liveGroupId, java.lang.String name,
+	public com.liferay.portal.model.Group fetchByC_C_L_GK(long companyId,
+		long classNameId, long liveGroupId, java.lang.String groupKey,
 		boolean retrieveFromCache);
 
 	/**
-	* Removes the group where companyId = &#63; and classNameId = &#63; and liveGroupId = &#63; and name = &#63; from the database.
+	* Removes the group where companyId = &#63; and classNameId = &#63; and liveGroupId = &#63; and groupKey = &#63; from the database.
 	*
 	* @param companyId the company ID
 	* @param classNameId the class name ID
 	* @param liveGroupId the live group ID
-	* @param name the name
+	* @param groupKey the group key
 	* @return the group that was removed
 	*/
-	public com.liferay.portal.model.Group removeByC_C_L_N(long companyId,
-		long classNameId, long liveGroupId, java.lang.String name)
+	public com.liferay.portal.model.Group removeByC_C_L_GK(long companyId,
+		long classNameId, long liveGroupId, java.lang.String groupKey)
 		throws com.liferay.portal.NoSuchGroupException;
 
 	/**
-	* Returns the number of groups where companyId = &#63; and classNameId = &#63; and liveGroupId = &#63; and name = &#63;.
+	* Returns the number of groups where companyId = &#63; and classNameId = &#63; and liveGroupId = &#63; and groupKey = &#63;.
 	*
 	* @param companyId the company ID
 	* @param classNameId the class name ID
 	* @param liveGroupId the live group ID
-	* @param name the name
+	* @param groupKey the group key
 	* @return the number of matching groups
 	*/
-	public int countByC_C_L_N(long companyId, long classNameId,
-		long liveGroupId, java.lang.String name);
+	public int countByC_C_L_GK(long companyId, long classNameId,
+		long liveGroupId, java.lang.String groupKey);
+
+	/**
+	* Returns all the groups where companyId = &#63; and parentGroupId = &#63; and site = &#63; and inheritContent = &#63;.
+	*
+	* @param companyId the company ID
+	* @param parentGroupId the parent group ID
+	* @param site the site
+	* @param inheritContent the inherit content
+	* @return the matching groups
+	*/
+	public java.util.List<com.liferay.portal.model.Group> findByC_P_S_I(
+		long companyId, long parentGroupId, boolean site, boolean inheritContent);
+
+	/**
+	* Returns a range of all the groups where companyId = &#63; and parentGroupId = &#63; and site = &#63; and inheritContent = &#63;.
+	*
+	* <p>
+	* Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.portal.model.impl.GroupModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	* </p>
+	*
+	* @param companyId the company ID
+	* @param parentGroupId the parent group ID
+	* @param site the site
+	* @param inheritContent the inherit content
+	* @param start the lower bound of the range of groups
+	* @param end the upper bound of the range of groups (not inclusive)
+	* @return the range of matching groups
+	*/
+	public java.util.List<com.liferay.portal.model.Group> findByC_P_S_I(
+		long companyId, long parentGroupId, boolean site,
+		boolean inheritContent, int start, int end);
+
+	/**
+	* Returns an ordered range of all the groups where companyId = &#63; and parentGroupId = &#63; and site = &#63; and inheritContent = &#63;.
+	*
+	* <p>
+	* Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.portal.model.impl.GroupModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	* </p>
+	*
+	* @param companyId the company ID
+	* @param parentGroupId the parent group ID
+	* @param site the site
+	* @param inheritContent the inherit content
+	* @param start the lower bound of the range of groups
+	* @param end the upper bound of the range of groups (not inclusive)
+	* @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	* @return the ordered range of matching groups
+	*/
+	public java.util.List<com.liferay.portal.model.Group> findByC_P_S_I(
+		long companyId, long parentGroupId, boolean site,
+		boolean inheritContent, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<com.liferay.portal.model.Group> orderByComparator);
+
+	/**
+	* Returns the first group in the ordered set where companyId = &#63; and parentGroupId = &#63; and site = &#63; and inheritContent = &#63;.
+	*
+	* @param companyId the company ID
+	* @param parentGroupId the parent group ID
+	* @param site the site
+	* @param inheritContent the inherit content
+	* @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	* @return the first matching group
+	* @throws com.liferay.portal.NoSuchGroupException if a matching group could not be found
+	*/
+	public com.liferay.portal.model.Group findByC_P_S_I_First(long companyId,
+		long parentGroupId, boolean site, boolean inheritContent,
+		com.liferay.portal.kernel.util.OrderByComparator<com.liferay.portal.model.Group> orderByComparator)
+		throws com.liferay.portal.NoSuchGroupException;
+
+	/**
+	* Returns the first group in the ordered set where companyId = &#63; and parentGroupId = &#63; and site = &#63; and inheritContent = &#63;.
+	*
+	* @param companyId the company ID
+	* @param parentGroupId the parent group ID
+	* @param site the site
+	* @param inheritContent the inherit content
+	* @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	* @return the first matching group, or <code>null</code> if a matching group could not be found
+	*/
+	public com.liferay.portal.model.Group fetchByC_P_S_I_First(long companyId,
+		long parentGroupId, boolean site, boolean inheritContent,
+		com.liferay.portal.kernel.util.OrderByComparator<com.liferay.portal.model.Group> orderByComparator);
+
+	/**
+	* Returns the last group in the ordered set where companyId = &#63; and parentGroupId = &#63; and site = &#63; and inheritContent = &#63;.
+	*
+	* @param companyId the company ID
+	* @param parentGroupId the parent group ID
+	* @param site the site
+	* @param inheritContent the inherit content
+	* @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	* @return the last matching group
+	* @throws com.liferay.portal.NoSuchGroupException if a matching group could not be found
+	*/
+	public com.liferay.portal.model.Group findByC_P_S_I_Last(long companyId,
+		long parentGroupId, boolean site, boolean inheritContent,
+		com.liferay.portal.kernel.util.OrderByComparator<com.liferay.portal.model.Group> orderByComparator)
+		throws com.liferay.portal.NoSuchGroupException;
+
+	/**
+	* Returns the last group in the ordered set where companyId = &#63; and parentGroupId = &#63; and site = &#63; and inheritContent = &#63;.
+	*
+	* @param companyId the company ID
+	* @param parentGroupId the parent group ID
+	* @param site the site
+	* @param inheritContent the inherit content
+	* @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	* @return the last matching group, or <code>null</code> if a matching group could not be found
+	*/
+	public com.liferay.portal.model.Group fetchByC_P_S_I_Last(long companyId,
+		long parentGroupId, boolean site, boolean inheritContent,
+		com.liferay.portal.kernel.util.OrderByComparator<com.liferay.portal.model.Group> orderByComparator);
+
+	/**
+	* Returns the groups before and after the current group in the ordered set where companyId = &#63; and parentGroupId = &#63; and site = &#63; and inheritContent = &#63;.
+	*
+	* @param groupId the primary key of the current group
+	* @param companyId the company ID
+	* @param parentGroupId the parent group ID
+	* @param site the site
+	* @param inheritContent the inherit content
+	* @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	* @return the previous, current, and next group
+	* @throws com.liferay.portal.NoSuchGroupException if a group with the primary key could not be found
+	*/
+	public com.liferay.portal.model.Group[] findByC_P_S_I_PrevAndNext(
+		long groupId, long companyId, long parentGroupId, boolean site,
+		boolean inheritContent,
+		com.liferay.portal.kernel.util.OrderByComparator<com.liferay.portal.model.Group> orderByComparator)
+		throws com.liferay.portal.NoSuchGroupException;
+
+	/**
+	* Removes all the groups where companyId = &#63; and parentGroupId = &#63; and site = &#63; and inheritContent = &#63; from the database.
+	*
+	* @param companyId the company ID
+	* @param parentGroupId the parent group ID
+	* @param site the site
+	* @param inheritContent the inherit content
+	*/
+	public void removeByC_P_S_I(long companyId, long parentGroupId,
+		boolean site, boolean inheritContent);
+
+	/**
+	* Returns the number of groups where companyId = &#63; and parentGroupId = &#63; and site = &#63; and inheritContent = &#63;.
+	*
+	* @param companyId the company ID
+	* @param parentGroupId the parent group ID
+	* @param site the site
+	* @param inheritContent the inherit content
+	* @return the number of matching groups
+	*/
+	public int countByC_P_S_I(long companyId, long parentGroupId, boolean site,
+		boolean inheritContent);
 
 	/**
 	* Caches the group in the entity cache if it is enabled.

@@ -15,8 +15,8 @@
 package com.liferay.portal.kernel.io;
 
 import com.liferay.portal.kernel.io.unsync.UnsyncStringWriter;
-import com.liferay.portal.kernel.test.CodeCoverageAssertor;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 import com.liferay.portal.kernel.util.StringPool;
 
 import java.io.CharArrayWriter;
@@ -40,8 +40,8 @@ import org.junit.Test;
 public class WriterOutputStreamTest {
 
 	@ClassRule
-	public static CodeCoverageAssertor codeCoverageAssertor =
-		new CodeCoverageAssertor();
+	public static final CodeCoverageAssertor codeCoverageAssertor =
+		CodeCoverageAssertor.INSTANCE;
 
 	@Test
 	public void testClose() throws IOException {
@@ -56,12 +56,11 @@ public class WriterOutputStreamTest {
 
 		};
 
-		WriterOutputStream writerOutputStream = new WriterOutputStream(
-			dummyWriter);
+		try (WriterOutputStream writerOutputStream = new WriterOutputStream(
+				dummyWriter)) {
 
-		Assert.assertFalse(closeAtomicBoolean.get());
-
-		writerOutputStream.close();
+			Assert.assertFalse(closeAtomicBoolean.get());
+		}
 
 		Assert.assertTrue(closeAtomicBoolean.get());
 	}
@@ -240,17 +239,18 @@ public class WriterOutputStreamTest {
 	public void testWriteBlockUnaligned() throws IOException {
 		CharArrayWriter charArrayWriter = new CharArrayWriter();
 
-		WriterOutputStream writerOutputStream = new WriterOutputStream(
-			charArrayWriter, StringPool.UTF8, true);
-
 		String unalignedOutput = "非对齐测试中文输出";
-		byte[] unalignedInput = unalignedOutput.getBytes(StringPool.UTF8);
 
-		writerOutputStream.write(unalignedInput[0]);
-		writerOutputStream.write(unalignedInput, 1, unalignedInput.length - 2);
-		writerOutputStream.write(unalignedInput[unalignedInput.length - 1]);
+		try (WriterOutputStream writerOutputStream = new WriterOutputStream(
+				charArrayWriter, StringPool.UTF8, true)) {
 
-		writerOutputStream.close();
+			byte[] unalignedInput = unalignedOutput.getBytes(StringPool.UTF8);
+
+			writerOutputStream.write(unalignedInput[0]);
+			writerOutputStream.write(
+				unalignedInput, 1, unalignedInput.length - 2);
+			writerOutputStream.write(unalignedInput[unalignedInput.length - 1]);
+		}
 
 		Assert.assertEquals(unalignedOutput, charArrayWriter.toString());
 	}
@@ -260,14 +260,13 @@ public class WriterOutputStreamTest {
 		WriterOutputStream writerOutputStream = new WriterOutputStream(
 			new DummyWriter(), "US-ASCII");
 
-		CharsetDecoder charsetDecoder =
-			(CharsetDecoder)ReflectionTestUtil.getFieldValue(
-				writerOutputStream, "_charsetDecoder");
+		CharsetDecoder charsetDecoder = ReflectionTestUtil.getFieldValue(
+			writerOutputStream, "_charsetDecoder");
 
 		charsetDecoder.onMalformedInput(CodingErrorAction.REPORT);
 
 		try {
-			writerOutputStream.write(new byte[]{-1, -2, -3, -4});
+			writerOutputStream.write(new byte[] {-1, -2, -3, -4});
 
 			Assert.fail();
 		}
@@ -278,32 +277,30 @@ public class WriterOutputStreamTest {
 	}
 
 	private int _getDefaultOutputBufferSize() {
-		return (Integer)ReflectionTestUtil.getFieldValue(
+		return ReflectionTestUtil.getFieldValue(
 			WriterOutputStream.class, "_DEFAULT_OUTPUT_BUFFER_SIZE");
 	}
 
 	private int _getInputBufferSize(WriterOutputStream writerOutputStream) {
-		ByteBuffer inputByteBuffer =
-			(ByteBuffer)ReflectionTestUtil.getFieldValue(
-				writerOutputStream, "_inputByteBuffer");
+		ByteBuffer inputByteBuffer = ReflectionTestUtil.getFieldValue(
+			writerOutputStream, "_inputByteBuffer");
 
 		return inputByteBuffer.capacity();
 	}
 
 	private int _getOutputBufferSize(WriterOutputStream writerOutputStream) {
-		CharBuffer outputBuffer = (CharBuffer)ReflectionTestUtil.getFieldValue(
+		CharBuffer outputBuffer = ReflectionTestUtil.getFieldValue(
 			writerOutputStream, "_outputCharBuffer");
 
 		return outputBuffer.capacity();
 	}
 
 	private Writer _getWriter(WriterOutputStream writerOutputStream) {
-		return (Writer)ReflectionTestUtil.getFieldValue(
-			writerOutputStream, "_writer");
+		return ReflectionTestUtil.getFieldValue(writerOutputStream, "_writer");
 	}
 
 	private boolean _isAutoFlush(WriterOutputStream writerOutputStream) {
-		return (Boolean)ReflectionTestUtil.getFieldValue(
+		return ReflectionTestUtil.getFieldValue(
 			writerOutputStream, "_autoFlush");
 	}
 
@@ -368,7 +365,7 @@ public class WriterOutputStreamTest {
 		writerOutputStream = new WriterOutputStream(
 			unsyncStringWriter, "US-ASCII", autoFlush);
 
-		writerOutputStream.write(new byte[]{(byte)'a', (byte)'b', (byte)'c'});
+		writerOutputStream.write(new byte[] {(byte)'a', (byte)'b', (byte)'c'});
 
 		Assert.assertFalse(flushed.get());
 

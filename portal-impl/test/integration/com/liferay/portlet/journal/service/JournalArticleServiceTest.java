@@ -16,22 +16,23 @@ package com.liferay.portlet.journal.service;
 
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.rule.Sync;
+import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
+import com.liferay.portal.kernel.test.util.GroupTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.model.ClassName;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.service.ClassNameServiceUtil;
 import com.liferay.portal.service.ServiceContext;
-import com.liferay.portal.test.DeleteAfterTestRun;
-import com.liferay.portal.test.Sync;
-import com.liferay.portal.test.SynchronousDestinationExecutionTestListener;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
-import com.liferay.portal.util.test.GroupTestUtil;
-import com.liferay.portal.util.test.RandomTestUtil;
-import com.liferay.portal.util.test.ServiceContextTestUtil;
-import com.liferay.portal.util.test.TestPropsValues;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portlet.asset.model.AssetEntry;
 import com.liferay.portlet.asset.service.AssetEntryLocalServiceUtil;
 import com.liferay.portlet.dynamicdatamapping.StorageFieldRequiredException;
@@ -59,21 +60,23 @@ import java.util.Map;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Juan Fernández
  * @author Roberto Díaz
  */
-@ExecutionTestListeners(
-	listeners = {
-		MainServletExecutionTestListener.class,
-		SynchronousDestinationExecutionTestListener.class
-	})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 @Sync
 public class JournalArticleServiceTest {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE,
+			SynchronousDestinationTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -101,7 +104,7 @@ public class JournalArticleServiceTest {
 
 	@Test(expected = StorageFieldRequiredException.class)
 	public void testAddArticleWithEmptyRequiredHTMLField() throws Exception {
-		Map<String, String> requiredFields = new HashMap<String, String>();
+		Map<String, String> requiredFields = new HashMap<>();
 
 		requiredFields.put("HTML2030", "");
 
@@ -112,7 +115,7 @@ public class JournalArticleServiceTest {
 
 	@Test
 	public void testAddArticleWithNotEmptyRequiredHTMLField() throws Exception {
-		Map<String, String> requiredFields = new HashMap<String, String>();
+		Map<String, String> requiredFields = new HashMap<>();
 
 		requiredFields.put("HTML2030", "<p>Hello World!</p>");
 
@@ -148,11 +151,12 @@ public class JournalArticleServiceTest {
 		JournalArticle article = JournalTestUtil.addArticle(
 			group.getGroupId(), parentFolder.getFolderId(), "title", "content");
 
-		long classNameId = ClassNameServiceUtil.fetchClassNameId(
-			JournalArticle.class);
+		ClassName className = ClassNameServiceUtil.fetchClassName(
+			JournalArticle.class.getName());
 
 		DDMStructure ddmStructure = DDMStructureServiceUtil.getStructure(
-			group.getGroupId(), classNameId, article.getStructureId());
+			group.getGroupId(), className.getClassNameId(),
+			article.getDDMStructureKey());
 
 		checkArticleMatchesStructure(article, ddmStructure);
 	}
@@ -452,8 +456,6 @@ public class JournalArticleServiceTest {
 
 	@Test
 	public void testUpdateArticle() throws Exception {
-		Date oldDisplayDate = _article.getDisplayDate();
-
 		_article.setDisplayDate(new Date());
 
 		_article = JournalTestUtil.updateArticle(_article, "Version 2");
@@ -466,7 +468,8 @@ public class JournalArticleServiceTest {
 		AssetEntry assetEntry = AssetEntryLocalServiceUtil.getEntry(
 			_article.getModelClassName(), _article.getResourcePrimKey());
 
-		Assert.assertEquals(oldDisplayDate, assetEntry.getPublishDate());
+		Assert.assertEquals(
+			_article.getDisplayDate(), assetEntry.getPublishDate());
 	}
 
 	@Test
@@ -495,7 +498,7 @@ public class JournalArticleServiceTest {
 	protected List<JournalArticle> addArticles(int count, String content)
 		throws Exception {
 
-		List<JournalArticle> articles = new ArrayList<JournalArticle>(count);
+		List<JournalArticle> articles = new ArrayList<>(count);
 
 		for (int i = 0; i < count; i++) {
 			JournalArticle article = JournalTestUtil.addArticle(
@@ -529,14 +532,14 @@ public class JournalArticleServiceTest {
 	protected int countArticlesByKeyword(String keyword, int status)
 		throws Exception {
 
-		List<Long> folderIds = new ArrayList<Long>(1);
+		List<Long> folderIds = new ArrayList<>(1);
 
 		folderIds.add(JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
 
 		return JournalArticleLocalServiceUtil.searchCount(
 			TestPropsValues.getCompanyId(), _group.getGroupId(), folderIds,
 			JournalArticleConstants.CLASSNAME_ID_DEFAULT, null, null, null,
-			null, keyword, "general", "", "", null, null, status, null, true);
+			null, keyword, "", "", null, null, status, null, true);
 	}
 
 	protected List<JournalArticle> createArticlesWithKeyword(int count)
@@ -585,14 +588,14 @@ public class JournalArticleServiceTest {
 			String keyword, int status)
 		throws Exception {
 
-		List<Long> folderIds = new ArrayList<Long>(1);
+		List<Long> folderIds = new ArrayList<>(1);
 
 		folderIds.add(JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
 
 		return JournalArticleLocalServiceUtil.search(
 			TestPropsValues.getCompanyId(), _group.getGroupId(), folderIds,
 			JournalArticleConstants.CLASSNAME_ID_DEFAULT, null, null, null,
-			null, keyword, "general", "", "", null, null, status, null, false,
+			null, keyword, "", "", null, null, status, null, false,
 			QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 

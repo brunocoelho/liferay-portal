@@ -238,14 +238,14 @@ public interface MembershipRequestModel extends BaseModel<MembershipRequest>,
 	 *
 	 * @return the status ID of this membership request
 	 */
-	public int getStatusId();
+	public long getStatusId();
 
 	/**
 	 * Sets the status ID of this membership request.
 	 *
 	 * @param statusId the status ID of this membership request
 	 */
-	public void setStatusId(int statusId);
+	public void setStatusId(long statusId);
 
 	@Override
 	public boolean isNew();
@@ -284,19 +284,20 @@ public interface MembershipRequestModel extends BaseModel<MembershipRequest>,
 	public Object clone();
 
 	@Override
-	public int compareTo(MembershipRequest membershipRequest);
+	public int compareTo(
+		com.liferay.portal.model.MembershipRequest membershipRequest);
 
 	@Override
 	public int hashCode();
 
 	@Override
-	public CacheModel<MembershipRequest> toCacheModel();
+	public CacheModel<com.liferay.portal.model.MembershipRequest> toCacheModel();
 
 	@Override
-	public MembershipRequest toEscapedModel();
+	public com.liferay.portal.model.MembershipRequest toEscapedModel();
 
 	@Override
-	public MembershipRequest toUnescapedModel();
+	public com.liferay.portal.model.MembershipRequest toUnescapedModel();
 
 	@Override
 	public String toString();

@@ -30,6 +30,7 @@ import com.liferay.portal.security.permission.ActionKeys;
 import com.liferay.portal.security.permission.PermissionChecker;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.service.LayoutLocalServiceUtil;
+import com.liferay.portal.service.LayoutSetLocalServiceUtil;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portal.util.PortletKeys;
@@ -37,7 +38,7 @@ import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.util.WebKeys;
 import com.liferay.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portlet.asset.model.BaseAssetRenderer;
-import com.liferay.portlet.asset.model.DDMFieldReader;
+import com.liferay.portlet.asset.model.DDMFormValuesReader;
 import com.liferay.portlet.journal.model.JournalArticle;
 import com.liferay.portlet.journal.model.JournalArticleConstants;
 import com.liferay.portlet.journal.model.JournalArticleDisplay;
@@ -69,8 +70,7 @@ public class JournalArticleAssetRenderer
 
 	public static long getClassPK(JournalArticle article) {
 		if ((article.isDraft() || article.isPending()) &&
-			(article.getVersion() !=
-				JournalArticleConstants.VERSION_DEFAULT)) {
+			(article.getVersion() != JournalArticleConstants.VERSION_DEFAULT)) {
 
 			return article.getPrimaryKey();
 		}
@@ -81,11 +81,6 @@ public class JournalArticleAssetRenderer
 
 	public JournalArticleAssetRenderer(JournalArticle article) {
 		_article = article;
-	}
-
-	@Override
-	public String getAddToPagePortletId() throws Exception {
-		return PortletKeys.JOURNAL_CONTENT;
 	}
 
 	public JournalArticle getArticle() {
@@ -108,8 +103,8 @@ public class JournalArticleAssetRenderer
 	}
 
 	@Override
-	public DDMFieldReader getDDMFieldReader() {
-		return new JournalArticleDDMFieldReader(_article);
+	public DDMFormValuesReader getDDMFormValuesReader() {
+		return new JournalArticleDDMFormValuesReader(_article);
 	}
 
 	@Override
@@ -223,13 +218,15 @@ public class JournalArticleAssetRenderer
 
 	@Override
 	public PortletURL getURLExport(
-		LiferayPortletRequest liferayPortletRequest,
-		LiferayPortletResponse liferayPortletResponse) {
+			LiferayPortletRequest liferayPortletRequest,
+			LiferayPortletResponse liferayPortletResponse)
+		throws Exception {
 
-		PortletURL portletURL = liferayPortletResponse.createActionURL();
+		PortletURL portletURL = liferayPortletResponse.createLiferayPortletURL(
+			getControlPanelPlid(liferayPortletRequest), PortletKeys.JOURNAL,
+			PortletRequest.ACTION_PHASE);
 
-		portletURL.setParameter(
-			"struts_action", "/asset_publisher/export_journal_article");
+		portletURL.setParameter("struts_action", "/journal/export_article");
 		portletURL.setParameter(
 			"groupId", String.valueOf(_article.getGroupId()));
 		portletURL.setParameter("articleId", _article.getArticleId());
@@ -309,7 +306,9 @@ public class JournalArticleAssetRenderer
 			}
 
 			String groupFriendlyURL = PortalUtil.getGroupFriendlyURL(
-				group, layout.isPrivateLayout(), themeDisplay);
+				LayoutSetLocalServiceUtil.getLayoutSet(
+					group.getGroupId(), layout.isPrivateLayout()),
+				themeDisplay);
 
 			return PortalUtil.addPreservedParameters(
 				themeDisplay,
@@ -425,26 +424,10 @@ public class JournalArticleAssetRenderer
 	}
 
 	@Override
-	public void setAddToPagePreferences(
-			PortletPreferences preferences, String portletId,
-			ThemeDisplay themeDisplay)
-		throws Exception {
-
-		preferences.setValue("articleId", _article.getArticleId());
-		preferences.setValue("groupId", String.valueOf(_article.getGroupId()));
-
-		Layout layout = themeDisplay.getLayout();
-
-		JournalContentSearchLocalServiceUtil.updateContentSearch(
-			layout.getGroupId(), layout.isPrivateLayout(), layout.getLayoutId(),
-			portletId, _article.getArticleId(), true);
-	}
-
-	@Override
 	protected String getIconPath(ThemeDisplay themeDisplay) {
 		return themeDisplay.getPathThemeImages() + "/common/history.png";
 	}
 
-	private JournalArticle _article;
+	private final JournalArticle _article;
 
 }

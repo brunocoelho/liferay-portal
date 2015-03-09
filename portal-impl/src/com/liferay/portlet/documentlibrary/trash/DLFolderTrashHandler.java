@@ -28,9 +28,11 @@ import com.liferay.portal.security.permission.PermissionChecker;
 import com.liferay.portal.service.RepositoryServiceUtil;
 import com.liferay.portal.service.ServiceContext;
 import com.liferay.portlet.documentlibrary.asset.DLFolderAssetRenderer;
+import com.liferay.portlet.documentlibrary.model.DLFileEntry;
 import com.liferay.portlet.documentlibrary.model.DLFolder;
 import com.liferay.portlet.documentlibrary.model.DLFolderConstants;
 import com.liferay.portlet.documentlibrary.service.DLAppLocalServiceUtil;
+import com.liferay.portlet.documentlibrary.service.DLFileEntryLocalServiceUtil;
 import com.liferay.portlet.documentlibrary.service.DLFolderLocalServiceUtil;
 import com.liferay.portlet.documentlibrary.service.permission.DLFolderPermission;
 import com.liferay.portlet.documentlibrary.util.DLUtil;
@@ -139,6 +141,11 @@ public class DLFolderTrashHandler extends DLBaseTrashHandler {
 	}
 
 	@Override
+	public String getSubcontainerModelName() {
+		return "folder";
+	}
+
+	@Override
 	public String getSystemEventClassName() {
 		return DLFolderConstants.getClassName();
 	}
@@ -238,7 +245,12 @@ public class DLFolderTrashHandler extends DLBaseTrashHandler {
 			TrashCapability.class);
 
 		Folder folder = repository.getFolder(classPK);
-		Folder destinationFolder = repository.getFolder(containerModelId);
+
+		Folder destinationFolder = null;
+
+		if (containerModelId != DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
+			destinationFolder = repository.getFolder(containerModelId);
+		}
 
 		trashCapability.moveFolderFromTrash(
 			userId, folder, destinationFolder, serviceContext);
@@ -291,6 +303,22 @@ public class DLFolderTrashHandler extends DLBaseTrashHandler {
 
 			ree.setDuplicateEntryId(duplicateDLFolder.getFolderId());
 			ree.setOldName(duplicateDLFolder.getName());
+			ree.setTrashEntryId(trashEntryId);
+
+			throw ree;
+		}
+
+		DLFileEntry duplicateDLFileEntry =
+			DLFileEntryLocalServiceUtil.fetchFileEntry(
+				dlFolder.getGroupId(), containerModelId, originalTitle);
+
+		if (duplicateDLFileEntry != null) {
+			RestoreEntryException ree = new RestoreEntryException(
+				RestoreEntryException.DUPLICATE);
+
+			ree.setDuplicateEntryId(duplicateDLFileEntry.getFileEntryId());
+			ree.setOldName(duplicateDLFileEntry.getTitle());
+			ree.setOverridable(false);
 			ree.setTrashEntryId(trashEntryId);
 
 			throw ree;

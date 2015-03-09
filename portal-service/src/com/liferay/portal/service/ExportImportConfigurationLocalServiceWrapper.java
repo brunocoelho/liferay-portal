@@ -183,10 +183,10 @@ public class ExportImportConfigurationLocalServiceWrapper
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	@Override
 	public long dynamicQueryCount(
@@ -195,11 +195,11 @@ public class ExportImportConfigurationLocalServiceWrapper
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	@Override
 	public long dynamicQueryCount(
@@ -257,6 +257,13 @@ public class ExportImportConfigurationLocalServiceWrapper
 		com.liferay.portal.kernel.util.OrderByComparator<com.liferay.portal.model.ExportImportConfiguration> orderByComparator) {
 		return _exportImportConfigurationLocalService.getExportImportConfigurations(groupId,
 			type, start, end, orderByComparator);
+	}
+
+	@Override
+	public java.util.List<com.liferay.portal.model.ExportImportConfiguration> getExportImportConfigurations(
+		com.liferay.portal.kernel.search.Hits hits)
+		throws com.liferay.portal.kernel.exception.PortalException {
+		return _exportImportConfigurationLocalService.getExportImportConfigurations(hits);
 	}
 
 	/**
@@ -319,6 +326,25 @@ public class ExportImportConfigurationLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 		return _exportImportConfigurationLocalService.restoreExportImportConfigurationFromTrash(userId,
 			exportImportConfigurationId);
+	}
+
+	@Override
+	public com.liferay.portal.kernel.search.BaseModelSearchResult<com.liferay.portal.model.ExportImportConfiguration> searchExportImportConfigurations(
+		long companyId, long groupId, int type, java.lang.String keywords,
+		int start, int end, com.liferay.portal.kernel.search.Sort sort)
+		throws com.liferay.portal.kernel.exception.PortalException {
+		return _exportImportConfigurationLocalService.searchExportImportConfigurations(companyId,
+			groupId, type, keywords, start, end, sort);
+	}
+
+	@Override
+	public com.liferay.portal.kernel.search.BaseModelSearchResult<com.liferay.portal.model.ExportImportConfiguration> searchExportImportConfigurations(
+		long companyId, long groupId, int type, java.lang.String name,
+		java.lang.String description, boolean andSearch, int start, int end,
+		com.liferay.portal.kernel.search.Sort sort)
+		throws com.liferay.portal.kernel.exception.PortalException {
+		return _exportImportConfigurationLocalService.searchExportImportConfigurations(companyId,
+			groupId, type, name, description, andSearch, start, end, sort);
 	}
 
 	/**

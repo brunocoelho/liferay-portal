@@ -16,7 +16,7 @@ package com.liferay.portal.kernel.io;
 
 import com.liferay.portal.kernel.io.RestrictedByteArrayCacheOutputStream.FlushPreAction;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
-import com.liferay.portal.kernel.test.CodeCoverageAssertor;
+import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 import com.liferay.portal.kernel.util.ArrayUtil;
 
 import java.io.IOException;
@@ -36,8 +36,8 @@ import org.junit.Test;
 public class RestrictedByteArrayCacheOutputStreamTest {
 
 	@ClassRule
-	public static CodeCoverageAssertor codeCoverageAssertor =
-		new CodeCoverageAssertor();
+	public static final CodeCoverageAssertor codeCoverageAssertor =
+		CodeCoverageAssertor.INSTANCE;
 
 	@Test
 	public void testBlockWrite() throws IOException {

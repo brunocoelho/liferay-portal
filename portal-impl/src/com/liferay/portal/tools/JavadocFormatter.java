@@ -25,6 +25,7 @@ import com.liferay.portal.kernel.util.Tuple;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
+import com.liferay.portal.kernel.xml.SAXReader;
 import com.liferay.portal.tools.javadocformatter.SinceJava;
 import com.liferay.portal.tools.servicebuilder.ServiceBuilder;
 import com.liferay.portal.util.FileImpl;
@@ -49,11 +50,12 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -76,18 +78,18 @@ import org.apache.tools.ant.DirectoryScanner;
  */
 public class JavadocFormatter {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
+		Map<String, String> arguments = ArgumentsUtil.parseArguments(args);
+
 		try {
-			new JavadocFormatter(args);
+			new JavadocFormatter(arguments);
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			ArgumentsUtil.processMainException(arguments, e);
 		}
 	}
 
-	public JavadocFormatter(String[] args) throws Exception {
-		Map<String, String> arguments = ArgumentsUtil.parseArguments(args);
-
+	public JavadocFormatter(Map<String, String> arguments) throws Exception {
 		String init = arguments.get("javadoc.init");
 
 		if (Validator.isNotNull(init) && !init.startsWith("$")) {
@@ -772,18 +774,15 @@ public class JavadocFormatter {
 	}
 
 	private void _format(String fileName) throws Exception {
-		InputStream inputStream = new FileInputStream(_inputDir + fileName);
+		String originalContent = new String(
+			Files.readAllBytes(Paths.get(_inputDir + fileName)),
+			StringPool.UTF8);
 
-		byte[] bytes = new byte[inputStream.available()];
-
-		inputStream.read(bytes);
-
-		inputStream.close();
-
-		String originalContent = new String(bytes, StringPool.UTF8);
-
-		if (fileName.endsWith("JavadocFormatter.java") ||
+		if (fileName.contains("modules/third-party") ||
+			fileName.endsWith("Application.java") ||
+			fileName.endsWith("JavadocFormatter.java") ||
 			fileName.endsWith("SourceFormatter.java") ||
+			fileName.endsWith("WebProxyPortlet.java") ||
 			_hasGeneratedTag(originalContent)) {
 
 			return;
@@ -1108,9 +1107,9 @@ public class JavadocFormatter {
 	}
 
 	private Document _getJavadocDocument(JavaClass javaClass) throws Exception {
-		Element rootElement = _saxReaderUtil.createElement("javadoc");
+		Element rootElement = _saxReader.createElement("javadoc");
 
-		Document document = _saxReaderUtil.createDocument(rootElement);
+		Document document = _saxReader.createDocument(rootElement);
 
 		DocUtil.add(rootElement, "name", javaClass.getName());
 		DocUtil.add(rootElement, "type", javaClass.getFullyQualifiedName());
@@ -1208,7 +1207,7 @@ public class JavadocFormatter {
 
 		String javadocsXmlContent = _fileUtil.read(javadocsXmlFile);
 
-		Document javadocsXmlDocument = _saxReaderUtil.read(javadocsXmlContent);
+		Document javadocsXmlDocument = _saxReader.read(javadocsXmlContent);
 
 		tuple = new Tuple(
 			srcDirName, javadocsXmlFile, javadocsXmlContent,
@@ -1586,6 +1585,14 @@ public class JavadocFormatter {
 				continue;
 			}
 
+			int blankLines = 0;
+
+			while (line.equals(StringPool.BLANK)) {
+				line = lines[--pos];
+
+				blankLines++;
+			}
+
 			line = line.trim();
 
 			if (line.endsWith("*/")) {
@@ -1597,6 +1604,10 @@ public class JavadocFormatter {
 					}
 
 					line = lines[--pos].trim();
+				}
+
+				for (int i = 0; i < blankLines; i++) {
+					lines[lineNumber - i - 2] = null;
 				}
 			}
 		}
@@ -1879,47 +1890,46 @@ public class JavadocFormatter {
 	private void _updateLanguageProperties(String key, String value)
 		throws IOException {
 
-		UnsyncBufferedReader unsyncBufferedReader = new UnsyncBufferedReader(
-			new FileReader(_languagePropertiesFile));
-
 		StringBundler sb = new StringBundler();
 
-		boolean begin = false;
-		boolean firstLine = true;
-		String linePrefix = key + "=";
+		try (UnsyncBufferedReader unsyncBufferedReader = 
+				new UnsyncBufferedReader(
+					new FileReader(_languagePropertiesFile))) {
 
-		String line = null;
+			boolean begin = false;
+			boolean firstLine = true;
+			String linePrefix = key + "=";
 
-		while ((line = unsyncBufferedReader.readLine()) != null) {
-			if (line.equals(StringPool.BLANK)) {
-				begin = !begin;
-			}
+			String line = null;
 
-			if (firstLine) {
-				firstLine = false;
-			}
-			else {
-				sb.append(StringPool.NEW_LINE);
-			}
+			while ((line = unsyncBufferedReader.readLine()) != null) {
+				if (line.equals(StringPool.BLANK)) {
+					begin = !begin;
+				}
 
-			if (line.startsWith(linePrefix)) {
-				sb.append(linePrefix);
-				sb.append(value);
-			}
-			else {
-				sb.append(line);
+				if (firstLine) {
+					firstLine = false;
+				}
+				else {
+					sb.append(StringPool.NEW_LINE);
+				}
+
+				if (line.startsWith(linePrefix)) {
+					sb.append(linePrefix);
+					sb.append(value);
+				}
+				else {
+					sb.append(line);
+				}
 			}
 		}
 
-		unsyncBufferedReader.close();
+		try (Writer writer = new OutputStreamWriter(
+				new FileOutputStream(_languagePropertiesFile, false),
+				StringPool.UTF8)) {
 
-		Writer writer = new OutputStreamWriter(
-			new FileOutputStream(_languagePropertiesFile, false),
-			StringPool.UTF8);
-
-		writer.write(sb.toString());
-
-		writer.close();
+			sb.writeTo(writer);
+		}
 
 		System.out.println(
 			"Updating " + _languagePropertiesFile + " key " + key);
@@ -1975,7 +1985,7 @@ public class JavadocFormatter {
 	private static final double _LOWEST_SUPPORTED_JAVA_VERSION = 1.7;
 
 	private static FileImpl _fileUtil = FileImpl.getInstance();
-	private static SAXReaderImpl _saxReaderUtil = SAXReaderImpl.getInstance();
+	private static final SAXReader _saxReader = new SAXReaderImpl();
 
 	private boolean _initializeMissingJavadocs;
 	private String _inputDir;

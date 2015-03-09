@@ -18,11 +18,13 @@ import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
+ * @deprecated As of 7.0.0, replaced by {@link
+ *             UserScreenNameException.MustNotBeReserved}
  */
+@Deprecated
 public class ReservedUserScreenNameException extends PortalException {
 
 	public ReservedUserScreenNameException() {
-		super();
 	}
 
 	public ReservedUserScreenNameException(String msg) {

@@ -22,7 +22,12 @@ import com.liferay.portal.kernel.search.IndexWriter;
 import com.liferay.portal.kernel.search.SearchEngine;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.PortalRunMode;
+import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.SystemProperties;
+import com.liferay.portal.kernel.util.Time;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.elasticsearch.connection.ElasticsearchConnectionManager;
 import com.liferay.portal.search.elasticsearch.index.IndexFactory;
 import com.liferay.portal.search.elasticsearch.util.LogUtil;
@@ -49,6 +54,7 @@ import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.client.ClusterAdminClient;
 import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.cluster.metadata.RepositoryMetaData;
+import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.collect.ImmutableList;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.repositories.RepositoryMissingException;
@@ -63,7 +69,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	immediate = true,
 	property = {
-		"clusteredWrite=false", "luceneBased=true",
+		"clusteredWrite=false", "luceneBased=false",
 		"search.engine.id=SYSTEM_ENGINE", "vendor=Elasticsearch"
 	},
 	service = {ElasticsearchSearchEngine.class, SearchEngine.class}
@@ -73,6 +79,10 @@ public class ElasticsearchSearchEngine extends BaseSearchEngine {
 	@Override
 	public synchronized String backup(long companyId, String backupName)
 		throws SearchException {
+
+		backupName = StringUtil.toLowerCase(backupName);
+
+		validateBackupName(backupName);
 
 		ClusterAdminClient clusterAdminClient =
 			_elasticsearchConnectionManager.getClusterAdminClient();
@@ -104,8 +114,18 @@ public class ElasticsearchSearchEngine extends BaseSearchEngine {
 	public void initialize(long companyId) {
 		super.initialize(companyId);
 
-		ClusterHealthResponse clusterHealthResponse =
-			_elasticsearchConnectionManager.getClusterHealthResponse();
+		ClusterHealthResponse clusterHealthResponse = null;
+
+		if (PortalRunMode.isTestMode()) {
+			clusterHealthResponse =
+				_elasticsearchConnectionManager.getClusterHealthResponse(
+					Time.HOUR, 1);
+		}
+		else {
+			clusterHealthResponse =
+				_elasticsearchConnectionManager.getClusterHealthResponse(
+					30 * Time.SECOND, 2);
+		}
 
 		if (clusterHealthResponse.getStatus() == ClusterHealthStatus.RED) {
 			throw new IllegalStateException(
@@ -129,11 +149,15 @@ public class ElasticsearchSearchEngine extends BaseSearchEngine {
 		ClusterAdminClient clusterAdminClient =
 			_elasticsearchConnectionManager.getClusterAdminClient();
 
-		DeleteSnapshotRequestBuilder deleteSnapshotRequestBuilder =
-			clusterAdminClient.prepareDeleteSnapshot(
-				_BACKUP_REPOSITORY_NAME, backupName);
-
 		try {
+			if (!hasBackupRepository(clusterAdminClient)) {
+				return;
+			}
+
+			DeleteSnapshotRequestBuilder deleteSnapshotRequestBuilder =
+				clusterAdminClient.prepareDeleteSnapshot(
+					_BACKUP_REPOSITORY_NAME, backupName);
+
 			Future<DeleteSnapshotResponse> future =
 				deleteSnapshotRequestBuilder.execute();
 
@@ -165,6 +189,10 @@ public class ElasticsearchSearchEngine extends BaseSearchEngine {
 	public synchronized void restore(long companyId, String backupName)
 		throws SearchException {
 
+		backupName = StringUtil.toLowerCase(backupName);
+
+		validateBackupName(backupName);
+
 		AdminClient adminClient =
 			_elasticsearchConnectionManager.getAdminClient();
 
@@ -192,6 +220,9 @@ public class ElasticsearchSearchEngine extends BaseSearchEngine {
 			clusterAdminClient.prepareRestoreSnapshot(
 				_BACKUP_REPOSITORY_NAME, backupName);
 
+		restoreSnapshotRequestBuilder.setIndices(String.valueOf(companyId));
+		restoreSnapshotRequestBuilder.setWaitForCompletion(true);
+
 		try {
 			Future<RestoreSnapshotResponse> future =
 				restoreSnapshotRequestBuilder.execute();
@@ -204,8 +235,18 @@ public class ElasticsearchSearchEngine extends BaseSearchEngine {
 			throw new SearchException(e);
 		}
 
-		ClusterHealthResponse clusterHealthResponse =
-			_elasticsearchConnectionManager.getClusterHealthResponse();
+		ClusterHealthResponse clusterHealthResponse = null;
+
+		if (PortalRunMode.isTestMode()) {
+			clusterHealthResponse =
+				_elasticsearchConnectionManager.getClusterHealthResponse(
+					Time.HOUR, 1);
+		}
+		else {
+			clusterHealthResponse =
+				_elasticsearchConnectionManager.getClusterHealthResponse(
+					30 * Time.SECOND, 2);
+		}
 
 		if (clusterHealthResponse.getStatus() == ClusterHealthStatus.RED) {
 			throw new IllegalStateException(
@@ -227,13 +268,13 @@ public class ElasticsearchSearchEngine extends BaseSearchEngine {
 	}
 
 	@Override
-	@Reference
+	@Reference(service = ElasticsearchIndexSearcher.class)
 	public void setIndexSearcher(IndexSearcher indexSearcher) {
 		super.setIndexSearcher(indexSearcher);
 	}
 
 	@Override
-	@Reference
+	@Reference(service = ElasticsearchIndexWriter.class)
 	public void setIndexWriter(IndexWriter indexWriter) {
 		super.setIndexWriter(indexWriter);
 	}
@@ -258,32 +299,8 @@ public class ElasticsearchSearchEngine extends BaseSearchEngine {
 	protected void createBackupRepository(ClusterAdminClient clusterAdminClient)
 		throws Exception {
 
-		GetRepositoriesRequestBuilder getRepositoriesRequestBuilder =
-			clusterAdminClient.prepareGetRepositories(_BACKUP_REPOSITORY_NAME);
-
-		try {
-			Future<GetRepositoriesResponse> getRepositoriesResponseFuture =
-				getRepositoriesRequestBuilder.execute();
-
-			GetRepositoriesResponse getRepositoriesResponse =
-				getRepositoriesResponseFuture.get();
-
-			ImmutableList<RepositoryMetaData> repositoryMetaDatas =
-				getRepositoriesResponse.repositories();
-
-			if (!repositoryMetaDatas.isEmpty()) {
-				return;
-			}
-		}
-		catch (ExecutionException ee) {
-			if (ee.getCause() instanceof RepositoryMissingException) {
-				if (_log.isInfoEnabled()) {
-					_log.info("Creating a new backup repository", ee);
-				}
-			}
-			else {
-				throw ee;
-			}
+		if (hasBackupRepository(clusterAdminClient)) {
+			return;
 		}
 
 		PutRepositoryRequestBuilder putRepositoryRequestBuilder =
@@ -308,9 +325,78 @@ public class ElasticsearchSearchEngine extends BaseSearchEngine {
 		LogUtil.logActionResponse(_log, putRepositoryResponse);
 	}
 
+	protected boolean hasBackupRepository(ClusterAdminClient clusterAdminClient)
+		throws Exception {
+
+		GetRepositoriesRequestBuilder getRepositoriesRequestBuilder =
+			clusterAdminClient.prepareGetRepositories(_BACKUP_REPOSITORY_NAME);
+
+		try {
+			Future<GetRepositoriesResponse> getRepositoriesResponseFuture =
+				getRepositoriesRequestBuilder.execute();
+
+			GetRepositoriesResponse getRepositoriesResponse =
+				getRepositoriesResponseFuture.get();
+
+			ImmutableList<RepositoryMetaData> repositoryMetaDatas =
+				getRepositoriesResponse.repositories();
+
+			if (repositoryMetaDatas.isEmpty()) {
+				return false;
+			}
+
+			return true;
+		}
+		catch (ExecutionException ee) {
+			if (ee.getCause() instanceof RepositoryMissingException) {
+				return false;
+			}
+			else {
+				throw ee;
+			}
+		}
+	}
+
+	protected void validateBackupName(String backupName)
+		throws SearchException {
+
+		if (Validator.isNull(backupName)) {
+			throw new SearchException(
+				"Backup name must not be an empty string");
+		}
+
+		if (StringUtil.contains(backupName, StringPool.COMMA)) {
+			throw new SearchException("Backup name must not contain comma");
+		}
+
+		if (StringUtil.startsWith(backupName, StringPool.DASH)) {
+			throw new SearchException("Backup name must not start with dash");
+		}
+
+		if (StringUtil.contains(backupName, StringPool.POUND)) {
+			throw new SearchException("Backup name must not contain pounds");
+		}
+
+		if (StringUtil.contains(backupName, StringPool.SPACE)) {
+			throw new SearchException("Backup name must not contain spaces");
+		}
+
+		if (StringUtil.contains(backupName, StringPool.TAB)) {
+			throw new SearchException("Backup name must not contain tabs");
+		}
+
+		for (char c : backupName.toCharArray()) {
+			if (Strings.INVALID_FILENAME_CHARS.contains(c)) {
+				throw new SearchException(
+					"Backup name must not contain invalid file name " +
+						"characters");
+			}
+		}
+	}
+
 	private static final String _BACKUP_REPOSITORY_NAME = "liferay_backup";
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		ElasticsearchSearchEngine.class);
 
 	private ElasticsearchConnectionManager _elasticsearchConnectionManager;

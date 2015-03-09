@@ -27,6 +27,7 @@ import java.util.Set;
 import org.python.core.CompileMode;
 import org.python.core.Py;
 import org.python.core.PyCode;
+import org.python.core.PyObject;
 import org.python.core.PySystemState;
 import org.python.util.InteractiveInterpreter;
 
@@ -69,11 +70,12 @@ public class PythonExecutor extends BaseScriptingExecutor {
 			return null;
 		}
 
-		Map<String, Object> outputObjects = new HashMap<String, Object>();
+		Map<String, Object> outputObjects = new HashMap<>();
 
 		for (String outputName : outputNames) {
-			outputObjects.put(
-				outputName, interactiveInterpreter.get(outputName));
+			PyObject pyObject = interactiveInterpreter.get(outputName);
+
+			outputObjects.put(outputName, pyObject.__tojava__(Object.class));
 		}
 
 		return outputObjects;
@@ -114,7 +116,7 @@ public class PythonExecutor extends BaseScriptingExecutor {
 	private static final String _LANGUAGE = "python";
 
 	private volatile boolean _initialized;
-	private PortalCache<String, PyCode> _portalCache =
+	private final PortalCache<String, PyCode> _portalCache =
 		SingleVMPoolUtil.getCache(_CACHE_NAME);
 
 }

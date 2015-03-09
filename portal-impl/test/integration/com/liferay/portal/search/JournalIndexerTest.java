@@ -19,24 +19,24 @@ import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.SearchContext;
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.rule.Sync;
+import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
+import com.liferay.portal.kernel.test.util.GroupTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.SearchContextTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.model.User;
 import com.liferay.portal.service.ServiceContext;
-import com.liferay.portal.test.DeleteAfterTestRun;
-import com.liferay.portal.test.Sync;
-import com.liferay.portal.test.SynchronousDestinationExecutionTestListener;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
-import com.liferay.portal.util.test.GroupTestUtil;
-import com.liferay.portal.util.test.RandomTestUtil;
-import com.liferay.portal.util.test.SearchContextTestUtil;
-import com.liferay.portal.util.test.ServiceContextTestUtil;
-import com.liferay.portal.util.test.TestPropsValues;
-import com.liferay.portal.util.test.UserTestUtil;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portlet.dynamicdatamapping.model.DDMStructure;
 import com.liferay.portlet.dynamicdatamapping.model.DDMTemplate;
 import com.liferay.portlet.dynamicdatamapping.util.test.DDMStructureTestUtil;
@@ -53,20 +53,22 @@ import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Eudaldo Alonso
  */
-@ExecutionTestListeners(
-	listeners = {
-		MainServletExecutionTestListener.class,
-		SynchronousDestinationExecutionTestListener.class
-	})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 @Sync
 public class JournalIndexerTest {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE,
+			SynchronousDestinationTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -149,7 +151,7 @@ public class JournalIndexerTest {
 		serviceContext.setWorkflowAction(WorkflowConstants.ACTION_PUBLISH);
 
 		JournalTestUtil.updateArticle(
-			article1, article1.getTitle(), content, false, true,
+			article1, article1.getTitleMap(), content, false, true,
 			serviceContext);
 
 		JournalArticle article2 = JournalTestUtil.addArticleWithWorkflow(
@@ -157,14 +159,14 @@ public class JournalIndexerTest {
 			"Apple Architectural Tablet", true);
 
 		Assert.assertEquals(
-			initialSearchCount  + 2,
+			initialSearchCount + 2,
 			searchCount(_group.getGroupId(), searchContext));
 
 		content = DDMStructureTestUtil.getSampleStructuredContent(
 			"Architectural Tablet");
 
 		JournalTestUtil.updateArticle(
-			article2, article2.getTitle(), content, false, true,
+			article2, article2.getTitleMap(), content, false, true,
 			serviceContext);
 
 		JournalArticleLocalServiceUtil.deleteArticles(_group.getGroupId());
@@ -206,7 +208,7 @@ public class JournalIndexerTest {
 			_group.getGroupId(), folder.getFolderId(), "title", content, true);
 
 		Assert.assertEquals(
-			initialSearchCount  + 1,
+			initialSearchCount + 1,
 			searchCount(
 				_group.getGroupId(), false, WorkflowConstants.STATUS_ANY,
 				searchContext));
@@ -217,7 +219,7 @@ public class JournalIndexerTest {
 		serviceContext.setWorkflowAction(WorkflowConstants.ACTION_PUBLISH);
 
 		article = JournalTestUtil.updateArticle(
-			article, article.getTitle(), article.getContent(), false, true,
+			article, article.getTitleMap(), article.getContent(), false, true,
 			serviceContext);
 
 		Assert.assertEquals(
@@ -229,7 +231,7 @@ public class JournalIndexerTest {
 		serviceContext.setWorkflowAction(WorkflowConstants.ACTION_SAVE_DRAFT);
 
 		JournalTestUtil.updateArticle(
-			article, article.getTitle(), article.getContent(), false, true,
+			article, article.getTitleMap(), article.getContent(), false, true,
 			serviceContext);
 
 		Assert.assertEquals(
@@ -335,13 +337,13 @@ public class JournalIndexerTest {
 		int initialSearchCount2 = searchCount(
 			_group.getGroupId(), searchContext2);
 
-		Map<Locale, String> titleMap = new HashMap<Locale, String>();
+		Map<Locale, String> titleMap = new HashMap<>();
 
 		titleMap.put(LocaleUtil.GERMANY, "Titel");
 		titleMap.put(LocaleUtil.SPAIN, "Titulo");
 		titleMap.put(LocaleUtil.US, "Title");
 
-		Map<Locale, String> contentMap = new HashMap<Locale, String>();
+		Map<Locale, String> contentMap = new HashMap<>();
 
 		contentMap.put(LocaleUtil.GERMANY, "Liferay Architektur Ansatz");
 		contentMap.put(LocaleUtil.SPAIN, "Liferay Arquitectura Aproximacion");
@@ -399,13 +401,13 @@ public class JournalIndexerTest {
 		int initialSearchCount2 = searchCount(
 			_group.getGroupId(), searchContext2);
 
-		Map<Locale, String> titleMap = new HashMap<Locale, String>();
+		Map<Locale, String> titleMap = new HashMap<>();
 
 		titleMap.put(LocaleUtil.GERMANY, "Titel");
 		titleMap.put(LocaleUtil.SPAIN, "Titulo");
 		titleMap.put(LocaleUtil.US, "Title");
 
-		Map<Locale, String> contentMap = new HashMap<Locale, String>();
+		Map<Locale, String> contentMap = new HashMap<>();
 
 		contentMap.put(LocaleUtil.GERMANY, "Liferay Architektur Ansatz");
 		contentMap.put(LocaleUtil.SPAIN, "Liferay Arquitectura Aproximacion");
@@ -544,7 +546,8 @@ public class JournalIndexerTest {
 		serviceContext.setWorkflowAction(WorkflowConstants.ACTION_PUBLISH);
 
 		article = JournalTestUtil.updateArticle(
-			article, article.getTitle(), content, false, true, serviceContext);
+			article, article.getTitleMap(), content, false, true,
+			serviceContext);
 
 		Assert.assertEquals(
 			initialSearchCount1,
@@ -616,7 +619,7 @@ public class JournalIndexerTest {
 		serviceContext.setWorkflowAction(WorkflowConstants.ACTION_PUBLISH);
 
 		article = JournalTestUtil.updateArticle(
-			article, article.getTitle(), article.getContent(), false, true,
+			article, article.getTitleMap(), article.getContent(), false, true,
 			serviceContext);
 
 		Assert.assertEquals(
@@ -704,6 +707,9 @@ public class JournalIndexerTest {
 			initialSearchCount1 + 1,
 			searchCount(_group.getGroupId(), searchContext1));
 
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
+
 		if (moveToTrash) {
 			JournalFolderLocalServiceUtil.moveFolderToTrash(
 				TestPropsValues.getUserId(), folder1.getFolderId());
@@ -711,9 +717,6 @@ public class JournalIndexerTest {
 			Assert.assertEquals(
 				initialSearchCount1,
 				searchCount(_group.getGroupId(), searchContext1));
-
-			ServiceContext serviceContext =
-				ServiceContextTestUtil.getServiceContext(_group.getGroupId());
 
 			article = JournalArticleLocalServiceUtil.getArticle(
 				article.getId());
@@ -725,7 +728,7 @@ public class JournalIndexerTest {
 		else {
 			JournalArticleLocalServiceUtil.moveArticle(
 				_group.getGroupId(), article.getArticleId(),
-				folder2.getFolderId());
+				folder2.getFolderId(), serviceContext);
 		}
 
 		Assert.assertEquals(
@@ -801,7 +804,8 @@ public class JournalIndexerTest {
 		}
 
 		JournalTestUtil.updateArticle(
-			article, article.getTitle(), content, false, true, serviceContext);
+			article, article.getTitleMap(), content, false, true,
+			serviceContext);
 
 		if (approve) {
 			Assert.assertEquals(

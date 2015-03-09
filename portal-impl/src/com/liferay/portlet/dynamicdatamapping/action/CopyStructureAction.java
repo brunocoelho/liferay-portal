@@ -164,12 +164,14 @@ public class CopyStructureAction extends PortletAction {
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			DDMTemplate.class.getName(), actionRequest);
 
+		long resourceClassNameId = ParamUtil.getLong(
+			actionRequest, "resourceClassNameId");
 		boolean copyDisplayTemplates = ParamUtil.getBoolean(
 			actionRequest, "copyDisplayTemplates");
 
 		if (copyDisplayTemplates) {
 			DDMTemplateServiceUtil.copyTemplates(
-				classNameId, oldClassPK, newClassPK,
+				classNameId, oldClassPK, resourceClassNameId, newClassPK,
 				DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY, serviceContext);
 		}
 
@@ -178,7 +180,7 @@ public class CopyStructureAction extends PortletAction {
 
 		if (copyFormTemplates) {
 			DDMTemplateServiceUtil.copyTemplates(
-				classNameId, oldClassPK, newClassPK,
+				classNameId, oldClassPK, resourceClassNameId, newClassPK,
 				DDMTemplateConstants.TEMPLATE_TYPE_FORM, serviceContext);
 		}
 	}

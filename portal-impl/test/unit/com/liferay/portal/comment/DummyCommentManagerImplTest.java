@@ -16,7 +16,7 @@ package com.liferay.portal.comment;
 
 import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.util.test.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -58,6 +58,7 @@ public class DummyCommentManagerImplTest {
 			0, _commentManager.getCommentsCount(className, classPK));
 	}
 
-	private CommentManager _commentManager = new DummyCommentManagerImpl();
+	private final CommentManager _commentManager =
+		new DummyCommentManagerImpl();
 
 }

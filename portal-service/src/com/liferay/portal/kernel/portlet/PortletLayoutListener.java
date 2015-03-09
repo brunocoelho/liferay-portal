@@ -14,6 +14,8 @@
 
 package com.liferay.portal.kernel.portlet;
 
+import com.liferay.portal.kernel.util.UnicodeProperties;
+
 /**
  * @author Brian Wing Shun Chan
  */
@@ -26,6 +28,13 @@ public interface PortletLayoutListener {
 		throws PortletLayoutListenerException;
 
 	public void onRemoveFromLayout(String portletId, long plid)
+		throws PortletLayoutListenerException;
+
+	public void onSetup(String portletId, long plid)
+		throws PortletLayoutListenerException;
+
+	public void updatePropertiesOnRemoveFromLayout(
+			String portletId, UnicodeProperties typeSettingsProperties)
 		throws PortletLayoutListenerException;
 
 }

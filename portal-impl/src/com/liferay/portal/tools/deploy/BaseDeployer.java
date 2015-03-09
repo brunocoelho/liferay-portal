@@ -96,8 +96,8 @@ public class BaseDeployer implements AutoDeployer, Deployer {
 	public static void main(String[] args) {
 		ToolDependencies.wireDeployers();
 
-		List<String> wars = new ArrayList<String>();
-		List<String> jars = new ArrayList<String>();
+		List<String> wars = new ArrayList<>();
+		List<String> jars = new ArrayList<>();
 
 		for (String arg : args) {
 			String fileName = StringUtil.toLowerCase(arg);
@@ -197,7 +197,7 @@ public class BaseDeployer implements AutoDeployer, Deployer {
 	public int autoDeploy(AutoDeploymentContext autoDeploymentContext)
 		throws AutoDeployException {
 
-		List<String> wars = new ArrayList<String>();
+		List<String> wars = new ArrayList<>();
 
 		File file = autoDeploymentContext.getFile();
 
@@ -485,8 +485,7 @@ public class BaseDeployer implements AutoDeployer, Deployer {
 		}
 
 		File portletPropertiesFile = new File(
-			srcFile.getAbsolutePath() +
-				"/WEB-INF/classes/portlet.properties");
+			srcFile.getAbsolutePath() + "/WEB-INF/classes/portlet.properties");
 
 		if (portletPropertiesFile.exists()) {
 			return;
@@ -1528,7 +1527,7 @@ public class BaseDeployer implements AutoDeployer, Deployer {
 			return null;
 		}
 
-		Map<String, String> filterMap = new HashMap<String, String>();
+		Map<String, String> filterMap = new HashMap<>();
 
 		filterMap.put("author", wrapCDATA(pluginPackage.getAuthor()));
 		filterMap.put("change_log", wrapCDATA(pluginPackage.getChangeLog()));
@@ -1743,7 +1742,7 @@ public class BaseDeployer implements AutoDeployer, Deployer {
 
 		String webSphereHome = System.getenv("WAS_HOME");
 
-		List<String> commands = new ArrayList<String>();
+		List<String> commands = new ArrayList<>();
 
 		if (OSDetector.isWindows()) {
 			commands.add(webSphereHome + "\\bin\\wsadmin.bat");
@@ -2038,7 +2037,7 @@ public class BaseDeployer implements AutoDeployer, Deployer {
 
 		Element rootElement = document.getRootElement();
 
-		List<String> listenerClasses = new ArrayList<String>();
+		List<String> listenerClasses = new ArrayList<>();
 
 		List<Element> listenerElements = rootElement.elements("listener");
 
@@ -2429,6 +2428,6 @@ public class BaseDeployer implements AutoDeployer, Deployer {
 	private static final String _PORTAL_CLASS_LOADER =
 		"com.liferay.support.tomcat.loader.PortalClassLoader";
 
-	private static Log _log = LogFactoryUtil.getLog(BaseDeployer.class);
+	private static final Log _log = LogFactoryUtil.getLog(BaseDeployer.class);
 
 }

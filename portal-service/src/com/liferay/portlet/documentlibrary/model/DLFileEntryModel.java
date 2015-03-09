@@ -314,6 +314,21 @@ public interface DLFileEntryModel extends AttachedModel, BaseModel<DLFileEntry>,
 	public void setName(String name);
 
 	/**
+	 * Returns the file name of this document library file entry.
+	 *
+	 * @return the file name of this document library file entry
+	 */
+	@AutoEscape
+	public String getFileName();
+
+	/**
+	 * Sets the file name of this document library file entry.
+	 *
+	 * @param fileName the file name of this document library file entry
+	 */
+	public void setFileName(String fileName);
+
+	/**
 	 * Returns the extension of this document library file entry.
 	 *
 	 * @return the extension of this document library file entry
@@ -613,19 +628,20 @@ public interface DLFileEntryModel extends AttachedModel, BaseModel<DLFileEntry>,
 	public Object clone();
 
 	@Override
-	public int compareTo(DLFileEntry dlFileEntry);
+	public int compareTo(
+		com.liferay.portlet.documentlibrary.model.DLFileEntry dlFileEntry);
 
 	@Override
 	public int hashCode();
 
 	@Override
-	public CacheModel<DLFileEntry> toCacheModel();
+	public CacheModel<com.liferay.portlet.documentlibrary.model.DLFileEntry> toCacheModel();
 
 	@Override
-	public DLFileEntry toEscapedModel();
+	public com.liferay.portlet.documentlibrary.model.DLFileEntry toEscapedModel();
 
 	@Override
-	public DLFileEntry toUnescapedModel();
+	public com.liferay.portlet.documentlibrary.model.DLFileEntry toUnescapedModel();
 
 	@Override
 	public String toString();

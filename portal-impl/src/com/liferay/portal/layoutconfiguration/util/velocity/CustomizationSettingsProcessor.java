@@ -14,6 +14,7 @@
 
 package com.liferay.portal.layoutconfiguration.util.velocity;
 
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.servlet.JSPSupportServlet;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringPool;
@@ -41,7 +42,8 @@ import javax.servlet.jsp.tagext.Tag;
 public class CustomizationSettingsProcessor implements ColumnProcessor {
 
 	public CustomizationSettingsProcessor(
-		HttpServletRequest request, HttpServletResponse response) {
+			HttpServletRequest request, HttpServletResponse response)
+		throws PortalException {
 
 		JspFactory jspFactory = JspFactory.getDefaultFactory();
 
@@ -58,14 +60,13 @@ public class CustomizationSettingsProcessor implements ColumnProcessor {
 
 		_layoutTypeSettings = selLayout.getTypeSettingsProperties();
 
-		_customizationEnabled = true;
+		if (!SitesUtil.isLayoutUpdateable(selLayout) ||
+			selLayout.isLayoutPrototypeLinkActive()) {
 
-		if (!SitesUtil.isLayoutUpdateable(selLayout)) {
 			_customizationEnabled = false;
 		}
-
-		if (selLayout.isLayoutPrototypeLinkActive()) {
-			_customizationEnabled = false;
+		else {
+			_customizationEnabled = true;
 		}
 	}
 
@@ -148,9 +149,9 @@ public class CustomizationSettingsProcessor implements ColumnProcessor {
 		return processPortlet(portletId);
 	}
 
-	private boolean _customizationEnabled;
-	private UnicodeProperties _layoutTypeSettings;
-	private PageContext _pageContext;
-	private Writer _writer;
+	private final boolean _customizationEnabled;
+	private final UnicodeProperties _layoutTypeSettings;
+	private final PageContext _pageContext;
+	private final Writer _writer;
 
 }

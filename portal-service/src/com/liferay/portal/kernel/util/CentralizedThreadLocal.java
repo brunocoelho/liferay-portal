@@ -78,6 +78,15 @@ public class CentralizedThreadLocal<T> extends ThreadLocal<T> {
 	}
 
 	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+
+		return false;
+	}
+
+	@Override
 	public T get() {
 		ThreadLocalMap threadLocalMap = _getThreadLocalMap();
 
@@ -129,9 +138,8 @@ public class CentralizedThreadLocal<T> extends ThreadLocal<T> {
 	private static Map<CentralizedThreadLocal<?>, Object> _toMap(
 		ThreadLocalMap threadLocalMap) {
 
-		Map<CentralizedThreadLocal<?>, Object> map =
-			new HashMap<CentralizedThreadLocal<?>, Object>(
-				threadLocalMap._table.length);
+		Map<CentralizedThreadLocal<?>, Object> map = new HashMap<>(
+			threadLocalMap._table.length);
 
 		for (Entry entry : threadLocalMap._table) {
 			if (entry != null) {
@@ -160,8 +168,15 @@ public class CentralizedThreadLocal<T> extends ThreadLocal<T> {
 
 	private static final int _HASH_INCREMENT = 0x61c88647;
 
-	private static final Set<Class<?>> _immutableTypes =
-		new HashSet<Class<?>>();
+	private static final Set<Class<?>> _immutableTypes = new HashSet<>();
+	private static final AtomicInteger _longLivedNextHasCode =
+		new AtomicInteger();
+	private static final ThreadLocal<ThreadLocalMap> _longLivedThreadLocals =
+		new ThreadLocalMapThreadLocal();
+	private static final AtomicInteger _shortLivedNextHasCode =
+		new AtomicInteger();
+	private static final ThreadLocal<ThreadLocalMap> _shortLivedThreadLocals =
+		new ThreadLocalMapThreadLocal();
 
 	static {
 		_immutableTypes.add(Boolean.class);
@@ -174,15 +189,6 @@ public class CentralizedThreadLocal<T> extends ThreadLocal<T> {
 		_immutableTypes.add(Double.class);
 		_immutableTypes.add(String.class);
 	}
-
-	private static final AtomicInteger _longLivedNextHasCode =
-		new AtomicInteger();
-	private static final ThreadLocal<ThreadLocalMap> _longLivedThreadLocals =
-		new ThreadLocalMapThreadLocal();
-	private static final AtomicInteger _shortLivedNextHasCode =
-		new AtomicInteger();
-	private static final ThreadLocal<ThreadLocalMap> _shortLivedThreadLocals =
-		new ThreadLocalMapThreadLocal();
 
 	private final int _hashCode;
 	private final boolean _shortLived;

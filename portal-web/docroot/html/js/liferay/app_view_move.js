@@ -32,9 +32,9 @@ AUI.add(
 
 		var STR_MOVE = 'move';
 
-		var STR_MOVE_TO_TRASH = 'move_to_trash';
-
 		var STR_MOVE_ENTRY_URL = 'moveEntryRenderUrl';
+
+		var STR_MOVE_TO_TRASH = 'move_to_trash';
 
 		var STR_NODE = 'node';
 
@@ -137,7 +137,9 @@ AUI.add(
 
 						A.Array.invoke(instance._eventHandles, 'detach');
 
-						instance._ddHandler.destroy();
+						if (instance._ddHandler) {
+							instance._ddHandler.destroy();
+						}
 					},
 
 					_editEntry: function(event) {
@@ -463,6 +465,6 @@ AUI.add(
 	},
 	'',
 	{
-		requires: ['aui-base', 'dd-constrain', 'dd-delegate', 'dd-drag', 'dd-drop', 'dd-proxy', 'liferay-history-manager', 'liferay-portlet-base', 'liferay-util-list-fields']
+		requires: ['aui-base', 'dd-constrain', 'dd-delegate', 'dd-drag', 'dd-drop', 'dd-proxy', 'liferay-history-manager', 'liferay-portlet-base']
 	}
 );

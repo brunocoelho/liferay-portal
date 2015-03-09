@@ -38,8 +38,8 @@ import com.liferay.portal.kernel.resiliency.spi.agent.SPIAgentFactoryUtil;
 import com.liferay.portal.kernel.resiliency.spi.remote.RemoteSPI;
 import com.liferay.portal.kernel.resiliency.spi.remote.RemoteSPIProxy;
 import com.liferay.portal.kernel.test.CaptureHandler;
-import com.liferay.portal.kernel.test.CodeCoverageAssertor;
 import com.liferay.portal.kernel.test.JDKLoggerTestUtil;
+import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.resiliency.spi.SPIRegistryImpl;
@@ -62,8 +62,8 @@ import org.junit.Test;
 public class BaseSPIProviderTest {
 
 	@ClassRule
-	public static CodeCoverageAssertor codeCoverageAssertor =
-		new CodeCoverageAssertor();
+	public static final CodeCoverageAssertor codeCoverageAssertor =
+		CodeCoverageAssertor.INSTANCE;
 
 	@Before
 	public void setUp() {
@@ -95,10 +95,9 @@ public class BaseSPIProviderTest {
 
 	@Test
 	public void testCreateSPI() throws PortalResiliencyException {
-		CaptureHandler captureHandler = JDKLoggerTestUtil.configureJDKLogger(
-			MPIHelperUtil.class.getName(), Level.OFF);
-
-		try {
+		try (CaptureHandler captureHandler =
+				JDKLoggerTestUtil.configureJDKLogger(
+					MPIHelperUtil.class.getName(), Level.OFF)) {
 
 			// Timeout
 
@@ -175,14 +174,11 @@ public class BaseSPIProviderTest {
 				Assert.assertEquals("ProcessException", throwable.getMessage());
 			}
 		}
-		finally {
-			captureHandler.close();
-		}
 	}
 
-	private MockProcessExecutor _mockProcessExecutor =
+	private final MockProcessExecutor _mockProcessExecutor =
 		new MockProcessExecutor();
-	private SPIConfiguration _spiConfiguration = new SPIConfiguration(
+	private final SPIConfiguration _spiConfiguration = new SPIConfiguration(
 		"testId", "java", "", MockSPIAgent.class.getName(), 8081, "",
 		new String[0], new String[0], 10, 10, 10, "");
 	private TestSPIProvider _testSPIProvider;
@@ -229,7 +225,7 @@ public class BaseSPIProviderTest {
 			}
 
 			DefaultNoticeableFuture<T> defaultNoticeableFuture =
-				new DefaultNoticeableFuture<T>();
+				new DefaultNoticeableFuture<>();
 
 			defaultNoticeableFuture.set((T)mockSPI);
 

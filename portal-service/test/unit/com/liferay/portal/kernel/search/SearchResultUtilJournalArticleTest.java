@@ -15,15 +15,14 @@
 package com.liferay.portal.kernel.search;
 
 import com.liferay.portal.kernel.search.test.SearchTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.StringPool;
-import com.liferay.portal.util.test.RandomTestUtil;
 import com.liferay.portlet.journal.model.JournalArticle;
 
 import java.util.List;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -62,8 +61,7 @@ public class SearchResultUtilJournalArticleTest
 			indexer
 		).getSummary(
 			(Document)Matchers.any(), Matchers.anyString(),
-			(PortletURL)Matchers.any(), (PortletRequest)Matchers.any(),
-			(PortletResponse)Matchers.any());
+			(PortletRequest)Matchers.any(), (PortletResponse)Matchers.any());
 
 		stub(
 			method(IndexerRegistryUtil.class, "getIndexer", String.class)
@@ -82,7 +80,7 @@ public class SearchResultUtilJournalArticleTest
 		Mockito.verify(
 			indexer
 		).getSummary(
-			document, StringPool.BLANK, portletURL, null, null
+			document, StringPool.BLANK, null, null
 		);
 	}
 

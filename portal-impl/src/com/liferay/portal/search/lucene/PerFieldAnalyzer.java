@@ -97,6 +97,16 @@ public class PerFieldAnalyzer extends Analyzer implements Tokenizer {
 		return analyzer.getPositionIncrementGap(fieldName);
 	}
 
+	public boolean isSubstringSearchAlways(String fieldName) {
+		Analyzer analyzer = getAnalyzer(fieldName);
+
+		if (analyzer instanceof LikeKeywordAnalyzer) {
+			return true;
+		}
+
+		return false;
+	}
+
 	@Override
 	public final TokenStream reusableTokenStream(
 			String fieldName, Reader reader)
@@ -112,7 +122,7 @@ public class PerFieldAnalyzer extends Analyzer implements Tokenizer {
 			String fieldName, String input, String languageId)
 		throws SearchException {
 
-		List<String> tokens = new ArrayList<String>();
+		List<String> tokens = new ArrayList<>();
 		TokenStream tokenStream = null;
 
 		try {
@@ -161,10 +171,11 @@ public class PerFieldAnalyzer extends Analyzer implements Tokenizer {
 		return analyzer.tokenStream(fieldName, reader);
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(PerFieldAnalyzer.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		PerFieldAnalyzer.class);
 
-	private Analyzer _analyzer;
-	private Map<String, ObjectValuePair<Pattern, Analyzer>> _analyzers =
-		new LinkedHashMap<String, ObjectValuePair<Pattern, Analyzer>>();
+	private final Analyzer _analyzer;
+	private final Map<String, ObjectValuePair<Pattern, Analyzer>> _analyzers =
+		new LinkedHashMap<>();
 
 }

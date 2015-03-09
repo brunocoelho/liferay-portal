@@ -691,8 +691,8 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 	 * com.liferay.portlet.portalsettings.action.EditLDAPServerAction} remotely
 	 * through {@link com.liferay.portal.service.CompanyService}.
 	 *
-	 * @param  companyId the primary key of the company
-	 * @param  keys the company's preferences keys to be remove
+	 * @param companyId the primary key of the company
+	 * @param keys the company's preferences keys to be remove
 	 */
 	@Override
 	public void removePreferences(long companyId, String[] keys) {
@@ -915,7 +915,7 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 
 		company.setHomeURL(homeURL);
 
-		PortalUtil.updateImageId(company, logo, logoBytes, "logoId",0 ,0, 0);
+		PortalUtil.updateImageId(company, logo, logoBytes, "logoId", 0, 0, 0);
 
 		companyPersistence.update(company);
 
@@ -1105,7 +1105,7 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 				}
 			}
 
-			List<String> resetKeys = new ArrayList<String>();
+			List<String> resetKeys = new ArrayList<>();
 
 			for (Map.Entry<String, String> entry : properties.entrySet()) {
 				String key = entry.getKey();
@@ -1147,20 +1147,20 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 	/**
 	 * Updates the company's security properties.
 	 *
-	 * @param  companyId the primary key of the company
-	 * @param  authType the company's method of authenticating users
-	 * @param  autoLogin whether to allow users to select the "remember me"
-	 *         feature
-	 * @param  sendPassword whether to allow users to ask the company to send
-	 *         their password
-	 * @param  strangers whether to allow strangers to create accounts register
-	 *         themselves in the company
-	 * @param  strangersWithMx whether to allow strangers to create accounts
-	 *         with email addresses that match the company mail suffix
-	 * @param  strangersVerify whether to require strangers who create accounts
-	 *         to be verified via email
-	 * @param  siteLogo whether to allow site administrators to use their own
-	 *         logo instead of the enterprise logo
+	 * @param companyId the primary key of the company
+	 * @param authType the company's method of authenticating users
+	 * @param autoLogin whether to allow users to select the "remember me"
+	 *        feature
+	 * @param sendPassword whether to allow users to ask the company to send
+	 *        their password
+	 * @param strangers whether to allow strangers to create accounts register
+	 *        themselves in the company
+	 * @param strangersWithMx whether to allow strangers to create accounts with
+	 *        email addresses that match the company mail suffix
+	 * @param strangersVerify whether to require strangers who create accounts
+	 *        to be verified via email
+	 * @param siteLogo whether to allow site administrators to use their own
+	 *        logo instead of the enterprise logo
 	 */
 	@Override
 	public void updateSecurity(
@@ -1336,7 +1336,10 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 		PasswordPolicy defaultPasswordPolicy =
 			passwordPolicyLocalService.getDefaultPasswordPolicy(companyId);
 
-		passwordPolicyLocalService.deletePasswordPolicy(defaultPasswordPolicy);
+		if (defaultPasswordPolicy != null) {
+			passwordPolicyLocalService.deletePasswordPolicy(
+				defaultPasswordPolicy);
+		}
 
 		// Portal preferences
 
@@ -1588,7 +1591,7 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 
 						Group group = (Group)object;
 
-						if (!PortalUtil.isSystemGroup(group.getName()) &&
+						if (!PortalUtil.isSystemGroup(group.getGroupKey()) &&
 							!group.isCompany()) {
 
 							deleteGroup(group);
@@ -1629,6 +1632,7 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 
 		private ActionableDynamicQuery _actionableDynamicQuery;
 		private long _parentGroupId = GroupConstants.DEFAULT_PARENT_GROUP_ID;
+
 	}
 
 	protected class DeleteOrganizationActionableDynamicQuery {
@@ -1701,7 +1705,7 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 
 	private static final String _DEFAULT_VIRTUAL_HOST = "localhost";
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		CompanyLocalServiceImpl.class);
 
 }

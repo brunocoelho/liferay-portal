@@ -27,7 +27,7 @@ import com.liferay.portlet.trash.model.TrashVersion;
 import java.util.List;
 
 /**
- * The persistence utility for the trash version service. This utility wraps {@link TrashVersionPersistenceImpl} and provides direct access to the database for CRUD operations. This utility should only be used by the service layer, as it must operate within a transaction. Never access this utility in a JSP, controller, model, or other front-end class.
+ * The persistence utility for the trash version service. This utility wraps {@link com.liferay.portlet.trash.service.persistence.impl.TrashVersionPersistenceImpl} and provides direct access to the database for CRUD operations. This utility should only be used by the service layer, as it must operate within a transaction. Never access this utility in a JSP, controller, model, or other front-end class.
  *
  * <p>
  * Caching information and settings can be found in <code>portal.properties</code>
@@ -35,7 +35,7 @@ import java.util.List;
  *
  * @author Brian Wing Shun Chan
  * @see TrashVersionPersistence
- * @see TrashVersionPersistenceImpl
+ * @see com.liferay.portlet.trash.service.persistence.impl.TrashVersionPersistenceImpl
  * @generated
  */
 @ProviderType
@@ -468,76 +468,6 @@ public class TrashVersionUtil {
 	*/
 	public static int countByC_C(long classNameId, long classPK) {
 		return getPersistence().countByC_C(classNameId, classPK);
-	}
-
-	/**
-	* Returns the trash version where entryId = &#63; and classNameId = &#63; and classPK = &#63; or throws a {@link com.liferay.portlet.trash.NoSuchVersionException} if it could not be found.
-	*
-	* @param entryId the entry ID
-	* @param classNameId the class name ID
-	* @param classPK the class p k
-	* @return the matching trash version
-	* @throws com.liferay.portlet.trash.NoSuchVersionException if a matching trash version could not be found
-	*/
-	public static com.liferay.portlet.trash.model.TrashVersion findByE_C_C(
-		long entryId, long classNameId, long classPK)
-		throws com.liferay.portlet.trash.NoSuchVersionException {
-		return getPersistence().findByE_C_C(entryId, classNameId, classPK);
-	}
-
-	/**
-	* Returns the trash version where entryId = &#63; and classNameId = &#63; and classPK = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	*
-	* @param entryId the entry ID
-	* @param classNameId the class name ID
-	* @param classPK the class p k
-	* @return the matching trash version, or <code>null</code> if a matching trash version could not be found
-	*/
-	public static com.liferay.portlet.trash.model.TrashVersion fetchByE_C_C(
-		long entryId, long classNameId, long classPK) {
-		return getPersistence().fetchByE_C_C(entryId, classNameId, classPK);
-	}
-
-	/**
-	* Returns the trash version where entryId = &#63; and classNameId = &#63; and classPK = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
-	*
-	* @param entryId the entry ID
-	* @param classNameId the class name ID
-	* @param classPK the class p k
-	* @param retrieveFromCache whether to use the finder cache
-	* @return the matching trash version, or <code>null</code> if a matching trash version could not be found
-	*/
-	public static com.liferay.portlet.trash.model.TrashVersion fetchByE_C_C(
-		long entryId, long classNameId, long classPK, boolean retrieveFromCache) {
-		return getPersistence()
-				   .fetchByE_C_C(entryId, classNameId, classPK,
-			retrieveFromCache);
-	}
-
-	/**
-	* Removes the trash version where entryId = &#63; and classNameId = &#63; and classPK = &#63; from the database.
-	*
-	* @param entryId the entry ID
-	* @param classNameId the class name ID
-	* @param classPK the class p k
-	* @return the trash version that was removed
-	*/
-	public static com.liferay.portlet.trash.model.TrashVersion removeByE_C_C(
-		long entryId, long classNameId, long classPK)
-		throws com.liferay.portlet.trash.NoSuchVersionException {
-		return getPersistence().removeByE_C_C(entryId, classNameId, classPK);
-	}
-
-	/**
-	* Returns the number of trash versions where entryId = &#63; and classNameId = &#63; and classPK = &#63;.
-	*
-	* @param entryId the entry ID
-	* @param classNameId the class name ID
-	* @param classPK the class p k
-	* @return the number of matching trash versions
-	*/
-	public static int countByE_C_C(long entryId, long classNameId, long classPK) {
-		return getPersistence().countByE_C_C(entryId, classNameId, classPK);
 	}
 
 	/**

@@ -17,15 +17,25 @@ package com.liferay.portal.tools.sourceformatter;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.util.CharPool;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.util.Validator;
+
+import com.thoughtworks.qdox.JavaDocBuilder;
+import com.thoughtworks.qdox.model.JavaClass;
+import com.thoughtworks.qdox.model.JavaMethod;
+import com.thoughtworks.qdox.model.Type;
 
 import java.io.File;
 import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -332,6 +342,8 @@ public class JSPSourceProcessor extends BaseSourceProcessor {
 				"while (", ") {\n", ";\n", "\n\n"
 			});
 
+		newContent = fixRedirectBackURL(newContent);
+
 		newContent = fixCompatClassImports(absolutePath, newContent);
 
 		if (_stripJSPImports && !_jspContents.isEmpty()) {
@@ -344,7 +356,6 @@ public class JSPSourceProcessor extends BaseSourceProcessor {
 		}
 
 		if (portalSource &&
-			!mainReleaseVersion.equals(MAIN_RELEASE_VERSION_6_1_0) &&
 			content.contains("page import=") &&
 			!fileName.contains("init.jsp") &&
 			!fileName.contains("init-ext.jsp") &&
@@ -423,9 +434,21 @@ public class JSPSourceProcessor extends BaseSourceProcessor {
 		Matcher matcher = _javaClassPattern.matcher(newContent);
 
 		if (matcher.find()) {
+			String javaClassContent = matcher.group();
+
+			javaClassContent = javaClassContent.substring(1);
+
+			String javaClassName = matcher.group(2);
+
+			String beforeJavaClass = newContent.substring(
+				0, matcher.start() + 1);
+
+			int javaClassLineCount =
+				StringUtil.count(beforeJavaClass, "\n") + 1;
+
 			newContent = formatJavaTerms(
-				fileName, absolutePath, newContent, matcher.group(), null,
-				null);
+				javaClassName, null, file, fileName, absolutePath, newContent,
+				javaClassContent, javaClassLineCount, null, null, null, null);
 		}
 
 		if (!content.equals(newContent)) {
@@ -435,10 +458,26 @@ public class JSPSourceProcessor extends BaseSourceProcessor {
 		return newContent;
 	}
 
+	protected String fixRedirectBackURL(String content) {
+		Matcher matcher = _redirectBackURLPattern.matcher(content);
+
+		String newContent = content;
+
+		while (matcher.find()) {
+			newContent = StringUtil.replaceFirst(
+				newContent, matcher.group(),
+				matcher.group(1) + "\n\n" + matcher.group(2), matcher.start());
+		}
+
+		return newContent;
+	}
+
 	@Override
 	protected void format() throws Exception {
-		_unusedVariablesExclusions = getPropertyList(
-			"jsp.unused.variables.excludes");
+		_moveFrequentlyUsedImportsToCommonInit = GetterUtil.getBoolean(
+			getProperty("move.frequently.used.imports.to.common.init"));
+		_unusedVariablesExclusionFiles = getPropertyList(
+			"jsp.unused.variables.excludes.files");
 
 		String[] excludes = new String[] {"**\\null.jsp", "**\\tools\\**"};
 		String[] includes = new String[] {
@@ -474,7 +513,7 @@ public class JSPSourceProcessor extends BaseSourceProcessor {
 			processFormattedFile(file, fileName, content, newContent);
 
 			if (portalSource &&
-				mainReleaseVersion.equals(MAIN_RELEASE_LATEST_VERSION) &&
+				_moveFrequentlyUsedImportsToCommonInit &&
 				fileName.endsWith("/init.jsp") &&
 				!absolutePath.contains("/modules/") &&
 				!fileName.endsWith("/common/init.jsp")) {
@@ -485,9 +524,7 @@ public class JSPSourceProcessor extends BaseSourceProcessor {
 			_jspContents.put(fileName, newContent);
 		}
 
-		if (portalSource &&
-			!mainReleaseVersion.equals(MAIN_RELEASE_VERSION_6_1_0)) {
-
+		if (portalSource && _moveFrequentlyUsedImportsToCommonInit) {
 			moveFrequentlyUsedImportsToCommonInit(4);
 		}
 
@@ -498,178 +535,172 @@ public class JSPSourceProcessor extends BaseSourceProcessor {
 
 	protected String formatJSP(
 			String fileName, String absolutePath, String content)
-		throws IOException {
+		throws Exception {
 
 		StringBundler sb = new StringBundler();
-
-		UnsyncBufferedReader unsyncBufferedReader = new UnsyncBufferedReader(
-			new UnsyncStringReader(content));
-
-		_checkedForIncludesFileNames = new HashSet<String>();
-		_includeFileNames = new HashSet<String>();
-
-		int lineCount = 0;
-
-		String line = null;
-
-		String previousLine = StringPool.BLANK;
 
 		String currentAttributeAndValue = null;
 		String previousAttribute = null;
 		String previousAttributeAndValue = null;
-
-		boolean readAttributes = false;
+		String tag = null;
 
 		String currentException = null;
 		String previousException = null;
 
 		boolean hasUnsortedExceptions = false;
 
-		boolean javaSource = false;
+		try (UnsyncBufferedReader unsyncBufferedReader =
+				new UnsyncBufferedReader(new UnsyncStringReader(content))) {
 
-		while ((line = unsyncBufferedReader.readLine()) != null) {
-			lineCount++;
+			_checkedForIncludesFileNames = new HashSet<String>();
+			_includeFileNames = new HashSet<String>();
 
-			if (portalSource && hasUnusedTaglib(fileName, line)) {
-				continue;
-			}
+			int lineCount = 0;
 
-			if (!fileName.contains("jsonw") ||
-				!fileName.endsWith("action.jsp")) {
+			String line = null;
 
-				line = trimLine(line, false);
-			}
+			String previousLine = StringPool.BLANK;
 
-			if (line.contains("<aui:button ") &&
-				line.contains("type=\"button\"")) {
+			boolean readAttributes = false;
 
-				processErrorMessage(
-					fileName, "aui:button " + fileName + " " + lineCount);
-			}
+			boolean javaSource = false;
 
-			if (line.contains("debugger.")) {
-				processErrorMessage(
-					fileName, "debugger " + fileName + " " + lineCount);
-			}
+			while ((line = unsyncBufferedReader.readLine()) != null) {
+				lineCount++;
 
-			String trimmedLine = StringUtil.trimLeading(line);
-			String trimmedPreviousLine = StringUtil.trimLeading(previousLine);
-
-			checkStringBundler(trimmedLine, fileName, lineCount);
-
-			checkEmptyCollection(trimmedLine, fileName, lineCount);
-
-			if (trimmedLine.equals("<%") || trimmedLine.equals("<%!")) {
-				javaSource = true;
-			}
-			else if (trimmedLine.equals("%>")) {
-				javaSource = false;
-			}
-
-			if (javaSource || trimmedLine.contains("<%= ")) {
-				checkInefficientStringMethods(
-					line, fileName, absolutePath, lineCount);
-			}
-
-			if (javaSource && portalSource &&
-				!isExcluded(
-					_unusedVariablesExclusions, absolutePath, lineCount) &&
-				!_jspContents.isEmpty() &&
-				hasUnusedVariable(fileName, trimmedLine)) {
-
-				continue;
-			}
-
-			// LPS-47179
-
-			if (line.contains(".sendRedirect(") &&
-				!fileName.endsWith("_jsp.jsp")) {
-
-				processErrorMessage(
-					fileName,
-					"Do not use sendRedirect in jsp: " + fileName + " " +
-						lineCount);
-			}
-
-			if (!trimmedLine.equals("%>") && line.contains("%>") &&
-				!line.contains("--%>") && !line.contains(" %>")) {
-
-				line = StringUtil.replace(line, "%>", " %>");
-			}
-
-			if (line.contains("<%=") && !line.contains("<%= ")) {
-				line = StringUtil.replace(line, "<%=", "<%= ");
-			}
-
-			if (trimmedPreviousLine.equals("%>") && Validator.isNotNull(line) &&
-				!trimmedLine.equals("-->")) {
-
-				sb.append("\n");
-			}
-			else if (Validator.isNotNull(previousLine) &&
-					 !trimmedPreviousLine.equals("<!--") &&
-					 trimmedLine.equals("<%")) {
-
-				sb.append("\n");
-			}
-			else if (trimmedPreviousLine.equals("<%") &&
-					 Validator.isNull(line)) {
-
-				continue;
-			}
-			else if (trimmedPreviousLine.equals("<%") &&
-					 trimmedLine.startsWith("//")) {
-
-				sb.append("\n");
-			}
-			else if (Validator.isNull(previousLine) &&
-					 trimmedLine.equals("%>") && (sb.index() > 2)) {
-
-				String lineBeforePreviousLine = sb.stringAt(sb.index() - 3);
-
-				if (!lineBeforePreviousLine.startsWith("//")) {
-					sb.setIndex(sb.index() - 1);
+				if (portalSource && hasUnusedTaglib(fileName, line)) {
+					continue;
 				}
-			}
 
-			if ((trimmedLine.startsWith("if (") ||
-				 trimmedLine.startsWith("else if (") ||
-				 trimmedLine.startsWith("while (")) &&
-				trimmedLine.endsWith(") {")) {
+				if (!fileName.contains("jsonw") ||
+					!fileName.endsWith("action.jsp")) {
 
-				checkIfClauseParentheses(trimmedLine, fileName, lineCount);
-			}
+					line = trimLine(line, false);
+				}
 
-			if (readAttributes) {
-				if (!trimmedLine.startsWith(StringPool.FORWARD_SLASH) &&
-					!trimmedLine.startsWith(StringPool.GREATER_THAN)) {
+				if (line.contains("<aui:button ") &&
+					line.contains("type=\"button\"")) {
 
-					int pos = trimmedLine.indexOf(StringPool.EQUAL);
+					processErrorMessage(
+						fileName, "aui:button " + fileName + " " + lineCount);
+				}
 
-					if (pos != -1) {
-						String attribute = trimmedLine.substring(0, pos);
+				if (line.contains("debugger.")) {
+					processErrorMessage(
+						fileName, "debugger " + fileName + " " + lineCount);
+				}
 
-						if (!trimmedLine.endsWith(StringPool.APOSTROPHE) &&
-							!trimmedLine.endsWith(StringPool.GREATER_THAN) &&
-							!trimmedLine.endsWith(StringPool.QUOTE)) {
+				String trimmedLine = StringUtil.trimLeading(line);
+				String trimmedPreviousLine = StringUtil.trimLeading(
+					previousLine);
 
-							processErrorMessage(
-								fileName,
-								"attribute: " + fileName + " " + lineCount);
+				checkStringBundler(trimmedLine, fileName, lineCount);
 
-							readAttributes = false;
-						}
-						else if (trimmedLine.endsWith(StringPool.APOSTROPHE) &&
-								 !trimmedLine.contains(StringPool.QUOTE)) {
+				checkEmptyCollection(trimmedLine, fileName, lineCount);
 
-							line = StringUtil.replace(
-								line, StringPool.APOSTROPHE, StringPool.QUOTE);
+				if (trimmedLine.equals("<%") || trimmedLine.equals("<%!")) {
+					javaSource = true;
+				}
+				else if (trimmedLine.equals("%>")) {
+					javaSource = false;
+				}
 
-							readAttributes = false;
-						}
-						else if (Validator.isNotNull(previousAttribute)) {
-							if (!isAttributName(attribute) &&
-								!attribute.startsWith(StringPool.LESS_THAN)) {
+				if (javaSource || trimmedLine.contains("<%= ")) {
+					checkInefficientStringMethods(
+						line, fileName, absolutePath, lineCount);
+				}
+
+				if (javaSource && portalSource &&
+					!isExcludedFile(
+						_unusedVariablesExclusionFiles, absolutePath,
+						lineCount) &&
+					!_jspContents.isEmpty() &&
+					hasUnusedVariable(fileName, trimmedLine)) {
+
+					continue;
+				}
+
+				// LPS-47179
+
+				if (line.contains(".sendRedirect(") &&
+					!fileName.endsWith("_jsp.jsp")) {
+
+					processErrorMessage(
+						fileName,
+						"Do not use sendRedirect in jsp: " + fileName + " " +
+							lineCount);
+				}
+
+				if (!trimmedLine.equals("%>") && line.contains("%>") &&
+					!line.contains("--%>") && !line.contains(" %>")) {
+
+					line = StringUtil.replace(line, "%>", " %>");
+				}
+
+				if (line.contains("<%=") && !line.contains("<%= ")) {
+					line = StringUtil.replace(line, "<%=", "<%= ");
+				}
+
+				if (trimmedPreviousLine.equals("%>") &&
+					Validator.isNotNull(line) && !trimmedLine.equals("-->")) {
+
+					sb.append("\n");
+				}
+				else if (Validator.isNotNull(previousLine) &&
+						 !trimmedPreviousLine.equals("<!--") &&
+						 trimmedLine.equals("<%")) {
+
+					sb.append("\n");
+				}
+				else if (trimmedPreviousLine.equals("<%") &&
+						 Validator.isNull(line)) {
+
+					continue;
+				}
+				else if (trimmedPreviousLine.equals("<%") &&
+						 trimmedLine.startsWith("//")) {
+
+					sb.append("\n");
+				}
+				else if (Validator.isNull(previousLine) &&
+						 trimmedLine.equals("%>") && (sb.index() > 2)) {
+
+					String lineBeforePreviousLine = sb.stringAt(sb.index() - 3);
+
+					if (!lineBeforePreviousLine.startsWith("//")) {
+						sb.setIndex(sb.index() - 1);
+					}
+				}
+
+				if ((trimmedLine.startsWith("if (") ||
+					 trimmedLine.startsWith("else if (") ||
+					 trimmedLine.startsWith("while (")) &&
+					trimmedLine.endsWith(") {")) {
+
+					checkIfClauseParentheses(trimmedLine, fileName, lineCount);
+				}
+
+				if (readAttributes) {
+					if (!trimmedLine.startsWith(StringPool.FORWARD_SLASH) &&
+						!trimmedLine.startsWith(StringPool.GREATER_THAN)) {
+
+						int pos = trimmedLine.indexOf(StringPool.EQUAL);
+
+						if (pos != -1) {
+							String attribute = trimmedLine.substring(0, pos);
+							String newLine = formatTagAttributeType(
+								line, tag, trimmedLine);
+
+							if (!newLine.equals(line)) {
+								line = newLine;
+
+								readAttributes = false;
+							}
+							else if (!trimmedLine.endsWith(
+										StringPool.APOSTROPHE) &&
+									 !trimmedLine.endsWith(
+										 StringPool.GREATER_THAN) &&
+									 !trimmedLine.endsWith(StringPool.QUOTE)) {
 
 								processErrorMessage(
 									fileName,
@@ -677,130 +708,154 @@ public class JSPSourceProcessor extends BaseSourceProcessor {
 
 								readAttributes = false;
 							}
-							else if (Validator.isNull(
-										previousAttributeAndValue) &&
-									 (previousAttribute.compareTo(
-										 attribute) > 0)) {
+							else if (trimmedLine.endsWith(
+										StringPool.APOSTROPHE) &&
+									 !trimmedLine.contains(StringPool.QUOTE)) {
 
-								previousAttributeAndValue = previousLine;
-								currentAttributeAndValue = line;
+								line = StringUtil.replace(
+									line, StringPool.APOSTROPHE,
+										StringPool.QUOTE);
+
+								readAttributes = false;
+							}
+							else if (Validator.isNotNull(previousAttribute)) {
+								if (!isAttributName(attribute) &&
+									!attribute.startsWith(
+										StringPool.LESS_THAN)) {
+
+									processErrorMessage(
+										fileName,
+										"attribute: " + fileName + " " +
+											lineCount);
+
+									readAttributes = false;
+								}
+								else if (Validator.isNull(
+											previousAttributeAndValue) &&
+										 (previousAttribute.compareTo(
+											 attribute) > 0)) {
+
+									previousAttributeAndValue = previousLine;
+									currentAttributeAndValue = line;
+								}
+							}
+
+							if (!readAttributes) {
+								previousAttribute = null;
+								previousAttributeAndValue = null;
+							}
+							else {
+								previousAttribute = attribute;
 							}
 						}
-
-						if (!readAttributes) {
-							previousAttribute = null;
-							previousAttributeAndValue = null;
-						}
-						else {
-							previousAttribute = attribute;
-						}
 					}
-				}
-				else {
-					previousAttribute = null;
+					else {
+						previousAttribute = null;
 
-					readAttributes = false;
-				}
-			}
-
-			if (!hasUnsortedExceptions) {
-				int x = line.indexOf("<liferay-ui:error exception=\"<%=");
-
-				if (x != -1) {
-					int y = line.indexOf(".class %>", x);
-
-					if (y != -1) {
-						currentException = line.substring(x, y);
-
-						if (Validator.isNotNull(previousException) &&
-							(previousException.compareTo(currentException) >
-								0)) {
-
-							currentException = line;
-							previousException = previousLine;
-
-							hasUnsortedExceptions = true;
-						}
+						readAttributes = false;
 					}
 				}
 
 				if (!hasUnsortedExceptions) {
-					previousException = currentException;
-					currentException = null;
-				}
-			}
+					int x = line.indexOf("<liferay-ui:error exception=\"<%=");
 
-			if (trimmedLine.startsWith(StringPool.LESS_THAN) &&
-				!trimmedLine.startsWith("<%") &&
-				!trimmedLine.startsWith("<!")) {
+					if (x != -1) {
+						int y = line.indexOf(".class %>", x);
 
-				if (!trimmedLine.contains(StringPool.GREATER_THAN) &&
-					!trimmedLine.contains(StringPool.SPACE)) {
+						if (y != -1) {
+							currentException = line.substring(x, y);
 
-					readAttributes = true;
-				}
-				else {
-					line = sortAttributes(fileName, line, lineCount, true);
-				}
-			}
+							if (Validator.isNotNull(previousException) &&
+								(previousException.compareTo(currentException) >
+									0)) {
 
-			if (!trimmedLine.contains(StringPool.DOUBLE_SLASH) &&
-				!trimmedLine.startsWith(StringPool.STAR)) {
+								currentException = line;
+								previousException = previousLine;
 
-				while (trimmedLine.contains(StringPool.TAB)) {
-					line = StringUtil.replaceLast(
-						line, StringPool.TAB, StringPool.SPACE);
+								hasUnsortedExceptions = true;
+							}
+						}
+					}
 
-					trimmedLine = StringUtil.replaceLast(
-						trimmedLine, StringPool.TAB, StringPool.SPACE);
+					if (!hasUnsortedExceptions) {
+						previousException = currentException;
+						currentException = null;
+					}
 				}
 
-				while (trimmedLine.contains(StringPool.DOUBLE_SPACE) &&
-					   !trimmedLine.contains(
-						   StringPool.QUOTE + StringPool.DOUBLE_SPACE) &&
-					   !fileName.endsWith(".vm")) {
+				if (trimmedLine.startsWith(StringPool.LESS_THAN) &&
+					!trimmedLine.startsWith("<%") &&
+					!trimmedLine.startsWith("<!")) {
 
-					line = StringUtil.replaceLast(
-						line, StringPool.DOUBLE_SPACE, StringPool.SPACE);
+					if (!trimmedLine.contains(StringPool.GREATER_THAN) &&
+						!trimmedLine.contains(StringPool.SPACE)) {
 
-					trimmedLine = StringUtil.replaceLast(
-						trimmedLine, StringPool.DOUBLE_SPACE, StringPool.SPACE);
+						tag = trimmedLine.substring(1);
+
+						readAttributes = true;
+					}
+					else {
+						line = sortAttributes(fileName, line, lineCount, true);
+					}
 				}
-			}
 
-			if (!fileName.endsWith("/touch.jsp")) {
-				int x = line.indexOf("<%@ include file");
+				if (!trimmedLine.contains(StringPool.DOUBLE_SLASH) &&
+					!trimmedLine.startsWith(StringPool.STAR)) {
 
-				if (x != -1) {
-					x = line.indexOf(StringPool.QUOTE, x);
+					while (trimmedLine.contains(StringPool.TAB)) {
+						line = StringUtil.replaceLast(
+							line, StringPool.TAB, StringPool.SPACE);
 
-					int y = line.indexOf(StringPool.QUOTE, x + 1);
+						trimmedLine = StringUtil.replaceLast(
+							trimmedLine, StringPool.TAB, StringPool.SPACE);
+					}
 
-					if (y != -1) {
-						String includeFileName = line.substring(x + 1, y);
+					while (trimmedLine.contains(StringPool.DOUBLE_SPACE) &&
+						   !trimmedLine.contains(
+							   StringPool.QUOTE + StringPool.DOUBLE_SPACE) &&
+						   !fileName.endsWith(".vm")) {
 
-						Matcher matcher = _jspIncludeFilePattern.matcher(
-							includeFileName);
+						line = StringUtil.replaceLast(
+							line, StringPool.DOUBLE_SPACE, StringPool.SPACE);
 
-						if (!matcher.find()) {
-							processErrorMessage(
-								fileName,
-								"include: " + fileName + " " + lineCount);
+						trimmedLine = StringUtil.replaceLast(
+							trimmedLine, StringPool.DOUBLE_SPACE,
+							StringPool.SPACE);
+					}
+				}
+
+				if (!fileName.endsWith("/touch.jsp")) {
+					int x = line.indexOf("<%@ include file");
+
+					if (x != -1) {
+						x = line.indexOf(StringPool.QUOTE, x);
+
+						int y = line.indexOf(StringPool.QUOTE, x + 1);
+
+						if (y != -1) {
+							String includeFileName = line.substring(x + 1, y);
+
+							Matcher matcher = _jspIncludeFilePattern.matcher(
+								includeFileName);
+
+							if (!matcher.find()) {
+								processErrorMessage(
+									fileName,
+									"include: " + fileName + " " + lineCount);
+							}
 						}
 					}
 				}
+
+				line = replacePrimitiveWrapperInstantiation(
+					fileName, line, lineCount);
+
+				previousLine = line;
+
+				sb.append(line);
+				sb.append("\n");
 			}
-
-			line = replacePrimitiveWrapperInstantiation(
-				fileName, line, lineCount);
-
-			previousLine = line;
-
-			sb.append(line);
-			sb.append("\n");
 		}
-
-		unsyncBufferedReader.close();
 
 		content = sb.toString();
 
@@ -835,6 +890,61 @@ public class JSPSourceProcessor extends BaseSourceProcessor {
 		}
 
 		return content;
+	}
+
+	@Override
+	protected String formatTagAttributeType(
+			String line, String tag, String attributeAndValue)
+		throws Exception {
+
+		if (!attributeAndValue.endsWith(StringPool.QUOTE) ||
+			attributeAndValue.contains("\"<%=")) {
+
+			return line;
+		}
+
+		if (tag.startsWith("liferay-")) {
+			tag = tag.substring(8);
+		}
+
+		JavaClass tagJavaClass = getTagJavaClass(tag);
+
+		if (tagJavaClass == null) {
+			return line;
+		}
+
+		int pos = attributeAndValue.indexOf("=\"");
+
+		String attribute = attributeAndValue.substring(0, pos);
+
+		String setAttributeMethodName =
+			"set" + TextFormatter.format(attribute, TextFormatter.G);
+
+		for (String dataType : getPrimitiveTagAttributeDataTypes()) {
+			Type javaType = new Type(dataType);
+
+			JavaMethod setAttributeMethod = tagJavaClass.getMethodBySignature(
+				setAttributeMethodName, new Type[] {javaType}, true);
+
+			if (setAttributeMethod != null) {
+				String value = attributeAndValue.substring(
+					pos + 2, attributeAndValue.length() - 1);
+
+				if (!isValidTagAttributeValue(value, dataType)) {
+					return line;
+				}
+
+				String newAttributeAndValue = StringUtil.replace(
+					attributeAndValue,
+					StringPool.QUOTE + value + StringPool.QUOTE,
+					"\"<%= " + value + " %>\"");
+
+				return StringUtil.replace(
+					line, attributeAndValue, newAttributeAndValue);
+			}
+		}
+
+		return line;
 	}
 
 	protected String formatTaglibQuotes(
@@ -930,6 +1040,79 @@ public class JSPSourceProcessor extends BaseSourceProcessor {
 		return duplicateImports;
 	}
 
+	protected Set<String> getPrimitiveTagAttributeDataTypes() {
+		if (_primitiveTagAttributeDataTypes != null) {
+			return _primitiveTagAttributeDataTypes;
+		}
+
+		_primitiveTagAttributeDataTypes = SetUtil.fromArray(
+			new String[] {"boolean", "double", "int", "long"});
+
+		return _primitiveTagAttributeDataTypes;
+	}
+
+	protected JavaClass getTagJavaClass(String tag) throws Exception {
+		JavaClass tagJavaClass = _tagJavaClassesMap.get(tag);
+
+		if (tagJavaClass != null) {
+			return tagJavaClass;
+		}
+
+		String[] tagParts = StringUtil.split(tag, CharPool.COLON);
+
+		if (tagParts.length != 2) {
+			return null;
+		}
+
+		String utilTaglibDirName = getUtilTaglibDirName();
+
+		if (Validator.isNull(utilTaglibDirName)) {
+			return null;
+		}
+
+		String tagName = tagParts[1];
+
+		String tagJavaClassName = TextFormatter.format(
+			tagName, TextFormatter.M);
+
+		tagJavaClassName =
+			TextFormatter.format(tagJavaClassName, TextFormatter.G) + "Tag";
+
+		String tagCategory = tagParts[0];
+
+		StringBundler sb = new StringBundler(6);
+
+		sb.append(utilTaglibDirName);
+		sb.append("/src/com/liferay/taglib/");
+		sb.append(tagCategory);
+		sb.append(StringPool.SLASH);
+		sb.append(tagJavaClassName);
+		sb.append(".java");
+
+		File tagJavaFile = new File(sb.toString());
+
+		if (!tagJavaFile.exists()) {
+			return null;
+		}
+
+		JavaDocBuilder javaDocBuilder = new JavaDocBuilder();
+
+		javaDocBuilder.addSource(tagJavaFile);
+
+		sb = new StringBundler(4);
+
+		sb.append("com.liferay.taglib.");
+		sb.append(tagCategory);
+		sb.append(StringPool.PERIOD);
+		sb.append(tagJavaClassName);
+
+		tagJavaClass = javaDocBuilder.getClassByName(sb.toString());
+
+		_tagJavaClassesMap.put(tag, tagJavaClass);
+
+		return tagJavaClass;
+	}
+
 	protected String getTaglibRegex(String quoteType) {
 		StringBuilder sb = new StringBuilder();
 
@@ -950,6 +1133,26 @@ public class JSPSourceProcessor extends BaseSourceProcessor {
 		sb.append("([^>]|%>)*>");
 
 		return sb.toString();
+	}
+
+	protected String getUtilTaglibDirName() {
+		if (_utilTaglibDirName != null) {
+			return _utilTaglibDirName;
+		}
+
+		File utilTaglibDir = getFile("util-taglib", 4);
+
+		if (utilTaglibDir != null) {
+			_utilTaglibDirName = utilTaglibDir.getAbsolutePath();
+
+			_utilTaglibDirName = StringUtil.replace(
+				_utilTaglibDirName, StringPool.BACK_SLASH, StringPool.SLASH);
+		}
+		else {
+			_utilTaglibDirName = StringPool.BLANK;
+		}
+
+		return _utilTaglibDirName;
 	}
 
 	protected String getVariableName(String line) {
@@ -1035,9 +1238,16 @@ public class JSPSourceProcessor extends BaseSourceProcessor {
 			return false;
 		}
 
-		String regex = "[^A-Za-z0-9_\"]" + variableName + "[^A-Za-z0-9_\"]";
+		StringBundler sb = new StringBundler(6);
 
-		return hasUnusedJSPTerm(fileName, regex, "variable");
+		sb.append("((/)|(\\*)|(\\+(\\+)?)|(-(-)?)|\\(|=)?( )?");
+		sb.append(variableName);
+		sb.append("( )?(\\.");
+		sb.append("|(((\\+)|(-)|(\\*)|(/)|(%)|(\\|)|(&)|(\\^))?(=))");
+		sb.append("|(\\+(\\+)?)|(-(-)?)");
+		sb.append("|(\\)))?");
+
+		return hasUnusedJSPTerm(fileName, sb.toString(), "variable");
 	}
 
 	protected boolean isJSPDuplicateImport(
@@ -1140,6 +1350,29 @@ public class JSPSourceProcessor extends BaseSourceProcessor {
 		return false;
 	}
 
+	protected boolean isValidTagAttributeValue(String value, String dataType) {
+		if (dataType.equals("boolean")) {
+			return Validator.isBoolean(value);
+		}
+
+		if (dataType.equals("double")) {
+			try {
+				Double.parseDouble(value);
+			}
+			catch (NumberFormatException nfe) {
+				return false;
+			}
+
+			return true;
+		}
+
+		if (dataType.equals("int") || dataType.equals("long")) {
+			return Validator.isNumber(value);
+		}
+
+		return false;
+	}
+
 	protected void moveFrequentlyUsedImportsToCommonInit(int minCount)
 		throws IOException {
 
@@ -1191,6 +1424,32 @@ public class JSPSourceProcessor extends BaseSourceProcessor {
 
 			_jspContents.put(commonInitFileName, commonInitFileContent);
 		}
+	}
+
+	@Override
+	protected String sortHTMLAttributes(
+		String line, String value, String attributeAndValue) {
+
+		if (!value.matches("([-a-z]+ )+[-a-z]+")) {
+			return line;
+		}
+
+		List<String> htmlAttributes = ListUtil.fromArray(
+			StringUtil.split(value, StringPool.SPACE));
+
+		Collections.sort(htmlAttributes);
+
+		String newValue = StringUtil.merge(htmlAttributes, StringPool.SPACE);
+
+		if (value.equals(newValue)) {
+			return line;
+		}
+
+		String newAttributeAndValue = StringUtil.replace(
+			attributeAndValue, value, newValue);
+
+		return StringUtil.replace(
+			line, attributeAndValue, newAttributeAndValue);
 	}
 
 	protected String stripJSPImports(String fileName, String content)
@@ -1278,24 +1537,34 @@ public class JSPSourceProcessor extends BaseSourceProcessor {
 	private Pattern _importsPattern = Pattern.compile("page import=\"(.+)\"");
 	private Set<String> _includeFileNames = new HashSet<String>();
 	private Pattern _javaClassPattern = Pattern.compile(
-		"\n(private|protected|public).* class ([\\s\\S]*?)\n\\}\n");
+		"\n(private|protected|public).* class ([A-Za-z0-9]+) " +
+			"([\\s\\S]*?)\n\\}\n");
 	private Map<String, String> _jspContents = new HashMap<String, String>();
 	private Pattern _jspImportPattern = Pattern.compile(
 		"(<.*\n*page.import=\".*>\n*)+", Pattern.MULTILINE);
 	private Pattern _jspIncludeFilePattern = Pattern.compile("/.*[.]jsp[f]?");
+	private boolean _moveFrequentlyUsedImportsToCommonInit;
+	private Set<String> _primitiveTagAttributeDataTypes;
+	private Pattern _redirectBackURLPattern = Pattern.compile(
+		"(String redirect = ParamUtil\\.getString\\(request, \"redirect\".*" +
+			"\\);)\n(String backURL = ParamUtil\\.getString\\(request, \"" +
+				"backURL\", redirect\\);)");
 	private boolean _stripJSPImports = true;
+	private Map<String, JavaClass> _tagJavaClassesMap =
+		new HashMap<String, JavaClass>();
 	private Pattern _taglibLanguageKeyPattern1 = Pattern.compile(
 		"(?:confirmation|label|(?:M|m)essage|message key|names|title)=\"[^A-Z" +
 			"<=%\\[\\s]+\"");
 	private Pattern _taglibLanguageKeyPattern2 = Pattern.compile(
-		"(aui:)(?:input|select|field-wrapper) (?!.*label=(?:'|\").+(?:'|\").*" +
+		"(aui:)(?:input|select|field-wrapper) (?!.*label=(?:'|\").*(?:'|\").*" +
 			"name=\"[^<=%\\[\\s]+\")(?!.*name=\"[^<=%\\[\\s]+\".*title=" +
 				"(?:'|\").+(?:'|\"))(?!.*name=\"[^<=%\\[\\s]+\".*type=\"" +
 					"hidden\").*name=\"([^<=%\\[\\s]+)\"");
 	private Pattern _taglibLanguageKeyPattern3 = Pattern.compile(
 		"(liferay-ui:)(?:input-resource) .*id=\"([^<=%\\[\\s]+)\"(?!.*title=" +
 			"(?:'|\").+(?:'|\"))");
-	private List<String> _unusedVariablesExclusions;
+	private List<String> _unusedVariablesExclusionFiles;
+	private String _utilTaglibDirName;
 	private Pattern _xssPattern = Pattern.compile(
 		"\\s+([^\\s]+)\\s*=\\s*(Bean)?ParamUtil\\.getString\\(");
 

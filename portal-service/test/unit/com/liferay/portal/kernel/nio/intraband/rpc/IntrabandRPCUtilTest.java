@@ -23,7 +23,7 @@ import com.liferay.portal.kernel.nio.intraband.rpc.IntrabandRPCUtil.FutureComple
 import com.liferay.portal.kernel.nio.intraband.test.MockIntraband;
 import com.liferay.portal.kernel.nio.intraband.test.MockRegistrationReference;
 import com.liferay.portal.kernel.process.ProcessCallable;
-import com.liferay.portal.kernel.test.CodeCoverageAssertor;
+import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 
@@ -47,7 +47,7 @@ import org.junit.Test;
 public class IntrabandRPCUtilTest {
 
 	@ClassRule
-	public static CodeCoverageAssertor codeCoverageAssertor =
+	public static final CodeCoverageAssertor codeCoverageAssertor =
 		new CodeCoverageAssertor() {
 
 			@Override
@@ -151,10 +151,10 @@ public class IntrabandRPCUtilTest {
 		// Failed
 
 		DefaultNoticeableFuture<String> defaultNoticeableFuture =
-			new DefaultNoticeableFuture<String>();
+			new DefaultNoticeableFuture<>();
 
 		FutureCompletionHandler<String> futureCompletionHandler =
-			new FutureCompletionHandler<String>(defaultNoticeableFuture);
+			new FutureCompletionHandler<>(defaultNoticeableFuture);
 
 		futureCompletionHandler.delivered(null);
 		futureCompletionHandler.submitted(null);
@@ -174,9 +174,9 @@ public class IntrabandRPCUtilTest {
 
 		// Class not found exception
 
-		defaultNoticeableFuture = new DefaultNoticeableFuture<String>();
+		defaultNoticeableFuture = new DefaultNoticeableFuture<>();
 
-		futureCompletionHandler = new FutureCompletionHandler<String>(
+		futureCompletionHandler = new FutureCompletionHandler<>(
 			defaultNoticeableFuture);
 
 		Serializer serializer = new Serializer();
@@ -205,9 +205,9 @@ public class IntrabandRPCUtilTest {
 
 		// Timed out
 
-		defaultNoticeableFuture = new DefaultNoticeableFuture<String>();
+		defaultNoticeableFuture = new DefaultNoticeableFuture<>();
 
-		futureCompletionHandler = new FutureCompletionHandler<String>(
+		futureCompletionHandler = new FutureCompletionHandler<>(
 			defaultNoticeableFuture);
 
 		futureCompletionHandler.timedOut(null);
@@ -230,6 +230,7 @@ public class IntrabandRPCUtilTest {
 		}
 
 		private static final long serialVersionUID = 1L;
+
 	}
 
 }

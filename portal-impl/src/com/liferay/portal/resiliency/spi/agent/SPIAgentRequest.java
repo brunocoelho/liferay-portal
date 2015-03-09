@@ -123,7 +123,7 @@ public class SPIAgentRequest extends SPIAgentSerializable {
 		distributedRequestAttributes = extractDistributedRequestAttributes(
 			request, Direction.REQUEST);
 		headerMap = extractRequestHeaders(request);
-		parameterMap = new HashMap<String, String[]>(request.getParameterMap());
+		parameterMap = new HashMap<>(request.getParameterMap());
 		remoteAddr = request.getRemoteAddr();
 		remoteHost = request.getRemoteHost();
 		remotePort = request.getRemotePort();
@@ -159,17 +159,9 @@ public class SPIAgentRequest extends SPIAgentSerializable {
 
 				requestBodyFile = FileUtil.createTempFile();
 
-				FileOutputStream fileOutputStream = new FileOutputStream(
-					requestBodyFile);
-
-				try {
-					StreamUtil.transfer(
-						currentRequest.getInputStream(), fileOutputStream,
-						false);
-				}
-				finally {
-					fileOutputStream.close();
-				}
+				StreamUtil.transfer(
+					StreamUtil.uncloseable(currentRequest.getInputStream()),
+					new FileOutputStream(requestBodyFile));
 
 				uploadServletRequest = new UploadServletRequestImpl(
 					new AgentHttpServletRequestWrapper(currentRequest));
@@ -193,7 +185,7 @@ public class SPIAgentRequest extends SPIAgentSerializable {
 			WebKeys.THEME_DISPLAY);
 
 		if ((themeDisplay != null) && themeDisplay.isAjax()) {
-			parameterMap = new HashMap<String, String[]>(parameterMap);
+			parameterMap = new HashMap<>(parameterMap);
 
 			parameterMap.put(
 				"portalResiliencyPortletShowFooter",

@@ -14,7 +14,7 @@
 
 package com.liferay.portal.kernel.resiliency.spi;
 
-import com.liferay.portal.kernel.test.CodeCoverageAssertor;
+import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.StringBundler;
@@ -37,8 +37,8 @@ import org.junit.Test;
 public class SPIConfigurationTest {
 
 	@ClassRule
-	public static CodeCoverageAssertor codeCoverageAssertor =
-		new CodeCoverageAssertor();
+	public static final CodeCoverageAssertor codeCoverageAssertor =
+		CodeCoverageAssertor.INSTANCE;
 
 	@Before
 	public void setUp() {
@@ -48,7 +48,7 @@ public class SPIConfigurationTest {
 
 		SAXReaderUtil saxReaderUtil = new SAXReaderUtil();
 
-		saxReaderUtil.setSAXReader(new SAXReaderImpl());
+		saxReaderUtil.setSecureSAXReader(new SAXReaderImpl());
 	}
 
 	@Test

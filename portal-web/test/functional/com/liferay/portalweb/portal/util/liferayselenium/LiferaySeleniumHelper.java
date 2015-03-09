@@ -30,13 +30,12 @@ import com.liferay.portal.util.PropsValues;
 import com.liferay.portalweb.portal.BaseTestCase;
 import com.liferay.portalweb.portal.util.AntCommands;
 import com.liferay.portalweb.portal.util.EmailCommands;
-import com.liferay.portalweb.portal.util.RuntimeVariables;
-import com.liferay.portalweb.portal.util.TestPropsValues;
+import com.liferay.portalweb.util.RuntimeVariables;
+import com.liferay.portalweb.util.TestPropsValues;
 
 import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.Toolkit;
-import java.awt.event.InputEvent;
 import java.awt.image.BufferedImage;
 
 import java.io.BufferedReader;
@@ -46,7 +45,14 @@ import java.io.InputStreamReader;
 
 import java.net.URL;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -63,6 +69,14 @@ import org.sikuli.script.Screen;
  */
 public class LiferaySeleniumHelper {
 
+	public static void addToJavaScriptExceptions(Exception exception) {
+		_javaScriptExceptions.add(exception);
+	}
+
+	public static void addToLiferayExceptions(Exception exception) {
+		_liferayExceptions.add(exception);
+	}
+
 	public static void antCommand(
 			LiferaySelenium liferaySelenium, String fileName, String target)
 		throws Exception {
@@ -70,9 +84,18 @@ public class LiferaySeleniumHelper {
 		AntCommands antCommands = new AntCommands(
 			liferaySelenium, fileName, target);
 
-		antCommands.start();
+		ExecutorService executorService = Executors.newCachedThreadPool();
 
-		antCommands.join(120000);
+		Future<Void> future = executorService.submit(antCommands);
+
+		try {
+			future.get(150, TimeUnit.SECONDS);
+		}
+		catch (ExecutionException ee) {
+			throw ee;
+		}
+		catch (TimeoutException te) {
+		}
 	}
 
 	public static void assertAlert(
@@ -213,6 +236,13 @@ public class LiferaySeleniumHelper {
 			String level = eventElement.attributeValue("level");
 
 			if (level.equals("ERROR")) {
+				String fileContent = FileUtil.read(fileName);
+
+				fileContent = fileContent.replaceFirst(
+					"level=\"ERROR\"", "level=\"ERROR_FOUND\"");
+
+				FileUtil.write(fileName, fileContent);
+
 				Element messageElement = eventElement.element("message");
 
 				String messageText = messageElement.getText();
@@ -223,12 +253,22 @@ public class LiferaySeleniumHelper {
 
 				Element throwableElement = eventElement.element("throwable");
 
+				Exception exception;
+
 				if (throwableElement != null) {
-					throw new Exception(
+					exception = new Exception(
 						messageText + throwableElement.getText());
+
+					addToLiferayExceptions(exception);
+
+					throw exception;
 				}
 
-				throw new Exception(messageText);
+				exception = new Exception(messageText);
+
+				addToLiferayExceptions(exception);
+
+				throw exception;
 			}
 		}
 	}
@@ -237,6 +277,80 @@ public class LiferaySeleniumHelper {
 		LiferaySelenium liferaySelenium, String pattern) {
 
 		BaseTestCase.assertEquals(pattern, liferaySelenium.getLocation());
+	}
+
+	public static void assertNoJavaScriptExceptions() throws Exception {
+		if (!_javaScriptExceptions.isEmpty()) {
+			StringBundler sb = new StringBundler();
+
+			sb.append(_javaScriptExceptions.size());
+			sb.append(" Javascript Exception");
+
+			if (_javaScriptExceptions.size() > 1) {
+				sb.append("s were");
+			}
+			else {
+				sb.append(" was");
+			}
+
+			sb.append(" thrown");
+
+			System.out.println();
+			System.out.println("##");
+			System.out.println("## " + sb.toString());
+			System.out.println("##");
+
+			for (int i = 0; i < _javaScriptExceptions.size(); i++) {
+				Exception liferayException = _javaScriptExceptions.get(i);
+
+				System.out.println();
+				System.out.println("##");
+				System.out.println("## Javascript Exception #" + (i + 1));
+				System.out.println("##");
+				System.out.println();
+				System.out.println(liferayException.getMessage());
+				System.out.println();
+			}
+
+			throw new Exception(sb.toString());
+		}
+	}
+
+	public static void assertNoLiferayExceptions() throws Exception {
+		if (!_liferayExceptions.isEmpty()) {
+			StringBundler sb = new StringBundler();
+
+			sb.append(_liferayExceptions.size());
+			sb.append(" Liferay Exception");
+
+			if (_liferayExceptions.size() > 1) {
+				sb.append("s were");
+			}
+			else {
+				sb.append(" was");
+			}
+
+			sb.append(" thrown");
+
+			System.out.println();
+			System.out.println("##");
+			System.out.println("## " + sb.toString());
+			System.out.println("##");
+
+			for (int i = 0; i < _liferayExceptions.size(); i++) {
+				Exception liferayException = _liferayExceptions.get(i);
+
+				System.out.println();
+				System.out.println("##");
+				System.out.println("## Liferay Exception #" + (i + 1));
+				System.out.println("##");
+				System.out.println();
+				System.out.println(liferayException.getMessage());
+				System.out.println();
+			}
+
+			throw new Exception(sb.toString());
+		}
 	}
 
 	public static void assertNotAlert(
@@ -765,6 +879,14 @@ public class LiferaySeleniumHelper {
 
 				return true;
 			}
+
+			if (line.contains("[org.apache.xmlbeans.impl.store.CharUtil$1]")) {
+				return true;
+			}
+
+			if (line.contains("[org.apache.xmlbeans.impl.store.Locale$1]")) {
+				return true;
+			}
 		}
 
 		// LPS-49505
@@ -811,6 +933,96 @@ public class LiferaySeleniumHelper {
 			if (line.contains("[org.apache.xmlbeans.XmlBeans$1]")) {
 				return true;
 			}
+		}
+
+		// LPS-50047
+
+		if (line.matches(
+				".*The web application \\[\\] created a ThreadLocal with key " +
+					"of type.*")) {
+
+			if (line.contains(
+					"[com.sun.syndication.feed.impl.ToStringBean$1]")) {
+
+				return true;
+			}
+		}
+
+		// LPS-50936
+
+		if (line.contains(
+				"Liferay does not have the Xuggler native libraries " +
+					"installed.")) {
+
+			return true;
+		}
+
+		// LPS-51371
+
+		if (line.matches(
+				".*The web application \\[/jasperreports-web\\] created a " +
+					"ThreadLocal with key of type.*")) {
+
+			if (line.contains(
+					"[net.sf.jasperreports.engine.fonts.FontUtil$1]")) {
+
+				return true;
+			}
+		}
+
+		// LPS-52346
+
+		if (line.matches(
+				".*The web application \\[\\] created a ThreadLocal with key " +
+					"of type.*")) {
+
+			if (line.contains(
+					"[org.apache.jasper.runtime.JspWriterImpl." +
+						"CharBufferThreadLocalPool]")) {
+
+				return true;
+			}
+		}
+
+		// LPS-52699
+
+		if (line.matches(
+				".*The web application \\[\\] created a ThreadLocal with key " +
+					"of type.*")) {
+
+			if (line.contains(
+					"[org.apache.xml.security.algorithms." +
+						"MessageDigestAlgorithm$1]")) {
+
+				return true;
+			}
+
+			if (line.contains(
+					"[org.apache.xml.security.algorithms." +
+						"SignatureAlgorithm$1]")) {
+
+				return true;
+			}
+
+			if (line.contains(
+					"[org.apache.xml.security.utils." +
+						"UnsyncBufferedOutputStream$1]")) {
+
+				return true;
+			}
+
+			if (line.contains(
+					"[org.apache.xml.security.utils." +
+						"UnsyncByteArrayOutputStream$1]")) {
+
+				return true;
+			}
+		}
+
+		// WCM-202
+
+		if (line.contains("No score point assigners available")) {
+			return true;
 		}
 
 		if (Validator.equals(
@@ -1027,9 +1239,9 @@ public class LiferaySeleniumHelper {
 
 		robot.delay(1000);
 
-		robot.mousePress(InputEvent.BUTTON1_MASK);
+		_screen.mouseDown(Button.LEFT);
 
-		robot.delay(1000);
+		liferaySelenium.pause("2000");
 
 		String[] coords = coordString.split(",");
 
@@ -1042,7 +1254,7 @@ public class LiferaySeleniumHelper {
 
 		robot.delay(1500);
 
-		robot.mouseRelease(InputEvent.BUTTON1_MASK);
+		_screen.mouseUp(Button.LEFT);
 	}
 
 	public static void sikuliLeftMouseDown(LiferaySelenium liferaySelenium)
@@ -1140,6 +1352,12 @@ public class LiferaySeleniumHelper {
 			LiferaySelenium liferaySelenium, String image, String value)
 		throws Exception {
 
+		_screen.click(
+			liferaySelenium.getProjectDirName() +
+			liferaySelenium.getSikuliImagesDirName() + image);
+
+		_screen.type("a", Key.CTRL);
+
 		sikuliType(
 			liferaySelenium, image,
 			liferaySelenium.getProjectDirName() +
@@ -1168,6 +1386,12 @@ public class LiferaySeleniumHelper {
 			LiferaySelenium liferaySelenium, String image, String value)
 		throws Exception {
 
+		_screen.click(
+			liferaySelenium.getProjectDirName() +
+			liferaySelenium.getSikuliImagesDirName() + image);
+
+		_screen.type("a", Key.CTRL);
+
 		String slash = "/";
 
 		if (OSDetector.isWindows()) {
@@ -1195,7 +1419,7 @@ public class LiferaySeleniumHelper {
 
 		liferaySelenium.typeKeys(locator, line.trim());
 
-		liferaySelenium.keyPress(locator, "\\13");
+		liferaySelenium.keyPress(locator, "\\RETURN");
 
 		while (y != -1) {
 			x = value.indexOf("}", x) + 1;
@@ -1210,7 +1434,7 @@ public class LiferaySeleniumHelper {
 
 			liferaySelenium.typeKeys(locator, line.trim());
 
-			liferaySelenium.keyPress(locator, "\\13");
+			liferaySelenium.keyPress(locator, "\\RETURN");
 		}
 	}
 
@@ -1556,7 +1780,10 @@ public class LiferaySeleniumHelper {
 		}
 	}
 
-	private static Screen _screen = new Screen();
+	private static final List<Exception> _javaScriptExceptions =
+		new ArrayList<>();
+	private static final List<Exception> _liferayExceptions = new ArrayList<>();
+	private static final Screen _screen = new Screen();
 	private static int _screenshotCount = 0;
 	private static int _screenshotErrorCount = 0;
 

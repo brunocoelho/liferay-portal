@@ -14,12 +14,12 @@
 
 package com.liferay.portlet.asset.service.impl;
 
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.increment.BufferedIncrement;
 import com.liferay.portal.kernel.increment.NumberIncrement;
 import com.liferay.portal.kernel.lar.ExportImportThreadLocal;
-import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.Indexer;
@@ -35,7 +35,6 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.model.User;
 import com.liferay.portal.util.PortalUtil;
-import com.liferay.portal.util.PortletKeys;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.asset.AssetRendererFactoryRegistryUtil;
 import com.liferay.portlet.asset.NoSuchEntryException;
@@ -48,14 +47,13 @@ import com.liferay.portlet.asset.model.AssetTag;
 import com.liferay.portlet.asset.service.base.AssetEntryLocalServiceBaseImpl;
 import com.liferay.portlet.asset.service.persistence.AssetEntryQuery;
 import com.liferay.portlet.asset.util.AssetEntryValidator;
-import com.liferay.portlet.assetpublisher.util.AssetSearcher;
+import com.liferay.portlet.asset.util.AssetSearcher;
 import com.liferay.portlet.blogs.model.BlogsEntry;
-import com.liferay.portlet.bookmarks.model.BookmarksEntry;
 import com.liferay.portlet.documentlibrary.model.DLFileEntry;
+import com.liferay.portlet.documentlibrary.util.DLUtil;
 import com.liferay.portlet.journal.model.JournalArticle;
 import com.liferay.portlet.messageboards.model.MBMessage;
 import com.liferay.portlet.social.model.SocialActivityConstants;
-import com.liferay.portlet.wiki.model.WikiPage;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -150,7 +148,7 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 	public List<AssetEntry> getAncestorEntries(long entryId)
 		throws PortalException {
 
-		List<AssetEntry> entries = new ArrayList<AssetEntry>();
+		List<AssetEntry> entries = new ArrayList<>();
 
 		AssetEntry parentEntry = getParentEntry(entryId);
 
@@ -167,7 +165,7 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 	public List<AssetEntry> getChildEntries(long entryId)
 		throws PortalException {
 
-		List<AssetEntry> entries = new ArrayList<AssetEntry>();
+		List<AssetEntry> entries = new ArrayList<>();
 
 		List<AssetLink> links = assetLinkLocalService.getDirectLinks(
 			entryId, AssetLinkConstants.TYPE_CHILD);
@@ -199,8 +197,37 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 	}
 
 	@Override
+	public List<AssetEntry> getEntries(
+		long[] groupIds, long[] classNameIds, String keywords, String userName,
+		String title, String description, boolean advancedSearch,
+		boolean andOperator, int start, int end, String orderByCol1,
+		String orderByCol2, String orderByType1, String orderByType2) {
+
+		AssetEntryQuery assetEntryQuery = getAssetEntryQuery(
+			groupIds, classNameIds, keywords, userName, title, description,
+			advancedSearch, andOperator, start, end, orderByCol1, orderByCol2,
+			orderByType1, orderByType2);
+
+		return getEntries(assetEntryQuery);
+	}
+
+	@Override
 	public int getEntriesCount(AssetEntryQuery entryQuery) {
 		return assetEntryFinder.countEntries(entryQuery);
+	}
+
+	@Override
+	public int getEntriesCount(
+		long[] groupIds, long[] classNameIds, String keywords, String userName,
+		String title, String description, boolean advancedSearch,
+		boolean andOperator) {
+
+		AssetEntryQuery assetEntryQuery = getAssetEntryQuery(
+			groupIds, classNameIds, keywords, userName, title, description,
+			advancedSearch, andOperator, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+			null, null, null, null);
+
+		return getEntriesCount(assetEntryQuery);
 	}
 
 	@Override
@@ -356,7 +383,8 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 	}
 
 	@BufferedIncrement(
-		configuration = "AssetEntry", incrementClass = NumberIncrement.class)
+		configuration = "AssetEntry", incrementClass = NumberIncrement.class
+	)
 	@Override
 	public void incrementViewCounter(
 		long userId, String className, long classPK, int increment) {
@@ -382,11 +410,7 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 	@Override
 	public void reindex(List<AssetEntry> entries) throws PortalException {
 		for (AssetEntry entry : entries) {
-			String className = PortalUtil.getClassName(entry.getClassNameId());
-
-			Indexer indexer = IndexerRegistryUtil.nullSafeGetIndexer(className);
-
-			indexer.reindex(className, entry.getClassPK());
+			reindex(entry);
 		}
 	}
 
@@ -396,8 +420,8 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 		long classTypeId, String keywords, int status, int start, int end) {
 
 		return search(
-			companyId, groupIds, userId, className, classTypeId, null, null,
-			null, null, null, status, false, start, end);
+			companyId, groupIds, userId, className, classTypeId, keywords,
+			keywords, keywords, null, null, status, false, start, end);
 	}
 
 	@Override
@@ -581,12 +605,9 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 
 			entry.setCreateDate(createDate);
 
-			entry.setModifiedDate(modifiedDate);
 			entry.setClassNameId(classNameId);
 			entry.setClassPK(classPK);
 			entry.setClassUuid(classUuid);
-			entry.setVisible(visible);
-			entry.setExpirationDate(expirationDate);
 
 			if (priority == null) {
 				entry.setPriority(0);
@@ -598,6 +619,15 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 		entry.setGroupId(groupId);
 		entry.setModifiedDate(modifiedDate);
 		entry.setClassTypeId(classTypeId);
+
+		AssetRendererFactory assetRendererFactory =
+			AssetRendererFactoryRegistryUtil.
+				getAssetRendererFactoryByClassNameId(classNameId);
+
+		if (assetRendererFactory != null) {
+			entry.setListable(assetRendererFactory.isListable(classPK));
+		}
+
 		entry.setVisible(visible);
 		entry.setStartDate(startDate);
 		entry.setEndDate(endDate);
@@ -679,61 +709,51 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 
 		// Synchronize
 
-		if (!sync) {
-			return entry;
+		if (sync) {
+			if (className.equals(BlogsEntry.class.getName())) {
+				BlogsEntry blogsEntry = blogsEntryPersistence.findByPrimaryKey(
+					classPK);
+
+				blogsEntry.setTitle(title);
+
+				blogsEntryPersistence.update(blogsEntry);
+			}
+			else if (className.equals(DLFileEntry.class.getName())) {
+				DLFileEntry dlFileEntry =
+					dlFileEntryPersistence.findByPrimaryKey(classPK);
+
+				String fileName = DLUtil.getSanitizedFileName(
+					title, dlFileEntry.getExtension());
+
+				dlFileEntry.setFileName(fileName);
+
+				dlFileEntry.setTitle(title);
+				dlFileEntry.setDescription(description);
+
+				dlFileEntryPersistence.update(dlFileEntry);
+			}
+			else if (className.equals(JournalArticle.class.getName())) {
+				JournalArticle journalArticle =
+					journalArticlePersistence.findByPrimaryKey(classPK);
+
+				journalArticle.setTitle(title);
+				journalArticle.setDescription(description);
+
+				journalArticlePersistence.update(journalArticle);
+			}
+			else if (className.equals(MBMessage.class.getName())) {
+				MBMessage mbMessage = mbMessagePersistence.findByPrimaryKey(
+					classPK);
+
+				mbMessage.setSubject(title);
+
+				mbMessagePersistence.update(mbMessage);
+			}
 		}
 
-		if (className.equals(BlogsEntry.class.getName())) {
-			BlogsEntry blogsEntry = blogsEntryPersistence.findByPrimaryKey(
-				classPK);
+		// Indexer
 
-			blogsEntry.setTitle(title);
-
-			blogsEntryPersistence.update(blogsEntry);
-		}
-		else if (className.equals(BookmarksEntry.class.getName())) {
-			BookmarksEntry bookmarksEntry =
-				bookmarksEntryPersistence.findByPrimaryKey(classPK);
-
-			bookmarksEntry.setName(title);
-			bookmarksEntry.setDescription(description);
-			bookmarksEntry.setUrl(url);
-
-			bookmarksEntryPersistence.update(bookmarksEntry);
-		}
-		else if (className.equals(DLFileEntry.class.getName())) {
-			DLFileEntry dlFileEntry = dlFileEntryPersistence.findByPrimaryKey(
-				classPK);
-
-			dlFileEntry.setTitle(title);
-			dlFileEntry.setDescription(description);
-
-			dlFileEntryPersistence.update(dlFileEntry);
-		}
-		else if (className.equals(JournalArticle.class.getName())) {
-			JournalArticle journalArticle =
-				journalArticlePersistence.findByPrimaryKey(classPK);
-
-			journalArticle.setTitle(title);
-			journalArticle.setDescription(description);
-
-			journalArticlePersistence.update(journalArticle);
-		}
-		else if (className.equals(MBMessage.class.getName())) {
-			MBMessage mbMessage = mbMessagePersistence.findByPrimaryKey(
-				classPK);
-
-			mbMessage.setSubject(title);
-
-			mbMessagePersistence.update(mbMessage);
-		}
-		else if (className.equals(WikiPage.class.getName())) {
-			WikiPage wikiPage = wikiPagePersistence.findByPrimaryKey(classPK);
-
-			wikiPage.setTitle(title);
-
-			wikiPagePersistence.update(wikiPage);
-		}
+		reindex(entry);
 
 		return entry;
 	}
@@ -827,6 +847,12 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 		AssetEntry entry = assetEntryPersistence.findByC_C(
 			classNameId, classPK);
 
+		AssetRendererFactory assetRendererFactory =
+			AssetRendererFactoryRegistryUtil.
+				getAssetRendererFactoryByClassNameId(classNameId);
+
+		entry.setListable(assetRendererFactory.isListable(classPK));
+
 		entry.setPublishDate(publishDate);
 
 		return updateVisible(entry, visible);
@@ -842,6 +868,12 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 
 		AssetEntry entry = assetEntryPersistence.findByC_C(
 			classNameId, classPK);
+
+		AssetRendererFactory assetRendererFactory =
+			AssetRendererFactoryRegistryUtil.
+				getAssetRendererFactoryByClassNameId(classNameId);
+
+		entry.setListable(assetRendererFactory.isListable(classPK));
 
 		entry.setExpirationDate(expirationDate);
 		entry.setPublishDate(publishDate);
@@ -895,6 +927,36 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 			categoryIds, tagNames);
 	}
 
+	protected AssetEntryQuery getAssetEntryQuery(
+		long[] groupIds, long[] classNameIds, String keywords, String userName,
+		String title, String description, boolean advancedSearch,
+		boolean andOperator, int start, int end, String orderByCol1,
+		String orderByCol2, String orderByType1, String orderByType2) {
+
+		AssetEntryQuery assetEntryQuery = new AssetEntryQuery();
+
+		if (advancedSearch) {
+			assetEntryQuery.setAndOperator(andOperator);
+			assetEntryQuery.setDescription(description);
+			assetEntryQuery.setTitle(title);
+			assetEntryQuery.setUserName(userName);
+		}
+		else {
+			assetEntryQuery.setKeywords(keywords);
+		}
+
+		assetEntryQuery.setClassNameIds(classNameIds);
+		assetEntryQuery.setEnd(end);
+		assetEntryQuery.setGroupIds(groupIds);
+		assetEntryQuery.setOrderByCol1(orderByCol1);
+		assetEntryQuery.setOrderByCol2(orderByCol2);
+		assetEntryQuery.setOrderByType1(orderByType1);
+		assetEntryQuery.setOrderByType2(orderByType2);
+		assetEntryQuery.setStart(start);
+
+		return assetEntryQuery;
+	}
+
 	protected long[] getClassNameIds(long companyId, String className) {
 		if (Validator.isNotNull(className)) {
 			return new long[] {classNameLocalService.getClassNameId(className)};
@@ -916,81 +978,12 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 		return classNameIds;
 	}
 
-	protected AssetEntry getEntry(Document document) throws PortalException {
-		String portletId = GetterUtil.getString(document.get(Field.PORTLET_ID));
+	protected void reindex(AssetEntry entry) throws PortalException {
+		String className = PortalUtil.getClassName(entry.getClassNameId());
 
-		if (portletId.equals(PortletKeys.BLOGS)) {
-			long entryId = GetterUtil.getLong(
-				document.get(Field.ENTRY_CLASS_PK));
+		Indexer indexer = IndexerRegistryUtil.nullSafeGetIndexer(className);
 
-			long classNameId = classNameLocalService.getClassNameId(
-				BlogsEntry.class.getName());
-			long classPK = entryId;
-
-			return assetEntryPersistence.findByC_C(classNameId, classPK);
-		}
-		else if (portletId.equals(PortletKeys.BOOKMARKS)) {
-			long entryId = GetterUtil.getLong(
-				document.get(Field.ENTRY_CLASS_PK));
-
-			long classNameId = classNameLocalService.getClassNameId(
-				BookmarksEntry.class.getName());
-			long classPK = entryId;
-
-			return assetEntryPersistence.findByC_C(classNameId, classPK);
-		}
-		else if (portletId.equals(PortletKeys.DOCUMENT_LIBRARY)) {
-			long fileEntryId = GetterUtil.getLong(
-				document.get(Field.ENTRY_CLASS_PK));
-
-			long classNameId = classNameLocalService.getClassNameId(
-				DLFileEntry.class.getName());
-			long classPK = fileEntryId;
-
-			return assetEntryPersistence.findByC_C(classNameId, classPK);
-		}
-		else if (portletId.equals(PortletKeys.JOURNAL)) {
-			long groupId = GetterUtil.getLong(document.get(Field.GROUP_ID));
-			String articleId = document.get("articleId");
-			//double version = GetterUtil.getDouble(document.get("version"));
-
-			long articleResourcePrimKey =
-				journalArticleResourceLocalService.getArticleResourcePrimKey(
-					groupId, articleId);
-
-			long classNameId = classNameLocalService.getClassNameId(
-				JournalArticle.class.getName());
-			long classPK = articleResourcePrimKey;
-
-			return assetEntryPersistence.findByC_C(classNameId, classPK);
-		}
-		else if (portletId.equals(PortletKeys.MESSAGE_BOARDS)) {
-			long messageId = GetterUtil.getLong(
-				document.get(Field.ENTRY_CLASS_PK));
-
-			long classNameId = classNameLocalService.getClassNameId(
-				MBMessage.class.getName());
-			long classPK = messageId;
-
-			return assetEntryPersistence.findByC_C(classNameId, classPK);
-		}
-		else if (portletId.equals(PortletKeys.WIKI)) {
-			long nodeId = GetterUtil.getLong(
-				document.get(Field.ENTRY_CLASS_PK));
-			String title = document.get(Field.TITLE);
-
-			long pageResourcePrimKey =
-				wikiPageResourceLocalService.getPageResourcePrimKey(
-					nodeId, title);
-
-			long classNameId = classNameLocalService.getClassNameId(
-				WikiPage.class.getName());
-			long classPK = pageResourcePrimKey;
-
-			return assetEntryPersistence.findByC_C(classNameId, classPK);
-		}
-
-		return null;
+		indexer.reindex(className, entry.getClassPK());
 	}
 
 	protected AssetEntry updateVisible(AssetEntry entry, boolean visible)

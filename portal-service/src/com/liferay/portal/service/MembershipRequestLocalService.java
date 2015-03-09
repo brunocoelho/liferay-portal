@@ -94,7 +94,7 @@ public interface MembershipRequestLocalService extends BaseLocalService,
 
 	public void deleteMembershipRequests(long groupId);
 
-	public void deleteMembershipRequests(long groupId, int statusId);
+	public void deleteMembershipRequests(long groupId, long statusId);
 
 	public void deleteMembershipRequestsByUserId(long userId);
 
@@ -152,20 +152,20 @@ public interface MembershipRequestLocalService extends BaseLocalService,
 		com.liferay.portal.kernel.util.OrderByComparator<T> orderByComparator);
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery);
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,
@@ -214,7 +214,7 @@ public interface MembershipRequestLocalService extends BaseLocalService,
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public java.util.List<com.liferay.portal.model.MembershipRequest> getMembershipRequests(
-		long userId, long groupId, int statusId);
+		long userId, long groupId, long statusId);
 
 	/**
 	* Returns the number of membership requests.
@@ -231,7 +231,7 @@ public interface MembershipRequestLocalService extends BaseLocalService,
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public boolean hasMembershipRequest(long userId, long groupId, int statusId);
+	public boolean hasMembershipRequest(long userId, long groupId, long statusId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public java.util.List<com.liferay.portal.model.MembershipRequest> search(
@@ -258,7 +258,7 @@ public interface MembershipRequestLocalService extends BaseLocalService,
 		com.liferay.portal.model.MembershipRequest membershipRequest);
 
 	public void updateStatus(long replierUserId, long membershipRequestId,
-		java.lang.String replyComments, int statusId, boolean addUserToGroup,
+		java.lang.String replyComments, long statusId, boolean addUserToGroup,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException;
 }

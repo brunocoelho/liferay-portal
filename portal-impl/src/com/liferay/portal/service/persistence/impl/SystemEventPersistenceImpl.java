@@ -57,7 +57,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see SystemEventPersistence
- * @see SystemEventUtil
+ * @see com.liferay.portal.service.persistence.SystemEventUtil
  * @generated
  */
 @ProviderType
@@ -2969,7 +2969,7 @@ public class SystemEventPersistenceImpl extends BasePersistenceImpl<SystemEvent>
 		MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

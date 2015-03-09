@@ -24,8 +24,17 @@ import com.liferay.portal.kernel.lar.MissingReferences;
 import com.liferay.portal.kernel.lar.PortletDataContext;
 import com.liferay.portal.kernel.lar.PortletDataContextFactoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.rule.Sync;
+import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
+import com.liferay.portal.kernel.test.rule.TransactionalTestRule;
+import com.liferay.portal.kernel.test.util.GroupTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.CharPool;
+import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringBundler;
@@ -46,23 +55,17 @@ import com.liferay.portal.model.User;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFileEntry;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.service.LayoutLocalServiceUtil;
-import com.liferay.portal.test.DeleteAfterTestRun;
-import com.liferay.portal.test.Sync;
-import com.liferay.portal.test.SynchronousDestinationExecutionTestListener;
-import com.liferay.portal.test.TransactionalTestRule;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
+import com.liferay.portal.service.ServiceContext;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portal.util.PortalImpl;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portal.util.PropsValues;
-import com.liferay.portal.util.test.GroupTestUtil;
 import com.liferay.portal.util.test.LayoutTestUtil;
-import com.liferay.portal.util.test.RandomTestUtil;
-import com.liferay.portal.util.test.TestPropsValues;
 import com.liferay.portlet.documentlibrary.model.DLFileEntry;
 import com.liferay.portlet.documentlibrary.model.DLFolderConstants;
+import com.liferay.portlet.documentlibrary.service.DLAppLocalServiceUtil;
 import com.liferay.portlet.documentlibrary.service.DLFileEntryLocalServiceUtil;
-import com.liferay.portlet.documentlibrary.util.test.DLAppTestUtil;
 import com.liferay.portlet.journal.model.JournalArticle;
 import com.liferay.portlet.journal.util.test.JournalTestUtil;
 
@@ -84,8 +87,8 @@ import java.util.regex.Pattern;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import org.powermock.api.mockito.PowerMockito;
 
@@ -93,29 +96,31 @@ import org.powermock.api.mockito.PowerMockito;
  * @author Zsolt Berentey
  * @author Peter Borkuti
  */
-@ExecutionTestListeners(
-	listeners = {
-		MainServletExecutionTestListener.class,
-		SynchronousDestinationExecutionTestListener.class
-	})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 @Sync
 public class ExportImportHelperUtilTest extends PowerMockito {
 
 	@ClassRule
-	public static TransactionalTestRule transactionalTestRule =
-		new TransactionalTestRule();
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE,
+			SynchronousDestinationTestRule.INSTANCE,
+			TransactionalTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
 		_liveGroup = GroupTestUtil.addGroup();
 		_stagingGroup = GroupTestUtil.addGroup();
 
-		_fileEntry = DLAppTestUtil.addFileEntry(
-			_stagingGroup.getGroupId(),
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				_stagingGroup.getGroupId(), TestPropsValues.getUserId());
+
+		_fileEntry = DLAppLocalServiceUtil.addFileEntry(
+			TestPropsValues.getUserId(), _stagingGroup.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-			RandomTestUtil.randomString() + ".txt",
-			RandomTestUtil.randomString(), true);
+			RandomTestUtil.randomString() + ".txt", ContentTypes.TEXT_PLAIN,
+			RandomTestUtil.randomBytes(), serviceContext);
 
 		LiferayFileEntry liferayFileEntry = (LiferayFileEntry)_fileEntry;
 
@@ -146,10 +151,8 @@ public class ExportImportHelperUtilTest extends PowerMockito {
 
 		_portletDataContextExport.setExportDataRootElement(rootElement);
 
-		_stagingPrivateLayout = LayoutTestUtil.addLayout(
-			_stagingGroup.getGroupId(), RandomTestUtil.randomString(), true);
-		_stagingPublicLayout = LayoutTestUtil.addLayout(
-			_stagingGroup.getGroupId(), RandomTestUtil.randomString(), false);
+		_stagingPrivateLayout = LayoutTestUtil.addLayout(_stagingGroup, true);
+		_stagingPublicLayout = LayoutTestUtil.addLayout(_stagingGroup, false);
 
 		_portletDataContextExport.setPlid(_stagingPublicLayout.getPlid());
 
@@ -162,8 +165,7 @@ public class ExportImportHelperUtilTest extends PowerMockito {
 
 		_portletDataContextImport.setImportDataRootElement(rootElement);
 
-		_livePublicLayout = LayoutTestUtil.addLayout(
-			_liveGroup.getGroupId(), RandomTestUtil.randomString(), false);
+		_livePublicLayout = LayoutTestUtil.addLayout(_liveGroup, false);
 
 		_portletDataContextImport.setPlid(_livePublicLayout.getPlid());
 
@@ -384,10 +386,8 @@ public class ExportImportHelperUtilTest extends PowerMockito {
 
 		Group group = user.getGroup();
 
-		Layout privateLayout = LayoutTestUtil.addLayout(
-			group.getGroupId(), RandomTestUtil.randomString(), true);
-		Layout publicLayout = LayoutTestUtil.addLayout(
-			group.getGroupId(), RandomTestUtil.randomString(), false);
+		Layout privateLayout = LayoutTestUtil.addLayout(group, true);
+		Layout publicLayout = LayoutTestUtil.addLayout(group, false);
 
 		PortletDataContext portletDataContextExport =
 			PortletDataContextFactoryUtil.createExportPortletDataContext(
@@ -420,12 +420,10 @@ public class ExportImportHelperUtilTest extends PowerMockito {
 
 	@Test
 	public void testGetSelectedLayoutsJSONSelectAllLayouts() throws Exception {
-		Layout layout = LayoutTestUtil.addLayout(
-			_stagingGroup.getGroupId(), RandomTestUtil.randomString());
+		Layout layout = LayoutTestUtil.addLayout(_stagingGroup);
 
 		Layout childLayout = LayoutTestUtil.addLayout(
-			_stagingGroup.getGroupId(), RandomTestUtil.randomString(),
-			layout.getPlid());
+			_stagingGroup, layout.getPlid());
 
 		long[] selectedLayoutIds = new long[] {
 			layout.getLayoutId(), childLayout.getLayoutId()};
@@ -448,12 +446,10 @@ public class ExportImportHelperUtilTest extends PowerMockito {
 
 	@Test
 	public void testGetSelectedLayoutsJSONSelectChildLayout() throws Exception {
-		Layout layout = LayoutTestUtil.addLayout(
-			_stagingGroup.getGroupId(), RandomTestUtil.randomString());
+		Layout layout = LayoutTestUtil.addLayout(_stagingGroup);
 
 		Layout childLayout = LayoutTestUtil.addLayout(
-			_stagingGroup.getGroupId(), RandomTestUtil.randomString(),
-			layout.getPlid());
+			_stagingGroup, layout.getPlid());
 
 		long[] selectedLayoutIds = new long[] {childLayout.getLayoutId()};
 
@@ -476,12 +472,9 @@ public class ExportImportHelperUtilTest extends PowerMockito {
 
 	@Test
 	public void testGetSelectedLayoutsJSONSelectNoLayouts() throws Exception {
-		Layout layout = LayoutTestUtil.addLayout(
-			_stagingGroup.getGroupId(), RandomTestUtil.randomString());
+		Layout layout = LayoutTestUtil.addLayout(_stagingGroup);
 
-		LayoutTestUtil.addLayout(
-			_stagingGroup.getGroupId(), RandomTestUtil.randomString(),
-			layout.getPlid());
+		LayoutTestUtil.addLayout(_stagingGroup, layout.getPlid());
 
 		String selectedLayoutsJSON =
 			ExportImportHelperUtil.getSelectedLayoutsJSON(
@@ -498,8 +491,7 @@ public class ExportImportHelperUtilTest extends PowerMockito {
 	public void testGetSelectedLayoutsJSONSelectParentLayout()
 		throws Exception {
 
-		Layout layout = LayoutTestUtil.addLayout(
-			_stagingGroup.getGroupId(), "Layout");
+		Layout layout = LayoutTestUtil.addLayout(_stagingGroup);
 
 		LayoutTestUtil.addLayout(
 			_stagingGroup.getGroupId(), "Child Layout", layout.getPlid());
@@ -589,10 +581,8 @@ public class ExportImportHelperUtilTest extends PowerMockito {
 
 	@Test
 	public void testImportLinksToLayoutsIdsReplacement() throws Exception {
-		LayoutTestUtil.addLayout(
-			_liveGroup.getGroupId(), RandomTestUtil.randomString(), true);
-		LayoutTestUtil.addLayout(
-			_liveGroup.getGroupId(), RandomTestUtil.randomString(), false);
+		LayoutTestUtil.addLayout(_liveGroup, true);
+		LayoutTestUtil.addLayout(_liveGroup, false);
 
 		exportImportLayouts(true);
 		exportImportLayouts(false);
@@ -603,6 +593,15 @@ public class ExportImportHelperUtilTest extends PowerMockito {
 		Layout importedPublicLayout =
 			LayoutLocalServiceUtil.fetchLayoutByUuidAndGroupId(
 				_stagingPublicLayout.getUuid(), _liveGroup.getGroupId(), false);
+
+		Map<Long, Long> layoutPlids =
+			(Map<Long, Long>)_portletDataContextImport.getNewPrimaryKeysMap(
+				Layout.class);
+
+		layoutPlids.put(
+			_stagingPrivateLayout.getPlid(), importedPrivateLayout.getPlid());
+		layoutPlids.put(
+			_stagingPublicLayout.getPlid(), importedPublicLayout.getPlid());
 
 		String content = getContent("layout_links_ids_replacement.txt");
 
@@ -650,6 +649,8 @@ public class ExportImportHelperUtilTest extends PowerMockito {
 		Assert.assertEquals(1, weakMissingReferences.size());
 
 		FileUtil.delete(zipWriter.getFile());
+
+		zipReader.close();
 	}
 
 	protected void assertLinksToLayouts(
@@ -679,9 +680,7 @@ public class ExportImportHelperUtilTest extends PowerMockito {
 		}
 
 		sb.append(CharPool.AT);
-		sb.append(layout.getUuid());
-		sb.append(StringPool.AT);
-		sb.append(layout.getFriendlyURL());
+		sb.append(layout.getPlid());
 
 		if (group != null) {
 			sb.append(CharPool.AT);
@@ -694,8 +693,12 @@ public class ExportImportHelperUtilTest extends PowerMockito {
 	}
 
 	protected void exportImportLayouts(boolean privateLayout) throws Exception {
+		List<Layout> layouts = LayoutLocalServiceUtil.getLayouts(
+			_stagingGroup.getGroupId(), privateLayout);
+
 		File larFile = LayoutLocalServiceUtil.exportLayoutsAsFile(
-			_stagingGroup.getGroupId(), privateLayout, null,
+			_stagingGroup.getGroupId(), privateLayout,
+			ExportImportHelperUtil.getLayoutIds(layouts),
 			new HashMap<String, String[]>(), null, null);
 
 		LayoutLocalServiceUtil.importLayouts(
@@ -721,7 +724,7 @@ public class ExportImportHelperUtilTest extends PowerMockito {
 
 		String[] lines = StringUtil.split(content, StringPool.NEW_LINE);
 
-		List<String> urls = new ArrayList<String>();
+		List<String> urls = new ArrayList<>();
 
 		for (String line : lines) {
 			matcher.reset(line);
@@ -792,7 +795,7 @@ public class ExportImportHelperUtilTest extends PowerMockito {
 			timestampParameter + "?" + timestampParameter +
 				"&width=100&height=100";
 
-		List<String> outURLs = new ArrayList<String>();
+		List<String> outURLs = new ArrayList<>();
 
 		for (String url : urls) {
 			if (!url.contains("[$TIMESTAMP")) {
@@ -841,7 +844,7 @@ public class ExportImportHelperUtilTest extends PowerMockito {
 	private Group _liveGroup;
 
 	private Layout _livePublicLayout;
-	private Pattern _pattern = Pattern.compile("href=|\\{|\\[");
+	private final Pattern _pattern = Pattern.compile("href=|\\{|\\[");
 	private PortletDataContext _portletDataContextExport;
 	private PortletDataContext _portletDataContextImport;
 	private StagedModel _referrerStagedModel;
@@ -889,7 +892,7 @@ public class ExportImportHelperUtilTest extends PowerMockito {
 
 		@Override
 		public List<String> getEntries() {
-			return new ArrayList<String>(_entries.keySet());
+			return new ArrayList<>(_entries.keySet());
 		}
 
 		@Override
@@ -922,8 +925,8 @@ public class ExportImportHelperUtilTest extends PowerMockito {
 			return StringPool.BLANK;
 		}
 
-		private List<String> _binaryEntries = new ArrayList<String>();
-		private Map<String, String> _entries = new HashMap<String, String>();
+		private final List<String> _binaryEntries = new ArrayList<>();
+		private final Map<String, String> _entries = new HashMap<>();
 
 	}
 

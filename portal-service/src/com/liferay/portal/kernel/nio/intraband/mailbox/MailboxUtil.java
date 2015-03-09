@@ -72,7 +72,7 @@ public class MailboxUtil {
 		}
 	}
 
-	static long depositMail(ByteBuffer byteBuffer) {
+	protected static long depositMail(ByteBuffer byteBuffer) {
 		long receipt = _receiptGenerator.getAndIncrement();
 
 		_mailMap.put(receipt, byteBuffer);
@@ -102,11 +102,23 @@ public class MailboxUtil {
 		GetterUtil.getLong(
 			PropsUtil.get(PropsKeys.INTRABAND_MAILBOX_STORAGE_LIFE));
 
-	private final static Map<Long, ByteBuffer> _mailMap =
-		new ConcurrentHashMap<Long, ByteBuffer>();
-	private final static BlockingQueue<ReceiptStub> _overdueMailQueue =
-		new DelayQueue<ReceiptStub>();
-	private final static AtomicLong _receiptGenerator = new AtomicLong();
+	private static final Map<Long, ByteBuffer> _mailMap =
+		new ConcurrentHashMap<>();
+	private static final BlockingQueue<ReceiptStub> _overdueMailQueue =
+		new DelayQueue<>();
+	private static final AtomicLong _receiptGenerator = new AtomicLong();
+
+	static {
+		if (_INTRABAND_MAILBOX_REAPER_THREAD_ENABLED) {
+			Thread thread = new OverdueMailReaperThread(
+				MailboxUtil.class.getName());
+
+			thread.setContextClassLoader(MailboxUtil.class.getClassLoader());
+			thread.setDaemon(true);
+
+			thread.start();
+		}
+	}
 
 	private static class OverdueMailReaperThread extends Thread {
 
@@ -126,6 +138,7 @@ public class MailboxUtil {
 				}
 			}
 		}
+
 	}
 
 	private static class ReceiptStub implements Delayed {
@@ -154,30 +167,23 @@ public class MailboxUtil {
 			return _receipt == receiptStub._receipt;
 		}
 
-		public long getReceipt() {
-			return _receipt;
-		}
-
 		@Override
 		public long getDelay(TimeUnit unit) {
 			return _expireTime - System.nanoTime();
 		}
 
+		public long getReceipt() {
+			return _receipt;
+		}
+
+		@Override
+		public int hashCode() {
+			return (int)_receipt;
+		}
+
 		private final long _expireTime;
 		private final long _receipt;
 
-	}
-
-	static {
-		if (_INTRABAND_MAILBOX_REAPER_THREAD_ENABLED) {
-			Thread thread = new OverdueMailReaperThread(
-				MailboxUtil.class.getName());
-
-			thread.setContextClassLoader(MailboxUtil.class.getClassLoader());
-			thread.setDaemon(true);
-
-			thread.start();
-		}
 	}
 
 }

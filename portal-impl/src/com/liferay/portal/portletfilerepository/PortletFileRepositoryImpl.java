@@ -14,14 +14,16 @@
 
 package com.liferay.portal.portletfilerepository;
 
-import com.liferay.portal.NoSuchRepositoryEntryException;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.repository.InvalidRepositoryIdException;
+import com.liferay.portal.kernel.repository.LocalRepository;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
+import com.liferay.portal.kernel.repository.util.RepositoryTrashUtil;
 import com.liferay.portal.kernel.security.pacl.DoPrivileged;
 import com.liferay.portal.kernel.systemevent.SystemEventHierarchyEntryThreadLocal;
 import com.liferay.portal.kernel.util.ContentTypes;
@@ -40,8 +42,8 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.model.Repository;
 import com.liferay.portal.model.User;
-import com.liferay.portal.repository.liferayrepository.LiferayRepository;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFileEntry;
+import com.liferay.portal.repository.portletrepository.PortletRepository;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.service.RepositoryLocalServiceUtil;
 import com.liferay.portal.service.ServiceContext;
@@ -51,10 +53,10 @@ import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portal.util.PortletKeys;
 import com.liferay.portal.webserver.WebServerServlet;
+import com.liferay.portlet.documentlibrary.NoSuchFileEntryException;
 import com.liferay.portlet.documentlibrary.NoSuchFolderException;
 import com.liferay.portlet.documentlibrary.model.DLFileEntry;
 import com.liferay.portlet.documentlibrary.model.DLFolderConstants;
-import com.liferay.portlet.documentlibrary.service.DLAppLocalServiceUtil;
 import com.liferay.portlet.documentlibrary.service.DLFileEntryLocalServiceUtil;
 import com.liferay.portlet.documentlibrary.util.DLAppHelperThreadLocal;
 import com.liferay.portlet.documentlibrary.util.comparator.DLFileEntryOrderByComparator;
@@ -129,10 +131,13 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 		try {
 			DLAppHelperThreadLocal.setEnabled(false);
 
-			return DLAppLocalServiceUtil.addFileEntry(
-				userId, repository.getRepositoryId(), folderId, fileName,
-				mimeType, fileName, StringPool.BLANK, StringPool.BLANK, file,
-				serviceContext);
+			LocalRepository localRepository =
+				RepositoryLocalServiceUtil.getLocalRepositoryImpl(
+					repository.getRepositoryId());
+
+			return localRepository.addFileEntry(
+				userId, folderId, fileName, mimeType, fileName,
+				StringPool.BLANK, StringPool.BLANK, file, serviceContext);
 		}
 		finally {
 			DLAppHelperThreadLocal.setEnabled(dlAppHelperEnabled);
@@ -175,20 +180,36 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 
 		boolean dlAppHelperEnabled = DLAppHelperThreadLocal.isEnabled();
 
+		LocalRepository localRepository =
+			RepositoryLocalServiceUtil.getLocalRepositoryImpl(repositoryId);
+
 		try {
 			DLAppHelperThreadLocal.setEnabled(false);
 
-			return DLAppLocalServiceUtil.getFolder(
-				repositoryId, parentFolderId, folderName);
+			return localRepository.getFolder(parentFolderId, folderName);
 		}
 		catch (NoSuchFolderException nsfe) {
-			return DLAppLocalServiceUtil.addFolder(
-				userId, repositoryId, parentFolderId, folderName,
-				StringPool.BLANK, serviceContext);
+			return localRepository.addFolder(
+				userId, parentFolderId, folderName, StringPool.BLANK,
+				serviceContext);
 		}
 		finally {
 			DLAppHelperThreadLocal.setEnabled(dlAppHelperEnabled);
 		}
+	}
+
+	@Override
+	public Folder addPortletFolder(
+			long groupId, long userId, String portletId, long parentFolderId,
+			String folderName, ServiceContext serviceContext)
+		throws PortalException {
+
+		Repository repository = addPortletRepository(
+			groupId, portletId, serviceContext);
+
+		return addPortletFolder(
+			userId, repository.getRepositoryId(), parentFolderId, folderName,
+			serviceContext);
 	}
 
 	@Override
@@ -208,7 +229,7 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 		User user = UserLocalServiceUtil.getDefaultUser(group.getCompanyId());
 
 		long classNameId = PortalUtil.getClassNameId(
-			LiferayRepository.class.getName());
+			PortletRepository.class.getName());
 
 		UnicodeProperties typeSettingsProperties = new UnicodeProperties();
 
@@ -275,11 +296,15 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 
 			SystemEventHierarchyEntryThreadLocal.push(FileEntry.class);
 
-			DLAppLocalServiceUtil.deleteFileEntry(fileEntryId);
+			LocalRepository localRepository =
+				RepositoryLocalServiceUtil.getLocalRepositoryImpl(
+					0, fileEntryId, 0);
+
+			localRepository.deleteFileEntry(fileEntryId);
 		}
-		catch (NoSuchRepositoryEntryException nsree) {
-			if (_log.isErrorEnabled()) {
-				_log.error(nsree, nsree);
+		catch (InvalidRepositoryIdException irie) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(irie, irie);
 			}
 		}
 		finally {
@@ -294,8 +319,10 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 			long groupId, long folderId, String fileName)
 		throws PortalException {
 
-		FileEntry fileEntry = DLAppLocalServiceUtil.getFileEntry(
-			groupId, folderId, fileName);
+		LocalRepository localRepository =
+			RepositoryLocalServiceUtil.getLocalRepositoryImpl(groupId);
+
+		FileEntry fileEntry = localRepository.getFileEntry(folderId, fileName);
 
 		deletePortletFileEntry(fileEntry.getFileEntryId());
 	}
@@ -309,11 +336,15 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 
 			SystemEventHierarchyEntryThreadLocal.push(Folder.class);
 
-			DLAppLocalServiceUtil.deleteFolder(folderId);
+			LocalRepository localRepository =
+				RepositoryLocalServiceUtil.getLocalRepositoryImpl(
+					folderId, 0, 0);
+
+			localRepository.deleteFolder(folderId);
 		}
-		catch (NoSuchRepositoryEntryException nsree) {
-			if (_log.isErrorEnabled()) {
-				_log.error(nsree, nsree);
+		catch (InvalidRepositoryIdException irie) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(irie, irie);
 			}
 		}
 		finally {
@@ -414,7 +445,16 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 	public FileEntry getPortletFileEntry(long fileEntryId)
 		throws PortalException {
 
-		return DLAppLocalServiceUtil.getFileEntry(fileEntryId);
+		try {
+			LocalRepository localRepository =
+				RepositoryLocalServiceUtil.getLocalRepositoryImpl(
+					0, fileEntryId, 0);
+
+			return localRepository.getFileEntry(fileEntryId);
+		}
+		catch (InvalidRepositoryIdException irid) {
+			throw new NoSuchFileEntryException(irid);
+		}
 	}
 
 	@Override
@@ -422,15 +462,20 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 			long groupId, long folderId, String fileName)
 		throws PortalException {
 
-		return DLAppLocalServiceUtil.getFileEntry(groupId, folderId, fileName);
+		LocalRepository localRepository =
+			RepositoryLocalServiceUtil.getLocalRepositoryImpl(groupId);
+
+		return localRepository.getFileEntry(folderId, fileName);
 	}
 
 	@Override
 	public FileEntry getPortletFileEntry(String uuid, long groupId)
 		throws PortalException {
 
-		return DLAppLocalServiceUtil.getFileEntryByUuidAndGroupId(
-			uuid, groupId);
+		LocalRepository localRepository =
+			RepositoryLocalServiceUtil.getLocalRepositoryImpl(groupId);
+
+		return localRepository.getFileEntryByUuid(uuid);
 	}
 
 	@Override
@@ -508,7 +553,16 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 
 	@Override
 	public Folder getPortletFolder(long folderId) throws PortalException {
-		return DLAppLocalServiceUtil.getFolder(folderId);
+		try {
+			LocalRepository localRepository =
+				RepositoryLocalServiceUtil.getLocalRepositoryImpl(
+					folderId, 0, 0);
+
+			return localRepository.getFolder(folderId);
+		}
+		catch (InvalidRepositoryIdException irid) {
+			throw new NoSuchFolderException(irid);
+		}
 	}
 
 	@Override
@@ -516,8 +570,10 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 			long repositoryId, long parentFolderId, String folderName)
 		throws PortalException {
 
-		return DLAppLocalServiceUtil.getFolder(
-			repositoryId, parentFolderId, folderName);
+		LocalRepository localRepository =
+			RepositoryLocalServiceUtil.getLocalRepositoryImpl(repositoryId);
+
+		return localRepository.getFolder(parentFolderId, folderName);
 	}
 
 	@Override
@@ -536,8 +592,12 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 		try {
 			DLAppHelperThreadLocal.setEnabled(false);
 
-			return DLAppLocalServiceUtil.moveFileEntryToTrash(
-				userId, fileEntryId);
+			LocalRepository localRepository =
+				RepositoryLocalServiceUtil.getLocalRepositoryImpl(
+					0, fileEntryId, 0);
+
+			return RepositoryTrashUtil.moveFileEntryToTrash(
+				userId, localRepository.getRepositoryId(), fileEntryId);
 		}
 		finally {
 			DLAppHelperThreadLocal.setEnabled(dlAppHelperEnabled);
@@ -549,8 +609,10 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 			long groupId, long userId, long folderId, String fileName)
 		throws PortalException {
 
-		FileEntry fileEntry = DLAppLocalServiceUtil.getFileEntry(
-			groupId, folderId, fileName);
+		LocalRepository localRepository =
+			RepositoryLocalServiceUtil.getLocalRepositoryImpl(groupId);
+
+		FileEntry fileEntry = localRepository.getFileEntry(folderId, fileName);
 
 		return movePortletFileEntryToTrash(userId, fileEntry.getFileEntryId());
 	}
@@ -564,8 +626,12 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 		try {
 			DLAppHelperThreadLocal.setEnabled(false);
 
-			DLAppLocalServiceUtil.restoreFileEntryFromTrash(
-				userId, fileEntryId);
+			LocalRepository localRepository =
+				RepositoryLocalServiceUtil.getLocalRepositoryImpl(
+					0, fileEntryId, 0);
+
+			RepositoryTrashUtil.restoreFileEntryFromTrash(
+				userId, localRepository.getRepositoryId(), fileEntryId);
 		}
 		finally {
 			DLAppHelperThreadLocal.setEnabled(dlAppHelperEnabled);
@@ -577,8 +643,10 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 			long groupId, long userId, long folderId, String fileName)
 		throws PortalException {
 
-		FileEntry fileEntry = DLAppLocalServiceUtil.getFileEntry(
-			groupId, folderId, fileName);
+		LocalRepository localRepository =
+			RepositoryLocalServiceUtil.getLocalRepositoryImpl(groupId);
+
+		FileEntry fileEntry = localRepository.getFileEntry(folderId, fileName);
 
 		restorePortletFileEntryFromTrash(userId, fileEntry.getFileEntryId());
 	}
@@ -587,8 +655,7 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 	 * @see com.liferay.portlet.documentlibrary.util.RepositoryModelUtil#toFileEntries
 	 */
 	protected List<FileEntry> toFileEntries(List<DLFileEntry> dlFileEntries) {
-		List<FileEntry> fileEntries = new ArrayList<FileEntry>(
-			dlFileEntries.size());
+		List<FileEntry> fileEntries = new ArrayList<>(dlFileEntries.size());
 
 		for (DLFileEntry dlFileEntry : dlFileEntries) {
 			FileEntry fileEntry = new LiferayFileEntry(dlFileEntry);
@@ -604,7 +671,7 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		PortletFileRepositoryImpl.class);
 
 }

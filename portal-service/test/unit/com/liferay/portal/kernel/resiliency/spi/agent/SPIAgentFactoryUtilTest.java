@@ -16,8 +16,8 @@ package com.liferay.portal.kernel.resiliency.spi.agent;
 
 import com.liferay.portal.kernel.resiliency.spi.SPI;
 import com.liferay.portal.kernel.resiliency.spi.SPIConfiguration;
-import com.liferay.portal.kernel.test.CodeCoverageAssertor;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -36,8 +36,8 @@ import org.junit.Test;
 public class SPIAgentFactoryUtilTest {
 
 	@ClassRule
-	public static CodeCoverageAssertor codeCoverageAssertor =
-		new CodeCoverageAssertor();
+	public static final CodeCoverageAssertor codeCoverageAssertor =
+		CodeCoverageAssertor.INSTANCE;
 
 	@Test
 	public void testCreateSPIAgent() {
@@ -111,7 +111,7 @@ public class SPIAgentFactoryUtilTest {
 
 		SPIAgentFactoryUtil spiAgentFactoryUtil = new SPIAgentFactoryUtil();
 
-		Set<String> agentClassNames = new HashSet<String>();
+		Set<String> agentClassNames = new HashSet<>();
 
 		agentClassNames.add(BadMockSPIAgent.class.getName());
 		agentClassNames.add(MockSPIAgent.class.getName());
@@ -119,9 +119,8 @@ public class SPIAgentFactoryUtilTest {
 		spiAgentFactoryUtil.setSPIAgentClasses(agentClassNames);
 
 		Map<String, Class<? extends SPIAgent>> spiAgentClasses =
-			(Map<String, Class<? extends SPIAgent>>)
-				ReflectionTestUtil.getFieldValue(
-					SPIAgentFactoryUtil.class, "_spiAgentClasses");
+			ReflectionTestUtil.getFieldValue(
+				SPIAgentFactoryUtil.class, "_spiAgentClasses");
 
 		Assert.assertEquals(2, spiAgentClasses.size());
 		Assert.assertSame(

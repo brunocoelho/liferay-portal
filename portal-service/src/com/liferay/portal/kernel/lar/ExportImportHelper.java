@@ -77,6 +77,11 @@ public interface ExportImportHelper {
 	public static final String TEMP_FOLDER_NAME =
 		ExportImportHelper.class.getName();
 
+	public long[] getAllLayoutIds(long groupId, boolean privateLayout);
+
+	public Map<Long, Boolean> getAllLayoutIdsMap(
+		long groupId, boolean privateLayout);
+
 	/**
 	 * @deprecated As of 7.0.0, moved to {@link
 	 *             ExportImportDateUtil#getCalendar(PortletRequest, String,
@@ -372,10 +377,6 @@ public interface ExportImportHelper {
 			long companyGroupId)
 		throws Exception;
 
-	public MissingReferences validateMissingReferences(
-			final PortletDataContext portletDataContext)
-		throws Exception;
-
 	/**
 	 * @deprecated As of 7.0.0, replaced by {@link
 	 *             #validateMissingReferences(PortletDataContext)}
@@ -384,6 +385,10 @@ public interface ExportImportHelper {
 	public MissingReferences validateMissingReferences(
 			long userId, long groupId, Map<String, String[]> parameterMap,
 			File file)
+		throws Exception;
+
+	public MissingReferences validateMissingReferences(
+			final PortletDataContext portletDataContext)
 		throws Exception;
 
 	public void writeManifestSummary(

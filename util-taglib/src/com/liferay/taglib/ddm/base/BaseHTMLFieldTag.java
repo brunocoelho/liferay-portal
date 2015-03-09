@@ -21,7 +21,7 @@ import javax.servlet.jsp.JspException;
  * @author Bruno Basto
  * @generated
  */
-public class BaseHTMLFieldTag extends com.liferay.taglib.util.IncludeTag {
+public abstract class BaseHTMLFieldTag extends com.liferay.taglib.util.IncludeTag {
 
 	@Override
 	public int doStartTag() throws JspException {
@@ -56,6 +56,10 @@ public class BaseHTMLFieldTag extends com.liferay.taglib.util.IncludeTag {
 
 	public java.util.Locale getRequestedLocale() {
 		return _requestedLocale;
+	}
+
+	public boolean getShowEmptyFieldLabel() {
+		return _showEmptyFieldLabel;
 	}
 
 	public void setClassNameId(long classNameId) {
@@ -100,8 +104,16 @@ public class BaseHTMLFieldTag extends com.liferay.taglib.util.IncludeTag {
 		setScopedAttribute("requestedLocale", requestedLocale);
 	}
 
+	public void setShowEmptyFieldLabel(boolean showEmptyFieldLabel) {
+		_showEmptyFieldLabel = showEmptyFieldLabel;
+
+		setScopedAttribute("showEmptyFieldLabel", showEmptyFieldLabel);
+	}
+
 	@Override
 	protected void cleanUp() {
+		super.cleanUp();
+
 		_classNameId = 0;
 		_classPK = 0;
 		_field = null;
@@ -109,6 +121,7 @@ public class BaseHTMLFieldTag extends com.liferay.taglib.util.IncludeTag {
 		_readOnly = false;
 		_repeatable = true;
 		_requestedLocale = null;
+		_showEmptyFieldLabel = true;
 	}
 
 	@Override
@@ -130,6 +143,7 @@ public class BaseHTMLFieldTag extends com.liferay.taglib.util.IncludeTag {
 		setNamespacedAttribute(request, "readOnly", _readOnly);
 		setNamespacedAttribute(request, "repeatable", _repeatable);
 		setNamespacedAttribute(request, "requestedLocale", _requestedLocale);
+		setNamespacedAttribute(request, "showEmptyFieldLabel", _showEmptyFieldLabel);
 	}
 
 	protected static final String _ATTRIBUTE_NAMESPACE = "ddm:html-field:";
@@ -147,5 +161,6 @@ public class BaseHTMLFieldTag extends com.liferay.taglib.util.IncludeTag {
 	private boolean _readOnly = false;
 	private boolean _repeatable = true;
 	private java.util.Locale _requestedLocale = null;
+	private boolean _showEmptyFieldLabel = true;
 
 }

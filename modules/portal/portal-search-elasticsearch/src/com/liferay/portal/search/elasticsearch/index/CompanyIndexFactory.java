@@ -130,7 +130,7 @@ public class CompanyIndexFactory implements IndexFactory {
 		setIndexConfigFileName(
 			MapUtil.getString(properties, "indexConfigFileName"));
 
-		Map<String, String> typeMappings = new HashMap<String, String>();
+		Map<String, String> typeMappings = new HashMap<>();
 
 		for (String key : properties.keySet()) {
 			if (key.startsWith(_PREFIX)) {
@@ -160,9 +160,10 @@ public class CompanyIndexFactory implements IndexFactory {
 
 	private static final String _PREFIX = "typeMappings.";
 
-	private static Log _log = LogFactoryUtil.getLog(CompanyIndexFactory.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		CompanyIndexFactory.class);
 
 	private String _indexConfigFileName;
-	private Map<String, String> _typeMappings = new HashMap<String, String>();
+	private Map<String, String> _typeMappings = new HashMap<>();
 
 }

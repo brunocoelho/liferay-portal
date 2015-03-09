@@ -17,6 +17,7 @@ package com.liferay.social.activities.web.portlet.action;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortletResponseUtil;
+import com.liferay.portal.kernel.portlet.bridges.mvc.ActionCommand;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
@@ -34,8 +35,8 @@ import com.liferay.portlet.social.model.SocialActivity;
 import com.liferay.portlet.social.model.SocialActivityFeedEntry;
 import com.liferay.portlet.social.service.SocialActivityInterpreterLocalServiceUtil;
 import com.liferay.portlet.social.service.SocialActivityLocalServiceUtil;
+import com.liferay.social.activities.web.constants.SocialActivitiesPortletKeys;
 import com.liferay.util.RSSUtil;
-import com.liferay.util.bridges.mvc.ActionCommand;
 
 import com.sun.syndication.feed.synd.SyndContent;
 import com.sun.syndication.feed.synd.SyndContentImpl;
@@ -70,7 +71,7 @@ import org.osgi.service.component.annotations.Component;
 	immediate = true,
 	property = {
 		"action.command.name=rss",
-		"javax.portlet.name=com_liferay_social_activities_web_portlet_SocialActivitiesPortlet"
+		"javax.portlet.name=" + SocialActivitiesPortletKeys.SOCIAL_ACTIVITIES
 	},
 	service = ActionCommand.class
 )
@@ -114,7 +115,7 @@ public class RSSAction implements ActionCommand {
 
 		syndFeed.setDescription(GetterUtil.getString(description, title));
 
-		List<SyndEntry> syndEntries = new ArrayList<SyndEntry>();
+		List<SyndEntry> syndEntries = new ArrayList<>();
 
 		syndFeed.setEntries(syndEntries);
 
@@ -161,7 +162,7 @@ public class RSSAction implements ActionCommand {
 
 		syndFeed.setFeedType(RSSUtil.getFeedType(format, version));
 
-		List<SyndLink> syndLinks = new ArrayList<SyndLink>();
+		List<SyndLink> syndLinks = new ArrayList<>();
 
 		syndFeed.setLinks(syndLinks);
 

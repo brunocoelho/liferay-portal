@@ -18,8 +18,8 @@ import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.nio.intraband.Datagram;
 import com.liferay.portal.kernel.nio.intraband.test.MockIntraband;
 import com.liferay.portal.kernel.nio.intraband.test.MockRegistrationReference;
-import com.liferay.portal.kernel.test.CodeCoverageAssertor;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 
 import java.nio.ByteBuffer;
@@ -34,8 +34,8 @@ import org.junit.Test;
 public class IntrabandBridgeMessageListenerTest {
 
 	@ClassRule
-	public static CodeCoverageAssertor codeCoverageAssertor =
-		new CodeCoverageAssertor();
+	public static final CodeCoverageAssertor codeCoverageAssertor =
+		CodeCoverageAssertor.INSTANCE;
 
 	@Test
 	public void testConstructor() {
@@ -85,8 +85,8 @@ public class IntrabandBridgeMessageListenerTest {
 		Assert.assertEquals(payload, receivedMessage.getPayload());
 	}
 
-	private MockIntraband _mockIntraband = new MockIntraband();
-	private MockRegistrationReference _mockRegistrationReference =
+	private final MockIntraband _mockIntraband = new MockIntraband();
+	private final MockRegistrationReference _mockRegistrationReference =
 		new MockRegistrationReference(_mockIntraband);
 
 }

@@ -14,18 +14,23 @@
 
 package com.liferay.portal.tools.seleniumbuilder;
 
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Michael Hashimoto
  */
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 public class SeleniumBuilderTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayIntegrationTestRule liferayIntegrationTestRule =
+		new LiferayIntegrationTestRule();
 
 	@Before
 	public void setUp() throws Exception {
@@ -637,8 +642,8 @@ public class SeleniumBuilderTest {
 	public void testFunctionIfElement1001_1() throws Exception {
 		test(
 			"FunctionIfElement1001_1.function",
-			"Error 1001: Missing (condition) child element in " + _DIR_NAME +
-				"/FunctionIfElement1001_1.function:3");
+			"Error 1001: Missing (condition|contains) child element in " +
+				_DIR_NAME + "/FunctionIfElement1001_1.function:3");
 	}
 
 	@Test
@@ -653,16 +658,16 @@ public class SeleniumBuilderTest {
 	public void testFunctionIfElement1001_3() throws Exception {
 		test(
 			"FunctionIfElement1001_3.function",
-			"Error 1001: Missing (condition) child element in " + _DIR_NAME +
-				"/FunctionIfElement1001_3.function:3");
+			"Error 1001: Missing (condition|contains) child element in " +
+				_DIR_NAME + "/FunctionIfElement1001_3.function:3");
 	}
 
 	@Test
 	public void testFunctionIfElement1001_4() throws Exception {
 		test(
 			"FunctionIfElement1001_4.function",
-			"Error 1001: Missing (condition) child element in " + _DIR_NAME +
-				"/FunctionIfElement1001_4.function:3");
+			"Error 1001: Missing (condition|contains) child element in " +
+				_DIR_NAME + "/FunctionIfElement1001_4.function:3");
 	}
 
 	@Test
@@ -838,32 +843,24 @@ public class SeleniumBuilderTest {
 	public void testMacroConditionElement1004_1() throws Exception {
 		test(
 			"MacroConditionElement1004_1.macro",
-			"Error 1004: Missing (action|macro) attribute in " + _DIR_NAME +
-				"/MacroConditionElement1004_1.macro:4");
+			"Error 1004: Missing (action|function|macro) attribute in " +
+				_DIR_NAME + "/MacroConditionElement1004_1.macro:4");
 	}
 
 	@Test
 	public void testMacroConditionElement1004_2() throws Exception {
 		test(
 			"MacroConditionElement1004_2.macro",
-			"Error 1004: Missing (action|macro) attribute in " + _DIR_NAME +
-				"/MacroConditionElement1004_2.macro:4");
+			"Error 1004: Missing (action|function|macro) attribute in " +
+				_DIR_NAME + "/MacroConditionElement1004_2.macro:4");
 	}
 
 	@Test
 	public void testMacroConditionElement1004_3() throws Exception {
 		test(
 			"MacroConditionElement1004_3.macro",
-			"Error 1004: Missing (action|macro) attribute in " + _DIR_NAME +
-				"/MacroConditionElement1004_3.macro:4");
-	}
-
-	@Test
-	public void testMacroConditionElement1004_4() throws Exception {
-		test(
-			"MacroConditionElement1004_4.macro",
-			"Error 1004: Missing (action|macro) attribute in " + _DIR_NAME +
-				"/MacroConditionElement1004_4.macro:4");
+			"Error 1004: Missing (action|function|macro) attribute in " +
+				_DIR_NAME + "/MacroConditionElement1004_3.macro:4");
 	}
 
 	@Test
@@ -1153,24 +1150,24 @@ public class SeleniumBuilderTest {
 	public void testMacroExecuteElement1004_1() throws Exception {
 		test(
 			"MacroExecuteElement1004_1.macro",
-			"Error 1004: Missing (action|macro) attribute in " + _DIR_NAME +
-				"/MacroExecuteElement1004_1.macro:3");
+			"Error 1004: Missing (action|function|macro) attribute in " +
+				_DIR_NAME + "/MacroExecuteElement1004_1.macro:3");
 	}
 
 	@Test
 	public void testMacroExecuteElement1004_2() throws Exception {
 		test(
 			"MacroExecuteElement1004_2.macro",
-			"Error 1004: Missing (action|macro) attribute in " + _DIR_NAME +
-				"/MacroExecuteElement1004_2.macro:3");
+			"Error 1004: Missing (action|function|macro) attribute in " +
+				_DIR_NAME + "/MacroExecuteElement1004_2.macro:3");
 	}
 
 	@Test
 	public void testMacroExecuteElement1004_3() throws Exception {
 		test(
 			"MacroExecuteElement1004_3.macro",
-			"Error 1004: Missing (action|macro) attribute in " + _DIR_NAME +
-				"/MacroExecuteElement1004_3.macro:3");
+			"Error 1004: Missing (action|function|macro) attribute in " +
+				_DIR_NAME + "/MacroExecuteElement1004_3.macro:3");
 	}
 
 	@Test
@@ -1235,6 +1232,27 @@ public class SeleniumBuilderTest {
 			"MacroExecuteElement1007.macro",
 			"Error 1007: Poorly formed XML in " + _DIR_NAME +
 				"/MacroExecuteElement1007.macro");
+	}
+
+	@Test
+	public void testMacroExecuteFunctionInvalidAttribute() throws Exception {
+		test(
+			"MacroExecuteFunctionInvalidAttribute_1.macro",
+			"Error 1005: Invalid locator attribute in " + _DIR_NAME +
+				"/MacroExecuteFunctionInvalidAttribute_1.macro:3");
+
+		test(
+			"MacroExecuteFunctionInvalidAttribute_2.macro",
+			"Error 1005: Invalid value attribute in " + _DIR_NAME +
+				"/MacroExecuteFunctionInvalidAttribute_2.macro:3");
+	}
+
+	@Test
+	public void testMacroExecuteFunctionMissingAttribute() throws Exception {
+		test(
+			"MacroExecuteFunctionMissingAttribute.macro",
+			"Error 1004: Missing (action|function|macro) attribute in " +
+				_DIR_NAME + "/MacroExecuteFunctionMissingAttribute.macro:3");
 	}
 
 	@Test
@@ -1799,6 +1817,29 @@ public class SeleniumBuilderTest {
 	}
 
 	@Test
+	public void testTestCaseActionCommandMissingAttributeValue()
+		throws Exception {
+
+		test(
+			"TestCaseActionCommandMissingAttributeValue_1.testcase",
+			"Error 1018: Missing (-Dfile|-Dtofile) in attribute value1 at " +
+				_DIR_NAME +
+				"/TestCaseActionCommandMissingAttributeValue_1.testcase:3");
+
+		test(
+			"TestCaseActionCommandMissingAttributeValue_2.testcase",
+			"Error 1018: Missing (-Dfile|-Dtofile) in attribute value1 at " +
+				_DIR_NAME +
+				"/TestCaseActionCommandMissingAttributeValue_2.testcase:3");
+
+		test(
+			"TestCaseActionCommandMissingAttributeValue_3.testcase",
+			"Error 1018: Missing (-Dfile|-Dtoken|-Dvalue) in attribute " +
+				"value1 at " + _DIR_NAME +
+				"/TestCaseActionCommandMissingAttributeValue_3.testcase:3");
+	}
+
+	@Test
 	public void testTestCaseActionComplexString1001() throws Exception {
 		test(
 			"TestCaseActionComplexString1001.testcase",
@@ -1956,24 +1997,24 @@ public class SeleniumBuilderTest {
 	public void testTestCaseExecuteElement1004_1() throws Exception {
 		test(
 			"TestCaseExecuteElement1004_1.testcase",
-			"Error 1004: Missing (action|macro|test-case) attribute in " +
-				_DIR_NAME + "/TestCaseExecuteElement1004_1.testcase:5");
+			"Error 1004: Missing (action|function|macro|test-case) attribute " +
+				"in " + _DIR_NAME + "/TestCaseExecuteElement1004_1.testcase:5");
 	}
 
 	@Test
 	public void testTestCaseExecuteElement1004_2() throws Exception {
 		test(
 			"TestCaseExecuteElement1004_2.testcase",
-			"Error 1004: Missing (action|macro|test-case) attribute in " +
-				_DIR_NAME + "/TestCaseExecuteElement1004_2.testcase:5");
+			"Error 1004: Missing (action|function|macro|test-case) attribute " +
+				"in " + _DIR_NAME + "/TestCaseExecuteElement1004_2.testcase:5");
 	}
 
 	@Test
 	public void testTestCaseExecuteElement1004_3() throws Exception {
 		test(
 			"TestCaseExecuteElement1004_3.testcase",
-			"Error 1004: Missing (action|macro|test-case) attribute in " +
-				_DIR_NAME + "/TestCaseExecuteElement1004_3.testcase:5");
+			"Error 1004: Missing (action|function|macro|test-case) attribute " +
+				"in " + _DIR_NAME + "/TestCaseExecuteElement1004_3.testcase:5");
 	}
 
 	@Test
@@ -2038,6 +2079,30 @@ public class SeleniumBuilderTest {
 			"TestCaseExecuteElement1007.testcase",
 			"Error 1007: Poorly formed XML in " + _DIR_NAME +
 				"/TestCaseExecuteElement1007.testcase");
+	}
+
+	@Test
+	public void testTestCaseExecuteFunctionElementInvalidAttribute()
+		throws Exception {
+
+		test(
+			"TestCaseExecuteFunctionElementInvalidAttribute_1.testcase",
+			"Error 1005: Invalid locator attribute in " + _DIR_NAME +
+				"/TestCaseExecuteFunctionElementInvalidAttribute_1.testcase:5");
+
+		test(
+			"TestCaseExecuteFunctionElementInvalidAttribute_2.testcase",
+			"Error 1005: Invalid value attribute in " + _DIR_NAME +
+				"/TestCaseExecuteFunctionElementInvalidAttribute_2.testcase:5");
+	}
+
+	@Test
+	public void testTestCaseExecuteFunctionMissingAttribute() throws Exception {
+		test(
+			"TestCaseExecuteFunctionMissingAttribute.testcase",
+			"Error 1004: Missing (action|function|macro|test-case) attribute " +
+				"in " + _DIR_NAME +
+				"/TestCaseExecuteFunctionMissingAttribute.testcase:5");
 	}
 
 	@Test

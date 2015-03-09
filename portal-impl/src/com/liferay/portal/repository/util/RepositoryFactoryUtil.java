@@ -66,9 +66,8 @@ public class RepositoryFactoryUtil {
 		_repositoryFactories.remove(className);
 	}
 
-	private static ConcurrentHashMap<String, RepositoryFactory>
-		_repositoryFactories =
-			new ConcurrentHashMap<String, RepositoryFactory>();
+	private static final ConcurrentHashMap<String, RepositoryFactory>
+		_repositoryFactories = new ConcurrentHashMap<>();
 
 	static {
 		ClassLoader classLoader = PortalClassLoaderUtil.getClassLoader();

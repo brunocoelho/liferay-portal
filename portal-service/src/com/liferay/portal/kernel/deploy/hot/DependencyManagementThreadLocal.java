@@ -30,8 +30,8 @@ public class DependencyManagementThreadLocal {
 		_enabled.set(enabled);
 	}
 
-	private static ThreadLocal<Boolean> _enabled =
-		new AutoResetThreadLocal<Boolean>(
+	private static final ThreadLocal<Boolean> _enabled =
+		new AutoResetThreadLocal<>(
 			DependencyManagementThreadLocal.class + ".enabled", true);
 
 }

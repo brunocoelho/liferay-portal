@@ -17,7 +17,7 @@
 <%
 boolean showAddEntryButton = BlogsPermission.contains(permissionChecker, scopeGroupId, ActionKeys.ADD_ENTRY);
 boolean showPermissionsButton = BlogsPermission.contains(permissionChecker, scopeGroupId, ActionKeys.PERMISSIONS);
-boolean showSubscribeButton = BlogsPermission.contains(permissionChecker, scopeGroupId, ActionKeys.SUBSCRIBE) && (blogsSettings.isEmailEntryAddedEnabled() || blogsSettings.isEmailEntryUpdatedEnabled());
+boolean showSubscribeButton = BlogsPermission.contains(permissionChecker, scopeGroupId, ActionKeys.SUBSCRIBE) && (blogsGroupServiceSettings.isEmailEntryAddedEnabled() || blogsGroupServiceSettings.isEmailEntryUpdatedEnabled());
 showSearch = showSearch && !results.isEmpty();
 %>
 
@@ -113,18 +113,16 @@ showSearch = showSearch && !results.isEmpty();
 />
 
 <%
-long portletDisplayDDMTemplateId = PortletDisplayTemplateUtil.getPortletDisplayTemplateDDMTemplateId(blogsPortletInstanceSettings.getDisplayStyleGroupId(themeDisplay.getScopeGroupId()), blogsPortletInstanceSettings.getDisplayStyle());
+Map<String, Object> contextObjects = new HashMap<String, Object>();
 
-if (portletDisplayDDMTemplateId > 0) {
+contextObjects.put("blogsPortletInstanceSettings", blogsPortletInstanceSettings);
 %>
 
-	<div class="entry-body">
-		<%= PortletDisplayTemplateUtil.renderDDMTemplate(request, response, portletDisplayDDMTemplateId, _convertToBlogEntries(results)) %>
-	</div>
+<liferay-ui:ddm-template-renderer contextObjects="<%= contextObjects %>" displayStyle="<%= blogsPortletInstanceSettings.getDisplayStyle() %>" displayStyleGroupId="<%= blogsPortletInstanceSettings.getDisplayStyleGroupId(themeDisplay.getScopeGroupId()) %>" entries="<%= _convertToBlogEntries(results) %>">
 
-<%
-}
-else {
+	<%
+	int index = 0;
+
 	for (Object result : results) {
 		BlogsEntry entry = null;
 
@@ -141,25 +139,26 @@ else {
 			entry = (BlogsEntry)result;
 		}
 
-		if (((entry.getStatus() == WorkflowConstants.STATUS_DRAFT) || entry.getDisplayDate().after(new Date())) && (entry.getUserId() != user.getUserId()) && !permissionChecker.isGroupAdmin(scopeGroupId)) {
-			searchContainer.setTotal(searchContainer.getTotal() - 1);
-
-			continue;
-		}
+		index++;
 
 		request.setAttribute("view_entry_content.jsp-searchContainer", searchContainer);
 
 		request.setAttribute("view_entry_content.jsp-entry", entry);
 
 		request.setAttribute("view_entry_content.jsp-assetEntry", assetEntry);
-%>
+	%>
 
 	<liferay-util:include page="/html/portlet/blogs/view_entry_content.jsp" />
 
-<%
+	<c:if test="<%= index < searchContainer.getTotal() %>">
+		<div class="separator"><!-- --></div>
+	</c:if>
+
+	<%
 	}
-}
-%>
+	%>
+
+</liferay-ui:ddm-template-renderer>
 
 <liferay-ui:search-paginator searchContainer="<%= searchContainer %>" />
 

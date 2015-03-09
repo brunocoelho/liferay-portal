@@ -19,7 +19,6 @@ import com.liferay.portal.dao.orm.hibernate.event.NestableAutoFlushEventListener
 import com.liferay.portal.dao.shard.ShardSpringSessionContext;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBFactoryUtil;
-import com.liferay.portal.kernel.dao.shard.ShardUtil;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -54,8 +53,6 @@ import org.hibernate.event.AutoFlushEventListener;
 import org.hibernate.event.EventListeners;
 import org.hibernate.event.PostUpdateEventListener;
 
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.orm.hibernate3.LocalSessionFactoryBean;
 
 /**
@@ -64,8 +61,7 @@ import org.springframework.orm.hibernate3.LocalSessionFactoryBean;
  * @author Shuyang Zhou
  * @author Tomas Polesovsky
  */
-public class PortalHibernateConfiguration
-	extends LocalSessionFactoryBean implements BeanFactoryAware {
+public class PortalHibernateConfiguration extends LocalSessionFactoryBean {
 
 	@Override
 	public SessionFactory buildSessionFactory() throws Exception {
@@ -81,11 +77,6 @@ public class PortalHibernateConfiguration
 		super.destroy();
 	}
 
-	@Override
-	public void setBeanFactory(BeanFactory beanFactory) {
-		_beanFactory = beanFactory;
-	}
-
 	public void setHibernateConfigurationConverter(
 		Converter<String> hibernateConfigurationConverter) {
 
@@ -96,9 +87,13 @@ public class PortalHibernateConfiguration
 		_mvccEnabled = mvccEnabled;
 	}
 
+	public void setShardEnabled(boolean shardEnabled) {
+		_shardEnabled = shardEnabled;
+	}
+
 	protected static Map<String, Class<?>> getPreloadClassLoaderClasses() {
 		try {
-			Map<String, Class<?>> classes = new HashMap<String, Class<?>>();
+			Map<String, Class<?>> classes = new HashMap<>();
 
 			for (String className : _PRELOAD_CLASS_NAMES) {
 				ClassLoader portalClassLoader =
@@ -199,7 +194,7 @@ public class PortalHibernateConfiguration
 
 		Properties hibernateProperties = getHibernateProperties();
 
-		if (_beanFactory.containsBean(ShardUtil.class.getName())) {
+		if (_shardEnabled) {
 			hibernateProperties.setProperty(
 				Environment.CURRENT_SESSION_CONTEXT_CLASS,
 				ShardSpringSessionContext.class.getName());
@@ -291,11 +286,11 @@ public class PortalHibernateConfiguration
 	private static final String[] _PRELOAD_CLASS_NAMES =
 		PropsValues.SPRING_HIBERNATE_CONFIGURATION_PROXY_FACTORY_PRELOAD_CLASSLOADER_CLASSES;
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		PortalHibernateConfiguration.class);
 
-	private static Map<ProxyFactory, ClassLoader> _proxyFactoryClassLoaders =
-		new WeakHashMap<ProxyFactory, ClassLoader>();
+	private static final Map<ProxyFactory, ClassLoader>
+		_proxyFactoryClassLoaders = new WeakHashMap<>();
 
 	static {
 		ProxyFactory.classLoaderProvider =
@@ -332,8 +327,8 @@ public class PortalHibernateConfiguration
 			};
 	}
 
-	private BeanFactory _beanFactory;
 	private Converter<String> _hibernateConfigurationConverter;
 	private boolean _mvccEnabled = true;
+	private boolean _shardEnabled;
 
 }

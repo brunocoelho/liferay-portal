@@ -166,10 +166,18 @@ public abstract class BasePermissionChecker implements PermissionChecker {
 		return signedIn;
 	}
 
+	/**
+	 * @deprecated As of 7.0.0
+	 */
+	@Deprecated
 	@Override
 	public void resetValues() {
 	}
 
+	/**
+	 * @deprecated As of 7.0.0
+	 */
+	@Deprecated
 	@Override
 	public void setValues(PortletRequest portletRequest) {
 	}
@@ -181,7 +189,7 @@ public abstract class BasePermissionChecker implements PermissionChecker {
 	protected boolean signedIn;
 	protected User user;
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		BasePermissionChecker.class);
 
 }

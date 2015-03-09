@@ -19,13 +19,12 @@ import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.model.Group;
 import com.liferay.portal.model.Layout;
 import com.liferay.portal.model.LayoutConstants;
 import com.liferay.portal.security.permission.ActionKeys;
 import com.liferay.portal.security.permission.PermissionChecker;
-import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.service.LayoutLocalServiceUtil;
+import com.liferay.portal.service.LayoutSetLocalServiceUtil;
 import com.liferay.portal.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.struts.PortletAction;
 import com.liferay.portal.theme.ThemeDisplay;
@@ -176,14 +175,18 @@ public class ViewAction extends PortletAction {
 				LayoutPermissionUtil.contains(
 					permissionChecker, layout, ActionKeys.VIEW)) {
 
-				return PortalUtil.getLayoutURL(layout, themeDisplay, true);
+				String canonicalURL = PortalUtil.getCanonicalURL(
+					null, themeDisplay, layout, true);
+
+				return PortalUtil.addPreservedParameters(
+					themeDisplay, layout, canonicalURL, true);
 			}
 		}
 
-		Group group = GroupLocalServiceUtil.getGroup(groupId);
-
 		String groupFriendlyURL = PortalUtil.getGroupFriendlyURL(
-			group, GetterUtil.getBoolean(privateLayoutParam), themeDisplay);
+			LayoutSetLocalServiceUtil.getLayoutSet(
+				groupId, GetterUtil.getBoolean(privateLayoutParam)),
+			themeDisplay);
 
 		return PortalUtil.addPreservedParameters(
 			themeDisplay, groupFriendlyURL);

@@ -21,7 +21,6 @@ import java.util.Locale;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
 
 /**
  * @author Brian Wing Shun Chan
@@ -49,6 +48,15 @@ public class IndexerWrapper implements Indexer {
 		_indexer.delete(obj);
 	}
 
+	@Override
+	public String getClassName() {
+		return _indexer.getClassName();
+	}
+
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #getClassName}
+	 */
+	@Deprecated
 	@Override
 	public String[] getClassNames() {
 		return _indexer.getClassNames();
@@ -84,9 +92,25 @@ public class IndexerWrapper implements Indexer {
 		return _indexer.getIndexerPostProcessors();
 	}
 
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #getClassName}
+	 */
+	@Deprecated
 	@Override
 	public String getPortletId() {
 		return _indexer.getPortletId();
+	}
+
+	@Override
+	public String getQueryString(SearchContext searchContext, Query query)
+		throws SearchException {
+
+		return _indexer.getQueryString(searchContext, query);
+	}
+
+	@Override
+	public String[] getSearchClassNames() {
+		return _indexer.getSearchClassNames();
 	}
 
 	@Override
@@ -106,26 +130,24 @@ public class IndexerWrapper implements Indexer {
 
 	/**
 	 * @deprecated As of 7.0.0, replaced by {@link #getSummary(Document, String,
-	 *             PortletURL, PortletRequest, PortletResponse)}
+	 *             PortletRequest, PortletResponse)}
 	 */
 	@Deprecated
 	@Override
-	public Summary getSummary(
-			Document document, Locale locale, String snippet,
-			PortletURL portletURL)
+	public Summary getSummary(Document document, Locale locale, String snippet)
 		throws SearchException {
 
-		return _indexer.getSummary(document, locale, snippet, portletURL);
+		return _indexer.getSummary(document, locale, snippet);
 	}
 
 	@Override
 	public Summary getSummary(
-			Document document, String snippet, PortletURL portletURL,
-			PortletRequest portletRequest, PortletResponse portletResponse)
+			Document document, String snippet, PortletRequest portletRequest,
+			PortletResponse portletResponse)
 		throws SearchException {
 
 		return _indexer.getSummary(
-			document, snippet, portletURL, portletRequest, portletResponse);
+			document, snippet, portletRequest, portletResponse);
 	}
 
 	@Override
@@ -240,6 +262,6 @@ public class IndexerWrapper implements Indexer {
 		_indexer.updateFullQuery(searchContext);
 	}
 
-	private Indexer _indexer;
+	private final Indexer _indexer;
 
 }

@@ -19,6 +19,7 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.repository.LocalRepository;
 import com.liferay.portal.kernel.repository.capabilities.TrashCapability;
+import com.liferay.portal.kernel.repository.event.RepositoryEventAware;
 import com.liferay.portal.kernel.repository.event.RepositoryEventListener;
 import com.liferay.portal.kernel.repository.event.RepositoryEventType;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -47,7 +48,8 @@ import java.util.List;
 /**
  * @author Adolfo Pérez
  */
-public class LiferayTrashCapability implements TrashCapability {
+public class LiferayTrashCapability
+	implements RepositoryEventAware, TrashCapability {
 
 	@Override
 	public void deleteFileEntry(FileEntry fileEntry) throws PortalException {
@@ -60,8 +62,9 @@ public class LiferayTrashCapability implements TrashCapability {
 	public void deleteFolder(Folder folder) throws PortalException {
 		List<DLFileEntry> dlFileEntries =
 			DLFileEntryLocalServiceUtil.getGroupFileEntries(
-				folder.getGroupId(), 0, folder.getFolderId(), QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS, null);
+				folder.getGroupId(), 0, folder.getRepositoryId(),
+				folder.getFolderId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+				null);
 
 		for (DLFileEntry dlFileEntry : dlFileEntries) {
 			FileEntry fileEntry = new LiferayFileEntry(dlFileEntry);
@@ -87,12 +90,18 @@ public class LiferayTrashCapability implements TrashCapability {
 
 	@Override
 	public FileEntry moveFileEntryFromTrash(
-			long userId, FileEntry fileEntry, Folder destinationFolder,
+			long userId, FileEntry fileEntry, Folder newFolder,
 			ServiceContext serviceContext)
 		throws PortalException {
 
+		long newFolderId = DLFolderConstants.DEFAULT_PARENT_FOLDER_ID;
+
+		if (newFolder != null) {
+			newFolderId = newFolder.getFolderId();
+		}
+
 		return DLAppHelperLocalServiceUtil.moveFileEntryFromTrash(
-			userId, fileEntry, destinationFolder.getFolderId(), serviceContext);
+			userId, fileEntry, newFolderId, serviceContext);
 	}
 
 	@Override
@@ -109,8 +118,14 @@ public class LiferayTrashCapability implements TrashCapability {
 			ServiceContext serviceContext)
 		throws PortalException {
 
+		long destinationFolderId = DLFolderConstants.DEFAULT_PARENT_FOLDER_ID;
+
+		if (destinationFolder != null) {
+			destinationFolderId = destinationFolder.getFolderId();
+		}
+
 		return DLAppHelperLocalServiceUtil.moveFolderFromTrash(
-			userId, folder, destinationFolder.getFolderId(), serviceContext);
+			userId, folder, destinationFolderId, serviceContext);
 	}
 
 	@Override
@@ -120,6 +135,7 @@ public class LiferayTrashCapability implements TrashCapability {
 		return DLAppHelperLocalServiceUtil.moveFolderToTrash(userId, folder);
 	}
 
+	@Override
 	public void registerRepositoryEventListeners(
 		RepositoryEventRegistry repositoryEventRegistry) {
 
@@ -181,7 +197,7 @@ public class LiferayTrashCapability implements TrashCapability {
 	protected void deleteTrashEntries(long groupId, long dlFolderId)
 		throws PortalException {
 
-		QueryDefinition<Object> queryDefinition = new QueryDefinition<Object>();
+		QueryDefinition<Object> queryDefinition = new QueryDefinition<>();
 
 		queryDefinition.setStatus(WorkflowConstants.STATUS_ANY);
 

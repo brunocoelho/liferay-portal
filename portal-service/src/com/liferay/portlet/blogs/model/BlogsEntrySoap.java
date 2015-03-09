@@ -51,7 +51,10 @@ public class BlogsEntrySoap implements Serializable {
 		soapModel.setAllowPingbacks(model.getAllowPingbacks());
 		soapModel.setAllowTrackbacks(model.getAllowTrackbacks());
 		soapModel.setTrackbacks(model.getTrackbacks());
+		soapModel.setCoverImageFileEntryId(model.getCoverImageFileEntryId());
+		soapModel.setCoverImageURL(model.getCoverImageURL());
 		soapModel.setSmallImage(model.getSmallImage());
+		soapModel.setSmallImageFileEntryId(model.getSmallImageFileEntryId());
 		soapModel.setSmallImageId(model.getSmallImageId());
 		soapModel.setSmallImageURL(model.getSmallImageURL());
 		soapModel.setStatus(model.getStatus());
@@ -254,6 +257,22 @@ public class BlogsEntrySoap implements Serializable {
 		_trackbacks = trackbacks;
 	}
 
+	public long getCoverImageFileEntryId() {
+		return _coverImageFileEntryId;
+	}
+
+	public void setCoverImageFileEntryId(long coverImageFileEntryId) {
+		_coverImageFileEntryId = coverImageFileEntryId;
+	}
+
+	public String getCoverImageURL() {
+		return _coverImageURL;
+	}
+
+	public void setCoverImageURL(String coverImageURL) {
+		_coverImageURL = coverImageURL;
+	}
+
 	public boolean getSmallImage() {
 		return _smallImage;
 	}
@@ -264,6 +283,14 @@ public class BlogsEntrySoap implements Serializable {
 
 	public void setSmallImage(boolean smallImage) {
 		_smallImage = smallImage;
+	}
+
+	public long getSmallImageFileEntryId() {
+		return _smallImageFileEntryId;
+	}
+
+	public void setSmallImageFileEntryId(long smallImageFileEntryId) {
+		_smallImageFileEntryId = smallImageFileEntryId;
 	}
 
 	public long getSmallImageId() {
@@ -331,7 +358,10 @@ public class BlogsEntrySoap implements Serializable {
 	private boolean _allowPingbacks;
 	private boolean _allowTrackbacks;
 	private String _trackbacks;
+	private long _coverImageFileEntryId;
+	private String _coverImageURL;
 	private boolean _smallImage;
+	private long _smallImageFileEntryId;
 	private long _smallImageId;
 	private String _smallImageURL;
 	private int _status;

@@ -14,20 +14,34 @@
 
 package com.liferay.amazon.rankings.web.portlet;
 
-import com.liferay.amazon.rankings.web.upgrade.AmazonRankingsUpgrade;
-import com.liferay.util.bridges.mvc.MVCPortlet;
+import aQute.bnd.annotation.metatype.Configurable;
+
+import com.liferay.amazon.rankings.web.configuration.AmazonRankingsConfiguration;
+import com.liferay.amazon.rankings.web.upgrade.AmazonRankingsWebUpgrade;
+import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
+
+import java.io.IOException;
+
+import java.util.Map;
 
 import javax.portlet.Portlet;
+import javax.portlet.PortletException;
+import javax.portlet.RenderRequest;
+import javax.portlet.RenderResponse;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
-* @author Raymond Augé
-* @author Peter Fellwock
-*/
+ * @author Raymond Augé
+ * @author Peter Fellwock
+ */
 @Component(
-	immediate = true,
+	configurationPid = "com.liferay.amazon.rankings.web.configuration.AmazonRankingsConfiguration",
+	configurationPolicy = ConfigurationPolicy.OPTIONAL, immediate = true,
 	property = {
 		"com.liferay.portlet.css-class-wrapper=portlet-amazon-rankings",
 		"com.liferay.portlet.display-category=category.shopping",
@@ -36,7 +50,6 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.private-session-attributes=false",
 		"com.liferay.portlet.render-weight=0",
 		"com.liferay.portlet.remoteable=true",
-		"com.liferay.portlet.struts-path=amazon_rankings",
 		"javax.portlet.display-name=Amazon Rankings",
 		"javax.portlet.expiration-cache=0",
 		"javax.portlet.init-param.config-template=/configuration.jsp",
@@ -50,9 +63,30 @@ import org.osgi.service.component.annotations.Reference;
 )
 public class AmazonRankingsPortlet extends MVCPortlet {
 
-	@Reference(unbind = "-")
-	protected void setAmazonRankingsUpgrade(
-		AmazonRankingsUpgrade amazonRankingsUpgrade) {
+	@Override
+	public void doView(
+			RenderRequest renderRequest, RenderResponse renderResponse)
+		throws IOException, PortletException {
+
+		renderRequest.setAttribute(
+			AmazonRankingsConfiguration.class.getName(),
+			_amazonRankingsConfiguration);
+
+		super.doView(renderRequest, renderResponse);
 	}
+
+	@Activate
+	@Modified
+	protected void activate(Map<String, Object> properties) {
+		_amazonRankingsConfiguration = Configurable.createConfigurable(
+			AmazonRankingsConfiguration.class, properties);
+	}
+
+	@Reference(unbind = "-")
+	protected void setAmazonRankingsWebUpgrade(
+		AmazonRankingsWebUpgrade amazonRankingsWebUpgrade) {
+	}
+
+	private volatile AmazonRankingsConfiguration _amazonRankingsConfiguration;
 
 }

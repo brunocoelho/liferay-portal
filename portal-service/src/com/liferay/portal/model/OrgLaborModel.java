@@ -106,14 +106,14 @@ public interface OrgLaborModel extends BaseModel<OrgLabor>, MVCCModel {
 	 *
 	 * @return the type ID of this org labor
 	 */
-	public int getTypeId();
+	public long getTypeId();
 
 	/**
 	 * Sets the type ID of this org labor.
 	 *
 	 * @param typeId the type ID of this org labor
 	 */
-	public void setTypeId(int typeId);
+	public void setTypeId(long typeId);
 
 	/**
 	 * Returns the sun open of this org labor.
@@ -348,19 +348,19 @@ public interface OrgLaborModel extends BaseModel<OrgLabor>, MVCCModel {
 	public Object clone();
 
 	@Override
-	public int compareTo(OrgLabor orgLabor);
+	public int compareTo(com.liferay.portal.model.OrgLabor orgLabor);
 
 	@Override
 	public int hashCode();
 
 	@Override
-	public CacheModel<OrgLabor> toCacheModel();
+	public CacheModel<com.liferay.portal.model.OrgLabor> toCacheModel();
 
 	@Override
-	public OrgLabor toEscapedModel();
+	public com.liferay.portal.model.OrgLabor toEscapedModel();
 
 	@Override
-	public OrgLabor toUnescapedModel();
+	public com.liferay.portal.model.OrgLabor toUnescapedModel();
 
 	@Override
 	public String toString();

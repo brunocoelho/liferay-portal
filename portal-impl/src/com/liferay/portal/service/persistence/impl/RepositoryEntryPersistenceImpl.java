@@ -59,7 +59,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see RepositoryEntryPersistence
- * @see RepositoryEntryUtil
+ * @see com.liferay.portal.service.persistence.RepositoryEntryUtil
  * @generated
  */
 @ProviderType
@@ -3009,7 +3009,7 @@ public class RepositoryEntryPersistenceImpl extends BasePersistenceImpl<Reposito
 		MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

@@ -110,7 +110,7 @@ public class LocalProcessExecutor implements ProcessExecutor {
 		try {
 			List<String> arguments = processConfig.getArguments();
 
-			List<String> commands = new ArrayList<String>(arguments.size() + 4);
+			List<String> commands = new ArrayList<>(arguments.size() + 4);
 
 			commands.add(processConfig.getJavaExecutable());
 			commands.add("-cp");
@@ -138,8 +138,7 @@ public class LocalProcessExecutor implements ProcessExecutor {
 
 			ThreadPoolExecutor threadPoolExecutor = _getThreadPoolExecutor();
 
-			AsyncBroker<Long, Serializable> asyncBroker =
-				new AsyncBroker<Long, Serializable>();
+			AsyncBroker<Long, Serializable> asyncBroker = new AsyncBroker<>();
 
 			SubprocessReactor subprocessReactor = new SubprocessReactor(
 				process, processConfig.getReactClassLoader(), asyncBroker);
@@ -197,7 +196,7 @@ public class LocalProcessExecutor implements ProcessExecutor {
 
 						};
 
-				return new LocalProcessChannel<T>(
+				return new LocalProcessChannel<>(
 					noticeableFuture, objectOutputStream, asyncBroker);
 			}
 			catch (RejectedExecutionException ree) {
@@ -233,10 +232,11 @@ public class LocalProcessExecutor implements ProcessExecutor {
 		return _threadPoolExecutor;
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(LocalProcessExecutor.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		LocalProcessExecutor.class);
 
 	private final Map<Process, NoticeableFuture<?>> _managedProcesses =
-		new ConcurrentHashMap<Process, NoticeableFuture<?>>();
+		new ConcurrentHashMap<>();
 	private volatile ThreadPoolExecutor _threadPoolExecutor;
 
 	private class SubprocessReactor
@@ -314,13 +314,19 @@ public class LocalProcessExecutor implements ProcessExecutor {
 						continue;
 					}
 
-					Serializable returnValue = processCallable.call();
+					try {
+						Serializable returnValue = processCallable.call();
 
-					if (_log.isDebugEnabled()) {
-						_log.debug(
-							"Invoked generic process callable " +
-								processCallable + " with return value " +
-									returnValue);
+						if (_log.isDebugEnabled()) {
+							_log.debug(
+								"Invoked generic process callable " +
+									processCallable + " with return value " +
+										returnValue);
+						}
+					}
+					catch (Throwable t) {
+						_log.error(
+							"Unable to invoke generic process callable", t);
 					}
 				}
 			}
@@ -345,6 +351,11 @@ public class LocalProcessExecutor implements ProcessExecutor {
 			catch (EOFException eofe) {
 				throw new ProcessException(
 					"Subprocess piping back ended prematurely", eofe);
+			}
+			catch (Throwable t) {
+				_log.error("Abort subprocess piping", t);
+
+				throw t;
 			}
 			finally {
 				try {

@@ -31,6 +31,15 @@ public class TicketLocalServiceWrapper implements TicketLocalService,
 	}
 
 	@Override
+	public com.liferay.portal.model.Ticket addDistinctTicket(long companyId,
+		java.lang.String className, long classPK, int type,
+		java.lang.String extraInfo, java.util.Date expirationDate,
+		com.liferay.portal.service.ServiceContext serviceContext) {
+		return _ticketLocalService.addDistinctTicket(companyId, className,
+			classPK, type, extraInfo, expirationDate, serviceContext);
+	}
+
+	@Override
 	public com.liferay.portal.model.Ticket addTicket(long companyId,
 		java.lang.String className, long classPK, int type,
 		java.lang.String extraInfo, java.util.Date expirationDate,
@@ -156,10 +165,10 @@ public class TicketLocalServiceWrapper implements TicketLocalService,
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	@Override
 	public long dynamicQueryCount(
@@ -168,11 +177,11 @@ public class TicketLocalServiceWrapper implements TicketLocalService,
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	@Override
 	public long dynamicQueryCount(

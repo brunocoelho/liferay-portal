@@ -45,7 +45,7 @@ public class PortletContextFactory {
 	}
 
 	private PortletContextFactory() {
-		_pool = new ConcurrentHashMap<String, Map<String, PortletContext>>();
+		_pool = new ConcurrentHashMap<>();
 	}
 
 	private PortletContext _create(
@@ -55,7 +55,7 @@ public class PortletContextFactory {
 			portlet.getRootPortletId());
 
 		if (portletContexts == null) {
-			portletContexts = new ConcurrentHashMap<String, PortletContext>();
+			portletContexts = new ConcurrentHashMap<>();
 
 			_pool.put(portlet.getRootPortletId(), portletContexts);
 		}
@@ -99,12 +99,12 @@ public class PortletContextFactory {
 		_pool.remove(portlet.getRootPortletId());
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		PortletContextFactory.class);
 
-	private static PortletContextFactory _instance =
+	private static final PortletContextFactory _instance =
 		new PortletContextFactory();
 
-	private Map<String, Map<String, PortletContext>> _pool;
+	private final Map<String, Map<String, PortletContext>> _pool;
 
 }

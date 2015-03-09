@@ -18,7 +18,7 @@ import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 
 /**
- * @author Ivan Zaera
+ * @author Iván Zaera
  */
 public class CMISContainsValueExpression implements CMISCriterion {
 
@@ -47,6 +47,6 @@ public class CMISContainsValueExpression implements CMISCriterion {
 		return sb.toString();
 	}
 
-	private String _value;
+	private final String _value;
 
 }

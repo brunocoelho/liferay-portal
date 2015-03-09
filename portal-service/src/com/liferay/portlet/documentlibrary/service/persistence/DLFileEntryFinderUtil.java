@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.util.ReferenceRegistry;
 
 /**
  * @author Brian Wing Shun Chan
+ * @generated
  */
 @ProviderType
 public class DLFileEntryFinderUtil {
@@ -156,6 +157,12 @@ public class DLFileEntryFinderUtil {
 		return getFinder().findByDDMStructureIds(ddmStructureIds, start, end);
 	}
 
+	public static java.util.List<com.liferay.portlet.documentlibrary.model.DLFileEntry> findByDDMStructureIds(
+		long groupId, long[] ddmStructureIds, int start, int end) {
+		return getFinder()
+				   .findByDDMStructureIds(groupId, ddmStructureIds, start, end);
+	}
+
 	public static java.util.List<com.liferay.portlet.documentlibrary.model.DLFileEntry> findByExtraSettings(
 		int start, int end) {
 		return getFinder().findByExtraSettings(start, end);
@@ -193,6 +200,16 @@ public class DLFileEntryFinderUtil {
 		com.liferay.portal.kernel.dao.orm.QueryDefinition<com.liferay.portlet.documentlibrary.model.DLFileEntry> queryDefinition) {
 		return getFinder()
 				   .findByG_U_F(groupId, userId, folderIds, queryDefinition);
+	}
+
+	public static java.util.List<com.liferay.portlet.documentlibrary.model.DLFileEntry> findByG_U_R_F(
+		long groupId, long userId,
+		java.util.List<java.lang.Long> repositoryIds,
+		java.util.List<java.lang.Long> folderIds,
+		com.liferay.portal.kernel.dao.orm.QueryDefinition<com.liferay.portlet.documentlibrary.model.DLFileEntry> queryDefinition) {
+		return getFinder()
+				   .findByG_U_R_F(groupId, userId, repositoryIds, folderIds,
+			queryDefinition);
 	}
 
 	public static java.util.List<com.liferay.portlet.documentlibrary.model.DLFileEntry> findByG_U_F_M(

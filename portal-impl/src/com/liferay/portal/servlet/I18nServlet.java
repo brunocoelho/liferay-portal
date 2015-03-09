@@ -55,7 +55,7 @@ public class I18nServlet extends HttpServlet {
 	}
 
 	public static void setLanguageIds(Element root) {
-		_languageIds = new HashSet<String>();
+		_languageIds = new HashSet<>();
 
 		List<Element> rootElements = root.elements("servlet-mapping");
 
@@ -166,7 +166,7 @@ public class I18nServlet extends HttpServlet {
 		return new String[] {i18nLanguageId, i18nPath, redirect};
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(I18nServlet.class);
+	private static final Log _log = LogFactoryUtil.getLog(I18nServlet.class);
 
 	private static Set<String> _languageIds;
 

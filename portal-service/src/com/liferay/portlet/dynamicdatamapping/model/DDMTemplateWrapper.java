@@ -64,7 +64,9 @@ public class DDMTemplateWrapper implements DDMTemplate,
 		attributes.put("modifiedDate", getModifiedDate());
 		attributes.put("classNameId", getClassNameId());
 		attributes.put("classPK", getClassPK());
+		attributes.put("resourceClassNameId", getResourceClassNameId());
 		attributes.put("templateKey", getTemplateKey());
+		attributes.put("version", getVersion());
 		attributes.put("name", getName());
 		attributes.put("description", getDescription());
 		attributes.put("type", getType());
@@ -141,10 +143,22 @@ public class DDMTemplateWrapper implements DDMTemplate,
 			setClassPK(classPK);
 		}
 
+		Long resourceClassNameId = (Long)attributes.get("resourceClassNameId");
+
+		if (resourceClassNameId != null) {
+			setResourceClassNameId(resourceClassNameId);
+		}
+
 		String templateKey = (String)attributes.get("templateKey");
 
 		if (templateKey != null) {
 			setTemplateKey(templateKey);
+		}
+
+		String version = (String)attributes.get("version");
+
+		if (version != null) {
+			setVersion(version);
 		}
 
 		String name = (String)attributes.get("name");
@@ -505,6 +519,16 @@ public class DDMTemplateWrapper implements DDMTemplate,
 	}
 
 	/**
+	* Returns the resource class name ID of this d d m template.
+	*
+	* @return the resource class name ID of this d d m template
+	*/
+	@Override
+	public long getResourceClassNameId() {
+		return _ddmTemplate.getResourceClassNameId();
+	}
+
+	/**
 	* Returns the script of this d d m template.
 	*
 	* @return the script of this d d m template
@@ -558,6 +582,12 @@ public class DDMTemplateWrapper implements DDMTemplate,
 	@Override
 	public long getTemplateId() {
 		return _ddmTemplate.getTemplateId();
+	}
+
+	@Override
+	public java.lang.String getTemplateImageURL(
+		com.liferay.portal.theme.ThemeDisplay themeDisplay) {
+		return _ddmTemplate.getTemplateImageURL(themeDisplay);
 	}
 
 	/**
@@ -618,6 +648,16 @@ public class DDMTemplateWrapper implements DDMTemplate,
 	@Override
 	public java.lang.String getUuid() {
 		return _ddmTemplate.getUuid();
+	}
+
+	/**
+	* Returns the version of this d d m template.
+	*
+	* @return the version of this d d m template
+	*/
+	@Override
+	public java.lang.String getVersion() {
+		return _ddmTemplate.getVersion();
 	}
 
 	/**
@@ -960,6 +1000,16 @@ public class DDMTemplateWrapper implements DDMTemplate,
 	}
 
 	/**
+	* Sets the resource class name ID of this d d m template.
+	*
+	* @param resourceClassNameId the resource class name ID of this d d m template
+	*/
+	@Override
+	public void setResourceClassNameId(long resourceClassNameId) {
+		_ddmTemplate.setResourceClassNameId(resourceClassNameId);
+	}
+
+	/**
 	* Sets the script of this d d m template.
 	*
 	* @param script the script of this d d m template
@@ -1072,6 +1122,16 @@ public class DDMTemplateWrapper implements DDMTemplate,
 	@Override
 	public void setUuid(java.lang.String uuid) {
 		_ddmTemplate.setUuid(uuid);
+	}
+
+	/**
+	* Sets the version of this d d m template.
+	*
+	* @param version the version of this d d m template
+	*/
+	@Override
+	public void setVersion(java.lang.String version) {
+		_ddmTemplate.setVersion(version);
 	}
 
 	@Override

@@ -29,7 +29,7 @@ public class WindowStateFactory {
 	}
 
 	private WindowStateFactory() {
-		_windowStates = new HashMap<String, WindowState>();
+		_windowStates = new HashMap<>();
 
 		_windowStates.put(_NORMAL, LiferayWindowState.NORMAL);
 		_windowStates.put(_MAXIMIZED, LiferayWindowState.MAXIMIZED);
@@ -59,8 +59,9 @@ public class WindowStateFactory {
 
 	private static final String _POP_UP = LiferayWindowState.POP_UP.toString();
 
-	private static WindowStateFactory _instance = new WindowStateFactory();
+	private static final WindowStateFactory _instance =
+		new WindowStateFactory();
 
-	private Map<String, WindowState> _windowStates;
+	private final Map<String, WindowState> _windowStates;
 
 }

@@ -25,6 +25,7 @@ import com.liferay.portal.service.ServiceContext;
 import com.liferay.portlet.trash.model.TrashEntry;
 
 import java.util.List;
+import java.util.Locale;
 
 import javax.portlet.PortletRequest;
 
@@ -54,8 +55,9 @@ import javax.portlet.PortletRequest;
  * BlogsEntry via {@link com.liferay.portlet.blogs.trash.BlogsEntryTrashHandler}
  * </li>
  * <li>
- * BookmarksEntry via {@link
- * com.liferay.portlet.bookmarks.trash.BookmarksEntryTrashHandler}
+ * BookmarksEntry via
+ * <code>com.liferay.bookmarks.trash.BookmarksEntryTrashHandler</code>
+ * located in Liferay Portal's external <code>modules</code> directory.
  * </li>
  * <li>
  * DLFileEntry via {@link
@@ -74,12 +76,12 @@ import javax.portlet.PortletRequest;
  * com.liferay.portlet.messageboards.trash.MBThreadTrashHandler}
  * </li>
  * <li>
- * WikiNode via {@link
- * com.liferay.portlet.wiki.trash.WikiNodeTrashHandler}
+ * WikiNode via <code>com.liferay.wiki.trash.WikiNodeTrashHandler</code> located
+ * in Liferay Portal's external <code>modules</code> directory.
  * </li>
  * <li>
- * WikiPage via {@link
- * com.liferay.portlet.wiki.trash.WikiPageTrashHandler}
+ * WikiPage via <code>com.liferay.wiki.trash.WikiPageTrashHandler</code> located
+ * in Liferay Portal's external <code>modules</code> directory.
  * </li>
  * </ul>
  *
@@ -193,9 +195,13 @@ public interface TrashHandler {
 	/**
 	 * Returns the name of the container model (e.g. folder name).
 	 *
-	 * @return the name of the container model
+	 * @return     the name of the container model
+	 * @deprecated As of 7.0.0, replaced by {@link #getContainerModelName(long)}
 	 */
+	@Deprecated
 	public String getContainerModelName();
+
+	public String getContainerModelName(long classPK) throws PortalException;
 
 	/**
 	 * Returns a range of all the container models that are children of the
@@ -336,12 +342,25 @@ public interface TrashHandler {
 	public String getRestoreMessage(PortletRequest portletRequest, long classPK)
 		throws PortalException;
 
+	public String getRootContainerModelClassName();
+
+	public long getRootContainerModelId(long classPK) throws PortalException;
+
 	/**
 	 * Returns the name of the root container (e.g. "home").
 	 *
 	 * @return the name of the root container
 	 */
 	public String getRootContainerModelName();
+
+	public List<ContainerModel> getRootContainerModels(long groupId)
+		throws PortalException;
+
+	public int getRootContainerModelsCount(long groupId) throws PortalException;
+
+	public String getRootContainerModelTitle(
+			long containerModelId, Locale locale)
+		throws PortalException;
 
 	/**
 	 * Returns the name of the subcontainer model (e.g. for a folder the
@@ -581,6 +600,8 @@ public interface TrashHandler {
 	 *         be found
 	 */
 	public boolean isRestorable(long classPK) throws PortalException;
+
+	public boolean isRootContainerModelMovable();
 
 	/**
 	 * Moves the entity with the class primary key to the container model with

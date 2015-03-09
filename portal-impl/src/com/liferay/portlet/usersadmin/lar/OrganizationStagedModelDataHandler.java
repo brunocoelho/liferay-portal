@@ -95,7 +95,7 @@ public class OrganizationStagedModelDataHandler
 			PortletDataContext portletDataContext, Organization organization)
 		throws Exception {
 
-		Queue<Organization> organizations = new LinkedList<Organization>();
+		Queue<Organization> organizations = new LinkedList<>();
 
 		organizations.add(organization);
 
@@ -137,14 +137,6 @@ public class OrganizationStagedModelDataHandler
 
 		long userId = portletDataContext.getUserId(organization.getUserUuid());
 
-		if (organization.getParentOrganizationId() !=
-				OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID) {
-
-			StagedModelDataHandlerUtil.importReferenceStagedModel(
-				portletDataContext, organization, Organization.class,
-				organization.getParentOrganizationId());
-		}
-
 		Map<Long, Long> organizationIds =
 			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
 				Organization.class);
@@ -172,12 +164,11 @@ public class OrganizationStagedModelDataHandler
 		if (existingOrganization == null) {
 			serviceContext.setUuid(organization.getUuid());
 
-			importedOrganization =
-				OrganizationLocalServiceUtil.addOrganization(
-					userId, parentOrganizationId, organization.getName(),
-					organization.getType(), organization.getRegionId(),
-					organization.getCountryId(), organization.getStatusId(),
-					organization.getComments(), false, serviceContext);
+			importedOrganization = OrganizationLocalServiceUtil.addOrganization(
+				userId, parentOrganizationId, organization.getName(),
+				organization.getType(), organization.getRegionId(),
+				organization.getCountryId(), organization.getStatusId(),
+				organization.getComments(), false, serviceContext);
 		}
 		else {
 			importedOrganization =
@@ -307,8 +298,7 @@ public class OrganizationStagedModelDataHandler
 			portletDataContext.getReferenceDataElements(
 				organization, Address.class);
 
-		List<Address> addresses = new ArrayList<Address>(
-			addressElements.size());
+		List<Address> addresses = new ArrayList<>(addressElements.size());
 
 		for (Element addressElement : addressElements) {
 			String addressPath = addressElement.attributeValue("path");
@@ -346,7 +336,7 @@ public class OrganizationStagedModelDataHandler
 			portletDataContext.getReferenceDataElements(
 				organization, EmailAddress.class);
 
-		List<EmailAddress> emailAddresses = new ArrayList<EmailAddress>(
+		List<EmailAddress> emailAddresses = new ArrayList<>(
 			emailAddressElements.size());
 
 		for (Element emailAddressElement : emailAddressElements) {
@@ -444,7 +434,7 @@ public class OrganizationStagedModelDataHandler
 			portletDataContext.getReferenceDataElements(
 				organization, Phone.class);
 
-		List<Phone> phones = new ArrayList<Phone>(phoneElements.size());
+		List<Phone> phones = new ArrayList<>(phoneElements.size());
 
 		for (Element phoneElement : phoneElements) {
 			String phonePath = phoneElement.attributeValue("path");
@@ -473,6 +463,11 @@ public class OrganizationStagedModelDataHandler
 			importedOrganization.getOrganizationId(), phones);
 	}
 
+	@Override
+	protected void importReferenceStagedModels(
+		PortletDataContext portletDataContext, Organization organization) {
+	}
+
 	protected void importWebsites(
 			PortletDataContext portletDataContext, Organization organization,
 			Organization importedOrganization)
@@ -482,7 +477,7 @@ public class OrganizationStagedModelDataHandler
 			portletDataContext.getReferenceDataElements(
 				organization, Website.class);
 
-		List<Website> websites = new ArrayList<Website>(websiteElements.size());
+		List<Website> websites = new ArrayList<>(websiteElements.size());
 
 		for (Element websiteElement : websiteElements) {
 			String websitePath = websiteElement.attributeValue("path");

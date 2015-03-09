@@ -31,6 +31,7 @@ import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.Digester;
 import com.liferay.portal.kernel.util.DigesterUtil;
 import com.liferay.portal.kernel.util.FileComparator;
+import com.liferay.portal.kernel.util.PwdGenerator;
 import com.liferay.portal.kernel.util.StreamUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
@@ -38,7 +39,6 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.util.PwdGenerator;
 import com.liferay.util.ant.ExpandTask;
 
 import java.io.File;
@@ -338,6 +338,10 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 	public String extractText(
 		InputStream is, String fileName, int maxStringLength) {
 
+		if (maxStringLength == 0) {
+			return StringPool.BLANK;
+		}
+
 		String text = null;
 
 		ClassLoader portalClassLoader = ClassLoaderUtil.getPortalClassLoader();
@@ -483,15 +487,15 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 			return null;
 		}
 
-		RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
+		try (RandomAccessFile randomAccessFile = new RandomAccessFile(
+				file, "r")) {
 
-		byte[] bytes = new byte[(int)randomAccessFile.length()];
+			byte[] bytes = new byte[(int)randomAccessFile.length()];
 
-		randomAccessFile.readFully(bytes);
+			randomAccessFile.readFully(bytes);
 
-		randomAccessFile.close();
-
-		return bytes;
+			return bytes;
+		}
 	}
 
 	@Override
@@ -586,25 +590,23 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 
 		nsDetector detector = new nsDetector(nsPSMDetector.ALL);
 
-		InputStream inputStream = new FileInputStream(file);
+		try (InputStream inputStream = new FileInputStream(file)) {
+			byte[] buffer = new byte[1024];
 
-		byte[] buffer = new byte[1024];
+			int len = 0;
 
-		int len = 0;
+			while ((len = inputStream.read(buffer, 0, buffer.length)) != -1) {
+				if (ascii) {
+					ascii = detector.isAscii(buffer, len);
 
-		while ((len = inputStream.read(buffer, 0, buffer.length)) != -1) {
-			if (ascii) {
-				ascii = detector.isAscii(buffer, len);
-
-				if (!ascii) {
-					break;
+					if (!ascii) {
+						break;
+					}
 				}
 			}
+
+			detector.DataEnd();
 		}
-
-		detector.DataEnd();
-
-		inputStream.close();
 
 		return ascii;
 	}
@@ -671,7 +673,7 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 
 	@Override
 	public String[] listDirs(File file) {
-		List<String> dirs = new ArrayList<String>();
+		List<String> dirs = new ArrayList<>();
 
 		File[] fileArray = file.listFiles();
 
@@ -691,7 +693,7 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 
 	@Override
 	public String[] listFiles(File file) {
-		List<String> files = new ArrayList<String>();
+		List<String> files = new ArrayList<>();
 
 		File[] fileArray = file.listFiles();
 
@@ -791,8 +793,8 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 
 		Arrays.sort(files, new FileComparator());
 
-		List<File> directoryList = new ArrayList<File>();
-		List<File> fileList = new ArrayList<File>();
+		List<File> directoryList = new ArrayList<>();
+		List<File> fileList = new ArrayList<>();
 
 		for (int i = 0; i < files.length; i++) {
 			if (files[i].isDirectory()) {
@@ -826,19 +828,16 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 
 	@Override
 	public List<String> toList(Reader reader) {
-		List<String> list = new ArrayList<String>();
+		List<String> list = new ArrayList<>();
 
-		try {
-			UnsyncBufferedReader unsyncBufferedReader =
-				new UnsyncBufferedReader(reader);
+		try (UnsyncBufferedReader unsyncBufferedReader =
+				new UnsyncBufferedReader(reader)) {
 
 			String line = null;
 
 			while ((line = unsyncBufferedReader.readLine()) != null) {
 				list.add(line);
 			}
-
-			unsyncBufferedReader.close();
 		}
 		catch (IOException ioe) {
 		}
@@ -852,7 +851,7 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 			return toList(new FileReader(fileName));
 		}
 		catch (IOException ioe) {
-			return new ArrayList<String>();
+			return new ArrayList<>();
 		}
 	}
 
@@ -920,11 +919,11 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 
 		mkdirsParentFile(file);
 
-		FileOutputStream fileOutputStream = new FileOutputStream(file, append);
+		try (FileOutputStream fileOutputStream = new FileOutputStream(
+				file, append)) {
 
-		fileOutputStream.write(bytes, offset, length);
-
-		fileOutputStream.close();
+			fileOutputStream.write(bytes, offset, length);
+		}
 	}
 
 	@Override
@@ -962,12 +961,11 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 			}
 		}
 
-		Writer writer = new OutputStreamWriter(
-			new FileOutputStream(file, append), StringPool.UTF8);
+		try (Writer writer = new OutputStreamWriter(
+				new FileOutputStream(file, append), StringPool.UTF8)) {
 
-		writer.write(s);
-
-		writer.close();
+			writer.write(s);
+		}
 	}
 
 	@Override
@@ -1051,9 +1049,9 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 		"_AMP_", "_CP_", "_OP_", "_SEM_"
 	};
 
-	private static Log _log = LogFactoryUtil.getLog(FileImpl.class);
+	private static final Log _log = LogFactoryUtil.getLog(FileImpl.class);
 
-	private static FileImpl _instance = new FileImpl();
+	private static final FileImpl _instance = new FileImpl();
 
 	private static class ExtractTextProcessCallable
 		implements ProcessCallable<String> {
@@ -1077,7 +1075,7 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 
 		private static final long serialVersionUID = 1L;
 
-		private byte[] _data;
+		private final byte[] _data;
 
 	}
 

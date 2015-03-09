@@ -131,7 +131,7 @@ public class DistributedRegistry {
 	}
 
 	protected static void processDistributed(Class<?> clazz, boolean register) {
-		Queue<Class<?>> queue = new LinkedList<Class<?>>();
+		Queue<Class<?>> queue = new LinkedList<>();
 
 		queue.offer(clazz);
 
@@ -193,11 +193,11 @@ public class DistributedRegistry {
 		}
 	}
 
-	private static ConcurrentMap<String, Direction> _exactDirections =
-		new ConcurrentHashMap<String, Direction>();
-	private static ConcurrentMap<String, Direction> _postfixDirections =
-		new ConcurrentHashMap<String, Direction>();
-	private static ConcurrentMap<String, Direction> _prefixDirections =
-		new ConcurrentHashMap<String, Direction>();
+	private static final ConcurrentMap<String, Direction> _exactDirections =
+		new ConcurrentHashMap<>();
+	private static final ConcurrentMap<String, Direction> _postfixDirections =
+		new ConcurrentHashMap<>();
+	private static final ConcurrentMap<String, Direction> _prefixDirections =
+		new ConcurrentHashMap<>();
 
 }

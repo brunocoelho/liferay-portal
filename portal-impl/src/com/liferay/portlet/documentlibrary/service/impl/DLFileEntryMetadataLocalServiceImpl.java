@@ -21,7 +21,7 @@ import com.liferay.portlet.documentlibrary.model.DLFileEntryType;
 import com.liferay.portlet.documentlibrary.service.base.DLFileEntryMetadataLocalServiceBaseImpl;
 import com.liferay.portlet.dynamicdatamapping.StorageException;
 import com.liferay.portlet.dynamicdatamapping.model.DDMStructure;
-import com.liferay.portlet.dynamicdatamapping.storage.Fields;
+import com.liferay.portlet.dynamicdatamapping.storage.DDMFormValues;
 import com.liferay.portlet.dynamicdatamapping.storage.StorageEngineUtil;
 
 import java.util.List;
@@ -117,19 +117,33 @@ public class DLFileEntryMetadataLocalServiceImpl
 	}
 
 	@Override
+	public List<DLFileEntryMetadata>
+		getMismatchedCompanyIdFileEntryMetadatas() {
+
+		return dlFileEntryMetadataFinder.findByMismatchedCompanyId();
+	}
+
+	@Override
+	public List<DLFileEntryMetadata> getNoStructuresFileEntryMetadatas() {
+		return dlFileEntryMetadataFinder.findByNoStructures();
+	}
+
+	@Override
 	public void updateFileEntryMetadata(
 			long companyId, List<DDMStructure> ddmStructures,
 			long fileEntryTypeId, long fileEntryId, long fileVersionId,
-			Map<String, Fields> fieldsMap, ServiceContext serviceContext)
+			Map<String, DDMFormValues> ddmFormValuesMap,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		for (DDMStructure ddmStructure : ddmStructures) {
-			Fields fields = fieldsMap.get(ddmStructure.getStructureKey());
+			DDMFormValues ddmFormValues = ddmFormValuesMap.get(
+				ddmStructure.getStructureKey());
 
-			if (fields != null) {
+			if (ddmFormValues != null) {
 				updateFileEntryMetadata(
 					companyId, ddmStructure, fileEntryTypeId, fileEntryId,
-					fileVersionId, fields, serviceContext);
+					fileVersionId, ddmFormValues, serviceContext);
 			}
 		}
 	}
@@ -137,7 +151,8 @@ public class DLFileEntryMetadataLocalServiceImpl
 	@Override
 	public void updateFileEntryMetadata(
 			long fileEntryTypeId, long fileEntryId, long fileVersionId,
-			Map<String, Fields> fieldsMap, ServiceContext serviceContext)
+			Map<String, DDMFormValues> ddmFormValuesMap,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		DLFileEntryType fileEntryType =
@@ -147,7 +162,7 @@ public class DLFileEntryMetadataLocalServiceImpl
 
 		updateFileEntryMetadata(
 			fileEntryType.getCompanyId(), ddmStructures, fileEntryTypeId,
-			fileEntryId, fileVersionId, fieldsMap, serviceContext);
+			fileEntryId, fileVersionId, ddmFormValuesMap, serviceContext);
 	}
 
 	protected void deleteFileEntryMetadata(
@@ -170,7 +185,7 @@ public class DLFileEntryMetadataLocalServiceImpl
 
 	protected void updateFileEntryMetadata(
 			long companyId, DDMStructure ddmStructure, long fileEntryTypeId,
-			long fileEntryId, long fileVersionId, Fields fields,
+			long fileEntryId, long fileVersionId, DDMFormValues ddmFormValues,
 			ServiceContext serviceContext)
 		throws StorageException {
 
@@ -180,7 +195,7 @@ public class DLFileEntryMetadataLocalServiceImpl
 
 		if (fileEntryMetadata != null) {
 			StorageEngineUtil.update(
-				fileEntryMetadata.getDDMStorageId(), fields, true,
+				fileEntryMetadata.getDDMStorageId(), ddmFormValues,
 				serviceContext);
 		}
 		else {
@@ -193,7 +208,7 @@ public class DLFileEntryMetadataLocalServiceImpl
 				fileEntryMetadataId);
 
 			long ddmStorageId = StorageEngineUtil.create(
-				companyId, ddmStructure.getStructureId(), fields,
+				companyId, ddmStructure.getStructureId(), ddmFormValues,
 				serviceContext);
 
 			fileEntryMetadata.setDDMStorageId(ddmStorageId);

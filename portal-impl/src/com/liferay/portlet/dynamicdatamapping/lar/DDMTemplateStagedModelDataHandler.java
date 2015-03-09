@@ -107,7 +107,7 @@ public class DDMTemplateStagedModelDataHandler
 	public Map<String, String> getReferenceAttributes(
 		PortletDataContext portletDataContext, DDMTemplate template) {
 
-		Map<String, String> referenceAttributes = new HashMap<String, String>();
+		Map<String, String> referenceAttributes = new HashMap<>();
 
 		referenceAttributes.put(
 			"referenced-class-name", template.getClassName());
@@ -286,9 +286,6 @@ public class DDMTemplateStagedModelDataHandler
 		long classPK = template.getClassPK();
 
 		if (classPK > 0) {
-			StagedModelDataHandlerUtil.importReferenceStagedModel(
-				portletDataContext, template, DDMStructure.class, classPK);
-
 			Map<Long, Long> structureIds =
 				(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
 					DDMStructure.class);
@@ -358,6 +355,7 @@ public class DDMTemplateStagedModelDataHandler
 					importedTemplate = DDMTemplateLocalServiceUtil.addTemplate(
 						userId, portletDataContext.getScopeGroupId(),
 						template.getClassNameId(), classPK,
+						template.getResourceClassNameId(),
 						template.getTemplateKey(), template.getNameMap(),
 						template.getDescriptionMap(), template.getType(),
 						template.getMode(), template.getLanguage(),
@@ -381,7 +379,8 @@ public class DDMTemplateStagedModelDataHandler
 			else {
 				importedTemplate = DDMTemplateLocalServiceUtil.addTemplate(
 					userId, portletDataContext.getScopeGroupId(),
-					template.getClassNameId(), classPK, null,
+					template.getClassNameId(), classPK,
+					template.getResourceClassNameId(), null,
 					template.getNameMap(), template.getDescriptionMap(),
 					template.getType(), template.getMode(),
 					template.getLanguage(), template.getScript(),

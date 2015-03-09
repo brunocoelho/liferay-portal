@@ -24,9 +24,7 @@ import java.util.Vector;
 public class OrderedProperties extends Properties {
 
 	public OrderedProperties() {
-		super();
-
-		_names = new Vector<String>();
+		_names = new Vector<>();
 	}
 
 	@Override
@@ -52,6 +50,6 @@ public class OrderedProperties extends Properties {
 		return super.remove(key);
 	}
 
-	private Vector<String> _names;
+	private final Vector<String> _names;
 
 }

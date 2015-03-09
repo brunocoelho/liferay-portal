@@ -160,10 +160,10 @@ public class ClassNameLocalServiceUtil {
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public static long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery) {
@@ -171,11 +171,11 @@ public class ClassNameLocalServiceUtil {
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public static long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,
@@ -191,14 +191,6 @@ public class ClassNameLocalServiceUtil {
 	public static com.liferay.portal.model.ClassName fetchClassName(
 		java.lang.String value) {
 		return getService().fetchClassName(value);
-	}
-
-	public static long fetchClassNameId(java.lang.Class<?> clazz) {
-		return getService().fetchClassNameId(clazz);
-	}
-
-	public static long fetchClassNameId(java.lang.String value) {
-		return getService().fetchClassNameId(value);
 	}
 
 	public static com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery getActionableDynamicQuery() {

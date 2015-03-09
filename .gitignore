@@ -6,12 +6,14 @@
 *.swp
 .ant_targets
 .ant-targets-build.xml
+.gh.json
 .sass-cache
 .sass_cache_*.css
 _sass_cache_*.css
 cobertura.ser
 
 **/.sonar
+**/pmd-reports
 
 /*.ant-*
 /*.ipr
@@ -151,6 +153,8 @@ cobertura.ser
 /portal-web/docroot/wsrp
 
 /portal-web/docroot/html/ALLOY_ZIP
+
+/portal-web/docroot/html/css/common/bourbon
 
 /portal-web/docroot/html/css/portal/aui_deprecated.css
 /portal-web/docroot/html/css/portal/bootstrap.css

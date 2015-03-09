@@ -26,12 +26,9 @@ public class RestoreEntryException extends PortalException {
 	public static final int INVALID_CONTAINER = 2;
 
 	public RestoreEntryException() {
-		super();
 	}
 
 	public RestoreEntryException(int type) {
-		super();
-
 		_type = type;
 	}
 
@@ -63,12 +60,20 @@ public class RestoreEntryException extends PortalException {
 		return _type;
 	}
 
+	public boolean isOverridable() {
+		return _overridable;
+	}
+
 	public void setDuplicateEntryId(long duplicateEntryId) {
 		_duplicateEntryId = duplicateEntryId;
 	}
 
 	public void setOldName(String oldName) {
 		_oldName = oldName;
+	}
+
+	public void setOverridable(boolean overridable) {
+		_overridable = overridable;
 	}
 
 	public void setTrashEntryId(long trashEntryId) {
@@ -81,6 +86,7 @@ public class RestoreEntryException extends PortalException {
 
 	private long _duplicateEntryId;
 	private String _oldName;
+	private boolean _overridable = true;
 	private long _trashEntryId;
 	private int _type;
 

@@ -17,16 +17,14 @@
 <%@ include file="/html/portlet/document_library_display/init.jsp" %>
 
 <%
-dlPortletInstanceSettings = DLPortletInstanceSettings.getInstance(layout, portletId, request.getParameterMap());
-
-DLDisplayConfigurationDisplayContext dlDisplayConfigurationDisplayContext = new DLDisplayConfigurationDisplayContext(request, dlPortletInstanceSettings);
+DLPortletInstanceSettingsHelper dlPortletInstanceSettingsHelper = new DLPortletInstanceSettingsHelper(dlDisplayRequestHelper);
 %>
 
-<liferay-portlet:actionURL portletConfiguration="true" var="configurationActionURL">
+<liferay-portlet:actionURL portletConfiguration="<%= true %>" var="configurationActionURL">
 	<liferay-portlet:param name="settingsScope" value="portletInstance" />
 </liferay-portlet:actionURL>
 
-<liferay-portlet:renderURL portletConfiguration="true" var="configurationRenderURL" />
+<liferay-portlet:renderURL portletConfiguration="<%= true %>" var="configurationRenderURL" />
 
 <aui:form action="<%= configurationActionURL %>" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + renderResponse.getNamespace() + "saveConfiguration();" %>'>
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
@@ -56,7 +54,7 @@ DLDisplayConfigurationDisplayContext dlDisplayConfigurationDisplayContext = new 
 					<aui:button name="openFolderSelectorButton" value="select" />
 
 					<%
-					String taglibRemoveFolder = "Liferay.Util.removeFolderSelection('rootFolderId', 'rootFolderName', '" + renderResponse.getNamespace() + "');";
+					String taglibRemoveFolder = "Liferay.Util.removeEntitySelection('rootFolderId', 'rootFolderName', this, '" + renderResponse.getNamespace() + "');";
 					%>
 
 					<aui:button disabled="<%= rootFolderId <= 0 %>" name="removeFolderButton" onClick="<%= taglibRemoveFolder %>" value="remove" />
@@ -69,11 +67,11 @@ DLDisplayConfigurationDisplayContext dlDisplayConfigurationDisplayContext = new 
 				<aui:field-wrapper label="show-columns">
 					<liferay-ui:input-move-boxes
 						leftBoxName="currentFolderColumns"
-						leftList="<%= dlDisplayConfigurationDisplayContext.getCurrentFolderColumns() %>"
+						leftList="<%= dlPortletInstanceSettingsHelper.getCurrentFolderColumns() %>"
 						leftReorder="true"
 						leftTitle="current"
 						rightBoxName="availableFolderColumns"
-						rightList="<%= dlDisplayConfigurationDisplayContext.getAvailableFolderColumns() %>"
+						rightList="<%= dlPortletInstanceSettingsHelper.getAvailableFolderColumns() %>"
 						rightTitle="available"
 					/>
 				</aui:field-wrapper>
@@ -87,11 +85,11 @@ DLDisplayConfigurationDisplayContext dlDisplayConfigurationDisplayContext = new 
 				<aui:field-wrapper label="show-columns">
 					<liferay-ui:input-move-boxes
 						leftBoxName="currentFileEntryColumns"
-						leftList="<%= dlDisplayConfigurationDisplayContext.getCurrentFileEntryColumns() %>"
+						leftList="<%= dlPortletInstanceSettingsHelper.getCurrentFileEntryColumns() %>"
 						leftReorder="true"
 						leftTitle="current"
 						rightBoxName="availableFileEntryColumns"
-						rightList="<%= dlDisplayConfigurationDisplayContext.getAvailableFileEntryColumns() %>"
+						rightList="<%= dlPortletInstanceSettingsHelper.getAvailableFileEntryColumns() %>"
 						rightTitle="available"
 					/>
 				</aui:field-wrapper>
@@ -109,8 +107,8 @@ DLDisplayConfigurationDisplayContext dlDisplayConfigurationDisplayContext = new 
 	</aui:button-row>
 </aui:form>
 
-<aui:script use="aui-base">
-	A.one('#<portlet:namespace />openFolderSelectorButton').on(
+<aui:script sandbox="<%= true %>">
+	$('#<portlet:namespace />openFolderSelectorButton').on(
 		'click',
 		function(event) {
 			Liferay.Util.selectEntity(
@@ -125,6 +123,8 @@ DLDisplayConfigurationDisplayContext dlDisplayConfigurationDisplayContext = new 
 
 					<liferay-portlet:renderURL portletName="<%= portletResource %>" var="selectFolderURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
 						<portlet:param name="struts_action" value="/document_library_display/select_folder" />
+						<portlet:param name="folderId" value="<%= String.valueOf(rootFolderId) %>" />
+						<portlet:param name="ignoreRootFolder" value="<%= Boolean.TRUE.toString() %>" />
 					</liferay-portlet:renderURL>
 
 					uri: '<%= selectFolderURL.toString() %>'
@@ -143,51 +143,36 @@ DLDisplayConfigurationDisplayContext dlDisplayConfigurationDisplayContext = new 
 		}
 	);
 
-	A.one('#<portlet:namespace />showActions').after(
+	var showActionsInput = $('#<portlet:namespace />showActions');
+
+	showActionsInput.on(
 		'change',
 		function(event) {
-			var currentFileEntryColumns = A.one('#<portlet:namespace />currentFileEntryColumns');
-			var currentFolderColumns = A.one('#<portlet:namespace />currentFolderColumns');
-			var showActionsInput = A.one('#<portlet:namespace />showActions');
+			var currentColumns = $('#<portlet:namespace />currentFileEntryColumns, #<portlet:namespace />currentFolderColumns');
 
-			if (showActionsInput.val() === 'false') {
-				var actionHTML = '<option value="action"><%= UnicodeLanguageUtil.get(request, "action") %></option>';
-
-				currentFileEntryColumns.append(actionHTML);
-				currentFolderColumns.append(actionHTML);
+			if (showActionsInput.prop('checked')) {
+				currentColumns.append('<option value="action"><%= UnicodeLanguageUtil.get(request, "action") %></option>');
 			}
 			else {
-				var availableFileEntryColumns = A.one('#<portlet:namespace />availableFileEntryColumns');
-				var availableFolderColumns = A.one('#<portlet:namespace />availableFolderColumns');
+				var allColumns = currentColumns.add('#<portlet:namespace />availableFileEntryColumns, #<portlet:namespace />availableFolderColumns');
 
-				A.Array.each(
-					[currentFolderColumns, currentFileEntryColumns, availableFileEntryColumns, availableFolderColumns],
-					function(item, index) {
-						var actionsNode = item.one('option[value="action"]');
-
-						if (actionsNode) {
-							actionsNode.remove();
-						}
-					}
-				);
+				allColumns.find('option[value="action"]').remove();
 			}
 		}
 	);
-
 </aui:script>
 
 <aui:script>
-	Liferay.provide(
-		window,
-		'<portlet:namespace />saveConfiguration',
-		function() {
-			document.<portlet:namespace />fm.<portlet:namespace />folderColumns.value = Liferay.Util.listSelect(document.<portlet:namespace />fm.<portlet:namespace />currentFolderColumns);
-			document.<portlet:namespace />fm.<portlet:namespace />fileEntryColumns.value = Liferay.Util.listSelect(document.<portlet:namespace />fm.<portlet:namespace />currentFileEntryColumns);
+	function <portlet:namespace />saveConfiguration() {
+		var Util = Liferay.Util;
 
-			submitForm(document.<portlet:namespace />fm);
-		},
-		['liferay-util-list-fields']
-	);
+		var form = AUI.$(document.<portlet:namespace />fm);
+
+		form.fm('folderColumns').val(Util.listSelect(form.fm('currentFolderColumns')));
+		form.fm('fileEntryColumns').val(Util.listSelect(form.fm('currentFileEntryColumns')));
+
+		submitForm(form);
+	}
 </aui:script>
 
 <c:if test="<%= SessionMessages.contains(renderRequest, portletDisplay.getId() + SessionMessages.KEY_SUFFIX_UPDATED_CONFIGURATION) %>">

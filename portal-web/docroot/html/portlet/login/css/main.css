@@ -1,4 +1,4 @@
-@import "compass";
+@import "bourbon";
 
 .portlet-login {
 	.form {
@@ -20,6 +20,8 @@
 	}
 
 	.signed-in {
-		@include hyphenation;
+		display: inline-block;
+
+		@include hyphens;
 	}
 }

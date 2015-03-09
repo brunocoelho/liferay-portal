@@ -66,7 +66,7 @@ public class SelectTag extends BaseSelectTag {
 		String validatorName, ValidatorTag validatorTag) {
 
 		if (_validators == null) {
-			_validators = new HashMap<String, ValidatorTag>();
+			_validators = new HashMap<>();
 		}
 
 		_validators.put(validatorName, validatorTag);
@@ -98,7 +98,7 @@ public class SelectTag extends BaseSelectTag {
 		String id = getId();
 
 		if (Validator.isNull(id)) {
-			id = name;
+			id = AUIUtil.normalizeId(name);
 		}
 
 		String label = getLabel();

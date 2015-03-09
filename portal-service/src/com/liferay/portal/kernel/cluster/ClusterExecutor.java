@@ -15,7 +15,6 @@
 package com.liferay.portal.kernel.cluster;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author Shuyang Zhou
@@ -29,28 +28,13 @@ public interface ClusterExecutor {
 
 	public FutureClusterResponses execute(ClusterRequest clusterRequest);
 
-	public void execute(
-		ClusterRequest clusterRequest,
-		ClusterResponseCallback clusterResponseCallback);
-
-	public void execute(
-		ClusterRequest clusterRequest,
-		ClusterResponseCallback clusterResponseCallback, long timeout,
-		TimeUnit timeUnit);
-
 	public List<ClusterEventListener> getClusterEventListeners();
-
-	public List<Address> getClusterNodeAddresses();
 
 	public List<ClusterNode> getClusterNodes();
 
 	public ClusterNode getLocalClusterNode();
 
-	public Address getLocalClusterNodeAddress();
-
 	public void initialize();
-
-	public boolean isClusterNodeAlive(Address address);
 
 	public boolean isClusterNodeAlive(String clusterNodeId);
 

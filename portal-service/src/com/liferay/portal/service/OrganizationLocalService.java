@@ -138,7 +138,7 @@ public interface OrganizationLocalService extends BaseLocalService,
 	public com.liferay.portal.model.Organization addOrganization(long userId,
 		long parentOrganizationId, java.lang.String name,
 		java.lang.String type, boolean recursable, long regionId,
-		long countryId, int statusId, java.lang.String comments, boolean site,
+		long countryId, long statusId, java.lang.String comments, boolean site,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
@@ -173,7 +173,7 @@ public interface OrganizationLocalService extends BaseLocalService,
 	*/
 	public com.liferay.portal.model.Organization addOrganization(long userId,
 		long parentOrganizationId, java.lang.String name,
-		java.lang.String type, long regionId, long countryId, int statusId,
+		java.lang.String type, long regionId, long countryId, long statusId,
 		java.lang.String comments, boolean site,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException;
@@ -333,25 +333,33 @@ public interface OrganizationLocalService extends BaseLocalService,
 		com.liferay.portal.kernel.util.OrderByComparator<T> orderByComparator);
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery);
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,
 		com.liferay.portal.kernel.dao.orm.Projection projection);
 
+	/**
+	* Returns the organization with the name.
+	*
+	* @param companyId the primary key of the organization's company
+	* @param name the organization's name
+	* @return the organization with the name, or <code>null</code> if no
+	organization could be found
+	*/
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public com.liferay.portal.model.Organization fetchOrganization(
 		long companyId, java.lang.String name);
@@ -627,6 +635,27 @@ public interface OrganizationLocalService extends BaseLocalService,
 		java.util.List<com.liferay.portal.model.Organization> allOrganizations,
 		java.util.List<com.liferay.portal.model.Organization> availableOrganizations);
 
+	/**
+	* Returns all the IDs of organizations with which the user is explicitly
+	* associated, optionally including the IDs of organizations that the user
+	* administers or owns.
+	*
+	* <p>
+	* A user is considered to be <i>explicitly</i> associated with an
+	* organization if his account is individually created within the
+	* organization or if the user is later added to it.
+	* </p>
+	*
+	* @param userId the primary key of the user
+	* @param includeAdministrative whether to include the IDs of organizations
+	that the user administers or owns, even if he's not a member of
+	the organizations
+	* @return the IDs of organizations with which the user is explicitly
+	associated, optionally including the IDs of organizations that
+	the user administers or owns
+	* @throws PortalException if a user with the primary key could not be found
+	or if a portal exception occurred
+	*/
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public long[] getUserOrganizationIds(long userId,
 		boolean includeAdministrative)
@@ -637,16 +666,23 @@ public interface OrganizationLocalService extends BaseLocalService,
 		long userId);
 
 	/**
-	* Returns all the organizations associated with the user. If
-	* includeAdministrative is <code>true</code>, the result includes those
-	* organizations that are not directly associated to the user but he is an
-	* administrator or an owner of the organization.
+	* Returns all the organizations with which the user is explicitly
+	* associated, optionally including the organizations that the user
+	* administers or owns.
+	*
+	* <p>
+	* A user is considered to be <i>explicitly</i> associated with an
+	* organization if his account is individually created within the
+	* organization or if the user is later added as a member.
+	* </p>
 	*
 	* @param userId the primary key of the user
-	* @param includeAdministrative whether to includes organizations that are
-	indirectly associated to the user because he is an administrator
-	or an owner of the organization
-	* @return the organizations associated with the user
+	* @param includeAdministrative whether to include the IDs of organizations
+	that the user administers or owns, even if he's not a member of
+	the organizations
+	* @return the organizations with which the user is explicitly associated,
+	optionally including the organizations that the user administers
+	or owns
 	* @throws PortalException if a user with the primary key could not be found
 	*/
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -754,7 +790,7 @@ public interface OrganizationLocalService extends BaseLocalService,
 	public boolean hasUserOrganizations(long userId);
 
 	/**
-	* Rebuilds the organizations tree.
+	* Rebuilds the organization's tree.
 	*
 	* <p>
 	* Only call this method if the tree has become stale through operations
@@ -1220,8 +1256,9 @@ public interface OrganizationLocalService extends BaseLocalService,
 	public com.liferay.portal.model.Organization updateOrganization(
 		long companyId, long organizationId, long parentOrganizationId,
 		java.lang.String name, java.lang.String type, boolean recursable,
-		long regionId, long countryId, int statusId, java.lang.String comments,
-		boolean site, com.liferay.portal.service.ServiceContext serviceContext)
+		long regionId, long countryId, long statusId,
+		java.lang.String comments, boolean site,
+		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	/**
@@ -1253,7 +1290,7 @@ public interface OrganizationLocalService extends BaseLocalService,
 	public com.liferay.portal.model.Organization updateOrganization(
 		long companyId, long organizationId, long parentOrganizationId,
 		java.lang.String name, java.lang.String type, long regionId,
-		long countryId, int statusId, java.lang.String comments, boolean logo,
+		long countryId, long statusId, java.lang.String comments, boolean logo,
 		byte[] logoBytes, boolean site,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException;
@@ -1283,13 +1320,13 @@ public interface OrganizationLocalService extends BaseLocalService,
 	information was invalid
 	* @deprecated As of 7.0.0, replaced by {@link #updateOrganization(long,
 	long, long, String, String, long, long, int, String, boolean,
-	boolean, byte[], ServiceContext)}
+	byte[], boolean, ServiceContext)}
 	*/
 	@java.lang.Deprecated
 	public com.liferay.portal.model.Organization updateOrganization(
 		long companyId, long organizationId, long parentOrganizationId,
 		java.lang.String name, java.lang.String type, long regionId,
-		long countryId, int statusId, java.lang.String comments, boolean site,
+		long countryId, long statusId, java.lang.String comments, boolean site,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException;
 

@@ -20,25 +20,27 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portlet.documentlibrary.model.DLFileEntry;
+import com.liferay.portlet.documentlibrary.model.DLFileEntryType;
 import com.liferay.portlet.documentlibrary.model.DLFolder;
 import com.liferay.portlet.documentlibrary.model.DLFolderConstants;
 import com.liferay.portlet.documentlibrary.service.DLFileEntryLocalServiceUtil;
+import com.liferay.portlet.documentlibrary.service.DLFileEntryTypeLocalServiceUtil;
 import com.liferay.portlet.documentlibrary.service.DLFolderLocalServiceUtil;
 import com.liferay.portlet.documentlibrary.util.DLUtil;
+import com.liferay.portlet.dynamicdatamapping.model.DDMStructure;
 import com.liferay.portlet.expando.model.ExpandoBridge;
 import com.liferay.portlet.expando.util.ExpandoBridgeFactoryUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
 
+import java.util.List;
+
 /**
  * @author Jorge Ferrer
  * @author Alexander Chow
  */
 public class DLFileVersionImpl extends DLFileVersionBaseImpl {
-
-	public DLFileVersionImpl() {
-	}
 
 	@Override
 	public String buildTreePath() throws PortalException {
@@ -57,6 +59,21 @@ public class DLFileVersionImpl extends DLFileVersionBaseImpl {
 
 		return DLFileEntryLocalServiceUtil.getFileAsStream(
 			getFileEntryId(), getVersion(), incrementCounter);
+	}
+
+	@Override
+	public List<DDMStructure> getDDMStructures() throws PortalException {
+		DLFileEntryType dlFileEntryType =
+			DLFileEntryTypeLocalServiceUtil.getFileEntryType(
+				getFileEntryTypeId());
+
+		return dlFileEntryType.getDDMStructures();
+	}
+
+	@Override
+	public DLFileEntryType getDLFileEntryType() throws PortalException {
+		return DLFileEntryTypeLocalServiceUtil.getFileEntryType(
+			getFileEntryTypeId());
 	}
 
 	@Override
@@ -130,7 +147,8 @@ public class DLFileVersionImpl extends DLFileVersionBaseImpl {
 		super.setExtraSettings(_extraSettingsProperties.toString());
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(DLFileVersionImpl.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		DLFileVersionImpl.class);
 
 	private transient ExpandoBridge _expandoBridge;
 	private UnicodeProperties _extraSettingsProperties;

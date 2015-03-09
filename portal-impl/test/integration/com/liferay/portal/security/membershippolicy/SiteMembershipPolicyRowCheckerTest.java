@@ -14,17 +14,17 @@
 
 package com.liferay.portal.security.membershippolicy;
 
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.model.Role;
 import com.liferay.portal.model.User;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.service.RoleLocalServiceUtil;
 import com.liferay.portal.service.UserGroupRoleLocalServiceUtil;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
-import com.liferay.portal.util.test.RandomTestUtil;
-import com.liferay.portal.util.test.UserTestUtil;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portlet.sites.search.UserGroupRoleRoleChecker;
 import com.liferay.portlet.sites.search.UserGroupRoleUserChecker;
 import com.liferay.portlet.usergroupsadmin.search.UserGroupChecker;
@@ -32,18 +32,23 @@ import com.liferay.portlet.usergroupsadmin.search.UserGroupChecker;
 import javax.portlet.RenderResponse;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import org.powermock.api.mockito.PowerMockito;
 
 /**
  * @author Roberto Díaz
  */
-@ExecutionTestListeners(listeners = {MainServletExecutionTestListener.class})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 public class SiteMembershipPolicyRowCheckerTest
 	extends BaseSiteMembershipPolicyTestCase {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE);
 
 	@Test
 	public void testIsCheckerDisabledWhenSettingForbiddenGroupToUser()

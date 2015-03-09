@@ -45,10 +45,8 @@ import com.liferay.portal.util.PortalUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.asset.model.AssetEntry;
 import com.liferay.portlet.asset.model.AssetLinkConstants;
-import com.liferay.portlet.asset.util.AssetUtil;
 import com.liferay.portlet.dynamicdatamapping.model.DDMStructure;
 import com.liferay.portlet.journal.DuplicateFolderNameException;
-import com.liferay.portlet.journal.FolderNameException;
 import com.liferay.portlet.journal.InvalidDDMStructureException;
 import com.liferay.portlet.journal.NoSuchFolderException;
 import com.liferay.portlet.journal.model.JournalArticle;
@@ -56,6 +54,7 @@ import com.liferay.portlet.journal.model.JournalArticleConstants;
 import com.liferay.portlet.journal.model.JournalFolder;
 import com.liferay.portlet.journal.model.JournalFolderConstants;
 import com.liferay.portlet.journal.service.base.JournalFolderLocalServiceBaseImpl;
+import com.liferay.portlet.journal.util.JournalValidatorUtil;
 import com.liferay.portlet.journal.util.comparator.FolderIdComparator;
 import com.liferay.portlet.social.model.SocialActivityConstants;
 import com.liferay.portlet.trash.model.TrashEntry;
@@ -125,7 +124,8 @@ public class JournalFolderLocalServiceImpl
 	@Override
 	@SystemEvent(
 		action = SystemEventConstants.ACTION_SKIP,
-		type = SystemEventConstants.TYPE_DELETE)
+		type = SystemEventConstants.TYPE_DELETE
+	)
 	public JournalFolder deleteFolder(JournalFolder folder)
 		throws PortalException {
 
@@ -136,7 +136,8 @@ public class JournalFolderLocalServiceImpl
 	@Override
 	@SystemEvent(
 		action = SystemEventConstants.ACTION_SKIP,
-		type = SystemEventConstants.TYPE_DELETE)
+		type = SystemEventConstants.TYPE_DELETE
+	)
 	public JournalFolder deleteFolder(
 			JournalFolder folder, boolean includeTrashedEntries)
 		throws PortalException {
@@ -318,7 +319,7 @@ public class JournalFolderLocalServiceImpl
 
 	@Override
 	public List<Object> getFoldersAndArticles(long groupId, long folderId) {
-		QueryDefinition<?> queryDefinition = new QueryDefinition<Object>(
+		QueryDefinition<?> queryDefinition = new QueryDefinition<>(
 			WorkflowConstants.STATUS_ANY);
 
 		return journalFolderFinder.findF_A_ByG_F(
@@ -329,8 +330,7 @@ public class JournalFolderLocalServiceImpl
 	public List<Object> getFoldersAndArticles(
 		long groupId, long folderId, int status) {
 
-		QueryDefinition<?> queryDefinition = new QueryDefinition<Object>(
-			status);
+		QueryDefinition<?> queryDefinition = new QueryDefinition<>(status);
 
 		return journalFolderFinder.findF_A_ByG_F(
 			groupId, folderId, queryDefinition);
@@ -353,8 +353,8 @@ public class JournalFolderLocalServiceImpl
 	public int getFoldersAndArticlesCount(
 		long groupId, List<Long> folderIds, int status) {
 
-		QueryDefinition<JournalArticle> queryDefinition =
-			new QueryDefinition<JournalArticle>(status);
+		QueryDefinition<JournalArticle> queryDefinition = new QueryDefinition<>(
+			status);
 
 		if (folderIds.size() <= PropsValues.SQL_DATA_MAX_PARAMETERS) {
 			return journalArticleFinder.countByG_F(
@@ -510,12 +510,8 @@ public class JournalFolderLocalServiceImpl
 
 			// Folder
 
-			TrashEntry trashEntry = folder.getTrashEntry();
-
-			TrashVersion trashVersion =
-				trashVersionLocalService.fetchVersion(
-					trashEntry.getEntryId(), JournalFolder.class.getName(),
-					folderId);
+			TrashVersion trashVersion = trashVersionLocalService.fetchVersion(
+				JournalFolder.class.getName(), folderId);
 
 			int status = WorkflowConstants.STATUS_APPROVED;
 
@@ -538,8 +534,7 @@ public class JournalFolderLocalServiceImpl
 					folder.getGroupId(), folder.getFolderId(),
 					WorkflowConstants.STATUS_IN_TRASH);
 
-			restoreDependentsFromTrash(
-				foldersAndArticles, trashEntry.getEntryId());
+			restoreDependentsFromTrash(foldersAndArticles);
 		}
 
 		return journalFolderLocalService.moveFolder(
@@ -679,7 +674,7 @@ public class JournalFolderLocalServiceImpl
 				folder.getGroupId(), folder.getFolderId(),
 				WorkflowConstants.STATUS_IN_TRASH);
 
-		restoreDependentsFromTrash(foldersAndArticles, trashEntry.getEntryId());
+		restoreDependentsFromTrash(foldersAndArticles);
 
 		// Trash
 
@@ -766,7 +761,7 @@ public class JournalFolderLocalServiceImpl
 
 		JournalFolder folder = null;
 
-		Set<Long> originalDDMStructureIds = new HashSet<Long>();
+		Set<Long> originalDDMStructureIds = new HashSet<>();
 
 		if (folderId > JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 			originalDDMStructureIds = getDDMStructureIds(
@@ -779,7 +774,7 @@ public class JournalFolderLocalServiceImpl
 		}
 
 		List<ObjectValuePair<Long, String>> workflowDefinitionOVPs =
-			new ArrayList<ObjectValuePair<Long, String>>();
+			new ArrayList<>();
 
 		if (restrictionType ==
 				JournalFolderConstants.
@@ -939,7 +934,7 @@ public class JournalFolderLocalServiceImpl
 	}
 
 	protected void deleteWorkflowDefinitionLink(JournalFolder folder) {
-		List<Long> ddmStructureIds = new ArrayList<Long>();
+		List<Long> ddmStructureIds = new ArrayList<>();
 
 		for (DDMStructure ddmStructure :
 				ddmStructureLocalService.getJournalFolderDDMStructures(
@@ -1027,7 +1022,7 @@ public class JournalFolderLocalServiceImpl
 	}
 
 	protected Set<Long> getDDMStructureIds(List<DDMStructure> ddmStructures) {
-		Set<Long> ddmStructureIds = new HashSet<Long>();
+		Set<Long> ddmStructureIds = new HashSet<>();
 
 		for (DDMStructure ddmStructure : ddmStructures) {
 			ddmStructureIds.add(ddmStructure.getStructureId());
@@ -1056,7 +1051,7 @@ public class JournalFolderLocalServiceImpl
 			return folder.getParentFolderId();
 		}
 
-		List<Long> subfolderIds = new ArrayList<Long>();
+		List<Long> subfolderIds = new ArrayList<>();
 
 		getSubfolderIds(
 			subfolderIds, folder.getGroupId(), folder.getFolderId());
@@ -1233,8 +1228,7 @@ public class JournalFolderLocalServiceImpl
 		}
 	}
 
-	protected void restoreDependentsFromTrash(
-			List<Object> foldersAndArticles, long trashEntryId)
+	protected void restoreDependentsFromTrash(List<Object> foldersAndArticles)
 		throws PortalException {
 
 		for (Object object : foldersAndArticles) {
@@ -1250,8 +1244,7 @@ public class JournalFolderLocalServiceImpl
 
 				TrashVersion trashVersion =
 					trashVersionLocalService.fetchVersion(
-						trashEntryId, JournalArticle.class.getName(),
-						article.getId());
+						JournalArticle.class.getName(), article.getId());
 
 				int oldStatus = WorkflowConstants.STATUS_APPROVED;
 
@@ -1269,10 +1262,8 @@ public class JournalFolderLocalServiceImpl
 
 					// Article
 
-					trashVersion =
-						trashVersionLocalService.fetchVersion(
-							trashEntryId, JournalArticle.class.getName(),
-							curArticle.getId());
+					trashVersion = trashVersionLocalService.fetchVersion(
+						JournalArticle.class.getName(), curArticle.getId());
 
 					int curArticleOldStatus = WorkflowConstants.STATUS_APPROVED;
 
@@ -1319,8 +1310,7 @@ public class JournalFolderLocalServiceImpl
 
 				TrashVersion trashVersion =
 					trashVersionLocalService.fetchVersion(
-						trashEntryId, JournalFolder.class.getName(),
-						folder.getFolderId());
+						JournalFolder.class.getName(), folder.getFolderId());
 
 				int oldStatus = WorkflowConstants.STATUS_APPROVED;
 
@@ -1338,7 +1328,7 @@ public class JournalFolderLocalServiceImpl
 					folder.getGroupId(), folder.getFolderId(),
 					WorkflowConstants.STATUS_IN_TRASH);
 
-				restoreDependentsFromTrash(curFoldersAndArticles, trashEntryId);
+				restoreDependentsFromTrash(curFoldersAndArticles);
 
 				// Trash
 
@@ -1383,7 +1373,7 @@ public class JournalFolderLocalServiceImpl
 				DDMStructure ddmStructure =
 					ddmStructureLocalService.fetchStructure(
 						article.getGroupId(), classNameId,
-						article.getStructureId(), true);
+						article.getDDMStructureKey(), true);
 
 				if (ddmStructure == null) {
 					throw new InvalidDDMStructureException();
@@ -1414,23 +1404,13 @@ public class JournalFolderLocalServiceImpl
 			long folderId, long groupId, long parentFolderId, String name)
 		throws PortalException {
 
-		validateFolderName(name);
+		JournalValidatorUtil.validateFolderName(name);
 
 		JournalFolder folder = journalFolderPersistence.fetchByG_P_N(
 			groupId, parentFolderId, name);
 
 		if ((folder != null) && (folder.getFolderId() != folderId)) {
 			throw new DuplicateFolderNameException(name);
-		}
-	}
-
-	protected void validateFolderName(String name) throws PortalException {
-		if (!AssetUtil.isValidWord(name)) {
-			throw new FolderNameException();
-		}
-
-		if (name.contains("\\\\") || name.contains("//")) {
-			throw new FolderNameException();
 		}
 	}
 

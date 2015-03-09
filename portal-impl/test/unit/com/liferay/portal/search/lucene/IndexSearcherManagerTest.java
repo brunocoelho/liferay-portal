@@ -14,9 +14,11 @@
 
 package com.liferay.portal.search.lucene;
 
-import com.liferay.portal.kernel.test.CodeCoverageAssertor;
-import com.liferay.portal.test.AdviseWith;
-import com.liferay.portal.test.runners.AspectJMockingNewClassLoaderJUnitTestRunner;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
+import com.liferay.portal.kernel.test.rule.NewEnv;
+import com.liferay.portal.test.rule.AdviseWith;
+import com.liferay.portal.test.rule.AspectJNewEnvTestRule;
 
 import java.io.IOException;
 
@@ -48,19 +50,20 @@ import org.aspectj.lang.annotation.Aspect;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Tina Tian
  * @author Shuyang Zhou
  */
-@RunWith(AspectJMockingNewClassLoaderJUnitTestRunner.class)
 public class IndexSearcherManagerTest {
 
 	@ClassRule
-	public static CodeCoverageAssertor codeCoverageAssertor =
-		new CodeCoverageAssertor();
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			CodeCoverageAssertor.INSTANCE, AspectJNewEnvTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -79,6 +82,7 @@ public class IndexSearcherManagerTest {
 	}
 
 	@AdviseWith(adviceClasses = {IndexReaderAdvice.class})
+	@NewEnv(type = NewEnv.Type.CLASSLOADER)
 	@Test
 	public void testAcquire() throws Exception {
 		IndexSearcher indexSearcher = _indexSearcherManager.acquire();
@@ -278,7 +282,8 @@ public class IndexSearcherManagerTest {
 
 		@Around(
 			"execution(public boolean org.apache.lucene.index.IndexReader." +
-				"tryIncRef())")
+				"tryIncRef())"
+		)
 		public Object tryIncRef(ProceedingJoinPoint proceedingJoinPoint)
 			throws Throwable {
 

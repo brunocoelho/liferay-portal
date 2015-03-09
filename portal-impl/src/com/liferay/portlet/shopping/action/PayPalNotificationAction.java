@@ -24,7 +24,7 @@ import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.service.ServiceContextFactory;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portlet.shopping.NoSuchOrderException;
-import com.liferay.portlet.shopping.ShoppingSettings;
+import com.liferay.portlet.shopping.ShoppingGroupServiceSettings;
 import com.liferay.portlet.shopping.model.ShoppingOrder;
 import com.liferay.portlet.shopping.service.ShoppingOrderLocalServiceUtil;
 import com.liferay.portlet.shopping.util.ShoppingUtil;
@@ -85,22 +85,22 @@ public class PayPalNotificationAction extends Action {
 
 			urlc.setDoOutput(true);
 			urlc.setRequestProperty(
-				"Content-Type","application/x-www-form-urlencoded");
+				"Content-Type", "application/x-www-form-urlencoded");
 
-			PrintWriter pw = UnsyncPrintWriterPool.borrow(
-				urlc.getOutputStream());
+			try (PrintWriter pw = UnsyncPrintWriterPool.borrow(
+					urlc.getOutputStream())) {
 
-			pw.println(query);
+				pw.println(query);
+			}
 
-			pw.close();
+			String payPalStatus = null;
 
-			UnsyncBufferedReader unsyncBufferedReader =
-				new UnsyncBufferedReader(
-					new InputStreamReader(urlc.getInputStream()));
+			try (UnsyncBufferedReader unsyncBufferedReader =
+					new UnsyncBufferedReader(
+						new InputStreamReader(urlc.getInputStream()))) {
 
-			String payPalStatus = unsyncBufferedReader.readLine();
-
-			unsyncBufferedReader.close();
+				payPalStatus = unsyncBufferedReader.readLine();
+			}
 
 			String itemName = ParamUtil.getString(request, "item_name");
 			String itemNumber = ParamUtil.getString(request, "item_number");
@@ -153,14 +153,15 @@ public class PayPalNotificationAction extends Action {
 
 		ShoppingOrder order = ShoppingOrderLocalServiceUtil.getOrder(ppInvoice);
 
-		ShoppingSettings shoppingSettings = ShoppingSettings.getInstance(
-			order.getGroupId());
+		ShoppingGroupServiceSettings shoppingGroupServiceSettings =
+			ShoppingGroupServiceSettings.getInstance(order.getGroupId());
 
 		// Receiver email address
 
 		String ppReceiverEmail = ParamUtil.getString(request, "receiver_email");
 
-		String payPalEmailAddress = shoppingSettings.getPayPalEmailAddress();
+		String payPalEmailAddress =
+			shoppingGroupServiceSettings.getPayPalEmailAddress();
 
 		if (!payPalEmailAddress.equals(ppReceiverEmail)) {
 			return false;
@@ -180,7 +181,7 @@ public class PayPalNotificationAction extends Action {
 
 		String ppCurrency = ParamUtil.getString(request, "mc_currency");
 
-		String currencyId = shoppingSettings.getCurrencyId();
+		String currencyId = shoppingGroupServiceSettings.getCurrencyId();
 
 		if (!currencyId.equals(ppCurrency)) {
 			return false;
@@ -201,7 +202,7 @@ public class PayPalNotificationAction extends Action {
 		return true;
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		PayPalNotificationAction.class);
 
 }

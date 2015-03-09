@@ -15,7 +15,9 @@
 package com.liferay.portal.lar;
 
 import com.liferay.portal.kernel.lar.PortletDataContext;
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
@@ -28,20 +30,18 @@ import com.liferay.portal.model.Role;
 import com.liferay.portal.model.RoleConstants;
 import com.liferay.portal.security.permission.ActionKeys;
 import com.liferay.portal.security.permission.ResourceActionsUtil;
+import com.liferay.portal.service.LayoutSetPrototypeLocalServiceUtil;
 import com.liferay.portal.service.ResourceBlockLocalServiceUtil;
 import com.liferay.portal.service.ResourceBlockServiceUtil;
 import com.liferay.portal.service.ResourceLocalServiceUtil;
 import com.liferay.portal.service.ResourcePermissionServiceUtil;
 import com.liferay.portal.service.RoleLocalServiceUtil;
 import com.liferay.portal.service.permission.PortletPermissionUtil;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.listeners.ResetDatabaseExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portal.util.PortletKeys;
 import com.liferay.portal.util.ResourcePermissionUtil;
 import com.liferay.portal.util.test.LayoutTestUtil;
-import com.liferay.portal.util.test.RandomTestUtil;
-import com.liferay.portal.util.test.TestPropsValues;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,21 +49,22 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import org.powermock.api.mockito.PowerMockito;
 
 /**
  * @author Mate Thurzo
  */
-@ExecutionTestListeners(
-	listeners = {
-		MainServletExecutionTestListener.class,
-		ResetDatabaseExecutionTestListener.class
-	})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 public class PermissionExportImportTest extends PowerMockito {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE);
 
 	@Test
 	public void testPortletGuestPermissionsExportImport() throws Exception {
@@ -75,8 +76,7 @@ public class PermissionExportImportTest extends PowerMockito {
 
 		Group exportGroup = exportLayoutSetPrototype.getGroup();
 
-		Layout exportLayout = LayoutTestUtil.addLayout(
-			exportGroup.getGroupId(), RandomTestUtil.randomString(), true);
+		Layout exportLayout = LayoutTestUtil.addLayout(exportGroup, true);
 
 		String exportResourcePrimKey = PortletPermissionUtil.getPrimaryKey(
 			exportLayout.getPlid(), _PORTLET_ID);
@@ -96,8 +96,7 @@ public class PermissionExportImportTest extends PowerMockito {
 
 		Group importGroup = importLayoutSetPrototype.getGroup();
 
-		Layout importLayout = LayoutTestUtil.addLayout(
-			importGroup.getGroupId(), RandomTestUtil.randomString(), true);
+		Layout importLayout = LayoutTestUtil.addLayout(importGroup, true);
 
 		String importResourcePrimKey = PortletPermissionUtil.getPrimaryKey(
 			importLayout.getPlid(), _PORTLET_ID);
@@ -106,13 +105,18 @@ public class PermissionExportImportTest extends PowerMockito {
 
 		validateImportedPortletPermissions(
 			importGroup, role, importResourcePrimKey);
+
+		LayoutSetPrototypeLocalServiceUtil.deleteLayoutSetPrototype(
+			exportLayoutSetPrototype);
+		LayoutSetPrototypeLocalServiceUtil.deleteLayoutSetPrototype(
+			importLayoutSetPrototype);
 	}
 
 	protected void addPortletPermissions(
 			Group exportGroup, Role role, String exportResourcePrimKey)
 		throws Exception {
 
-		Map<Long, String[]> roleIdsToActionIds = new HashMap<Long, String[]>();
+		Map<Long, String[]> roleIdsToActionIds = new HashMap<>();
 
 		if (ResourceBlockLocalServiceUtil.isSupported(_PORTLET_ID)) {
 			roleIdsToActionIds.put(role.getRoleId(), _ACTION_IDS);
@@ -184,7 +188,7 @@ public class PermissionExportImportTest extends PowerMockito {
 			TestPropsValues.getCompanyId(), _PORTLET_ID,
 			ResourceConstants.SCOPE_INDIVIDUAL, importResourcePrimKey);
 
-		List<String> currentIndividualActions = new ArrayList<String>();
+		List<String> currentIndividualActions = new ArrayList<>();
 
 		ResourcePermissionUtil.populateResourcePermissionActionIds(
 			importGroup.getGroupId(), role, resource, actions,
@@ -214,6 +218,6 @@ public class PermissionExportImportTest extends PowerMockito {
 	private static final String[] _ACTION_IDS =
 		{ActionKeys.ADD_TO_PAGE, ActionKeys.VIEW};
 
-	private static final String _PORTLET_ID = PortletKeys.BOOKMARKS;
+	private static final String _PORTLET_ID = PortletKeys.LAYOUTS_ADMIN;
 
 }

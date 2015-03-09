@@ -254,10 +254,10 @@ public class AssetEntryLocalServiceUtil {
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public static long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery) {
@@ -265,11 +265,11 @@ public class AssetEntryLocalServiceUtil {
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public static long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,
@@ -437,9 +437,31 @@ public class AssetEntryLocalServiceUtil {
 		return getService().getEntries(entryQuery);
 	}
 
+	public static java.util.List<com.liferay.portlet.asset.model.AssetEntry> getEntries(
+		long[] groupIds, long[] classNameIds, java.lang.String keywords,
+		java.lang.String userName, java.lang.String title,
+		java.lang.String description, boolean advancedSearch,
+		boolean andOperator, int start, int end, java.lang.String orderByCol1,
+		java.lang.String orderByCol2, java.lang.String orderByType1,
+		java.lang.String orderByType2) {
+		return getService()
+				   .getEntries(groupIds, classNameIds, keywords, userName,
+			title, description, advancedSearch, andOperator, start, end,
+			orderByCol1, orderByCol2, orderByType1, orderByType2);
+	}
+
 	public static int getEntriesCount(
 		com.liferay.portlet.asset.service.persistence.AssetEntryQuery entryQuery) {
 		return getService().getEntriesCount(entryQuery);
+	}
+
+	public static int getEntriesCount(long[] groupIds, long[] classNameIds,
+		java.lang.String keywords, java.lang.String userName,
+		java.lang.String title, java.lang.String description,
+		boolean advancedSearch, boolean andOperator) {
+		return getService()
+				   .getEntriesCount(groupIds, classNameIds, keywords, userName,
+			title, description, advancedSearch, andOperator);
 	}
 
 	public static com.liferay.portlet.asset.model.AssetEntry getEntry(

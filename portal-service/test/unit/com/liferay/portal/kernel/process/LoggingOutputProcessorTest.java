@@ -16,8 +16,8 @@ package com.liferay.portal.kernel.process;
 
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.test.CaptureHandler;
-import com.liferay.portal.kernel.test.CodeCoverageAssertor;
 import com.liferay.portal.kernel.test.JDKLoggerTestUtil;
+import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 import com.liferay.portal.kernel.util.StringPool;
 
 import java.util.List;
@@ -34,8 +34,8 @@ import org.junit.Test;
 public class LoggingOutputProcessorTest extends BaseOutputProcessorTestCase {
 
 	@ClassRule
-	public static CodeCoverageAssertor codeCoverageAssertor =
-		new CodeCoverageAssertor();
+	public static final CodeCoverageAssertor codeCoverageAssertor =
+		CodeCoverageAssertor.INSTANCE;
 
 	@Test
 	public void testLoggingFail() {
@@ -52,11 +52,9 @@ public class LoggingOutputProcessorTest extends BaseOutputProcessorTestCase {
 		byte[] stdErrBytes = stdErrString.getBytes(
 			StringPool.DEFAULT_CHARSET_NAME);
 
-		CaptureHandler captureHandler = null;
-
-		try {
-			captureHandler = JDKLoggerTestUtil.configureJDKLogger(
-				LoggingOutputProcessor.class.getName(), Level.OFF);
+		try (CaptureHandler captureHandler =
+				JDKLoggerTestUtil.configureJDKLogger(
+					LoggingOutputProcessor.class.getName(), Level.OFF)) {
 
 			List<LogRecord> logRecords = captureHandler.getLogRecords();
 
@@ -101,11 +99,6 @@ public class LoggingOutputProcessorTest extends BaseOutputProcessorTestCase {
 			logRecord = logRecords.get(0);
 
 			Assert.assertEquals(stdOutString, logRecord.getMessage());
-		}
-		finally {
-			if (captureHandler != null) {
-				captureHandler.close();
-			}
 		}
 	}
 

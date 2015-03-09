@@ -97,14 +97,14 @@ public class DDMDisplayRegistryUtil {
 		}
 	}
 
-	private static DDMDisplayRegistryUtil _instance =
+	private static final DDMDisplayRegistryUtil _instance =
 		new DDMDisplayRegistryUtil();
 
-	private Map<String, DDMDisplay> _ddmDisplays =
-		new ConcurrentHashMap<String, DDMDisplay>();
-	private ServiceRegistrationMap<DDMDisplay> _serviceRegistrations =
-		new ServiceRegistrationMap<DDMDisplay>();
-	private ServiceTracker<DDMDisplay, DDMDisplay> _serviceTracker;
+	private final Map<String, DDMDisplay> _ddmDisplays =
+		new ConcurrentHashMap<>();
+	private final ServiceRegistrationMap<DDMDisplay> _serviceRegistrations =
+		new ServiceRegistrationMap<>();
+	private final ServiceTracker<DDMDisplay, DDMDisplay> _serviceTracker;
 
 	private class DDMDisplayServiceTrackerCustomizer
 		implements ServiceTrackerCustomizer<DDMDisplay, DDMDisplay> {

@@ -15,9 +15,11 @@
 package com.liferay.portal.kernel.security;
 
 import com.liferay.portal.kernel.io.BigEndianCodec;
-import com.liferay.portal.kernel.test.CodeCoverageAssertor;
-import com.liferay.portal.kernel.test.NewClassLoaderJUnitTestRunner;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
+import com.liferay.portal.kernel.test.rule.NewEnv;
+import com.liferay.portal.kernel.test.rule.NewEnvTestRule;
 
 import java.security.SecureRandom;
 
@@ -29,18 +31,20 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Shuyang Zhou
  */
-@RunWith(NewClassLoaderJUnitTestRunner.class)
+@NewEnv(type = NewEnv.Type.CLASSLOADER)
 public class SecureRandomUtilTest {
 
 	@ClassRule
-	public static CodeCoverageAssertor codeCoverageAssertor =
-		new CodeCoverageAssertor();
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			CodeCoverageAssertor.INSTANCE, NewEnvTestRule.INSTANCE);
 
 	@Before
 	public void setUp() {
@@ -89,6 +93,7 @@ public class SecureRandomUtilTest {
 			(Long)(getFirstLong() ^ gapValue), futureTask.get());
 	}
 
+	@NewEnv(type = NewEnv.Type.NONE)
 	@Test
 	public void testConstructor() {
 		new SecureRandomUtil();
@@ -103,7 +108,7 @@ public class SecureRandomUtilTest {
 			ReflectionTestUtil.getFieldValue(
 				SecureRandomUtil.class, "_BUFFER_SIZE"));
 
-		byte[] bytes = (byte[])ReflectionTestUtil.getFieldValue(
+		byte[] bytes = ReflectionTestUtil.getFieldValue(
 			SecureRandomUtil.class, "_bytes");
 
 		Assert.assertEquals(1024, bytes.length);
@@ -371,14 +376,14 @@ public class SecureRandomUtilTest {
 	}
 
 	protected long getFirstLong() {
-		byte[] bytes = (byte[])ReflectionTestUtil.getFieldValue(
+		byte[] bytes = ReflectionTestUtil.getFieldValue(
 			SecureRandomUtil.class, "_bytes");
 
 		return BigEndianCodec.getLong(bytes, 0);
 	}
 
 	protected long getGapSeed() {
-		return (Long)ReflectionTestUtil.getFieldValue(
+		return ReflectionTestUtil.getFieldValue(
 			SecureRandomUtil.class, "_gapSeed");
 	}
 
@@ -388,7 +393,7 @@ public class SecureRandomUtilTest {
 		ReflectionTestUtil.setFieldValue(
 			SecureRandomUtil.class, "_random", predictableRandom);
 
-		byte[] bytes = (byte[])ReflectionTestUtil.getFieldValue(
+		byte[] bytes = ReflectionTestUtil.getFieldValue(
 			SecureRandomUtil.class, "_bytes");
 
 		predictableRandom.nextBytes(bytes);
@@ -397,7 +402,7 @@ public class SecureRandomUtilTest {
 	}
 
 	protected long reload() {
-		return (Long)ReflectionTestUtil.invoke(
+		return ReflectionTestUtil.invoke(
 			SecureRandomUtil.class, "_reload", new Class<?>[0]);
 	}
 
@@ -413,7 +418,7 @@ public class SecureRandomUtilTest {
 			}
 		}
 
-		private AtomicInteger _counter = new AtomicInteger();
+		private final AtomicInteger _counter = new AtomicInteger();
 
 	}
 

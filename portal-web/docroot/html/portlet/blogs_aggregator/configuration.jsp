@@ -28,9 +28,9 @@ if (organizationId > 0) {
 }
 %>
 
-<liferay-portlet:actionURL portletConfiguration="true" var="configurationActionURL" />
+<liferay-portlet:actionURL portletConfiguration="<%= true %>" var="configurationActionURL" />
 
-<liferay-portlet:renderURL portletConfiguration="true" var="configurationRenderURL" />
+<liferay-portlet:renderURL portletConfiguration="<%= true %>" var="configurationRenderURL" />
 
 <aui:form action="<%= configurationActionURL %>" method="post" name="fm">
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
@@ -43,12 +43,16 @@ if (organizationId > 0) {
 			<aui:option label="scope" />
 		</aui:select>
 
-		<div class="form-group" id="<portlet:namespace />usersSelectionOptions">
+		<div class="form-group <%= selectionMethod.equals("users") ? StringPool.BLANK : "hide" %>" id="<portlet:namespace />usersSelectionOptions">
 			<aui:input label="organization" name="organizationName" type="resource"  value="<%= organizationName %>" />
 
 			<aui:button name="selectOrganizationButton" value="select" />
 
-			<aui:button disabled="<%= organizationId <= 0 %>" name="removeOrganizationButton" onClick='<%= renderResponse.getNamespace() + "removeOrganization();" %>' value="remove" />
+			<%
+			String taglibRemoveFolder = "Liferay.Util.removeEntitySelection('organizationId', 'organizationName', this, '" + renderResponse.getNamespace() + "');";
+			%>
+
+			<aui:button disabled="<%= organizationId <= 0 %>" name="removeOrganizationButton" onClick="<%= taglibRemoveFolder %>" value="remove" />
 		</div>
 
 		<aui:select name="preferences--displayStyle--" value="<%= displayStyle %>">
@@ -99,17 +103,7 @@ if (organizationId > 0) {
 </aui:form>
 
 <aui:script>
-	function <portlet:namespace />removeOrganization() {
-		document.<portlet:namespace />fm.<portlet:namespace />organizationId.value = '';
-
-		document.getElementById('<portlet:namespace />organizationName').value = '';
-
-		Liferay.Util.toggleDisabled('#<portlet:namespace />removeOrganizationButton', true);
-	}
-</aui:script>
-
-<aui:script use="aui-base">
-	A.one('#<portlet:namespace />selectOrganizationButton').on(
+	AUI.$('#<portlet:namespace />selectOrganizationButton').on(
 		'click',
 		function(event) {
 			Liferay.Util.selectEntity(
@@ -133,20 +127,16 @@ if (organizationId > 0) {
 		}
 	);
 
-	var selectionMethod = A.one('#<portlet:namespace />selectionMethod');
+	var selectionMethod = AUI.$('#<portlet:namespace />selectionMethod');
 
-	function showHiddenFields() {
-		var usersSelectionOptions = A.one('#<portlet:namespace />usersSelectionOptions');
+	selectionMethod.on(
+		'change',
+		function() {
+			var usersSelectionOptions = AUI.$('#<portlet:namespace />usersSelectionOptions');
 
-		if (selectionMethod.val() == 'users') {
-			usersSelectionOptions.show();
+			var showUsersSelectionOptions = !(selectionMethod.val() === 'users');
+
+			usersSelectionOptions.toggleClass('hide', showUsersSelectionOptions);
 		}
-		else {
-			usersSelectionOptions.hide();
-		}
-	}
-
-	showHiddenFields();
-
-	selectionMethod.on('change', showHiddenFields);
+	);
 </aui:script>

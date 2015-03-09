@@ -32,6 +32,13 @@ public class ResourceActionLocalServiceWrapper
 		_resourceActionLocalService = resourceActionLocalService;
 	}
 
+	@Override
+	public com.liferay.portal.model.ResourceAction addResourceAction(
+		java.lang.String name, java.lang.String actionId, long bitwiseValue) {
+		return _resourceActionLocalService.addResourceAction(name, actionId,
+			bitwiseValue);
+	}
+
 	/**
 	* Adds the resource action to the database. Also notifies the appropriate model listeners.
 	*
@@ -169,10 +176,10 @@ public class ResourceActionLocalServiceWrapper
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	@Override
 	public long dynamicQueryCount(
@@ -181,11 +188,11 @@ public class ResourceActionLocalServiceWrapper
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	@Override
 	public long dynamicQueryCount(

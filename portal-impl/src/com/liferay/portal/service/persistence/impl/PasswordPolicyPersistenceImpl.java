@@ -62,7 +62,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see PasswordPolicyPersistence
- * @see PasswordPolicyUtil
+ * @see com.liferay.portal.service.persistence.PasswordPolicyUtil
  * @generated
  */
 @ProviderType
@@ -4195,7 +4195,7 @@ public class PasswordPolicyPersistenceImpl extends BasePersistenceImpl<PasswordP
 		MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

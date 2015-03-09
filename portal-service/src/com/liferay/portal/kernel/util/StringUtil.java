@@ -2139,19 +2139,15 @@ public class StringUtil {
 	public static String read(InputStream is) throws IOException {
 		StringBundler sb = new StringBundler();
 
-		UnsyncBufferedReader unsyncBufferedReader = new UnsyncBufferedReader(
-			new InputStreamReader(is));
+		try (UnsyncBufferedReader unsyncBufferedReader =
+				new UnsyncBufferedReader(new InputStreamReader(is))) {
 
-		String line = null;
+			String line = null;
 
-		try {
 			while ((line = unsyncBufferedReader.readLine()) != null) {
 				sb.append(line);
 				sb.append(CharPool.NEW_LINE);
 			}
-		}
-		finally {
-			unsyncBufferedReader.close();
 		}
 
 		return sb.toString().trim();
@@ -2160,16 +2156,15 @@ public class StringUtil {
 	public static void readLines(InputStream is, Collection<String> lines)
 		throws IOException {
 
-		UnsyncBufferedReader unsyncBufferedReader = new UnsyncBufferedReader(
-			new InputStreamReader(is));
+		try (UnsyncBufferedReader unsyncBufferedReader =
+				new UnsyncBufferedReader(new InputStreamReader(is))) {
 
-		String line = null;
+			String line = null;
 
-		while ((line = unsyncBufferedReader.readLine()) != null) {
-			lines.add(line);
+			while ((line = unsyncBufferedReader.readLine()) != null) {
+				lines.add(line);
+			}
 		}
-
-		unsyncBufferedReader.close();
 	}
 
 	/**
@@ -3240,7 +3235,7 @@ public class StringUtil {
 			return splitLines(s);
 		}
 
-		List<String> nodeValues = new ArrayList<String>();
+		List<String> nodeValues = new ArrayList<>();
 
 		int offset = 0;
 		int pos = s.indexOf(delimiter, offset);
@@ -3374,7 +3369,7 @@ public class StringUtil {
 			return split(s, delimiter.charAt(0));
 		}
 
-		List<String> nodeValues = new ArrayList<String>();
+		List<String> nodeValues = new ArrayList<>();
 
 		int offset = 0;
 		int pos = s.indexOf(delimiter, offset);
@@ -3607,7 +3602,7 @@ public class StringUtil {
 
 		s = s.trim();
 
-		List<String> lines = new ArrayList<String>();
+		List<String> lines = new ArrayList<>();
 
 		int lastIndex = 0;
 
@@ -4824,8 +4819,8 @@ public class StringUtil {
 		'u', 'v', 'w', 'x', 'y', 'z'
 	};
 
-	private static Log _log = LogFactoryUtil.getLog(StringUtil.class);
+	private static final Log _log = LogFactoryUtil.getLog(StringUtil.class);
 
-	private static String[] _emptyStringArray = new String[0];
+	private static final String[] _emptyStringArray = new String[0];
 
 }

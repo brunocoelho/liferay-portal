@@ -44,10 +44,8 @@ import com.liferay.portal.security.permission.PermissionChecker;
 import com.liferay.portal.security.permission.PermissionCheckerBag;
 import com.liferay.portal.security.permission.PermissionThreadLocal;
 import com.liferay.portal.security.permission.ResourceActionsUtil;
-import com.liferay.portal.security.permission.ResourceBlockIdsBag;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.service.ResourceBlockLocalServiceUtil;
-import com.liferay.portal.service.ResourceBlockPermissionLocalServiceUtil;
 import com.liferay.portal.service.ResourcePermissionLocalServiceUtil;
 import com.liferay.portal.service.RoleLocalServiceUtil;
 import com.liferay.portal.service.UserGroupRoleLocalServiceUtil;
@@ -203,28 +201,10 @@ public class SearchPermissionCheckerImpl implements SearchPermissionChecker {
 		boolean[] hasResourcePermissions = null;
 
 		if (ResourceBlockLocalServiceUtil.isSupported(className)) {
-			ResourceBlockIdsBag resourceBlockIdsBag =
-				ResourceBlockLocalServiceUtil.getResourceBlockIdsBag(
-					companyId, groupId, className, roleIdsArray);
-
-			long actionId = ResourceBlockLocalServiceUtil.getActionId(
-				className, ActionKeys.VIEW);
-
-			List<Long> resourceBlockIds =
-				resourceBlockIdsBag.getResourceBlockIds(actionId);
-
-			hasResourcePermissions = new boolean[roleIdsArray.length];
-
-			for (long resourceBlockId : resourceBlockIds) {
-				for (int i = 0; i < roleIdsArray.length; i++) {
-					int count =
-						ResourceBlockPermissionLocalServiceUtil.
-							getResourceBlockPermissionsCount(
-								resourceBlockId, roleIdsArray[i]);
-
-					hasResourcePermissions[i] = (count > 0);
-				}
-			}
+			hasResourcePermissions =
+				ResourceBlockLocalServiceUtil.hasIndividualPermissions(
+					className, Long.valueOf(classPK), roleIdsArray,
+					ActionKeys.VIEW);
 		}
 		else {
 			hasResourcePermissions =
@@ -233,8 +213,8 @@ public class SearchPermissionCheckerImpl implements SearchPermissionChecker {
 					classPK, roleIdsArray, ActionKeys.VIEW);
 		}
 
-		List<Long> roleIds = new ArrayList<Long>();
-		List<String> groupRoleIds = new ArrayList<String>();
+		List<Long> roleIds = new ArrayList<>();
+		List<String> groupRoleIds = new ArrayList<>();
 
 		for (int i = 0; i < hasResourcePermissions.length; i++) {
 			if (!hasResourcePermissions[i]) {
@@ -294,10 +274,10 @@ public class SearchPermissionCheckerImpl implements SearchPermissionChecker {
 			return query;
 		}
 
-		Set<Group> groups = new LinkedHashSet<Group>();
-		Set<Role> roles = new LinkedHashSet<Role>();
-		Set<UserGroupRole> userGroupRoles = new LinkedHashSet<UserGroupRole>();
-		Map<Long, List<Role>> groupIdsToRoles = new HashMap<Long, List<Role>>();
+		Set<Group> groups = new LinkedHashSet<>();
+		Set<Role> roles = new LinkedHashSet<>();
+		Set<UserGroupRole> userGroupRoles = new LinkedHashSet<>();
+		Map<Long, List<Role>> groupIdsToRoles = new HashMap<>();
 
 		roles.addAll(permissionCheckerBag.getRoles());
 
@@ -309,8 +289,6 @@ public class SearchPermissionCheckerImpl implements SearchPermissionChecker {
 				UserGroupRoleLocalServiceUtil.getUserGroupRoles( userId));
 		}
 		else {
-			groups.addAll(permissionCheckerBag.getGroups());
-
 			for (long groupId : groupIds) {
 				if (GroupLocalServiceUtil.hasUserGroup(userId, groupId)) {
 					Group group = GroupLocalServiceUtil.getGroup(groupId);
@@ -430,6 +408,20 @@ public class SearchPermissionCheckerImpl implements SearchPermissionChecker {
 				}
 			}
 
+			if (ArrayUtil.isNotEmpty(groupIds)) {
+				for (long groupId : groupIds) {
+					if (ResourcePermissionLocalServiceUtil.
+							hasResourcePermission(
+								companyId, className,
+								ResourceConstants.SCOPE_GROUP,
+								String.valueOf(groupId), role.getRoleId(),
+								ActionKeys.VIEW)) {
+
+						groupsQuery.addTerm(Field.GROUP_ID, groupId);
+					}
+				}
+			}
+
 			rolesQuery.addTerm(Field.ROLE_ID, role.getRoleId());
 		}
 
@@ -483,7 +475,7 @@ public class SearchPermissionCheckerImpl implements SearchPermissionChecker {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		SearchPermissionCheckerImpl.class);
 
 }

@@ -123,7 +123,7 @@ public class SetupWizardUtil {
 		// Data sources
 
 		jdbcProperties = PropertiesUtil.getProperties(
-			jdbcProperties,"jdbc.default.",true);
+			jdbcProperties, "jdbc.default.", true);
 
 		DataSourceSwapper.swapCounterDataSource(jdbcProperties);
 		DataSourceSwapper.swapLiferayDataSource(jdbcProperties);
@@ -543,7 +543,8 @@ public class SetupWizardUtil {
 
 	private static final String _PROPERTIES_PREFIX = "properties--";
 
-	private static Log _log = LogFactoryUtil.getLog(SetupWizardUtil.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		SetupWizardUtil.class);
 
 	private static boolean _setupFinished = false;
 

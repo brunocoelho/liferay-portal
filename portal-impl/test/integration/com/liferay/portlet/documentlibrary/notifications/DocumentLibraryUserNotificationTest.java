@@ -16,47 +16,72 @@ package com.liferay.portlet.documentlibrary.notifications;
 
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.Sync;
+import com.liferay.portal.kernel.test.rule.SynchronousMailTestRule;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.ContentTypes;
+import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.BaseModel;
-import com.liferay.portal.test.Sync;
-import com.liferay.portal.test.SynchronousMailExecutionTestListener;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
-import com.liferay.portal.util.BaseUserNotificationTestCase;
+import com.liferay.portal.service.ServiceContext;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portal.util.PortletKeys;
 import com.liferay.portlet.documentlibrary.model.DLFolderConstants;
 import com.liferay.portlet.documentlibrary.service.DLAppLocalServiceUtil;
+import com.liferay.portlet.documentlibrary.service.DLAppServiceUtil;
 import com.liferay.portlet.documentlibrary.util.test.DLAppTestUtil;
+import com.liferay.portlet.notifications.test.BaseUserNotificationTestCase;
 
-import org.junit.runner.RunWith;
+import org.junit.ClassRule;
+import org.junit.Rule;
 
 /**
  * @author Roberto Díaz
  * @author Sergio González
  */
-@ExecutionTestListeners(
-	listeners = {
-		MainServletExecutionTestListener.class,
-		SynchronousMailExecutionTestListener.class
-	})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 @Sync
 public class DocumentLibraryUserNotificationTest
 	extends BaseUserNotificationTestCase {
 
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE,
+			SynchronousMailTestRule.INSTANCE);
+
 	@Override
 	protected BaseModel<?> addBaseModel() throws Exception {
-		FileEntry fileEntry = DLAppTestUtil.addFileEntryWithWorkflow(
-			group.getGroupId(), group.getGroupId(), _folder.getFolderId(),
-			true);
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				group.getGroupId(), TestPropsValues.getUserId());
+
+		DLAppTestUtil.populateNotificationsServiceContext(
+			serviceContext, Constants.ADD);
+
+		FileEntry fileEntry = DLAppLocalServiceUtil.addFileEntry(
+			TestPropsValues.getUserId(), group.getGroupId(),
+			_folder.getFolderId(), RandomTestUtil.randomString() + ".txt",
+			ContentTypes.TEXT_PLAIN, RandomTestUtil.randomBytes(),
+			serviceContext);
 
 		return (BaseModel<?>)fileEntry.getModel();
 	}
 
 	@Override
 	protected void addContainerModel() throws Exception {
-		_folder = DLAppTestUtil.addFolder(
-			group.getGroupId(), DLFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				group.getGroupId(), TestPropsValues.getUserId());
+
+		_folder = DLAppServiceUtil.addFolder(
+			group.getGroupId(), DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			serviceContext);
 	}
 
 	@Override
@@ -74,9 +99,18 @@ public class DocumentLibraryUserNotificationTest
 	protected BaseModel<?> updateBaseModel(BaseModel<?> baseModel)
 		throws Exception {
 
-		FileEntry fileEntry = DLAppTestUtil.updateFileEntryWithWorkflow(
-			group.getGroupId(), (Long)baseModel.getPrimaryKeyObj(), false,
-			true);
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				group.getGroupId(), TestPropsValues.getUserId());
+
+		DLAppTestUtil.populateNotificationsServiceContext(
+			serviceContext, Constants.UPDATE);
+
+		FileEntry fileEntry = DLAppServiceUtil.updateFileEntry(
+			(Long)baseModel.getPrimaryKeyObj(), RandomTestUtil.randomString(),
+			ContentTypes.TEXT_PLAIN, RandomTestUtil.randomString(),
+			StringPool.BLANK, StringPool.BLANK, false,
+			RandomTestUtil.randomBytes(), serviceContext);
 
 		return (BaseModel<?>)fileEntry.getModel();
 	}

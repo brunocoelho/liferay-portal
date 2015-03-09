@@ -15,13 +15,13 @@
 package com.liferay.portlet.messageboards.comment;
 
 import com.liferay.portal.kernel.comment.DuplicateCommentException;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.Function;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.util.Portal;
 import com.liferay.portal.util.PortalUtil;
-import com.liferay.portal.util.test.RandomTestUtil;
 import com.liferay.portlet.messageboards.model.MBMessage;
 import com.liferay.portlet.messageboards.model.MBMessageDisplay;
 import com.liferay.portlet.messageboards.model.MBThread;
@@ -284,7 +284,7 @@ public class MBCommentManagerImplTest extends Mockito {
 
 	private static final String _USER_NAME = RandomTestUtil.randomString();
 
-	private MBCommentManagerImpl _mbCommentManagerImpl =
+	private final MBCommentManagerImpl _mbCommentManagerImpl =
 		new MBCommentManagerImpl();
 
 	@Mock
@@ -302,7 +302,7 @@ public class MBCommentManagerImplTest extends Mockito {
 	@Mock
 	private Portal _portal;
 
-	private ServiceContext _serviceContext = new ServiceContext();
+	private final ServiceContext _serviceContext = new ServiceContext();
 
 	@Mock
 	private Function<String, ServiceContext> _serviceContextFunction;

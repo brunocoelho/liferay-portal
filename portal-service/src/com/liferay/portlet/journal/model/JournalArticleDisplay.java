@@ -14,6 +14,8 @@
 
 package com.liferay.portlet.journal.model;
 
+import com.liferay.portal.theme.ThemeDisplay;
+
 import java.io.Serializable;
 
 /**
@@ -21,6 +23,8 @@ import java.io.Serializable;
  * @author Raymond Augé
  */
 public interface JournalArticleDisplay extends Serializable {
+
+	public String getArticleDisplayImageURL(ThemeDisplay themeDisplay);
 
 	public String getArticleId();
 
@@ -51,8 +55,6 @@ public interface JournalArticleDisplay extends Serializable {
 	public String getSmallImageURL();
 
 	public String getTitle();
-
-	public String getType();
 
 	public String getUrlTitle();
 

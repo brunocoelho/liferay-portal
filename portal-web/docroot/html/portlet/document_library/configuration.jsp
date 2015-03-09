@@ -17,16 +17,14 @@
 <%@ include file="/html/portlet/document_library/init.jsp" %>
 
 <%
-dlPortletInstanceSettings = DLPortletInstanceSettings.getInstance(layout, portletId, request.getParameterMap());
-
-DLConfigurationDisplayContext dlConfigurationDisplayContext = new DLConfigurationDisplayContext(request, dlPortletInstanceSettings);
+DLPortletInstanceSettingsHelper dlPortletInstanceSettingsHelper = new DLPortletInstanceSettingsHelper(dlRequestHelper);
 %>
 
-<liferay-portlet:actionURL portletConfiguration="true" var="configurationActionURL">
+<liferay-portlet:actionURL portletConfiguration="<%= true %>" var="configurationActionURL">
 	<liferay-portlet:param name="settingsScope" value="portletInstance" />
 </liferay-portlet:actionURL>
 
-<liferay-portlet:renderURL portletConfiguration="true" var="configurationRenderURL" />
+<liferay-portlet:renderURL portletConfiguration="<%= true %>" var="configurationRenderURL" />
 
 <aui:form action="<%= configurationActionURL %>" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + renderResponse.getNamespace() + "saveConfiguration();" %>'>
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
@@ -53,7 +51,7 @@ DLConfigurationDisplayContext dlConfigurationDisplayContext = new DLConfiguratio
 							<aui:button name="selectFolderButton" value="select" />
 
 							<%
-							String taglibRemoveFolder = "Liferay.Util.removeFolderSelection('rootFolderId', 'rootFolderName', '" + renderResponse.getNamespace() + "');";
+							String taglibRemoveFolder = "Liferay.Util.removeEntitySelection('rootFolderId', 'rootFolderName', this, '" + renderResponse.getNamespace() + "');";
 							%>
 
 							<aui:button disabled="<%= rootFolderId <= 0 %>" name="removeFolderButton" onClick="<%= taglibRemoveFolder %>" value="remove" />
@@ -80,11 +78,11 @@ DLConfigurationDisplayContext dlConfigurationDisplayContext = new DLConfiguratio
 						<aui:field-wrapper label="display-style-views">
 							<liferay-ui:input-move-boxes
 								leftBoxName="currentDisplayViews"
-								leftList="<%= dlConfigurationDisplayContext.getCurrentDisplayViews() %>"
+								leftList="<%= dlPortletInstanceSettingsHelper.getCurrentDisplayViews() %>"
 								leftReorder="true"
 								leftTitle="current"
 								rightBoxName="availableDisplayViews"
-								rightList="<%= dlConfigurationDisplayContext.getAvailableDisplayViews() %>"
+								rightList="<%= dlPortletInstanceSettingsHelper.getAvailableDisplayViews() %>"
 								rightTitle="available"
 							/>
 						</aui:field-wrapper>
@@ -96,11 +94,11 @@ DLConfigurationDisplayContext dlConfigurationDisplayContext = new DLConfiguratio
 						<aui:field-wrapper label="show-columns">
 							<liferay-ui:input-move-boxes
 								leftBoxName="currentEntryColumns"
-								leftList="<%= dlConfigurationDisplayContext.getCurrentEntryColumns() %>"
+								leftList="<%= dlPortletInstanceSettingsHelper.getCurrentEntryColumns() %>"
 								leftReorder="true"
 								leftTitle="current"
 								rightBoxName="availableEntryColumns"
-								rightList="<%= dlConfigurationDisplayContext.getAvailableEntryColumns() %>"
+								rightList="<%= dlPortletInstanceSettingsHelper.getAvailableEntryColumns() %>"
 								rightTitle="available"
 							/>
 						</aui:field-wrapper>
@@ -113,8 +111,8 @@ DLConfigurationDisplayContext dlConfigurationDisplayContext = new DLConfiguratio
 				</liferay-ui:panel>
 			</liferay-ui:panel-container>
 
-			<aui:script use="aui-base">
-				A.one('#<portlet:namespace />selectFolderButton').on(
+			<aui:script>
+				AUI.$('#<portlet:namespace />selectFolderButton').on(
 					'click',
 					function(event) {
 						Liferay.Util.selectEntity(
@@ -129,6 +127,7 @@ DLConfigurationDisplayContext dlConfigurationDisplayContext = new DLConfiguratio
 
 								<liferay-portlet:renderURL portletName="<%= portletResource %>" var="selectFolderURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
 									<portlet:param name="struts_action" value="/document_library/select_folder" />
+									<portlet:param name="folderId" value="<%= String.valueOf(rootFolderId) %>" />
 									<portlet:param name="ignoreRootFolder" value="<%= Boolean.TRUE.toString() %>" />
 								</liferay-portlet:renderURL>
 
@@ -157,15 +156,14 @@ DLConfigurationDisplayContext dlConfigurationDisplayContext = new DLConfiguratio
 </aui:form>
 
 <aui:script>
-	Liferay.provide(
-		window,
-		'<portlet:namespace />saveConfiguration',
-		function() {
-			document.<portlet:namespace />fm.<portlet:namespace />displayViews.value = Liferay.Util.listSelect(document.<portlet:namespace />fm.<portlet:namespace />currentDisplayViews);
-			document.<portlet:namespace />fm.<portlet:namespace />entryColumns.value = Liferay.Util.listSelect(document.<portlet:namespace />fm.<portlet:namespace />currentEntryColumns);
+	function <portlet:namespace />saveConfiguration() {
+		var Util = Liferay.Util;
 
-			submitForm(document.<portlet:namespace />fm);
-		},
-		['liferay-util-list-fields']
-	);
+		var form = $(document.<portlet:namespace />fm);
+
+		form.fm('displayViews').val(Util.listSelect(form.fm('currentDisplayViews')));
+		form.fm('entryColumns').val(Util.listSelect(form.fm('currentEntryColumns')));
+
+		submitForm(form);
+	}
 </aui:script>

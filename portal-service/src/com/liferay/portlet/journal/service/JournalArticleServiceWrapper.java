@@ -52,12 +52,7 @@ public class JournalArticleServiceWrapper implements JournalArticleService,
 	* @param titleMap the web content article's locales and localized titles
 	* @param descriptionMap the web content article's locales and localized
 	descriptions
-	* @param content the HTML content wrapped in XML. For more information,
-	see the content example in the class description for {@link
-	JournalArticleLocalServiceImpl}.
-	* @param type the structure's type, if the web content article is related
-	to a DDM structure. For more information, see {@link
-	com.liferay.portlet.dynamicdatamapping.model.DDMStructureConstants}.
+	* @param content the HTML content wrapped in XML
 	* @param ddmStructureKey the primary key of the web content article's DDM
 	structure, if the article is related to a DDM structure, or
 	<code>null</code> otherwise
@@ -114,20 +109,20 @@ public class JournalArticleServiceWrapper implements JournalArticleService,
 		java.lang.String articleId, boolean autoArticleId,
 		java.util.Map<java.util.Locale, java.lang.String> titleMap,
 		java.util.Map<java.util.Locale, java.lang.String> descriptionMap,
-		java.lang.String content, java.lang.String type,
-		java.lang.String ddmStructureKey, java.lang.String ddmTemplateKey,
-		java.lang.String layoutUuid, int displayDateMonth, int displayDateDay,
-		int displayDateYear, int displayDateHour, int displayDateMinute,
-		int expirationDateMonth, int expirationDateDay, int expirationDateYear,
-		int expirationDateHour, int expirationDateMinute, boolean neverExpire,
-		int reviewDateMonth, int reviewDateDay, int reviewDateYear,
-		int reviewDateHour, int reviewDateMinute, boolean neverReview,
-		boolean indexable, java.lang.String articleURL,
+		java.lang.String content, java.lang.String ddmStructureKey,
+		java.lang.String ddmTemplateKey, java.lang.String layoutUuid,
+		int displayDateMonth, int displayDateDay, int displayDateYear,
+		int displayDateHour, int displayDateMinute, int expirationDateMonth,
+		int expirationDateDay, int expirationDateYear, int expirationDateHour,
+		int expirationDateMinute, boolean neverExpire, int reviewDateMonth,
+		int reviewDateDay, int reviewDateYear, int reviewDateHour,
+		int reviewDateMinute, boolean neverReview, boolean indexable,
+		java.lang.String articleURL,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 		return _journalArticleService.addArticle(groupId, folderId,
 			classNameId, classPK, articleId, autoArticleId, titleMap,
-			descriptionMap, content, type, ddmStructureKey, ddmTemplateKey,
+			descriptionMap, content, ddmStructureKey, ddmTemplateKey,
 			layoutUuid, displayDateMonth, displayDateDay, displayDateYear,
 			displayDateHour, displayDateMinute, expirationDateMonth,
 			expirationDateDay, expirationDateYear, expirationDateHour,
@@ -156,11 +151,8 @@ public class JournalArticleServiceWrapper implements JournalArticleService,
 	* @param descriptionMap the web content article's locales and localized
 	descriptions
 	* @param content the HTML content wrapped in XML. For more information,
-	see the content example in the class description for {@link
-	JournalArticleLocalServiceImpl}.
-	* @param type the structure's type, if the web content article is related
-	to a DDM structure. For more information, see {@link
-	com.liferay.portlet.dynamicdatamapping.model.DDMStructureConstants}.
+	see the content example in the {@link #updateArticle(long, long,
+	String, double, String, ServiceContext)} description.
 	* @param ddmStructureKey the primary key of the web content article's DDM
 	structure, if the article is related to a DDM structure, or
 	<code>null</code> otherwise
@@ -221,22 +213,22 @@ public class JournalArticleServiceWrapper implements JournalArticleService,
 		java.lang.String articleId, boolean autoArticleId,
 		java.util.Map<java.util.Locale, java.lang.String> titleMap,
 		java.util.Map<java.util.Locale, java.lang.String> descriptionMap,
-		java.lang.String content, java.lang.String type,
-		java.lang.String ddmStructureKey, java.lang.String ddmTemplateKey,
-		java.lang.String layoutUuid, int displayDateMonth, int displayDateDay,
-		int displayDateYear, int displayDateHour, int displayDateMinute,
-		int expirationDateMonth, int expirationDateDay, int expirationDateYear,
-		int expirationDateHour, int expirationDateMinute, boolean neverExpire,
-		int reviewDateMonth, int reviewDateDay, int reviewDateYear,
-		int reviewDateHour, int reviewDateMinute, boolean neverReview,
-		boolean indexable, boolean smallImage, java.lang.String smallImageURL,
+		java.lang.String content, java.lang.String ddmStructureKey,
+		java.lang.String ddmTemplateKey, java.lang.String layoutUuid,
+		int displayDateMonth, int displayDateDay, int displayDateYear,
+		int displayDateHour, int displayDateMinute, int expirationDateMonth,
+		int expirationDateDay, int expirationDateYear, int expirationDateHour,
+		int expirationDateMinute, boolean neverExpire, int reviewDateMonth,
+		int reviewDateDay, int reviewDateYear, int reviewDateHour,
+		int reviewDateMinute, boolean neverReview, boolean indexable,
+		boolean smallImage, java.lang.String smallImageURL,
 		java.io.File smallFile, java.util.Map<java.lang.String, byte[]> images,
 		java.lang.String articleURL,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 		return _journalArticleService.addArticle(groupId, folderId,
 			classNameId, classPK, articleId, autoArticleId, titleMap,
-			descriptionMap, content, type, ddmStructureKey, ddmTemplateKey,
+			descriptionMap, content, ddmStructureKey, ddmTemplateKey,
 			layoutUuid, displayDateMonth, displayDateDay, displayDateYear,
 			displayDateHour, displayDateMinute, expirationDateMonth,
 			expirationDateDay, expirationDateYear, expirationDateHour,
@@ -1070,6 +1062,29 @@ public class JournalArticleServiceWrapper implements JournalArticleService,
 	* @param articleId the primary key of the web content article
 	* @param newFolderId the primary key of the web content article's new
 	folder
+	* @throws PortalException if the user did not have permission to update
+	any one of the versions of the web content article or if any
+	one of the versions of the web content article could not be
+	moved to the folder
+	* @deprecated As of 7.0.0, replaced by {@link #moveArticle(long, String,
+	long, ServiceContext)}
+	*/
+	@Deprecated
+	@Override
+	public void moveArticle(long groupId, java.lang.String articleId,
+		long newFolderId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+		_journalArticleService.moveArticle(groupId, articleId, newFolderId);
+	}
+
+	/**
+	* Moves all versions of the the web content article matching the group and
+	* article ID to the folder.
+	*
+	* @param groupId the primary key of the web content article's group
+	* @param articleId the primary key of the web content article
+	* @param newFolderId the primary key of the web content article's new
+	folder
 	* @throws PortalException if the user did not have permission to update any
 	one of the versions of the web content article or if any one of
 	the versions of the web content article could not be moved to the
@@ -1077,9 +1092,11 @@ public class JournalArticleServiceWrapper implements JournalArticleService,
 	*/
 	@Override
 	public void moveArticle(long groupId, java.lang.String articleId,
-		long newFolderId)
+		long newFolderId,
+		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		_journalArticleService.moveArticle(groupId, articleId, newFolderId);
+		_journalArticleService.moveArticle(groupId, articleId, newFolderId,
+			serviceContext);
 	}
 
 	/**
@@ -1264,8 +1281,6 @@ public class JournalArticleServiceWrapper implements JournalArticleService,
 	<code>null</code>)
 	* @param content the content keywords (space separated, optionally
 	<code>null</code>)
-	* @param type the web content article's type (optionally
-	<code>null</code>)
 	* @param ddmStructureKey the primary key of the web content article's DDM
 	structure, if the article is related to a DDM structure, or
 	<code>null</code> otherwise
@@ -1298,13 +1313,13 @@ public class JournalArticleServiceWrapper implements JournalArticleService,
 		long companyId, long groupId, java.util.List<java.lang.Long> folderIds,
 		long classNameId, java.lang.String articleId, java.lang.Double version,
 		java.lang.String title, java.lang.String description,
-		java.lang.String content, java.lang.String type,
-		java.lang.String ddmStructureKey, java.lang.String ddmTemplateKey,
-		java.util.Date displayDateGT, java.util.Date displayDateLT, int status,
-		java.util.Date reviewDate, boolean andOperator, int start, int end,
+		java.lang.String content, java.lang.String ddmStructureKey,
+		java.lang.String ddmTemplateKey, java.util.Date displayDateGT,
+		java.util.Date displayDateLT, int status, java.util.Date reviewDate,
+		boolean andOperator, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator<com.liferay.portlet.journal.model.JournalArticle> obc) {
 		return _journalArticleService.search(companyId, groupId, folderIds,
-			classNameId, articleId, version, title, description, content, type,
+			classNameId, articleId, version, title, description, content,
 			ddmStructureKey, ddmTemplateKey, displayDateGT, displayDateLT,
 			status, reviewDate, andOperator, start, end, obc);
 	}
@@ -1343,8 +1358,6 @@ public class JournalArticleServiceWrapper implements JournalArticleService,
 	<code>null</code>)
 	* @param content the content keywords (space separated, optionally
 	<code>null</code>)
-	* @param type the web content article's type (optionally
-	<code>null</code>)
 	* @param ddmStructureKeys the primary keys of the web content article's
 	DDM structures, if the article is related to a DDM structure, or
 	<code>null</code> otherwise
@@ -1379,14 +1392,13 @@ public class JournalArticleServiceWrapper implements JournalArticleService,
 		long companyId, long groupId, java.util.List<java.lang.Long> folderIds,
 		long classNameId, java.lang.String articleId, java.lang.Double version,
 		java.lang.String title, java.lang.String description,
-		java.lang.String content, java.lang.String type,
-		java.lang.String[] ddmStructureKeys,
+		java.lang.String content, java.lang.String[] ddmStructureKeys,
 		java.lang.String[] ddmTemplateKeys, java.util.Date displayDateGT,
 		java.util.Date displayDateLT, int status, java.util.Date reviewDate,
 		boolean andOperator, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator<com.liferay.portlet.journal.model.JournalArticle> obc) {
 		return _journalArticleService.search(companyId, groupId, folderIds,
-			classNameId, articleId, version, title, description, content, type,
+			classNameId, articleId, version, title, description, content,
 			ddmStructureKeys, ddmTemplateKeys, displayDateGT, displayDateLT,
 			status, reviewDate, andOperator, start, end, obc);
 	}
@@ -1422,8 +1434,6 @@ public class JournalArticleServiceWrapper implements JournalArticleService,
 	query criteria; otherwise it uses the AND operator.
 	* @param version the web content article's version (optionally
 	<code>null</code>)
-	* @param type the web content article's type (optionally
-	<code>null</code>)
 	* @param ddmStructureKey the primary key of the web content article's DDM
 	structure, if the article is related to a DDM structure, or
 	<code>null</code> otherwise
@@ -1452,29 +1462,28 @@ public class JournalArticleServiceWrapper implements JournalArticleService,
 	public java.util.List<com.liferay.portlet.journal.model.JournalArticle> search(
 		long companyId, long groupId, java.util.List<java.lang.Long> folderIds,
 		long classNameId, java.lang.String keywords, java.lang.Double version,
-		java.lang.String type, java.lang.String ddmStructureKey,
-		java.lang.String ddmTemplateKey, java.util.Date displayDateGT,
-		java.util.Date displayDateLT, int status, java.util.Date reviewDate,
-		int start, int end,
+		java.lang.String ddmStructureKey, java.lang.String ddmTemplateKey,
+		java.util.Date displayDateGT, java.util.Date displayDateLT, int status,
+		java.util.Date reviewDate, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator<com.liferay.portlet.journal.model.JournalArticle> obc) {
 		return _journalArticleService.search(companyId, groupId, folderIds,
-			classNameId, keywords, version, type, ddmStructureKey,
-			ddmTemplateKey, displayDateGT, displayDateLT, status, reviewDate,
-			start, end, obc);
+			classNameId, keywords, version, ddmStructureKey, ddmTemplateKey,
+			displayDateGT, displayDateLT, status, reviewDate, start, end, obc);
 	}
 
 	/**
-	* Returns a range of all the web content articles matching the group, creator,
-	* creator, and workflow status using the indexer. It is preferable to use this
-	* method instead of the non-indexed version whenever possible for performance
-	* reasons.
+	* Returns a range of all the web content articles matching the group,
+	* creator, creator, and workflow status using the indexer. It is preferable
+	* to use this method instead of the non-indexed version whenever possible
+	* for performance reasons.
 	*
 	* <p>
 	* Useful when paginating results. Returns a maximum of <code>end -
 	* start</code> instances. <code>start</code> and <code>end</code> are not
 	* primary keys, they are indexes in the result set. Thus, <code>0</code>
 	* refers to the first result in the set. Setting both <code>start</code>
-	* and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full
+	* and <code>end</code> to {@link
+	* com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full
 	* result set.
 	* </p>
 	*
@@ -1523,8 +1532,6 @@ public class JournalArticleServiceWrapper implements JournalArticleService,
 	<code>null</code>)
 	* @param content the content keywords (space separated, optionally
 	<code>null</code>)
-	* @param type the web content article's type (optionally
-	<code>null</code>)
 	* @param ddmStructureKey the primary key of the web content article's DDM
 	structure, if the article is related to a DDM structure, or
 	<code>null</code> otherwise
@@ -1551,13 +1558,13 @@ public class JournalArticleServiceWrapper implements JournalArticleService,
 		java.util.List<java.lang.Long> folderIds, long classNameId,
 		java.lang.String articleId, java.lang.Double version,
 		java.lang.String title, java.lang.String description,
-		java.lang.String content, java.lang.String type,
-		java.lang.String ddmStructureKey, java.lang.String ddmTemplateKey,
-		java.util.Date displayDateGT, java.util.Date displayDateLT, int status,
-		java.util.Date reviewDate, boolean andOperator) {
+		java.lang.String content, java.lang.String ddmStructureKey,
+		java.lang.String ddmTemplateKey, java.util.Date displayDateGT,
+		java.util.Date displayDateLT, int status, java.util.Date reviewDate,
+		boolean andOperator) {
 		return _journalArticleService.searchCount(companyId, groupId,
 			folderIds, classNameId, articleId, version, title, description,
-			content, type, ddmStructureKey, ddmTemplateKey, displayDateGT,
+			content, ddmStructureKey, ddmTemplateKey, displayDateGT,
 			displayDateLT, status, reviewDate, andOperator);
 	}
 
@@ -1584,8 +1591,6 @@ public class JournalArticleServiceWrapper implements JournalArticleService,
 	* @param description the description keywords (space separated, optionally
 	<code>null</code>)
 	* @param content the content keywords (space separated, optionally
-	<code>null</code>)
-	* @param type the web content article's type (optionally
 	<code>null</code>)
 	* @param ddmStructureKeys the primary keys of the web content article's
 	DDM structures, if the article is related to a DDM structure, or
@@ -1615,14 +1620,13 @@ public class JournalArticleServiceWrapper implements JournalArticleService,
 		java.util.List<java.lang.Long> folderIds, long classNameId,
 		java.lang.String articleId, java.lang.Double version,
 		java.lang.String title, java.lang.String description,
-		java.lang.String content, java.lang.String type,
-		java.lang.String[] ddmStructureKeys,
+		java.lang.String content, java.lang.String[] ddmStructureKeys,
 		java.lang.String[] ddmTemplateKeys, java.util.Date displayDateGT,
 		java.util.Date displayDateLT, int status, java.util.Date reviewDate,
 		boolean andOperator) {
 		return _journalArticleService.searchCount(companyId, groupId,
 			folderIds, classNameId, articleId, version, title, description,
-			content, type, ddmStructureKeys, ddmTemplateKeys, displayDateGT,
+			content, ddmStructureKeys, ddmTemplateKeys, displayDateGT,
 			displayDateLT, status, reviewDate, andOperator);
 	}
 
@@ -1647,8 +1651,6 @@ public class JournalArticleServiceWrapper implements JournalArticleService,
 	query criteria; otherwise it uses the AND operator.
 	* @param version the web content article's version (optionally
 	<code>null</code>)
-	* @param type the web content article's type (optionally
-	<code>null</code>)
 	* @param ddmStructureKey the primary key of the web content article's DDM
 	structure, if the article is related to a DDM structure, or
 	<code>null</code> otherwise
@@ -1671,11 +1673,11 @@ public class JournalArticleServiceWrapper implements JournalArticleService,
 	public int searchCount(long companyId, long groupId,
 		java.util.List<java.lang.Long> folderIds, long classNameId,
 		java.lang.String keywords, java.lang.Double version,
-		java.lang.String type, java.lang.String ddmStructureKey,
-		java.lang.String ddmTemplateKey, java.util.Date displayDateGT,
-		java.util.Date displayDateLT, int status, java.util.Date reviewDate) {
+		java.lang.String ddmStructureKey, java.lang.String ddmTemplateKey,
+		java.util.Date displayDateGT, java.util.Date displayDateLT, int status,
+		java.util.Date reviewDate) {
 		return _journalArticleService.searchCount(companyId, groupId,
-			folderIds, classNameId, keywords, version, type, ddmStructureKey,
+			folderIds, classNameId, keywords, version, ddmStructureKey,
 			ddmTemplateKey, displayDateGT, displayDateLT, status, reviewDate);
 	}
 
@@ -1728,23 +1730,39 @@ public class JournalArticleServiceWrapper implements JournalArticleService,
 	* Updates the web content article matching the version, replacing its
 	* folder and content.
 	*
+	* <p>
+	* The web content articles hold HTML content wrapped in XML. The XML lets
+	* you specify the article's default locale and available locales. Here is a
+	* content example:
+	* </p>
+	*
+	* <p>
+	* <pre>
+	* <code>
+	* &lt;?xml version='1.0' encoding='UTF-8'?&gt;
+	* &lt;root default-locale="en_US" available-locales="en_US"&gt;
+	*     &lt;static-content language-id="en_US"&gt;
+	*         &lt;![CDATA[&lt;p&gt;&lt;b&gt;&lt;i&gt;test&lt;i&gt; content&lt;b&gt;&lt;/p&gt;]]&gt;
+	*     &lt;/static-content&gt;
+	* &lt;/root&gt;
+	* </code>
+	* </pre>
+	* </p>
+	*
 	* @param groupId the primary key of the web content article's group
 	* @param folderId the primary key of the web content article folder
 	* @param articleId the primary key of the web content article
 	* @param version the web content article's version
-	* @param content the HTML content wrapped in XML. For more information,
-	see the content example in the class description for {@link
-	JournalArticleLocalServiceImpl}.
+	* @param content the HTML content wrapped in XML.
 	* @param serviceContext the service context to be applied. Can set the
 	modification date, expando bridge attributes, asset category IDs,
-	asset tag names, asset link entry IDs, workflow actions, the
-	"defaultLanguageId" and "urlTitle" attributes, and can set
-	whether to add the default command update for the web content
-	article. With respect to social activities, by setting the
-	service context's command to {@link
-	com.liferay.portal.kernel.util.Constants#UPDATE}, the invocation
-	is considered a web content update activity; otherwise it is
-	considered a web content add activity.
+	asset tag names, asset link entry IDs, workflow actions, the and
+	"urlTitle" attributes, and can set whether to add the default
+	command update for the web content article. With respect to
+	social activities, by setting the service context's command to
+	{@link com.liferay.portal.kernel.util.Constants#UPDATE}, the
+	invocation is considered a web content update activity; otherwise
+	it is considered a web content add activity.
 	* @return the updated web content article
 	* @throws PortalException if the user did not have permission to update the
 	web content article, if a user with the primary key or a matching
@@ -1772,11 +1790,8 @@ public class JournalArticleServiceWrapper implements JournalArticleService,
 	* @param descriptionMap the web content article's locales and localized
 	descriptions
 	* @param content the HTML content wrapped in XML. For more information,
-	see the content example in the class description for {@link
-	JournalArticleLocalServiceImpl}.
-	* @param type the structure's type, if the web content article is related
-	to a DDM structure. For more information, see {@link
-	com.liferay.portlet.dynamicdatamapping.model.DDMStructureConstants}.
+	see the content example in the {@link #updateArticle(long, long,
+	String, double, String, ServiceContext)} description.
 	* @param ddmStructureKey the primary key of the web content article's DDM
 	structure, if the article is related to a DDM structure, or
 	<code>null</code> otherwise
@@ -1830,14 +1845,13 @@ public class JournalArticleServiceWrapper implements JournalArticleService,
 	<code>null</code>)
 	* @param serviceContext the service context to be applied. Can set the
 	modification date, expando bridge attributes, asset category IDs,
-	asset tag names, asset link entry IDs, workflow actions, the
-	"defaultLanguageId" and "urlTitle" attributes, and can set
-	whether to add the default command update for the web content
-	article. With respect to social activities, by setting the
-	service context's command to {@link
-	com.liferay.portal.kernel.util.Constants#UPDATE}, the invocation
-	is considered a web content update activity; otherwise it is
-	considered a web content add activity.
+	asset tag names, asset link entry IDs, workflow actions, the and
+	"urlTitle" attributes, and can set whether to add the default
+	command update for the web content article. With respect to
+	social activities, by setting the service context's command to
+	{@link com.liferay.portal.kernel.util.Constants#UPDATE}, the
+	invocation is considered a web content update activity; otherwise
+	it is considered a web content add activity.
 	* @return the updated web content article
 	* @throws PortalException if the user did not have permission to update the
 	web content article, if a user with the primary key or a matching
@@ -1850,21 +1864,21 @@ public class JournalArticleServiceWrapper implements JournalArticleService,
 		double version,
 		java.util.Map<java.util.Locale, java.lang.String> titleMap,
 		java.util.Map<java.util.Locale, java.lang.String> descriptionMap,
-		java.lang.String content, java.lang.String type,
-		java.lang.String ddmStructureKey, java.lang.String ddmTemplateKey,
-		java.lang.String layoutUuid, int displayDateMonth, int displayDateDay,
-		int displayDateYear, int displayDateHour, int displayDateMinute,
-		int expirationDateMonth, int expirationDateDay, int expirationDateYear,
-		int expirationDateHour, int expirationDateMinute, boolean neverExpire,
-		int reviewDateMonth, int reviewDateDay, int reviewDateYear,
-		int reviewDateHour, int reviewDateMinute, boolean neverReview,
-		boolean indexable, boolean smallImage, java.lang.String smallImageURL,
+		java.lang.String content, java.lang.String ddmStructureKey,
+		java.lang.String ddmTemplateKey, java.lang.String layoutUuid,
+		int displayDateMonth, int displayDateDay, int displayDateYear,
+		int displayDateHour, int displayDateMinute, int expirationDateMonth,
+		int expirationDateDay, int expirationDateYear, int expirationDateHour,
+		int expirationDateMinute, boolean neverExpire, int reviewDateMonth,
+		int reviewDateDay, int reviewDateYear, int reviewDateHour,
+		int reviewDateMinute, boolean neverReview, boolean indexable,
+		boolean smallImage, java.lang.String smallImageURL,
 		java.io.File smallFile, java.util.Map<java.lang.String, byte[]> images,
 		java.lang.String articleURL,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 		return _journalArticleService.updateArticle(groupId, folderId,
-			articleId, version, titleMap, descriptionMap, content, type,
+			articleId, version, titleMap, descriptionMap, content,
 			ddmStructureKey, ddmTemplateKey, layoutUuid, displayDateMonth,
 			displayDateDay, displayDateYear, displayDateHour,
 			displayDateMinute, expirationDateMonth, expirationDateDay,
@@ -1889,20 +1903,19 @@ public class JournalArticleServiceWrapper implements JournalArticleService,
 	* @param descriptionMap the web content article's locales and localized
 	descriptions
 	* @param content the HTML content wrapped in XML. For more information,
-	see the content example in the class description for {@link
-	JournalArticleLocalServiceImpl}.
+	see the content example in the {@link #updateArticle(long, long,
+	String, double, String, ServiceContext)} description.
 	* @param layoutUuid the unique string identifying the web content
 	article's display page
 	* @param serviceContext the service context to be applied. Can set the
 	modification date, expando bridge attributes, asset category IDs,
-	asset tag names, asset link entry IDs, workflow actions, the
-	"defaultLanguageId" and "urlTitle" attributes, and can set
-	whether to add the default command update for the web content
-	article. With respect to social activities, by setting the
-	service context's command to {@link
-	com.liferay.portal.kernel.util.Constants#UPDATE}, the invocation
-	is considered a web content update activity; otherwise it is
-	considered a web content add activity.
+	asset tag names, asset link entry IDs, workflow actions, the and
+	"urlTitle" attributes, and can set whether to add the default
+	command update for the web content article. With respect to
+	social activities, by setting the service context's command to
+	{@link com.liferay.portal.kernel.util.Constants#UPDATE}, the
+	invocation is considered a web content update activity; otherwise
+	it is considered a web content add activity.
 	* @return the updated web content article
 	* @throws PortalException if a user with the primary key or a matching web
 	content article could not be found, or if a portal exception
@@ -1949,8 +1962,8 @@ public class JournalArticleServiceWrapper implements JournalArticleService,
 	* @param title the translated web content article title
 	* @param description the translated web content article description
 	* @param content the HTML content wrapped in XML. For more information,
-	see the content example in the class description for {@link
-	JournalArticleLocalServiceImpl}.
+	see the content example in the {@link #updateArticle(long, long,
+	String, double, String, ServiceContext)} description.
 	* @param images the web content's images
 	* @param serviceContext the service context to be applied. Can set the
 	modification date and "urlTitle" attribute for the web content
@@ -1982,8 +1995,8 @@ public class JournalArticleServiceWrapper implements JournalArticleService,
 	* @param articleId the primary key of the web content article
 	* @param version the web content article's version
 	* @param content the HTML content wrapped in XML. For more information,
-	see the content example in the class description for {@link
-	JournalArticleLocalServiceImpl}.
+	see the content example in the {@link #updateArticle(long, long,
+	String, double, String, ServiceContext)} description.
 	* @return the updated web content article
 	* @throws PortalException if the user did not have permission to update the
 	web content article or if a matching web content article could

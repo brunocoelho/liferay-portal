@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
@@ -50,6 +51,7 @@ import com.liferay.portal.util.PortalUtil;
 import com.liferay.portal.util.PortletKeys;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.util.WebKeys;
+import com.liferay.portlet.PortletURLUtil;
 import com.liferay.portlet.documentlibrary.store.DLStoreUtil;
 import com.liferay.portlet.trash.model.TrashEntry;
 import com.liferay.portlet.trash.model.TrashVersion;
@@ -70,6 +72,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.portlet.ActionRequest;
+import javax.portlet.PortletException;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
 
@@ -84,19 +87,22 @@ public class TrashImpl implements Trash {
 
 	@Override
 	public void addBaseModelBreadcrumbEntries(
-			HttpServletRequest request, String className, long classPK,
-			PortletURL containerModelURL)
-		throws PortalException {
+			HttpServletRequest request,
+			LiferayPortletResponse liferayPortletResponse, String className,
+			long classPK, PortletURL containerModelURL)
+		throws PortalException, PortletException {
 
 		addBreadcrumbEntries(
-			request, className, classPK, "classPK", containerModelURL);
+			request, liferayPortletResponse, className, classPK, "classPK",
+			containerModelURL);
 	}
 
 	@Override
 	public void addContainerModelBreadcrumbEntries(
-			HttpServletRequest request, String className, long classPK,
-			PortletURL containerModelURL)
-		throws PortalException {
+			HttpServletRequest request,
+			LiferayPortletResponse liferayPortletResponse, String className,
+			long classPK, PortletURL containerModelURL)
+		throws PortalException, PortletException {
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
 			WebKeys.THEME_DISPLAY);
@@ -104,12 +110,13 @@ public class TrashImpl implements Trash {
 		TrashHandler trashHandler = TrashHandlerRegistryUtil.getTrashHandler(
 			className);
 
-		String rootContainerModelName = LanguageUtil.get(
-			themeDisplay.getLocale(), trashHandler.getRootContainerModelName());
+		String rootContainerModelTitle =
+			trashHandler.getRootContainerModelTitle(
+				classPK, themeDisplay.getLocale());
 
 		if (classPK == 0) {
 			PortalUtil.addPortletBreadcrumbEntry(
-				request, rootContainerModelName, null);
+				request, rootContainerModelTitle, null);
 
 			return;
 		}
@@ -117,10 +124,11 @@ public class TrashImpl implements Trash {
 		containerModelURL.setParameter("containerModelId", "0");
 
 		PortalUtil.addPortletBreadcrumbEntry(
-			request, rootContainerModelName, containerModelURL.toString());
+			request, rootContainerModelTitle, containerModelURL.toString());
 
 		addBreadcrumbEntries(
-			request, className, classPK, "containerModelId", containerModelURL);
+			request, liferayPortletResponse, className, classPK,
+			"containerModelId", containerModelURL);
 	}
 
 	@Override
@@ -139,9 +147,9 @@ public class TrashImpl implements Trash {
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		List<String> classNames = new ArrayList<String>();
-		List<Long> restoreTrashEntryIds = new ArrayList<Long>();
-		List<String> titles = new ArrayList<String>();
+		List<String> classNames = new ArrayList<>();
+		List<Long> restoreTrashEntryIds = new ArrayList<>();
+		List<String> titles = new ArrayList<>();
 
 		for (int i = 0; i < trashedModels.size(); i++) {
 			try {
@@ -162,7 +170,7 @@ public class TrashImpl implements Trash {
 			}
 		}
 
-		Map<String, String[]> data = new HashMap<String, String[]>();
+		Map<String, String[]> data = new HashMap<>();
 
 		data.put(Constants.CMD, new String[] {cmd});
 
@@ -192,7 +200,7 @@ public class TrashImpl implements Trash {
 	public void addTrashSessionMessages(
 		ActionRequest actionRequest, TrashedModel trashedModel, String cmd) {
 
-		List<TrashedModel> trashedModels = new ArrayList<TrashedModel>();
+		List<TrashedModel> trashedModels = new ArrayList<>();
 
 		trashedModels.add(trashedModel);
 
@@ -219,8 +227,20 @@ public class TrashImpl implements Trash {
 	}
 
 	@Override
+	public Group disableTrash(Group group) {
+		UnicodeProperties typeSettingsProperties =
+			group.getParentLiveGroupTypeSettingsProperties();
+
+		typeSettingsProperties.setProperty("trashEnabled", StringPool.FALSE);
+
+		group.setTypeSettingsProperties(typeSettingsProperties);
+
+		return GroupLocalServiceUtil.updateGroup(group);
+	}
+
+	@Override
 	public List<TrashEntry> getEntries(Hits hits) {
-		List<TrashEntry> entries = new ArrayList<TrashEntry>();
+		List<TrashEntry> entries = new ArrayList<>();
 
 		for (Document document : hits.getDocs()) {
 			String entryClassName = GetterUtil.getString(
@@ -361,7 +381,12 @@ public class TrashImpl implements Trash {
 
 	@Override
 	public String getOriginalTitle(String title) {
-		return getOriginalTitle(title, StringPool.SLASH);
+		return getOriginalTitle(title, "title", StringPool.SLASH);
+	}
+
+	@Override
+	public String getOriginalTitle(String title, String paramName) {
+		return getOriginalTitle(title, paramName, StringPool.SLASH);
 	}
 
 	@Override
@@ -480,12 +505,22 @@ public class TrashImpl implements Trash {
 	}
 
 	protected void addBreadcrumbEntries(
-			HttpServletRequest request, String className, long classPK,
-			String paramName, PortletURL containerModelURL)
-		throws PortalException {
+			HttpServletRequest request,
+			LiferayPortletResponse liferayPortletResponse, String className,
+			long classPK, String paramName, PortletURL containerModelURL)
+		throws PortalException, PortletException {
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
 			WebKeys.THEME_DISPLAY);
+
+		PortletURL portletURL = PortletURLUtil.clone(
+			containerModelURL, liferayPortletResponse);
+
+		portletURL.setParameter("struts_action", "/trash/view");
+
+		PortalUtil.addPortletBreadcrumbEntry(
+			request, LanguageUtil.get(themeDisplay.getLocale(), "recycle-bin"),
+			portletURL.toString());
 
 		TrashHandler trashHandler = TrashHandlerRegistryUtil.getTrashHandler(
 			className);
@@ -494,12 +529,6 @@ public class TrashImpl implements Trash {
 			trashHandler.getParentContainerModels(classPK);
 
 		Collections.reverse(containerModels);
-
-		containerModelURL.setParameter("struts_action", "/trash/view");
-
-		PortalUtil.addPortletBreadcrumbEntry(
-			request, LanguageUtil.get(themeDisplay.getLocale(), "recycle-bin"),
-			containerModelURL.toString());
 
 		for (ContainerModel containerModel : containerModels) {
 			TrashHandler containerModelTrashHandler =
@@ -512,10 +541,9 @@ public class TrashImpl implements Trash {
 				continue;
 			}
 
-			containerModelURL.setParameter(
-				"struts_action", "/trash/view_content");
+			portletURL.setParameter("struts_action", "/trash/view_content");
 
-			containerModelURL.setParameter(
+			portletURL.setParameter(
 				paramName,
 				String.valueOf(containerModel.getContainerModelId()));
 
@@ -528,7 +556,7 @@ public class TrashImpl implements Trash {
 			}
 
 			PortalUtil.addPortletBreadcrumbEntry(
-				request, name, containerModelURL.toString());
+				request, name, portletURL.toString());
 		}
 
 		TrashRenderer trashRenderer = trashHandler.getTrashRenderer(classPK);
@@ -537,7 +565,9 @@ public class TrashImpl implements Trash {
 			request, trashRenderer.getTitle(themeDisplay.getLocale()), null);
 	}
 
-	protected String getOriginalTitle(String title, String prefix) {
+	protected String getOriginalTitle(
+		String title, String paramName, String prefix) {
+
 		if (!title.startsWith(prefix)) {
 			return title;
 		}
@@ -558,10 +588,10 @@ public class TrashImpl implements Trash {
 				TrashVersion trashVersion =
 					TrashVersionLocalServiceUtil.getTrashVersion(trashEntryId);
 
-				title = trashVersion.getTypeSettingsProperty("title");
+				title = trashVersion.getTypeSettingsProperty(paramName);
 			}
 			else {
-				title = trashEntry.getTypeSettingsProperty("title");
+				title = trashEntry.getTypeSettingsProperty(paramName);
 			}
 		}
 		catch (Exception e) {
@@ -579,6 +609,6 @@ public class TrashImpl implements Trash {
 		return prefix.concat(String.valueOf(trashEntryId));
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(TrashImpl.class);
+	private static final Log _log = LogFactoryUtil.getLog(TrashImpl.class);
 
 }

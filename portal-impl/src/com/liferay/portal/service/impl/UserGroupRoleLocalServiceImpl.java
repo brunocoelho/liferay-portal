@@ -38,7 +38,7 @@ public class UserGroupRoleLocalServiceImpl
 	public List<UserGroupRole> addUserGroupRoles(
 		long userId, long groupId, long[] roleIds) {
 
-		List<UserGroupRole> userGroupRoles = new ArrayList<UserGroupRole>();
+		List<UserGroupRole> userGroupRoles = new ArrayList<>();
 
 		for (long roleId : roleIds) {
 			UserGroupRole userGroupRole = addUserGroupRole(
@@ -62,7 +62,7 @@ public class UserGroupRoleLocalServiceImpl
 	public List<UserGroupRole> addUserGroupRoles(
 		long[] userIds, long groupId, long roleId) {
 
-		List<UserGroupRole> userGroupRoles = new ArrayList<UserGroupRole>();
+		List<UserGroupRole> userGroupRoles = new ArrayList<>();
 
 		for (long userId : userIds) {
 			UserGroupRole userGroupRole = addUserGroupRole(
@@ -199,6 +199,13 @@ public class UserGroupRoleLocalServiceImpl
 	}
 
 	@Override
+	public List<UserGroupRole> getUserGroupRoles(
+		long userId, long groupId, int start, int end) {
+
+		return userGroupRolePersistence.findByU_G(userId, groupId, start, end);
+	}
+
+	@Override
 	public List<UserGroupRole> getUserGroupRolesByGroup(long groupId) {
 		return userGroupRolePersistence.findByGroupId(groupId);
 	}
@@ -216,6 +223,11 @@ public class UserGroupRoleLocalServiceImpl
 
 		return userGroupRoleFinder.findByUserUserGroupGroupRole(
 			userId, groupId);
+	}
+
+	@Override
+	public int getUserGroupRolesCount(long userId, long groupId) {
+		return userGroupRolePersistence.countByU_G(userId, groupId);
 	}
 
 	@Override

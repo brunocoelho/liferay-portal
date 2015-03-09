@@ -16,34 +16,39 @@ package com.liferay.portlet.documentlibrary.service;
 
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.util.GroupTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.service.ServiceContext;
-import com.liferay.portal.test.DeleteAfterTestRun;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
-import com.liferay.portal.util.test.GroupTestUtil;
-import com.liferay.portal.util.test.ServiceContextTestUtil;
-import com.liferay.portal.util.test.TestPropsValues;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portlet.documentlibrary.model.DLFileShortcut;
 import com.liferay.portlet.documentlibrary.model.DLFolderConstants;
-import com.liferay.portlet.documentlibrary.util.test.DLAppTestUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import org.testng.Assert;
 
 /**
  * @author Shinn Lok
  */
-@ExecutionTestListeners(listeners = {MainServletExecutionTestListener.class})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 public class DLFileShortcutLocalServiceTreeTest {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -54,21 +59,22 @@ public class DLFileShortcutLocalServiceTreeTest {
 	public void testFileShortcutTreePathWhenMovingSubfolderWithFileShortcut()
 		throws Exception {
 
-		Folder folderA = DLAppTestUtil.addFolder(
-			_group.getGroupId(), DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-			"Folder A");
-
-		Folder folderAA = DLAppTestUtil.addFolder(
-			_group.getGroupId(), folderA.getFolderId(), "Folder AA");
-
-		FileEntry fileEntry = DLAppTestUtil.addFileEntry(
-			_group.getGroupId(), folderA.getFolderId(), "Entry.txt");
-
-		DLFileShortcut dlFileShortcut = DLAppTestUtil.addDLFileShortcut(
-			fileEntry, TestPropsValues.getGroupId(), folderAA.getFolderId());
-
 		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
+			ServiceContextTestUtil.getServiceContext(
+				_group.getGroupId(), TestPropsValues.getUserId());
+
+		Folder folderA = DLAppServiceUtil.addFolder(
+			_group.getGroupId(), DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			"Folder A", RandomTestUtil.randomString(), serviceContext);
+
+		Folder folderAA = DLAppServiceUtil.addFolder(
+			_group.getGroupId(), folderA.getFolderId(), "Folder AA",
+			RandomTestUtil.randomString(), serviceContext);
+
+		FileEntry fileEntry = addFileEntry(folderA.getFolderId(), "Entry.txt");
+
+		DLFileShortcut dlFileShortcut = addDLFileShortcut(
+			fileEntry, TestPropsValues.getGroupId(), folderAA.getFolderId());
 
 		DLAppLocalServiceUtil.moveFolder(
 			TestPropsValues.getUserId(), folderAA.getFolderId(),
@@ -103,29 +109,57 @@ public class DLFileShortcutLocalServiceTreeTest {
 		}
 	}
 
-	protected void createTree() throws Exception {
-		_fileEntry = DLAppTestUtil.addFileEntry(
-			_group.getGroupId(), DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-			"Entry A.txt");
+	protected DLFileShortcut addDLFileShortcut(
+			FileEntry fileEntry, long groupId, long folderId)
+		throws Exception {
 
-		DLFileShortcut dlFileShortcutA = DLAppTestUtil.addDLFileShortcut(
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				groupId, TestPropsValues.getUserId());
+
+		return DLAppLocalServiceUtil.addFileShortcut(
+			TestPropsValues.getUserId(), groupId, folderId,
+			fileEntry.getFileEntryId(), serviceContext);
+	}
+
+	protected FileEntry addFileEntry(long folderId, String sourceFileName)
+		throws Exception {
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				_group.getGroupId(), TestPropsValues.getUserId());
+
+		return DLAppLocalServiceUtil.addFileEntry(
+			TestPropsValues.getUserId(), _group.getGroupId(), folderId,
+			sourceFileName, ContentTypes.TEXT_PLAIN,
+			RandomTestUtil.randomBytes(), serviceContext);
+	}
+
+	protected void createTree() throws Exception {
+		_fileEntry = addFileEntry(
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, "Entry A.txt");
+
+		DLFileShortcut dlFileShortcutA = addDLFileShortcut(
 			_fileEntry, TestPropsValues.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID);
 
 		_dlFileShortcuts.add(dlFileShortcutA);
 
-		_folder = DLAppTestUtil.addFolder(
-			_group.getGroupId(), DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-			"Folder A");
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				_group.getGroupId(), TestPropsValues.getUserId());
 
-		DLFileShortcut dlFileShortcutAA = DLAppTestUtil.addDLFileShortcut(
+		_folder = DLAppServiceUtil.addFolder(
+			_group.getGroupId(), DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			"Folder A", RandomTestUtil.randomString(), serviceContext);
+
+		DLFileShortcut dlFileShortcutAA = addDLFileShortcut(
 			_fileEntry, TestPropsValues.getGroupId(), _folder.getFolderId());
 
 		_dlFileShortcuts.add(dlFileShortcutAA);
 	}
 
-	private List<DLFileShortcut> _dlFileShortcuts =
-		new ArrayList<DLFileShortcut>();
+	private final List<DLFileShortcut> _dlFileShortcuts = new ArrayList<>();
 	private FileEntry _fileEntry;
 	private Folder _folder;
 

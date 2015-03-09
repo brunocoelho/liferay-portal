@@ -69,7 +69,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see DDMStructurePersistence
- * @see DDMStructureUtil
+ * @see com.liferay.portlet.dynamicdatamapping.service.persistence.DDMStructureUtil
  * @generated
  */
 @ProviderType
@@ -8952,6 +8952,7 @@ public class DDMStructurePersistenceImpl extends BasePersistenceImpl<DDMStructur
 		ddmStructureImpl.setParentStructureId(ddmStructure.getParentStructureId());
 		ddmStructureImpl.setClassNameId(ddmStructure.getClassNameId());
 		ddmStructureImpl.setStructureKey(ddmStructure.getStructureKey());
+		ddmStructureImpl.setVersion(ddmStructure.getVersion());
 		ddmStructureImpl.setName(ddmStructure.getName());
 		ddmStructureImpl.setDescription(ddmStructure.getDescription());
 		ddmStructureImpl.setDefinition(ddmStructure.getDefinition());

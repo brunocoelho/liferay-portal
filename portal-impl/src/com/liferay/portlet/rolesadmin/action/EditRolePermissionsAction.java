@@ -289,8 +289,7 @@ public class EditRolePermissionsAction extends PortletAction {
 		String[] modelResources = StringUtil.split(
 			ParamUtil.getString(actionRequest, "modelResources"));
 
-		Map<String, List<String>> resourceActionsMap =
-			new HashMap<String, List<String>>();
+		Map<String, List<String>> resourceActionsMap = new HashMap<>();
 
 		if (Validator.isNotNull(portletResource)) {
 			resourceActionsMap.put(
@@ -362,6 +361,7 @@ public class EditRolePermissionsAction extends PortletAction {
 				}
 
 				if (selected &&
+					(scope == ResourceConstants.SCOPE_COMPANY) &&
 					actionId.equals(ActionKeys.ACCESS_IN_CONTROL_PANEL)) {
 
 					updateViewControlPanelPermission(

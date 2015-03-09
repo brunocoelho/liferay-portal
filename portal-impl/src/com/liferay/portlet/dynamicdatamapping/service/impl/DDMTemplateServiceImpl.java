@@ -23,7 +23,7 @@ import com.liferay.portlet.dynamicdatamapping.model.DDMTemplate;
 import com.liferay.portlet.dynamicdatamapping.service.base.DDMTemplateServiceBaseImpl;
 import com.liferay.portlet.dynamicdatamapping.service.permission.DDMPermission;
 import com.liferay.portlet.dynamicdatamapping.service.permission.DDMTemplatePermission;
-import com.liferay.portlet.dynamicdatamapping.util.DDMDisplay;
+import com.liferay.portlet.dynamicdatamapping.util.DDMPermissionHandler;
 import com.liferay.portlet.dynamicdatamapping.util.DDMUtil;
 
 import java.io.File;
@@ -52,6 +52,8 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	 * @param  classNameId the primary key of the class name for template's
 	 *         related model
 	 * @param  classPK the primary key of the template's related entity
+	 * @param  resourceClassNameId the primary key of the class name for
+	 *         template's resource model
 	 * @param  nameMap the template's locales and localized names
 	 * @param  descriptionMap the template's locales and localized descriptions
 	 * @param  type the template's type. For more information, see {@link
@@ -73,22 +75,23 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	@Override
 	public DDMTemplate addTemplate(
 			long groupId, long classNameId, long classPK,
-			Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
-			String type, String mode, String language, String script,
-			ServiceContext serviceContext)
+			long resourceClassNameId, Map<Locale, String> nameMap,
+			Map<Locale, String> descriptionMap, String type, String mode,
+			String language, String script, ServiceContext serviceContext)
 		throws PortalException {
 
-		DDMDisplay ddmDisplay = DDMUtil.getDDMDisplay(serviceContext);
+		DDMPermissionHandler ddmPermissionHandler =
+			DDMUtil.getDDMPermissionHandler(resourceClassNameId);
 
 		DDMPermission.check(
 			getPermissionChecker(), serviceContext.getScopeGroupId(),
-			ddmDisplay.getResourceName(classNameId),
-			ddmDisplay.getAddTemplateActionId());
+			ddmPermissionHandler.getResourceName(classNameId),
+			ddmPermissionHandler.getAddTemplateActionId());
 
 		return ddmTemplateLocalService.addTemplate(
-			getUserId(), groupId, classNameId, classPK, null, nameMap,
-			descriptionMap, type, mode, language, script, false, false, null,
-			null, serviceContext);
+			getUserId(), groupId, classNameId, classPK, resourceClassNameId,
+			null, nameMap, descriptionMap, type, mode, language, script, false,
+			false, null, null, serviceContext);
 	}
 
 	/**
@@ -98,6 +101,8 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	 * @param  classNameId the primary key of the class name for template's
 	 *         related model
 	 * @param  classPK the primary key of the template's related entity
+	 * @param  resourceClassNameId the primary key of the class name for
+	 *         template's resource model
 	 * @param  templateKey the unique string identifying the template
 	 *         (optionally <code>null</code>)
 	 * @param  nameMap the template's locales and localized names
@@ -126,24 +131,27 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	 */
 	@Override
 	public DDMTemplate addTemplate(
-			long groupId, long classNameId, long classPK, String templateKey,
+			long groupId, long classNameId, long classPK,
+			long resourceClassNameId, String templateKey,
 			Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
 			String type, String mode, String language, String script,
 			boolean cacheable, boolean smallImage, String smallImageURL,
 			File smallImageFile, ServiceContext serviceContext)
 		throws PortalException {
 
-		DDMDisplay ddmDisplay = DDMUtil.getDDMDisplay(serviceContext);
+		DDMPermissionHandler ddmPermissionHandler =
+			DDMUtil.getDDMPermissionHandler(resourceClassNameId);
 
 		DDMPermission.check(
 			getPermissionChecker(), serviceContext.getScopeGroupId(),
-			ddmDisplay.getResourceName(classNameId),
-			ddmDisplay.getAddTemplateActionId());
+			ddmPermissionHandler.getResourceName(classNameId),
+			ddmPermissionHandler.getAddTemplateActionId());
 
 		return ddmTemplateLocalService.addTemplate(
-			getUserId(), groupId, classNameId, classPK, templateKey, nameMap,
-			descriptionMap, type, mode, language, script, cacheable, smallImage,
-			smallImageURL, smallImageFile, serviceContext);
+			getUserId(), groupId, classNameId, classPK, resourceClassNameId,
+			templateKey, nameMap, descriptionMap, type, mode, language, script,
+			cacheable, smallImage, smallImageURL, smallImageFile,
+			serviceContext);
 	}
 
 	/**
@@ -169,17 +177,16 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 			Map<Locale, String> descriptionMap, ServiceContext serviceContext)
 		throws PortalException {
 
-		DDMDisplay ddmDisplay = DDMUtil.getDDMDisplay(serviceContext);
-
 		DDMTemplate template = ddmTemplatePersistence.findByPrimaryKey(
 			templateId);
 
-		long classNameId = template.getClassNameId();
+		DDMPermissionHandler ddmPermissionHandler =
+			DDMUtil.getDDMPermissionHandler(template.getResourceClassNameId());
 
 		DDMPermission.check(
 			getPermissionChecker(), serviceContext.getScopeGroupId(),
-			ddmDisplay.getResourceName(classNameId),
-			ddmDisplay.getAddTemplateActionId());
+			ddmPermissionHandler.getResourceName(template.getClassNameId()),
+			ddmPermissionHandler.getAddTemplateActionId());
 
 		return ddmTemplateLocalService.copyTemplate(
 			getUserId(), templateId, nameMap, descriptionMap, serviceContext);
@@ -190,17 +197,16 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 			long templateId, ServiceContext serviceContext)
 		throws PortalException {
 
-		DDMDisplay ddmDisplay = DDMUtil.getDDMDisplay(serviceContext);
-
 		DDMTemplate template = ddmTemplatePersistence.findByPrimaryKey(
 			templateId);
 
-		long classNameId = template.getClassNameId();
+		DDMPermissionHandler ddmPermissionHandler =
+			DDMUtil.getDDMPermissionHandler(template.getResourceClassNameId());
 
 		DDMPermission.check(
 			getPermissionChecker(), serviceContext.getScopeGroupId(),
-			ddmDisplay.getResourceName(classNameId),
-			ddmDisplay.getAddTemplateActionId());
+			ddmPermissionHandler.getResourceName(template.getClassNameId()),
+			ddmPermissionHandler.getAddTemplateActionId());
 
 		return ddmTemplateLocalService.copyTemplate(
 			getUserId(), templateId, serviceContext);
@@ -213,7 +219,9 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	 *
 	 * @param  classNameId the primary key of the class name for template's
 	 *         related model
-	 * @param  classPK the primary key of the original template's related entity
+	 * @param  oldClassPK the primary key of the old template's related entity
+	 * @param  resourceClassNameId the primary key of the class name for
+	 *         template's resource model
 	 * @param  newClassPK the primary key of the new template's related entity
 	 * @param  type the template's type. For more information, see {@link
 	 *         com.liferay.portlet.dynamicdatamapping.model.DDMTemplateConstants}.
@@ -227,19 +235,20 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	 */
 	@Override
 	public List<DDMTemplate> copyTemplates(
-			long classNameId, long classPK, long newClassPK, String type,
-			ServiceContext serviceContext)
+			long classNameId, long oldClassPK, long resourceClassNameId,
+			long newClassPK, String type, ServiceContext serviceContext)
 		throws PortalException {
 
-		DDMDisplay ddmDisplay = DDMUtil.getDDMDisplay(serviceContext);
+		DDMPermissionHandler ddmPermissionHandler =
+			DDMUtil.getDDMPermissionHandler(resourceClassNameId);
 
 		DDMPermission.check(
 			getPermissionChecker(), serviceContext.getScopeGroupId(),
-			ddmDisplay.getResourceName(classNameId),
-			ddmDisplay.getAddTemplateActionId());
+			ddmPermissionHandler.getResourceName(classNameId),
+			ddmPermissionHandler.getAddTemplateActionId());
 
 		return ddmTemplateLocalService.copyTemplates(
-			getUserId(), classNameId, classPK, newClassPK, type,
+			getUserId(), classNameId, oldClassPK, newClassPK, type,
 			serviceContext);
 	}
 
@@ -327,20 +336,23 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	}
 
 	/**
-	 * Returns the template matching the group and template key, optionally in
-	 * the global scope.
+	 * Returns the template matching the group and template key, optionally
+	 * searching ancestor sites (that have sharing enabled) and global scoped
+	 * sites.
 	 *
 	 * <p>
 	 * This method first searches in the group. If the template is still not
 	 * found and <code>includeAncestorTemplates</code> is set to
-	 * <code>true</code>, this method searches the global group.
+	 * <code>true</code>, this method searches the group's ancestor sites (that
+	 * have sharing enabled) and lastly searches global scoped sites.
 	 * </p>
 	 *
 	 * @param  groupId the primary key of the group
 	 * @param  classNameId the primary key of the class name for template's
 	 *         related model
 	 * @param  templateKey the unique string identifying the template
-	 * @param  includeAncestorTemplates whether to include the global scope in the
+	 * @param  includeAncestorTemplates whether to include ancestor sites (that
+	 *         have sharing enabled) and include global scoped sites in the
 	 *         search
 	 * @return the matching template
 	 * @throws PortalException if a matching template could not be found
@@ -397,7 +409,7 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 			boolean includeAncestorTemplates)
 		throws PortalException {
 
-		List<DDMTemplate> ddmTemplates = new ArrayList<DDMTemplate>();
+		List<DDMTemplate> ddmTemplates = new ArrayList<>();
 
 		ddmTemplates.addAll(
 			ddmTemplatePersistence.filterFindByG_C_C(
@@ -529,6 +541,8 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	 * @param  classNameId the primary key of the class name for template's
 	 *         related model
 	 * @param  classPK the primary key of the template's related entity
+	 * @param  resourceClassNameId the primary key of the class name for
+	 *         template's resource model
 	 * @param  keywords the keywords (space separated), which may occur in the
 	 *         template's name or description (optionally <code>null</code>)
 	 * @param  type the template's type (optionally <code>null</code>). For more
@@ -547,12 +561,12 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	@Override
 	public List<DDMTemplate> search(
 		long companyId, long groupId, long classNameId, long classPK,
-		String keywords, String type, String mode, int start, int end,
-		OrderByComparator<DDMTemplate> orderByComparator) {
+		long resourceClassNameId, String keywords, String type, String mode,
+		int start, int end, OrderByComparator<DDMTemplate> orderByComparator) {
 
 		return ddmTemplateFinder.filterFindByKeywords(
-			companyId, groupId, classNameId, classPK, keywords, type, mode,
-			start, end, orderByComparator);
+			companyId, groupId, classNameId, classPK, resourceClassNameId,
+			keywords, type, mode, start, end, orderByComparator);
 	}
 
 	/**
@@ -575,6 +589,8 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	 * @param  classNameId the primary key of the class name for template's
 	 *         related model
 	 * @param  classPK the primary key of the template's related entity
+	 * @param  resourceClassNameId the primary key of the class name for
+	 *         template's resource model
 	 * @param  name the name keywords (optionally <code>null</code>)
 	 * @param  description the description keywords (optionally
 	 *         <code>null</code>)
@@ -599,13 +615,14 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	@Override
 	public List<DDMTemplate> search(
 		long companyId, long groupId, long classNameId, long classPK,
-		String name, String description, String type, String mode,
-		String language, boolean andOperator, int start, int end,
+		long resourceClassNameId, String name, String description, String type,
+		String mode, String language, boolean andOperator, int start, int end,
 		OrderByComparator<DDMTemplate> orderByComparator) {
 
-		return ddmTemplateFinder.filterFindByC_G_C_C_N_D_T_M_L(
-			companyId, groupId, classNameId, classPK, name, description, type,
-			mode, language, andOperator, start, end, orderByComparator);
+		return ddmTemplateFinder.filterFindByC_G_C_C_R_N_D_T_M_L(
+			companyId, groupId, classNameId, classPK, resourceClassNameId, name,
+			description, type, mode, language, andOperator, start, end,
+			orderByComparator);
 	}
 
 	/**
@@ -628,6 +645,8 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	 * @param  classNameIds the primary keys of the entity's instances the
 	 *         templates are related to
 	 * @param  classPKs the primary keys of the template's related entities
+	 * @param  resourceClassNameId the primary key of the class name for
+	 *         template's resource model
 	 * @param  keywords the keywords (space separated), which may occur in the
 	 *         template's name or description (optionally <code>null</code>)
 	 * @param  type the template's type (optionally <code>null</code>). For more
@@ -646,12 +665,12 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	@Override
 	public List<DDMTemplate> search(
 		long companyId, long[] groupIds, long[] classNameIds, long[] classPKs,
-		String keywords, String type, String mode, int start, int end,
-		OrderByComparator<DDMTemplate> orderByComparator) {
+		long resourceClassNameId, String keywords, String type, String mode,
+		int start, int end, OrderByComparator<DDMTemplate> orderByComparator) {
 
 		return ddmTemplateFinder.filterFindByKeywords(
-			companyId, groupIds, classNameIds, classPKs, keywords, type, mode,
-			start, end, orderByComparator);
+			companyId, groupIds, classNameIds, classPKs, resourceClassNameId,
+			keywords, type, mode, start, end, orderByComparator);
 	}
 
 	/**
@@ -674,6 +693,8 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	 * @param  classNameIds the primary keys of the entity's instances the
 	 *         templates are related to
 	 * @param  classPKs the primary keys of the template's related entities
+	 * @param  resourceClassNameId the primary key of the class name for
+	 *         template's resource model
 	 * @param  name the name keywords (optionally <code>null</code>)
 	 * @param  description the description keywords (optionally
 	 *         <code>null</code>)
@@ -698,13 +719,14 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	@Override
 	public List<DDMTemplate> search(
 		long companyId, long[] groupIds, long[] classNameIds, long[] classPKs,
-		String name, String description, String type, String mode,
-		String language, boolean andOperator, int start, int end,
+		long resourceClassNameId, String name, String description, String type,
+		String mode, String language, boolean andOperator, int start, int end,
 		OrderByComparator<DDMTemplate> orderByComparator) {
 
-		return ddmTemplateFinder.filterFindByC_G_C_C_N_D_T_M_L(
-			companyId, groupIds, classNameIds, classPKs, name, description,
-			type, mode, language, andOperator, start, end, orderByComparator);
+		return ddmTemplateFinder.filterFindByC_G_C_C_R_N_D_T_M_L(
+			companyId, groupIds, classNameIds, classPKs, resourceClassNameId,
+			name, description, type, mode, language, andOperator, start, end,
+			orderByComparator);
 	}
 
 	/**
@@ -717,6 +739,8 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	 * @param  classNameId the primary key of the class name for template's
 	 *         related model
 	 * @param  classPK the primary key of the template's related entity
+	 * @param  resourceClassNameId the primary key of the class name for
+	 *         template's resource model
 	 * @param  keywords the keywords (space separated), which may occur in the
 	 *         template's name or description (optionally <code>null</code>)
 	 * @param  type the template's type (optionally <code>null</code>). For more
@@ -730,10 +754,11 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	@Override
 	public int searchCount(
 		long companyId, long groupId, long classNameId, long classPK,
-		String keywords, String type, String mode) {
+		long resourceClassNameId, String keywords, String type, String mode) {
 
 		return ddmTemplateFinder.filterCountByKeywords(
-			companyId, groupId, classNameId, classPK, keywords, type, mode);
+			companyId, groupId, classNameId, classPK, resourceClassNameId,
+			keywords, type, mode);
 	}
 
 	/**
@@ -745,6 +770,8 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	 * @param  classNameId the primary key of the class name for template's
 	 *         related model
 	 * @param  classPK the primary key of the template's related entity
+	 * @param  resourceClassNameId the primary key of the class name for
+	 *         template's resource model
 	 * @param  name the name keywords (optionally <code>null</code>)
 	 * @param  description the description keywords (optionally
 	 *         <code>null</code>)
@@ -764,12 +791,12 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	@Override
 	public int searchCount(
 		long companyId, long groupId, long classNameId, long classPK,
-		String name, String description, String type, String mode,
-		String language, boolean andOperator) {
+		long resourceClassNameId, String name, String description, String type,
+		String mode, String language, boolean andOperator) {
 
-		return ddmTemplateFinder.filterCountByC_G_C_C_N_D_T_M_L(
-			companyId, groupId, classNameId, classPK, name, description, type,
-			mode, language, andOperator);
+		return ddmTemplateFinder.filterCountByC_G_C_C_R_N_D_T_M_L(
+			companyId, groupId, classNameId, classPK, resourceClassNameId, name,
+			description, type, mode, language, andOperator);
 	}
 
 	/**
@@ -782,6 +809,8 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	 * @param  classNameIds the primary keys of the entity's instances the
 	 *         templates are related to
 	 * @param  classPKs the primary keys of the template's related entities
+	 * @param  resourceClassNameId the primary key of the class name for
+	 *         template's resource model
 	 * @param  keywords the keywords (space separated), which may occur in the
 	 *         template's name or description (optionally <code>null</code>)
 	 * @param  type the template's type (optionally <code>null</code>). For more
@@ -795,10 +824,11 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	@Override
 	public int searchCount(
 		long companyId, long[] groupIds, long[] classNameIds, long[] classPKs,
-		String keywords, String type, String mode) {
+		long resourceClassNameId, String keywords, String type, String mode) {
 
 		return ddmTemplateFinder.filterCountByKeywords(
-			companyId, groupIds, classNameIds, classPKs, keywords, type, mode);
+			companyId, groupIds, classNameIds, classPKs, resourceClassNameId,
+			keywords, type, mode);
 	}
 
 	/**
@@ -810,6 +840,8 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	 * @param  classNameIds the primary keys of the entity's instances the
 	 *         templates are related to
 	 * @param  classPKs the primary keys of the template's related entities
+	 * @param  resourceClassNameId the primary key of the class name for
+	 *         template's resource model
 	 * @param  name the name keywords (optionally <code>null</code>)
 	 * @param  description the description keywords (optionally
 	 *         <code>null</code>)
@@ -829,12 +861,12 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	@Override
 	public int searchCount(
 		long companyId, long[] groupIds, long[] classNameIds, long[] classPKs,
-		String name, String description, String type, String mode,
-		String language, boolean andOperator) {
+		long resourceClassNameId, String name, String description, String type,
+		String mode, String language, boolean andOperator) {
 
-		return ddmTemplateFinder.filterCountByC_G_C_C_N_D_T_M_L(
-			companyId, groupIds, classNameIds, classPKs, name, description,
-			type, mode, language, andOperator);
+		return ddmTemplateFinder.filterCountByC_G_C_C_R_N_D_T_M_L(
+			companyId, groupIds, classNameIds, classPKs, resourceClassNameId,
+			name, description, type, mode, language, andOperator);
 	}
 
 	/**

@@ -59,7 +59,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see PhonePersistence
- * @see PhoneUtil
+ * @see com.liferay.portal.service.persistence.PhoneUtil
  * @generated
  */
 @ProviderType
@@ -4559,7 +4559,7 @@ public class PhonePersistenceImpl extends BasePersistenceImpl<Phone>
 	private static class NullCacheModel implements CacheModel<Phone>, MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

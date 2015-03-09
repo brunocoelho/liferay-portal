@@ -1,4 +1,4 @@
-@import "compass";
+@import "bourbon";
 @import "mixins";
 
 .app-view-entry-taglib.entry-display-style {
@@ -14,6 +14,10 @@
 
 		@include respond-to(phone, tablet) {
 			height: 230px;
+		}
+
+		.form-group {
+			margin-bottom: 0;
 		}
 
 		.entry-title {

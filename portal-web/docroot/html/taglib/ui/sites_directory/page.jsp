@@ -122,12 +122,12 @@
 											assetCategoryClassPK="<%= childGroup.getGroupId() %>"
 											assetTagClassName="<%= Group.class.getName() %>"
 											assetTagClassPK="<%= childGroup.getGroupId() %>"
-											description="<%= HtmlUtil.escape(childGroup.getDescription()) %>"
+											description="<%= HtmlUtil.escape(childGroup.getDescription(locale)) %>"
 											displayStyle="<%= displayStyle %>"
 											showCheckbox="<%= false %>"
 											thumbnailSrc='<%= themeDisplay.getPathImage() + "/layout_set_logo?img_id=" + layoutSet.getLogoId() + "&t=" + WebServerServletTokenUtil.getToken(layoutSet.getLogoId()) %>'
 											title="<%= HtmlUtil.escape(childGroup.getDescriptiveName(locale)) %>"
-											url="<%= (childGroup.getGroupId() != scopeGroupId) ? PortalUtil.getGroupFriendlyURL(childGroup, !childGroup.hasPublicLayouts(), themeDisplay) : null %>"
+											url="<%= (childGroup.getGroupId() != scopeGroupId) ? childGroup.getDisplayURL(themeDisplay) : null %>"
 										/>
 									</liferay-ui:search-container-row>
 
@@ -228,7 +228,7 @@ private void _buildSitesList(Group rootGroup, Group curGroup, List<Group> branch
 
 		if (childGroup.getGroupId() != themeDisplay.getScopeGroupId()) {
 			sb.append("href=\"");
-			sb.append(HtmlUtil.escapeHREF(PortalUtil.getGroupFriendlyURL(childGroup, !childGroup.hasPublicLayouts(), themeDisplay)));
+			sb.append(HtmlUtil.escapeHREF(childGroup.getDisplayURL(themeDisplay, !childGroup.hasPublicLayouts())));
 			sb.append("\"");
 		}
 

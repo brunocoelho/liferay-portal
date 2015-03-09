@@ -29,8 +29,8 @@ import com.liferay.portlet.dynamicdatamapping.model.DDMStructure;
 import com.liferay.portlet.dynamicdatamapping.model.DDMTemplate;
 import com.liferay.portlet.dynamicdatamapping.model.DDMTemplateConstants;
 import com.liferay.portlet.dynamicdatamapping.util.BaseDDMDisplay;
+import com.liferay.portlet.dynamicdatamapping.util.DDMPermissionHandler;
 import com.liferay.portlet.journal.model.JournalArticle;
-import com.liferay.portlet.journal.service.permission.JournalPermission;
 
 import java.util.Set;
 
@@ -45,6 +45,11 @@ public class JournalDDMDisplay extends BaseDDMDisplay {
 	@Override
 	public String getAvailableFields() {
 		return "Liferay.FormBuilder.AVAILABLE_FIELDS.WCM_STRUCTURE";
+	}
+
+	@Override
+	public DDMPermissionHandler getDDMPermissionHandler() {
+		return _ddmPermissionHandler;
 	}
 
 	@Override
@@ -68,7 +73,7 @@ public class JournalDDMDisplay extends BaseDDMDisplay {
 			String.valueOf(PortalUtil.getClassNameId(DDMStructure.class)));
 		portletURL.setParameter(
 			"classPK", String.valueOf(structure.getStructureId()));
-		portletURL.setParameter("structureId", structure.getStructureKey());
+		portletURL.setParameter("ddmStructureKey", structure.getStructureKey());
 		portletURL.setWindowState(LiferayWindowState.POP_UP);
 
 		return portletURL.toString();
@@ -96,11 +101,6 @@ public class JournalDDMDisplay extends BaseDDMDisplay {
 	@Override
 	public String getPortletId() {
 		return PortletKeys.JOURNAL;
-	}
-
-	@Override
-	public String getResourceName() {
-		return JournalPermission.RESOURCE_NAME;
 	}
 
 	@Override
@@ -154,13 +154,15 @@ public class JournalDDMDisplay extends BaseDDMDisplay {
 		return true;
 	}
 
-	private static Set<String> _templateLanguageTypes =
-		SetUtil.fromArray(
-			new String[] {
-				TemplateConstants.LANG_TYPE_FTL, TemplateConstants.LANG_TYPE_VM,
-				TemplateConstants.LANG_TYPE_XSL
-			});
-	private static Set<String> _viewTemplateExcludedColumnNames =
+	private static final Set<String> _templateLanguageTypes = SetUtil.fromArray(
+		new String[] {
+			TemplateConstants.LANG_TYPE_FTL, TemplateConstants.LANG_TYPE_VM,
+			TemplateConstants.LANG_TYPE_XSL
+		});
+	private static final Set<String> _viewTemplateExcludedColumnNames =
 		SetUtil.fromArray(new String[] {"mode"});
+
+	private final DDMPermissionHandler _ddmPermissionHandler =
+		new JournalDDMPermissionHandler();
 
 }

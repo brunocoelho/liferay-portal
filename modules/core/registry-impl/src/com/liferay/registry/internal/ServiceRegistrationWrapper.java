@@ -49,7 +49,7 @@ public class ServiceRegistrationWrapper<T> implements ServiceRegistration<T> {
 
 	@Override
 	public ServiceReference<T> getServiceReference() {
-		return new ServiceReferenceWrapper<T>(
+		return new ServiceReferenceWrapper<>(
 			_serviceRegistration.getReference());
 	}
 
@@ -77,6 +77,7 @@ public class ServiceRegistrationWrapper<T> implements ServiceRegistration<T> {
 		_serviceRegistration.unregister();
 	}
 
-	private org.osgi.framework.ServiceRegistration<T> _serviceRegistration;
+	private final org.osgi.framework.ServiceRegistration<T>
+		_serviceRegistration;
 
 }

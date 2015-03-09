@@ -40,6 +40,7 @@ import com.liferay.portal.util.PortalUtil;
 
 import com.liferay.portlet.documentlibrary.model.DLFileEntryMetadata;
 import com.liferay.portlet.documentlibrary.service.DLFileEntryMetadataLocalService;
+import com.liferay.portlet.documentlibrary.service.persistence.DLFileEntryMetadataFinder;
 import com.liferay.portlet.documentlibrary.service.persistence.DLFileEntryMetadataPersistence;
 import com.liferay.portlet.documentlibrary.service.persistence.DLFileEntryTypeFinder;
 import com.liferay.portlet.documentlibrary.service.persistence.DLFileEntryTypePersistence;
@@ -186,10 +187,10 @@ public abstract class DLFileEntryMetadataLocalServiceBaseImpl
 	}
 
 	/**
-	 * Returns the number of rows that match the dynamic query.
+	 * Returns the number of rows matching the dynamic query.
 	 *
 	 * @param dynamicQuery the dynamic query
-	 * @return the number of rows that match the dynamic query
+	 * @return the number of rows matching the dynamic query
 	 */
 	@Override
 	public long dynamicQueryCount(DynamicQuery dynamicQuery) {
@@ -197,11 +198,11 @@ public abstract class DLFileEntryMetadataLocalServiceBaseImpl
 	}
 
 	/**
-	 * Returns the number of rows that match the dynamic query.
+	 * Returns the number of rows matching the dynamic query.
 	 *
 	 * @param dynamicQuery the dynamic query
 	 * @param projection the projection to apply to the query
-	 * @return the number of rows that match the dynamic query
+	 * @return the number of rows matching the dynamic query
 	 */
 	@Override
 	public long dynamicQueryCount(DynamicQuery dynamicQuery,
@@ -341,6 +342,25 @@ public abstract class DLFileEntryMetadataLocalServiceBaseImpl
 	public void setDLFileEntryMetadataPersistence(
 		DLFileEntryMetadataPersistence dlFileEntryMetadataPersistence) {
 		this.dlFileEntryMetadataPersistence = dlFileEntryMetadataPersistence;
+	}
+
+	/**
+	 * Returns the document library file entry metadata finder.
+	 *
+	 * @return the document library file entry metadata finder
+	 */
+	public DLFileEntryMetadataFinder getDLFileEntryMetadataFinder() {
+		return dlFileEntryMetadataFinder;
+	}
+
+	/**
+	 * Sets the document library file entry metadata finder.
+	 *
+	 * @param dlFileEntryMetadataFinder the document library file entry metadata finder
+	 */
+	public void setDLFileEntryMetadataFinder(
+		DLFileEntryMetadataFinder dlFileEntryMetadataFinder) {
+		this.dlFileEntryMetadataFinder = dlFileEntryMetadataFinder;
 	}
 
 	/**
@@ -599,6 +619,8 @@ public abstract class DLFileEntryMetadataLocalServiceBaseImpl
 	protected com.liferay.portlet.documentlibrary.service.DLFileEntryMetadataLocalService dlFileEntryMetadataLocalService;
 	@BeanReference(type = DLFileEntryMetadataPersistence.class)
 	protected DLFileEntryMetadataPersistence dlFileEntryMetadataPersistence;
+	@BeanReference(type = DLFileEntryMetadataFinder.class)
+	protected DLFileEntryMetadataFinder dlFileEntryMetadataFinder;
 	@BeanReference(type = com.liferay.counter.service.CounterLocalService.class)
 	protected com.liferay.counter.service.CounterLocalService counterLocalService;
 	@BeanReference(type = com.liferay.portal.service.ClassNameLocalService.class)

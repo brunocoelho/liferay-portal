@@ -9,9 +9,13 @@ AUI.add(
 
 		var Lang = A.Lang;
 
+		var AJSON = A.JSON;
+
 		var EMPTY_FN = A.Lang.emptyFn;
 
-		var JSON = A.JSON;
+		var FIELDS_DISPLAY_INSTANCE_SEPARATOR = '_INSTANCE_';
+
+		var FIELDS_DISPLAY_NAME = '_fieldsDisplay';
 
 		var STR_EMPTY = '';
 
@@ -104,7 +108,7 @@ AUI.add(
 							{
 								minDisplayRows: minDisplayRows,
 								recordSetId: recordsetId,
-								serviceContext: JSON.stringify(
+								serviceContext: AJSON.stringify(
 									{
 										scopeGroupId: themeDisplay.getScopeGroupId(),
 										userId: themeDisplay.getUserId()
@@ -150,6 +154,7 @@ AUI.add(
 
 						var structure = instance.get('structure');
 
+						var fieldsDisplayValues = [];
 						var normalized = {};
 
 						A.each(
@@ -163,19 +168,23 @@ AUI.add(
 
 									delete value.name;
 
-									value = JSON.stringify(value);
+									value = AJSON.stringify(value);
 								}
 								else if ((type === 'radio') || (type === 'select')) {
 									if (!isArray(value)) {
 										value = AArray(value);
 									}
 
-									value = JSON.stringify(value);
+									value = AJSON.stringify(value);
 								}
 
 								normalized[item.name] = instance._normalizeValue(value);
+
+								fieldsDisplayValues.push(item.name + FIELDS_DISPLAY_INSTANCE_SEPARATOR + instance._randomString(8));
 							}
 						);
+
+						normalized[FIELDS_DISPLAY_NAME] = fieldsDisplayValues.join(',');
 
 						delete normalized.displayIndex;
 						delete normalized.recordId;
@@ -265,6 +274,14 @@ AUI.add(
 						}
 					},
 
+					_randomString: function(length) {
+						var random = Math.random();
+
+						var randomString = random.toString(36);
+
+						return randomString.substring(length);
+					},
+
 					_setDataStableSort: function(data) {
 						var instance = this;
 
@@ -306,10 +323,10 @@ AUI.add(
 						'/ddlrecord/add-record',
 						{
 							displayIndex: displayIndex,
-							fieldsMap: JSON.stringify(fieldsMap),
+							fieldsMap: AJSON.stringify(fieldsMap),
 							groupId: themeDisplay.getScopeGroupId(),
 							recordSetId: recordsetId,
-							serviceContext: JSON.stringify(
+							serviceContext: AJSON.stringify(
 								{
 									scopeGroupId: themeDisplay.getScopeGroupId(),
 									userId: themeDisplay.getUserId(),
@@ -328,6 +345,7 @@ AUI.add(
 						columns,
 						function(item, index) {
 							var dataType = item.dataType;
+							var label = item.label;
 							var name = item.name;
 							var type = item.type;
 
@@ -347,8 +365,12 @@ AUI.add(
 							var structureField;
 
 							if (required) {
-								item.label += ' (' + Liferay.Language.get('required') + ')';
+								label += ' (' + Liferay.Language.get('required') + ')';
 							}
+
+							label = A.Escape.html(label);
+
+							item.label = label;
 
 							if (type === 'checkbox') {
 								config.options = {
@@ -591,10 +613,10 @@ AUI.add(
 						'/ddlrecord/update-record',
 						{
 							displayIndex: displayIndex,
-							fieldsMap: JSON.stringify(fieldsMap),
+							fieldsMap: AJSON.stringify(fieldsMap),
 							mergeFields: merge,
 							recordId: recordId,
-							serviceContext: JSON.stringify(
+							serviceContext: AJSON.stringify(
 								{
 									scopeGroupId: themeDisplay.getScopeGroupId(),
 									userId: themeDisplay.getUserId(),

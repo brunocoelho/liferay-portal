@@ -40,10 +40,10 @@ public class BatchJspCompiler {
 	}
 
 	public BatchJspCompiler(String appDir, String classDir) {
-		try {
-			_appDir = appDir;
-			_classDir = classDir;
+		_appDir = appDir;
+		_classDir = classDir;
 
+		try {
 			DirectoryScanner ds = new DirectoryScanner();
 
 			ds.setBasedir(appDir);
@@ -67,7 +67,7 @@ public class BatchJspCompiler {
 			return;
 		}
 
-		List<String> arguments = new ArrayList<String>();
+		List<String> arguments = new ArrayList<>();
 
 		arguments.add("-app-dir");
 		arguments.add(_appDir);
@@ -89,9 +89,9 @@ public class BatchJspCompiler {
 		}
 	}
 
-	private static FileImpl _fileUtil = FileImpl.getInstance();
+	private static final FileImpl _fileUtil = FileImpl.getInstance();
 
-	private String _appDir;
-	private String _classDir;
+	private final String _appDir;
+	private final String _classDir;
 
 }

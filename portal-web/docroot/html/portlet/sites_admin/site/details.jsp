@@ -22,6 +22,38 @@ Group liveGroup = (Group)request.getAttribute("site.liveGroup");
 LayoutSetPrototype layoutSetPrototype = (LayoutSetPrototype)request.getAttribute("site.layoutSetPrototype");
 boolean showPrototypes = GetterUtil.getBoolean(request.getAttribute("site.showPrototypes"));
 
+long parentGroupId = ParamUtil.getLong(request, "parentGroupSearchContainerPrimaryKeys", (group != null) ? group.getParentGroupId() : GroupConstants.DEFAULT_PARENT_GROUP_ID);
+
+if (parentGroupId <= 0) {
+	parentGroupId = GroupConstants.DEFAULT_PARENT_GROUP_ID;
+
+	if (liveGroup != null) {
+		parentGroupId = liveGroup.getParentGroupId();
+	}
+}
+
+Group parentGroup = null;
+
+if ((group == null) && (parentGroupId == GroupConstants.DEFAULT_PARENT_GROUP_ID) && !permissionChecker.isCompanyAdmin()) {
+	List<Group> manageableGroups = new ArrayList<Group>();
+
+	for (Group curGroup : user.getGroups()) {
+		if (GroupPermissionUtil.contains(permissionChecker, curGroup, ActionKeys.MANAGE_SUBGROUPS)) {
+			manageableGroups.add(curGroup);
+		}
+	}
+
+	if (manageableGroups.size() == 1) {
+		Group manageableGroup = manageableGroups.get(0);
+
+		parentGroupId = manageableGroup.getGroupId();
+	}
+}
+
+if (parentGroupId != GroupConstants.DEFAULT_PARENT_GROUP_ID) {
+	parentGroup = GroupLocalServiceUtil.fetchGroup(parentGroupId);
+}
+
 List<LayoutSetPrototype> layoutSetPrototypes = LayoutSetPrototypeServiceUtil.search(company.getCompanyId(), Boolean.TRUE, null);
 
 LayoutSet privateLayoutSet = null;
@@ -79,7 +111,8 @@ else if (group != null) {
 <aui:model-context bean="<%= liveGroup %>" model="<%= Group.class %>" />
 
 <liferay-ui:error exception="<%= DuplicateGroupException.class %>" message="please-enter-a-unique-name" />
-<liferay-ui:error exception="<%= GroupNameException.class %>" message="please-enter-a-valid-name" />
+<liferay-ui:error exception="<%= GroupInheritContentException.class %>" message="this-site-cannot-inherit-content-from-its-parent-site" />
+<liferay-ui:error exception="<%= GroupKeyException.class %>" message="please-enter-a-valid-name" />
 
 <liferay-ui:error exception="<%= GroupParentException.class %>">
 
@@ -121,15 +154,12 @@ else if (group != null) {
 
 <aui:fieldset>
 	<c:choose>
-		<c:when test="<%= ((liveGroup != null) && (liveGroup.isCompany() || PortalUtil.isSystemGroup(liveGroup.getName()))) %>">
-			<aui:input name="name" type="hidden" />
-		</c:when>
 		<c:when test="<%= (liveGroup != null) && liveGroup.isOrganization() %>">
 			<aui:input helpMessage="the-name-of-this-site-cannot-be-edited-because-it-belongs-to-an-organization" name="name" type="resource" value="<%= liveGroup.getDescriptiveName(locale) %>" />
 		</c:when>
-		<c:otherwise>
+		<c:when test="<%= (liveGroup == null) || (!liveGroup.isCompany() && !PortalUtil.isSystemGroup(liveGroup.getGroupKey())) %>">
 			<aui:input autoFocus="<%= windowState.equals(WindowState.MAXIMIZED) %>" name="name" />
-		</c:otherwise>
+		</c:when>
 	</c:choose>
 
 	<aui:input name="description" />
@@ -140,6 +170,19 @@ else if (group != null) {
 
 	<c:if test="<%= (group == null) || !group.isCompany() %>">
 		<aui:input name="active" value="<%= true %>" />
+	</c:if>
+
+	<c:if test="<%= ((parentGroupId != GroupConstants.DEFAULT_PARENT_GROUP_ID) && PropsValues.SITES_SHOW_INHERIT_CONTENT_SCOPE_FROM_PARENT_SITE) %>">
+
+		<%
+		boolean disabled = false;
+
+		if ((parentGroup != null) && parentGroup.isInheritContent()) {
+			disabled = true;
+		}
+		%>
+
+		<aui:input disabled="<%= disabled %>" helpMessage='<%= disabled ? "this-site-cannot-inherit-the-content-from-its-parent-site-since-the-parent-site-is-already-inheriting-the-content-from-its-parent" : StringPool.BLANK %>' name="inheritContent" value="<%= false %>" />
 	</c:if>
 
 	<h3><liferay-ui:message key="membership-options" /></h3>
@@ -449,42 +492,6 @@ boolean hasUnlinkLayoutSetPrototypePermission = PortalPermissionUtil.contains(pe
 	</aui:fieldset>
 
 	<%
-	long parentGroupId = ParamUtil.getLong(request, "parentGroupSearchContainerPrimaryKeys", (group != null) ? group.getParentGroupId() : GroupConstants.DEFAULT_PARENT_GROUP_ID);
-
-	if (parentGroupId <= 0) {
-		parentGroupId = GroupConstants.DEFAULT_PARENT_GROUP_ID;
-
-		if (group != null) {
-			parentGroupId = liveGroup.getParentGroupId();
-		}
-	}
-
-	Group parentGroup = null;
-
-	if ((group == null) && (parentGroupId == GroupConstants.DEFAULT_PARENT_GROUP_ID) && !permissionChecker.isCompanyAdmin()) {
-		List<Group> manageableGroups = new ArrayList<Group>();
-
-		for (Group curGroup : user.getGroups()) {
-			if (GroupPermissionUtil.contains(permissionChecker, curGroup, ActionKeys.MANAGE_SUBGROUPS)) {
-				manageableGroups.add(curGroup);
-			}
-		}
-
-		if (manageableGroups.size() == 1) {
-			Group manageableGroup = manageableGroups.get(0);
-
-			parentGroupId = manageableGroup.getGroupId();
-		}
-	}
-
-	if (parentGroupId != GroupConstants.DEFAULT_PARENT_GROUP_ID) {
-		try {
-			parentGroup = GroupLocalServiceUtil.getGroup(parentGroupId);
-		}
-		catch (NoSuchGroupException nsoe) {
-		}
-	}
-
 	List<Group> parentGroups = new ArrayList<Group>();
 
 	if (parentGroup != null) {
@@ -585,8 +592,8 @@ boolean hasUnlinkLayoutSetPrototypePermission = PortalPermissionUtil.contains(pe
 		Liferay.Util.toggleSelectBox('<portlet:namespace />publicLayoutSetPrototypeId', <portlet:namespace />isVisible, '<portlet:namespace />publicLayoutSetPrototypeIdOptions');
 		Liferay.Util.toggleSelectBox('<portlet:namespace />privateLayoutSetPrototypeId', <portlet:namespace />isVisible, '<portlet:namespace />privateLayoutSetPrototypeIdOptions');
 
-		Liferay.Util.toggleBoxes('<portlet:namespace />publicLayoutSetPrototypeLinkEnabled','<portlet:namespace />publicLayoutSetPrototypeMergeAlert');
-		Liferay.Util.toggleBoxes('<portlet:namespace />privateLayoutSetPrototypeLinkEnabled','<portlet:namespace />privateLayoutSetPrototypeMergeAlert');
+		Liferay.Util.toggleBoxes('<portlet:namespace />publicLayoutSetPrototypeLinkEnabled', '<portlet:namespace />publicLayoutSetPrototypeMergeAlert');
+		Liferay.Util.toggleBoxes('<portlet:namespace />privateLayoutSetPrototypeLinkEnabled', '<portlet:namespace />privateLayoutSetPrototypeMergeAlert');
 	</aui:script>
 
 	<aui:script use="liferay-search-container">

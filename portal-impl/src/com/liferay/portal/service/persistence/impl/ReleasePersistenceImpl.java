@@ -59,7 +59,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see ReleasePersistence
- * @see ReleaseUtil
+ * @see com.liferay.portal.service.persistence.ReleaseUtil
  * @generated
  */
 @ProviderType
@@ -1029,7 +1029,7 @@ public class ReleasePersistenceImpl extends BasePersistenceImpl<Release>
 		MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

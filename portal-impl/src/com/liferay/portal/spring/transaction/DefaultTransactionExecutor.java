@@ -28,44 +28,11 @@ import org.springframework.transaction.interceptor.TransactionAttribute;
  * @author Michael C. Han
  * @author Shuyang Zhou
  */
-public class DefaultTransactionExecutor extends BaseTransactionExecutor {
+public class DefaultTransactionExecutor
+	extends BaseTransactionExecutor implements TransactionHandler {
 
 	@Override
-	public Object execute(
-			PlatformTransactionManager platformTransactionManager,
-			TransactionAttribute transactionAttribute,
-			MethodInvocation methodInvocation)
-		throws Throwable {
-
-		TransactionStatus transactionStatus =
-			platformTransactionManager.getTransaction(transactionAttribute);
-
-		boolean newTransaction = transactionStatus.isNewTransaction();
-
-		if (newTransaction) {
-			fireTransactionCreatedEvent(
-				transactionAttribute, transactionStatus);
-		}
-
-		Object returnValue = null;
-
-		try {
-			returnValue = methodInvocation.proceed();
-		}
-		catch (Throwable throwable) {
-			processThrowable(
-				platformTransactionManager, throwable, transactionAttribute,
-				transactionStatus);
-		}
-
-		processCommit(
-			platformTransactionManager, transactionAttribute,
-			transactionStatus);
-
-		return returnValue;
-	}
-
-	protected void processCommit(
+	public void commit(
 		PlatformTransactionManager platformTransactionManager,
 		TransactionAttribute transactionAttribute,
 		TransactionStatus transactionStatus) {
@@ -112,7 +79,36 @@ public class DefaultTransactionExecutor extends BaseTransactionExecutor {
 		}
 	}
 
-	protected void processThrowable(
+	@Override
+	public Object execute(
+			PlatformTransactionManager platformTransactionManager,
+			TransactionAttribute transactionAttribute,
+			MethodInvocation methodInvocation)
+		throws Throwable {
+
+		TransactionStatus transactionStatus = start(
+			platformTransactionManager, transactionAttribute);
+
+		Object returnValue = null;
+
+		try {
+			returnValue = methodInvocation.proceed();
+		}
+		catch (Throwable throwable) {
+			rollback(
+				platformTransactionManager, throwable, transactionAttribute,
+				transactionStatus);
+		}
+
+		commit(
+			platformTransactionManager, transactionAttribute,
+			transactionStatus);
+
+		return returnValue;
+	}
+
+	@Override
+	public void rollback(
 			PlatformTransactionManager platformTransactionManager,
 			Throwable throwable, TransactionAttribute transactionAttribute,
 			TransactionStatus transactionStatus)
@@ -150,7 +146,7 @@ public class DefaultTransactionExecutor extends BaseTransactionExecutor {
 			}
 		}
 		else {
-			processCommit(
+			commit(
 				platformTransactionManager, transactionAttribute,
 				transactionStatus);
 		}
@@ -158,7 +154,23 @@ public class DefaultTransactionExecutor extends BaseTransactionExecutor {
 		throw throwable;
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
+	@Override
+	public TransactionStatus start(
+		PlatformTransactionManager platformTransactionManager,
+		TransactionAttribute transactionAttribute) {
+
+		TransactionStatus transactionStatus =
+			platformTransactionManager.getTransaction(transactionAttribute);
+
+		if (transactionStatus.isNewTransaction()) {
+			fireTransactionCreatedEvent(
+				transactionAttribute, transactionStatus);
+		}
+
+		return transactionStatus;
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
 		DefaultTransactionExecutor.class);
 
 }

@@ -19,10 +19,10 @@ import com.liferay.portal.kernel.io.unsync.UnsyncStringWriter;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.pacl.DoPrivileged;
-import com.liferay.portal.kernel.servlet.PluginContextListener;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.kernel.template.Template;
 import com.liferay.portal.kernel.template.TemplateConstants;
+import com.liferay.portal.kernel.template.TemplateManager;
 import com.liferay.portal.kernel.template.TemplateManagerUtil;
 import com.liferay.portal.kernel.template.TemplateResource;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -50,7 +50,6 @@ import com.liferay.portal.util.WebKeys;
 import com.liferay.taglib.servlet.PipingServletResponse;
 import com.liferay.taglib.util.DummyVelocityTaglib;
 import com.liferay.taglib.util.VelocityTaglib;
-import com.liferay.taglib.util.VelocityTaglibImpl;
 
 import java.io.Closeable;
 
@@ -266,9 +265,7 @@ public class RuntimePageImpl implements RuntimePage {
 				pluginServletContextName);
 
 			if (pluginServletContext != null) {
-				pluginClassLoader =
-					(ClassLoader)pluginServletContext.getAttribute(
-						PluginContextListener.PLUGIN_CLASS_LOADER);
+				pluginClassLoader = pluginServletContext.getClassLoader();
 			}
 		}
 
@@ -345,6 +342,10 @@ public class RuntimePageImpl implements RuntimePage {
 		TemplateProcessor processor = new TemplateProcessor(
 			request, response, portletId);
 
+		TemplateManager templateManager =
+			TemplateManagerUtil.getTemplateManager(
+				TemplateConstants.LANG_TYPE_VM);
+
 		Template template = TemplateManagerUtil.getTemplate(
 			TemplateConstants.LANG_TYPE_VM, templateResource, restricted);
 
@@ -354,16 +355,11 @@ public class RuntimePageImpl implements RuntimePage {
 
 		template.prepare(request);
 
-		// liferay:include tag library
-
 		UnsyncStringWriter unsyncStringWriter = new UnsyncStringWriter();
 
-		VelocityTaglib velocityTaglib = new VelocityTaglibImpl(
-			request.getServletContext(), request,
-			new PipingServletResponse(response, unsyncStringWriter), template);
-
-		template.put("taglibLiferay", velocityTaglib);
-		template.put("theme", velocityTaglib);
+		templateManager.addTaglibTheme(
+			template, "taglibLiferay", request,
+			new PipingServletResponse(response, unsyncStringWriter));
 
 		try {
 			template.processTemplate(unsyncStringWriter);
@@ -379,8 +375,7 @@ public class RuntimePageImpl implements RuntimePage {
 
 		Lock lock = null;
 
-		Map<String, StringBundler> contentsMap =
-			new HashMap<String, StringBundler>();
+		Map<String, StringBundler> contentsMap = new HashMap<>();
 
 		Map<Integer, List<PortletRenderer>> portletRenderersMap =
 			processor.getPortletRenderers();
@@ -521,9 +516,8 @@ public class RuntimePageImpl implements RuntimePage {
 			PortalExecutorManagerUtil.getPortalExecutor(
 				RuntimePageImpl.class.getName());
 
-		Map<Future<StringBundler>, PortletRenderer> futures =
-			new HashMap<Future<StringBundler>, PortletRenderer>(
-				portletRenderers.size());
+		Map<Future<StringBundler>, PortletRenderer> futures = new HashMap<>(
+			portletRenderers.size());
 
 		for (PortletRenderer portletRenderer : portletRenderers) {
 			if (_log.isDebugEnabled()) {
@@ -551,7 +545,7 @@ public class RuntimePageImpl implements RuntimePage {
 				// setting, but to be more robust, we take care of this by
 				// converting the rejection to a fallback action.
 
-				future = new FutureTask<StringBundler>(renderCallable);
+				future = new FutureTask<>(renderCallable);
 
 				// Cancel immediately
 
@@ -676,7 +670,8 @@ public class RuntimePageImpl implements RuntimePage {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(RuntimePageImpl.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		RuntimePageImpl.class);
 
 	private int _waitTime = Integer.MAX_VALUE;
 

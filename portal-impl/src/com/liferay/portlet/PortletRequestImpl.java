@@ -125,6 +125,7 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 		_request.removeAttribute(WebKeys.PORTLET_CONTENT);
 	}
 
+	@Override
 	public void defineObjects(
 		PortletConfig portletConfig, PortletResponse portletResponse) {
 
@@ -160,7 +161,7 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 
 	@Override
 	public Enumeration<String> getAttributeNames() {
-		List<String> names = new ArrayList<String>();
+		List<String> names = new ArrayList<>();
 
 		Enumeration<String> enu = _request.getAttributeNames();
 
@@ -369,8 +370,7 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 			}
 
 			if (privateParameterMap == null) {
-				privateParameterMap = new HashMap<String, String[]>(
-					parameterMap.size(), 1);
+				privateParameterMap = new HashMap<>(parameterMap.size(), 1);
 			}
 
 			privateParameterMap.put(name, entry.getValue());
@@ -385,7 +385,7 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 
 	@Override
 	public Enumeration<String> getProperties(String name) {
-		List<String> values = new ArrayList<String>();
+		List<String> values = new ArrayList<>();
 
 		String value = _portalContext.getProperty(name);
 
@@ -424,8 +424,7 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 
 			if (_portlet.getPublicRenderParameter(name) != null) {
 				if (publicParameterMap == null) {
-					publicParameterMap = new HashMap<String, String[]>(
-						parameterMap.size(), 1);
+					publicParameterMap = new HashMap<>(parameterMap.size(), 1);
 				}
 
 				publicParameterMap.put(name, entry.getValue());
@@ -478,7 +477,7 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 
 	@Override
 	public Enumeration<String> getResponseContentTypes() {
-		List<String> responseContentTypes = new ArrayList<String>();
+		List<String> responseContentTypes = new ArrayList<>();
 
 		responseContentTypes.add(getResponseContentType());
 
@@ -754,8 +753,7 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 		}
 
 		if (portletFocus) {
-			Map<String, String[]> renderParameters =
-				new HashMap<String, String[]>();
+			Map<String, String[]> renderParameters = new HashMap<>();
 
 			if (getLifecycle().equals(PortletRequest.RENDER_PHASE) &&
 				!LiferayWindowState.isExclusive(request) &&
@@ -947,9 +945,10 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 		return name;
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(PortletRequestImpl.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		PortletRequestImpl.class);
 
-	private static Pattern _strutsPortletIgnoredParamtersPattern =
+	private static final Pattern _strutsPortletIgnoredParamtersPattern =
 		Pattern.compile(PropsValues.STRUTS_PORTLET_IGNORED_PARAMETERS_REGEXP);
 
 	private boolean _invalidSession;

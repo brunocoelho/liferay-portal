@@ -226,6 +226,8 @@ public class EditTemplateAction extends PortletAction {
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
+		String portletResourceNamespace = ParamUtil.getString(
+			actionRequest, "portletResourceNamespace");
 		long classNameId = ParamUtil.getLong(actionRequest, "classNameId");
 		long classPK = ParamUtil.getLong(actionRequest, "classPK");
 		String structureAvailableFields = ParamUtil.getString(
@@ -239,6 +241,8 @@ public class EditTemplateAction extends PortletAction {
 		portletURL.setParameter(
 			"struts_action", "/dynamic_data_mapping/edit_template");
 		portletURL.setParameter("redirect", redirect, false);
+		portletURL.setParameter(
+			"portletResourceNamespace", portletResourceNamespace, false);
 		portletURL.setParameter(
 			"templateId", String.valueOf(template.getTemplateId()), false);
 		portletURL.setParameter(
@@ -304,6 +308,8 @@ public class EditTemplateAction extends PortletAction {
 		long classNameId = ParamUtil.getLong(
 			uploadPortletRequest, "classNameId");
 		long classPK = ParamUtil.getLong(uploadPortletRequest, "classPK");
+		long resourceClassNameId = ParamUtil.getLong(
+			uploadPortletRequest, "resourceClassNameId");
 		String templateKey = ParamUtil.getString(
 			uploadPortletRequest, "templateKey");
 		Map<Locale, String> nameMap = LocalizationUtil.getLocalizationMap(
@@ -333,9 +339,10 @@ public class EditTemplateAction extends PortletAction {
 
 		if (templateId <= 0) {
 			template = DDMTemplateServiceUtil.addTemplate(
-				groupId, classNameId, classPK, templateKey, nameMap,
-				descriptionMap, type, mode, language, script, cacheable,
-				smallImage, smallImageURL, smallImageFile, serviceContext);
+				groupId, classNameId, classPK, resourceClassNameId, templateKey,
+				nameMap, descriptionMap, type, mode, language, script,
+				cacheable, smallImage, smallImageURL, smallImageFile,
+				serviceContext);
 		}
 		else {
 			template = DDMTemplateServiceUtil.updateTemplate(

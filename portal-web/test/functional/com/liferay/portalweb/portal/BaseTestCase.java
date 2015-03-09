@@ -16,8 +16,8 @@ package com.liferay.portalweb.portal;
 
 import com.liferay.portal.util.InitUtil;
 import com.liferay.portalweb.portal.util.LiferaySeleneseTestCase;
-import com.liferay.portalweb.portal.util.SeleniumUtil;
-import com.liferay.portalweb.portal.util.TestPropsValues;
+import com.liferay.portalweb.util.SeleniumUtil;
+import com.liferay.portalweb.util.TestPropsValues;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,10 +28,11 @@ import java.util.Map;
 public class BaseTestCase extends LiferaySeleneseTestCase {
 
 	public BaseTestCase() {
-		InitUtil.initWithSpringAndModuleFramework();
+		InitUtil.initWithSpring(true);
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public void setUp() throws Exception {
 		Class<?> clazz = getClass();
 
@@ -47,6 +48,7 @@ public class BaseTestCase extends LiferaySeleneseTestCase {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public void tearDown() throws Exception {
 		String primaryTestSuiteName = selenium.getPrimaryTestSuiteName();
 
@@ -122,8 +124,7 @@ public class BaseTestCase extends LiferaySeleneseTestCase {
 	protected static int testCaseCount;
 
 	protected Map<String, String> commandScopeVariables;
-	protected Map<String, String> definitionScopeVariables =
-		new HashMap<String, String>();
+	protected Map<String, String> definitionScopeVariables = new HashMap<>();
 	protected Map<String, String> executeScopeVariables;
 	protected Map<String, String> forScopeVariables;
 

@@ -56,7 +56,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see WebDAVPropsPersistence
- * @see WebDAVPropsUtil
+ * @see com.liferay.portal.service.persistence.WebDAVPropsUtil
  * @generated
  */
 @ProviderType
@@ -1011,7 +1011,7 @@ public class WebDAVPropsPersistenceImpl extends BasePersistenceImpl<WebDAVProps>
 		MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

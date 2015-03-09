@@ -16,11 +16,11 @@ package com.liferay.portlet.documentlibrary.service;
 
 import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
 import com.liferay.portal.kernel.test.AssertUtils;
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.StringPool;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
-import com.liferay.portal.util.test.RandomTestUtil;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portlet.documentlibrary.model.DLContent;
 import com.liferay.portlet.documentlibrary.store.Store;
 
@@ -31,16 +31,21 @@ import java.util.List;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Tina Tian
  * @author Shuyang Zhou
  */
-@ExecutionTestListeners(listeners = {MainServletExecutionTestListener.class})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 public class DLContentLocalServiceTest {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -377,9 +382,6 @@ public class DLContentLocalServiceTest {
 
 	private static final byte[] _DATA_VERSION_2 = new byte[_DATA_SIZE];
 
-	private long _companyId;
-	private DLContentLocalService _dlContentLocalService;
-
 	static {
 		for (int i = 0; i < _DATA_SIZE; i++) {
 			_DATA_VERSION_1[i] = (byte)i;
@@ -387,6 +389,8 @@ public class DLContentLocalServiceTest {
 		}
 	}
 
+	private long _companyId;
+	private DLContentLocalService _dlContentLocalService;
 	private long _repositoryId;
 
 }

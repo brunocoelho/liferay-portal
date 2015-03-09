@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.cache.ThreadLocalCachable;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
+import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.Indexable;
@@ -50,11 +51,11 @@ import com.liferay.portlet.asset.model.AssetCategoryConstants;
 import com.liferay.portlet.asset.model.AssetCategoryProperty;
 import com.liferay.portlet.asset.model.AssetEntry;
 import com.liferay.portlet.asset.service.base.AssetCategoryLocalServiceBaseImpl;
-import com.liferay.portlet.asset.util.AssetCategoryUtil;
 import com.liferay.portlet.asset.util.comparator.AssetCategoryLeftCategoryIdComparator;
 
 import java.io.Serializable;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -177,13 +178,13 @@ public class AssetCategoryLocalServiceImpl
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		Map<Locale, String> titleMap = new HashMap<Locale, String>();
+		Map<Locale, String> titleMap = new HashMap<>();
 
 		Locale locale = LocaleUtil.getSiteDefault();
 
 		titleMap.put(locale, title);
 
-		Map<Locale, String> descriptionMap = new HashMap<Locale, String>();
+		Map<Locale, String> descriptionMap = new HashMap<>();
 
 		descriptionMap.put(locale, StringPool.BLANK);
 
@@ -218,6 +219,52 @@ public class AssetCategoryLocalServiceImpl
 	}
 
 	@Override
+	public void deleteCategories(List<AssetCategory> categories)
+		throws PortalException {
+
+		List<Long> rebuildTreeGroupIds = new ArrayList<>();
+
+		for (AssetCategory category : categories) {
+			if (!rebuildTreeGroupIds.contains(category.getGroupId()) &&
+				(getChildCategoriesCount(category.getCategoryId()) > 0)) {
+
+				final long groupId = category.getGroupId();
+
+				TransactionCommitCallbackRegistryUtil.registerCallback(
+					new Callable<Void>() {
+
+						@Override
+						public Void call() throws Exception {
+							assetCategoryLocalService.rebuildTree(
+								groupId, true);
+
+							return null;
+						}
+
+					});
+
+				rebuildTreeGroupIds.add(groupId);
+			}
+
+			deleteCategory(category, true);
+		}
+	}
+
+	@Override
+	public void deleteCategories(long[] categoryIds) throws PortalException {
+		List<AssetCategory> categories = new ArrayList<>();
+
+		for (long categoryId : categoryIds) {
+			AssetCategory category = assetCategoryPersistence.findByPrimaryKey(
+				categoryId);
+
+			categories.add(category);
+		}
+
+		deleteCategories(categories);
+	}
+
+	@Override
 	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
 	public AssetCategory deleteCategory(AssetCategory category)
 		throws PortalException {
@@ -228,7 +275,7 @@ public class AssetCategoryLocalServiceImpl
 	@Indexable(type = IndexableType.DELETE)
 	@Override
 	public AssetCategory deleteCategory(
-			AssetCategory category, boolean childCategory)
+			AssetCategory category, boolean skipRebuildTree)
 		throws PortalException {
 
 		// Categories
@@ -241,7 +288,7 @@ public class AssetCategoryLocalServiceImpl
 			deleteCategory(curCategory, true);
 		}
 
-		if (!categories.isEmpty() && !childCategory) {
+		if (!categories.isEmpty() && !skipRebuildTree) {
 			final long groupId = category.getGroupId();
 
 			TransactionCommitCallbackRegistryUtil.registerCallback(
@@ -257,6 +304,11 @@ public class AssetCategoryLocalServiceImpl
 				});
 		}
 
+		// Entries
+
+		List<AssetEntry> entries = assetCategoryPersistence.getAssetEntries(
+			category.getCategoryId());
+
 		// Category
 
 		assetCategoryPersistence.remove(category);
@@ -266,11 +318,6 @@ public class AssetCategoryLocalServiceImpl
 		resourceLocalService.deleteResource(
 			category.getCompanyId(), AssetCategory.class.getName(),
 			ResourceConstants.SCOPE_INDIVIDUAL, category.getCategoryId());
-
-		// Entries
-
-		List<AssetEntry> entries = assetTagPersistence.getAssetEntries(
-			category.getCategoryId());
 
 		// Properties
 
@@ -298,15 +345,12 @@ public class AssetCategoryLocalServiceImpl
 	public void deleteVocabularyCategories(long vocabularyId)
 		throws PortalException {
 
-		List<AssetCategory> categories =
-			assetCategoryPersistence.findByP_V(
-				AssetCategoryConstants.DEFAULT_PARENT_CATEGORY_ID, vocabularyId,
-				QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-				new AssetCategoryLeftCategoryIdComparator(false));
+		List<AssetCategory> categories = assetCategoryPersistence.findByP_V(
+			AssetCategoryConstants.DEFAULT_PARENT_CATEGORY_ID, vocabularyId,
+			QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+			new AssetCategoryLeftCategoryIdComparator(false));
 
-		for (AssetCategory category : categories) {
-			assetCategoryLocalService.deleteCategory(category);
-		}
+		assetCategoryLocalService.deleteCategories(categories);
 	}
 
 	@Override
@@ -317,6 +361,37 @@ public class AssetCategoryLocalServiceImpl
 	@Override
 	public List<AssetCategory> getCategories() {
 		return assetCategoryPersistence.findAll();
+	}
+
+	@Override
+	public List<AssetCategory> getCategories(Hits hits) throws PortalException {
+		List<Document> documents = hits.toList();
+
+		List<AssetCategory> categories = new ArrayList<>(documents.size());
+
+		for (Document document : documents) {
+			long categoryId = GetterUtil.getLong(
+				document.get(Field.ASSET_CATEGORY_ID));
+
+			AssetCategory category = fetchCategory(categoryId);
+
+			if (category == null) {
+				categories = null;
+
+				Indexer indexer = IndexerRegistryUtil.getIndexer(
+					AssetCategory.class);
+
+				long companyId = GetterUtil.getLong(
+					document.get(Field.COMPANY_ID));
+
+				indexer.delete(companyId, document.getUID());
+			}
+			else if (categories != null) {
+				categories.add(category);
+			}
+		}
+
+		return categories;
 	}
 
 	@Override
@@ -702,8 +777,7 @@ public class AssetCategoryLocalServiceImpl
 
 		SearchContext searchContext = new SearchContext();
 
-		Map<String, Serializable> attributes =
-			new HashMap<String, Serializable>();
+		Map<String, Serializable> attributes = new HashMap<>();
 
 		attributes.put(Field.ASSET_PARENT_CATEGORY_IDS, parentCategoryIds);
 		attributes.put(Field.ASSET_VOCABULARY_IDS, vocabularyIds);
@@ -744,11 +818,10 @@ public class AssetCategoryLocalServiceImpl
 		for (int i = 0; i < 10; i++) {
 			Hits hits = indexer.search(searchContext);
 
-			List<AssetCategory> categories = AssetCategoryUtil.getCategories(
-				hits);
+			List<AssetCategory> categories = getCategories(hits);
 
 			if (categories != null) {
-				return new BaseModelSearchResult<AssetCategory>(
+				return new BaseModelSearchResult<>(
 					categories, hits.getLength());
 			}
 		}

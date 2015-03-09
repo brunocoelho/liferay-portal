@@ -96,14 +96,14 @@ public class LuceneIndexWriter extends BaseIndexWriter {
 	}
 
 	@Override
-	public void deletePortletDocuments(
-			SearchContext searchContext, String portletId)
+	public void deleteEntityDocuments(
+			SearchContext searchContext, String className)
 		throws SearchException {
 
 		try {
 			LuceneHelperUtil.deleteDocuments(
-				searchContext.getCompanyId(), new Term(Field.PORTLET_ID,
-				portletId));
+				searchContext.getCompanyId(),
+				new Term(Field.ENTRY_CLASS_NAME, className));
 		}
 		catch (IOException ioe) {
 			throw new SearchException(ioe);
@@ -234,6 +234,7 @@ public class LuceneIndexWriter extends BaseIndexWriter {
 		return luceneDocument;
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(LuceneIndexWriter.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		LuceneIndexWriter.class);
 
 }

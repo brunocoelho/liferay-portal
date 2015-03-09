@@ -397,20 +397,20 @@ public interface LayoutLocalService extends BaseLocalService,
 		com.liferay.portal.kernel.util.OrderByComparator<T> orderByComparator);
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery);
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,
@@ -565,6 +565,14 @@ public interface LayoutLocalService extends BaseLocalService,
 		java.lang.String portletId,
 		java.util.Map<java.lang.String, java.lang.String[]> parameterMap,
 		java.util.Date startDate, java.util.Date endDate)
+		throws com.liferay.portal.kernel.exception.PortalException;
+
+	public long exportPortletInfoAsFileInBackground(long userId,
+		com.liferay.portal.model.ExportImportConfiguration exportImportConfiguration)
+		throws com.liferay.portal.kernel.exception.PortalException;
+
+	public long exportPortletInfoAsFileInBackground(long userId,
+		long exportImportConfigurationId)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	public long exportPortletInfoAsFileInBackground(long userId,
@@ -852,10 +860,27 @@ public interface LayoutLocalService extends BaseLocalService,
 	public int getLayoutsByLayoutPrototypeUuidCount(
 		java.lang.String layoutPrototypeUuid);
 
+	/**
+	* Returns all the layouts matching the UUID and company.
+	*
+	* @param uuid the UUID of the layouts
+	* @param companyId the primary key of the company
+	* @return the matching layouts, or an empty list if no matches were found
+	*/
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public java.util.List<com.liferay.portal.model.Layout> getLayoutsByUuidAndCompanyId(
 		java.lang.String uuid, long companyId);
 
+	/**
+	* Returns a range of layouts matching the UUID and company.
+	*
+	* @param uuid the UUID of the layouts
+	* @param companyId the primary key of the company
+	* @param start the lower bound of the range of layouts
+	* @param end the upper bound of the range of layouts (not inclusive)
+	* @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	* @return the range of matching layouts, or an empty list if no matches were found
+	*/
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public java.util.List<com.liferay.portal.model.Layout> getLayoutsByUuidAndCompanyId(
 		java.lang.String uuid, long companyId, int start, int end,
@@ -1049,6 +1074,15 @@ public interface LayoutLocalService extends BaseLocalService,
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	public long importLayoutsInBackground(long userId,
+		com.liferay.portal.model.ExportImportConfiguration exportImportConfiguration,
+		java.io.File file)
+		throws com.liferay.portal.kernel.exception.PortalException;
+
+	public long importLayoutsInBackground(long userId,
+		long exportImportConfigurationId, java.io.File file)
+		throws com.liferay.portal.kernel.exception.PortalException;
+
+	public long importLayoutsInBackground(long userId,
 		java.lang.String taskName, long groupId, boolean privateLayout,
 		java.util.Map<java.lang.String, java.lang.String[]> parameterMap,
 		java.io.File file)
@@ -1112,6 +1146,15 @@ public interface LayoutLocalService extends BaseLocalService,
 	public void importPortletInfo(long userId, java.lang.String portletId,
 		java.util.Map<java.lang.String, java.lang.String[]> parameterMap,
 		java.io.InputStream is)
+		throws com.liferay.portal.kernel.exception.PortalException;
+
+	public long importPortletInfoInBackground(long userId,
+		com.liferay.portal.model.ExportImportConfiguration exportImportConfiguration,
+		java.io.File file)
+		throws com.liferay.portal.kernel.exception.PortalException;
+
+	public long importPortletInfoInBackground(long userId,
+		long exportImportConfigurationId, java.io.File file)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	public long importPortletInfoInBackground(long userId,
@@ -1258,7 +1301,7 @@ public interface LayoutLocalService extends BaseLocalService,
 	exception occurred
 	* @deprecated As of 6.2.0, replaced by {@link #updateLayout(long, boolean,
 	long, long, Map, Map, Map, Map, Map, String, boolean, Map,
-	Boolean, byte[], ServiceContext)}
+	boolean, byte[], ServiceContext)}
 	*/
 	@java.lang.Deprecated
 	public com.liferay.portal.model.Layout updateLayout(long groupId,

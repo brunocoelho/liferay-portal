@@ -16,7 +16,7 @@ package com.liferay.portal.kernel.concurrent;
 
 import com.liferay.portal.kernel.concurrent.test.MarkerBlockingJob;
 import com.liferay.portal.kernel.concurrent.test.TestUtil;
-import com.liferay.portal.kernel.test.CodeCoverageAssertor;
+import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -31,8 +31,8 @@ import org.junit.Test;
 public class DiscardOldestPolicyTest {
 
 	@ClassRule
-	public static CodeCoverageAssertor codeCoverageAssertor =
-		new CodeCoverageAssertor();
+	public static final CodeCoverageAssertor codeCoverageAssertor =
+		CodeCoverageAssertor.INSTANCE;
 
 	@Test
 	public void testDiscardOldestPolicy1() {

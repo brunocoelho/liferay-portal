@@ -1,4 +1,4 @@
-@import "compass";
+@import "bourbon";
 @import "mixins";
 
 .lfr-add-panel {
@@ -37,7 +37,7 @@
 			}
 
 			.input-select-wrapper {
-				padding-left: 15px;
+				padding-left: 10px;
 				width: 25%;
 			}
 
@@ -181,11 +181,14 @@
 					margin-bottom: 5px;
 					margin-left: 0;
 					padding: 2px;
+
+					input[type="checkbox"], input[type="radio"] {
+						top: 5px;
+					}
 				}
 
-				.radio input {
-					margin-left: 6px;
-					margin-right: 6px;
+				.radio {
+					padding-left: 25px;
 				}
 
 				&.toggler-header-collapsed .lfr-page-template-description {
@@ -262,7 +265,7 @@
 		.added-message {
 			left: 0;
 
-			@include opacity(0);
+			opacity: 0;
 
 			position: fixed;
 			top: 0;
@@ -377,9 +380,12 @@
 
 			.toggler-header {
 				&.active {
-					&.lfr-page-template-title label {
+					&.lfr-page-template-title .radio {
 						background-color: #0DB5E7;
-						color: #FFF;
+
+						label {
+							color: #FFF;
+						}
 					}
 				}
 			}

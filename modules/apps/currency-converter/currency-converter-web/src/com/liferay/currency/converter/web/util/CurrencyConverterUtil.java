@@ -47,7 +47,7 @@ public class CurrencyConverterUtil {
 			return symbols;
 		}
 
-		symbols = new TreeMap<String, String>();
+		symbols = new TreeMap<>();
 
 		for (String symbol : _instance._currencyIds) {
 			symbols.put(LanguageUtil.get(request, symbol), symbol);
@@ -79,7 +79,7 @@ public class CurrencyConverterUtil {
 	}
 
 	private CurrencyConverterUtil() {
-		_currencyIds = new HashSet<String>();
+		_currencyIds = new HashSet<>();
 
 		_currencyIds.add("ALL");
 		_currencyIds.add("DZD");
@@ -232,12 +232,12 @@ public class CurrencyConverterUtil {
 		_currencyIds.add("ZWD");
 	}
 
-	private static CurrencyConverterUtil _instance =
+	private static final CurrencyConverterUtil _instance =
 		new CurrencyConverterUtil();
 
-	private static Map<String, Map<String, String>> _symbolsPool =
-		new ConcurrentHashMap<String, Map<String, String>>();
+	private static final Map<String, Map<String, String>> _symbolsPool =
+		new ConcurrentHashMap<>();
 
-	private Set<String> _currencyIds;
+	private final Set<String> _currencyIds;
 
 }

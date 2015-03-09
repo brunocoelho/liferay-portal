@@ -117,6 +117,7 @@
 				cached = new A.Tooltip(
 					{
 						cssClass: 'tooltip-help',
+						html: true,
 						opacity: 1,
 						stickDuration: 300,
 						visible: false,
@@ -125,6 +126,10 @@
 				).render();
 
 				instance._cached = cached;
+			}
+
+			if (obj.jquery) {
+				obj = obj[0];
 			}
 
 			obj = A.one(obj);

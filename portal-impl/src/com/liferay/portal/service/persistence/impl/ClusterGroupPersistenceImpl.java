@@ -55,7 +55,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see ClusterGroupPersistence
- * @see ClusterGroupUtil
+ * @see com.liferay.portal.service.persistence.ClusterGroupUtil
  * @generated
  */
 @ProviderType
@@ -718,7 +718,7 @@ public class ClusterGroupPersistenceImpl extends BasePersistenceImpl<ClusterGrou
 		MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

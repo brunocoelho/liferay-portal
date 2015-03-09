@@ -100,7 +100,7 @@ public class MembershipRequestLocalServiceUtil {
 		getService().deleteMembershipRequests(groupId);
 	}
 
-	public static void deleteMembershipRequests(long groupId, int statusId) {
+	public static void deleteMembershipRequests(long groupId, long statusId) {
 		getService().deleteMembershipRequests(groupId, statusId);
 	}
 
@@ -172,10 +172,10 @@ public class MembershipRequestLocalServiceUtil {
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public static long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery) {
@@ -183,11 +183,11 @@ public class MembershipRequestLocalServiceUtil {
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public static long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,
@@ -243,7 +243,7 @@ public class MembershipRequestLocalServiceUtil {
 	}
 
 	public static java.util.List<com.liferay.portal.model.MembershipRequest> getMembershipRequests(
-		long userId, long groupId, int statusId) {
+		long userId, long groupId, long statusId) {
 		return getService().getMembershipRequests(userId, groupId, statusId);
 	}
 
@@ -263,7 +263,7 @@ public class MembershipRequestLocalServiceUtil {
 	}
 
 	public static boolean hasMembershipRequest(long userId, long groupId,
-		int statusId) {
+		long statusId) {
 		return getService().hasMembershipRequest(userId, groupId, statusId);
 	}
 
@@ -297,8 +297,8 @@ public class MembershipRequestLocalServiceUtil {
 	}
 
 	public static void updateStatus(long replierUserId,
-		long membershipRequestId, java.lang.String replyComments, int statusId,
-		boolean addUserToGroup,
+		long membershipRequestId, java.lang.String replyComments,
+		long statusId, boolean addUserToGroup,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 		getService()

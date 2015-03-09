@@ -140,17 +140,18 @@ public class BeanReferenceAnnotationBeanPostProcessor
 					catch (BeanLocatorException ble) {
 						StringWriter stringWriter = new StringWriter();
 
-						PrintWriter printWriter = new PrintWriter(stringWriter);
+						try (PrintWriter printWriter = new PrintWriter(
+								stringWriter)) {
 
-						printWriter.print("BeanFactory could not find bean: ");
+							printWriter.print(
+								"BeanFactory could not find bean: ");
 
-						nsbde.printStackTrace(printWriter);
+							nsbde.printStackTrace(printWriter);
 
-						printWriter.print(
-							" and PortalBeanLocator failed with: ");
-						printWriter.append(ble.getMessage());
-
-						printWriter.close();
+							printWriter.print(
+								" and PortalBeanLocator failed with: ");
+							printWriter.append(ble.getMessage());
+						}
 
 						throw new BeanLocatorException(
 							stringWriter.toString(), ble);
@@ -163,7 +164,7 @@ public class BeanReferenceAnnotationBeanPostProcessor
 			ReflectionUtils.makeAccessible(field);
 
 			BeanReferenceRefreshUtil.registerRefreshPoint(
-				targetBean, field, referencedBeanName);
+				_beanFactory, targetBean, field, referencedBeanName);
 
 			try {
 				field.set(targetBean, referencedBean);
@@ -181,10 +182,10 @@ public class BeanReferenceAnnotationBeanPostProcessor
 
 	private static final String _ORG_SPRINGFRAMEWORK = "org.springframework";
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		BeanReferenceAnnotationBeanPostProcessor.class);
 
 	private BeanFactory _beanFactory;
-	private Map<String, Object> _beans = new HashMap<String, Object>();
+	private final Map<String, Object> _beans = new HashMap<>();
 
 }

@@ -40,7 +40,7 @@ public class SessionTreeJSClicks {
 		long layoutId, boolean recursive) {
 
 		try {
-			List<String> layoutIds = new ArrayList<String>();
+			List<String> layoutIds = new ArrayList<>();
 
 			layoutIds.add(String.valueOf(layoutId));
 
@@ -120,7 +120,7 @@ public class SessionTreeJSClicks {
 		long layoutId, boolean recursive) {
 
 		try {
-			List<String> layoutIds = new ArrayList<String>();
+			List<String> layoutIds = new ArrayList<>();
 
 			layoutIds.add(String.valueOf(layoutId));
 
@@ -219,6 +219,7 @@ public class SessionTreeJSClicks {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(SessionTreeJSClicks.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		SessionTreeJSClicks.class);
 
 }

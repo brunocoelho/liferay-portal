@@ -58,7 +58,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see LayoutSetPersistence
- * @see LayoutSetUtil
+ * @see com.liferay.portal.service.persistence.LayoutSetUtil
  * @generated
  */
 @ProviderType
@@ -2088,7 +2088,7 @@ public class LayoutSetPersistenceImpl extends BasePersistenceImpl<LayoutSet>
 		MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

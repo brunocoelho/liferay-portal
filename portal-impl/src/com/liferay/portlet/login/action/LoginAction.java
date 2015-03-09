@@ -27,6 +27,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.Http;
+import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.Layout;
@@ -105,7 +106,7 @@ public class LoginAction extends PortletAction {
 				if (cause instanceof PasswordExpiredException ||
 					cause instanceof UserLockoutException) {
 
-					SessionErrors.add(actionRequest, cause.getClass());
+					SessionErrors.add(actionRequest, cause.getClass(), cause);
 				}
 				else {
 					if (_log.isInfoEnabled()) {
@@ -125,7 +126,7 @@ public class LoginAction extends PortletAction {
 					 e instanceof UserPasswordException ||
 					 e instanceof UserScreenNameException) {
 
-				SessionErrors.add(actionRequest, e.getClass());
+				SessionErrors.add(actionRequest, e.getClass(), e);
 			}
 			else {
 				_log.error(e, e);
@@ -219,7 +220,8 @@ public class LoginAction extends PortletAction {
 		if (PropsValues.PORTAL_JAAS_ENABLE) {
 			if (Validator.isNotNull(redirect)) {
 				redirect = mainPath.concat(
-					"/portal/protected?redirect=").concat(redirect);
+					"/portal/protected?redirect=").concat(
+						HttpUtil.encodeURL(redirect));
 			}
 			else {
 				redirect = mainPath.concat("/portal/protected");
@@ -263,6 +265,12 @@ public class LoginAction extends PortletAction {
 			portletURL.setParameter("redirect", redirect);
 		}
 
+		String login = ParamUtil.getString(actionRequest, "login");
+
+		if (Validator.isNotNull(login)) {
+			portletURL.setParameter("login", login);
+		}
+
 		portletURL.setWindowState(WindowState.MAXIMIZED);
 
 		actionResponse.sendRedirect(portletURL.toString());
@@ -270,6 +278,6 @@ public class LoginAction extends PortletAction {
 
 	private static final boolean _CHECK_METHOD_ON_PROCESS_ACTION = false;
 
-	private static Log _log = LogFactoryUtil.getLog(LoginAction.class);
+	private static final Log _log = LogFactoryUtil.getLog(LoginAction.class);
 
 }

@@ -93,6 +93,19 @@ public class FinalizeManager {
 
 		};
 
+	static {
+		if (THREAD_ENABLED) {
+			Thread thread = new FinalizeThread("Finalize Thread");
+
+			thread.setContextClassLoader(
+				FinalizeManager.class.getClassLoader());
+
+			thread.setDaemon(true);
+
+			thread.start();
+		}
+	}
+
 	public static <T> Reference<T> register(
 		T reference, FinalizeAction finalizeAction,
 		ReferenceFactory referenceFactory) {
@@ -140,9 +153,9 @@ public class FinalizeManager {
 	}
 
 	private static final Map<Reference<?>, FinalizeAction> _finalizeActions =
-		new ConcurrentIdentityHashMap<Reference<?>, FinalizeAction>();
+		new ConcurrentIdentityHashMap<>();
 	private static final ReferenceQueue<Object> _referenceQueue =
-		new ReferenceQueue<Object>();
+		new ReferenceQueue<>();
 
 	private static class FinalizeThread extends Thread {
 
@@ -160,19 +173,7 @@ public class FinalizeManager {
 				}
 			}
 		}
-	}
 
-	static {
-		if (THREAD_ENABLED) {
-			Thread thread = new FinalizeThread("Finalize Thread");
-
-			thread.setContextClassLoader(
-				FinalizeManager.class.getClassLoader());
-
-			thread.setDaemon(true);
-
-			thread.start();
-		}
 	}
 
 }

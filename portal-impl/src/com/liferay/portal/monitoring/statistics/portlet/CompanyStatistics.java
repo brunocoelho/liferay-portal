@@ -70,8 +70,7 @@ public class CompanyStatistics
 	}
 
 	public Set<RequestStatistics> getActionRequestStatisticsSet() {
-		Set<RequestStatistics> actionStatisticsSet =
-			new HashSet<RequestStatistics>();
+		Set<RequestStatistics> actionStatisticsSet = new HashSet<>();
 
 		for (PortletStatistics portletStatistics :
 				_portletStatisticsByPortletId.values()) {
@@ -102,8 +101,7 @@ public class CompanyStatistics
 	}
 
 	public Set<RequestStatistics> getEventRequestStatisticsSet() {
-		Set<RequestStatistics> eventStatisticsSet =
-			new HashSet<RequestStatistics>();
+		Set<RequestStatistics> eventStatisticsSet = new HashSet<>();
 
 		for (PortletStatistics portletStatistics :
 				_portletStatisticsByPortletId.values()) {
@@ -142,8 +140,7 @@ public class CompanyStatistics
 	}
 
 	public Set<RequestStatistics> getRenderRequestStatisticsSet() {
-		Set<RequestStatistics> renderStatisticsSet =
-			new HashSet<RequestStatistics>();
+		Set<RequestStatistics> renderStatisticsSet = new HashSet<>();
 
 		for (PortletStatistics portletStatistics :
 				_portletStatisticsByPortletId.values()) {
@@ -170,8 +167,7 @@ public class CompanyStatistics
 	}
 
 	public Set<RequestStatistics> getResourceRequestStatisticsSet() {
-		Set<RequestStatistics> resourceStatisticsSet =
-			new HashSet<RequestStatistics>();
+		Set<RequestStatistics> resourceStatisticsSet = new HashSet<>();
 
 		for (PortletStatistics portletStatistics :
 				_portletStatisticsByPortletId.values()) {
@@ -232,11 +228,11 @@ public class CompanyStatistics
 		}
 	}
 
-	private long _companyId;
+	private final long _companyId;
 	private long _maxTime;
 	private long _minTime;
-	private Map<String, PortletStatistics> _portletStatisticsByPortletId =
-		new ConcurrentHashMap<String, PortletStatistics>();
-	private String _webId;
+	private final Map<String, PortletStatistics> _portletStatisticsByPortletId =
+		new ConcurrentHashMap<>();
+	private final String _webId;
 
 }

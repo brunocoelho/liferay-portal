@@ -16,6 +16,7 @@ package com.liferay.portlet.shopping.service.impl;
 
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.util.CharPool;
+import com.liferay.portal.kernel.util.PwdGenerator;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.User;
@@ -36,7 +37,6 @@ import com.liferay.portlet.shopping.model.ShoppingCategory;
 import com.liferay.portlet.shopping.model.ShoppingCoupon;
 import com.liferay.portlet.shopping.model.ShoppingItem;
 import com.liferay.portlet.shopping.service.base.ShoppingCouponLocalServiceBaseImpl;
-import com.liferay.util.PwdGenerator;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -281,7 +281,7 @@ public class ShoppingCouponLocalServiceImpl
 
 		// Category IDs
 
-		List<Long> categoryIds = new ArrayList<Long>();
+		List<Long> categoryIds = new ArrayList<>();
 
 		String[] categoryNames = StringUtil.split(limitCategories);
 
@@ -292,7 +292,7 @@ public class ShoppingCouponLocalServiceImpl
 			categoryIds.add(category.getCategoryId());
 		}
 
-		List<Long> invalidCategoryIds = new ArrayList<Long>();
+		List<Long> invalidCategoryIds = new ArrayList<>();
 
 		for (long categoryId : categoryIds) {
 			ShoppingCategory category =
@@ -316,7 +316,7 @@ public class ShoppingCouponLocalServiceImpl
 
 		String[] skus = StringUtil.split(limitSkus);
 
-		List<String> invalidSkus = new ArrayList<String>();
+		List<String> invalidSkus = new ArrayList<>();
 
 		for (String sku : skus) {
 			ShoppingItem item = shoppingItemPersistence.fetchByC_S(

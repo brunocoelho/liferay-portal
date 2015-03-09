@@ -62,7 +62,7 @@ public class MailMessageListener extends BaseMessageListener {
 		if (auditTrail.length > 0) {
 			if (ArrayUtil.isNotEmpty(bcc)) {
 				for (InternetAddress internetAddress : auditTrail) {
-					ArrayUtil.append(bcc, internetAddress);
+					bcc = ArrayUtil.append(bcc, internetAddress);
 				}
 			}
 			else {
@@ -127,8 +127,8 @@ public class MailMessageListener extends BaseMessageListener {
 			return null;
 		}
 
-		List<InternetAddress> filteredInternetAddresses =
-			new ArrayList<InternetAddress>(internetAddresses.length);
+		List<InternetAddress> filteredInternetAddresses = new ArrayList<>(
+			internetAddresses.length);
 
 		for (InternetAddress internetAddress : internetAddresses) {
 			InternetAddress filteredInternetAddress = filterInternetAddress(

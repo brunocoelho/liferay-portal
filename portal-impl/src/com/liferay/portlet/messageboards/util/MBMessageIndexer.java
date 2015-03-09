@@ -33,6 +33,7 @@ import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchEngineUtil;
 import com.liferay.portal.kernel.search.Summary;
+import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -40,7 +41,6 @@ import com.liferay.portal.model.Group;
 import com.liferay.portal.security.permission.ActionKeys;
 import com.liferay.portal.security.permission.PermissionChecker;
 import com.liferay.portal.service.GroupLocalServiceUtil;
-import com.liferay.portal.util.PortletKeys;
 import com.liferay.portlet.documentlibrary.model.DLFileEntry;
 import com.liferay.portlet.messageboards.NoSuchDiscussionException;
 import com.liferay.portlet.messageboards.model.MBCategory;
@@ -57,7 +57,6 @@ import java.util.Locale;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
 
 /**
  * @author Brian Wing Shun Chan
@@ -65,17 +64,17 @@ import javax.portlet.PortletURL;
  * @author Bruno Farache
  * @author Raymond Augé
  */
+@OSGiBeanProperties
 public class MBMessageIndexer extends BaseIndexer {
 
-	public static final String[] CLASS_NAMES = {MBMessage.class.getName()};
-
-	public static final String PORTLET_ID = PortletKeys.MESSAGE_BOARDS;
+	public static final String CLASS_NAME = MBMessage.class.getName();
 
 	public MBMessageIndexer() {
 		setDefaultSelectedFieldNames(
-			Field.CLASS_NAME_ID, Field.CLASS_PK, Field.COMPANY_ID,
-			Field.CONTENT, Field.ENTRY_CLASS_NAME, Field.ENTRY_CLASS_PK,
-			Field.TITLE, Field.UID);
+			Field.ASSET_TAG_NAMES, Field.CLASS_NAME_ID, Field.CLASS_PK,
+			Field.COMPANY_ID, Field.CONTENT, Field.ENTRY_CLASS_NAME,
+			Field.ENTRY_CLASS_PK, Field.GROUP_ID, Field.MODIFIED_DATE,
+			Field.SCOPE_GROUP_ID, Field.TITLE, Field.UID);
 		setFilterSearch(true);
 		setPermissionAware(true);
 	}
@@ -103,13 +102,8 @@ public class MBMessageIndexer extends BaseIndexer {
 	}
 
 	@Override
-	public String[] getClassNames() {
-		return CLASS_NAMES;
-	}
-
-	@Override
-	public String getPortletId() {
-		return PORTLET_ID;
+	public String getClassName() {
+		return CLASS_NAME;
 	}
 
 	@Override
@@ -223,7 +217,7 @@ public class MBMessageIndexer extends BaseIndexer {
 	protected Document doGetDocument(Object obj) throws Exception {
 		MBMessage message = (MBMessage)obj;
 
-		Document document = getBaseModelDocument(PORTLET_ID, message);
+		Document document = getBaseModelDocument(CLASS_NAME, message);
 
 		document.addKeyword(Field.CATEGORY_ID, message.getCategoryId());
 		document.addText(Field.CONTENT, processContent(message));
@@ -263,19 +257,12 @@ public class MBMessageIndexer extends BaseIndexer {
 
 	@Override
 	protected Summary doGetSummary(
-		Document document, Locale locale, String snippet, PortletURL portletURL,
+		Document document, Locale locale, String snippet,
 		PortletRequest portletRequest, PortletResponse portletResponse) {
-
-		String messageId = document.get(Field.ENTRY_CLASS_PK);
-
-		portletURL.setParameter(
-			"struts_action", "/message_boards/view_message");
-		portletURL.setParameter("messageId", messageId);
 
 		Summary summary = createSummary(document, Field.TITLE, Field.CONTENT);
 
 		summary.setMaxContentLength(200);
-		summary.setPortletURL(portletURL);
 
 		return summary;
 	}
@@ -326,11 +313,6 @@ public class MBMessageIndexer extends BaseIndexer {
 		reindexCategories(companyId);
 		reindexDiscussions(companyId);
 		reindexRoot(companyId);
-	}
-
-	@Override
-	protected String getPortletId(SearchContext searchContext) {
-		return PORTLET_ID;
 	}
 
 	protected String processContent(MBMessage message) {
@@ -483,6 +465,7 @@ public class MBMessageIndexer extends BaseIndexer {
 		actionableDynamicQuery.performActions();
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(MBMessageIndexer.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		MBMessageIndexer.class);
 
 }

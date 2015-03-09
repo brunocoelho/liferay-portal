@@ -57,7 +57,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see PortalPreferencesPersistence
- * @see PortalPreferencesUtil
+ * @see com.liferay.portal.service.persistence.PortalPreferencesUtil
  * @generated
  */
 @ProviderType
@@ -1028,7 +1028,7 @@ public class PortalPreferencesPersistenceImpl extends BasePersistenceImpl<Portal
 		MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

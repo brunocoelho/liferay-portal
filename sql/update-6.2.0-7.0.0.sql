@@ -1,4 +1,74 @@
+alter table AssetEntry add listable BOOLEAN;
+
+COMMIT_TRANSACTION;
+
+update AssetEntry set listable = TRUE;
+
+drop table AssetTagProperty;
+
 alter table BlogsEntry add subtitle STRING null;
+alter table BlogsEntry add coverImageFileEntryId LONG;
+alter table BlogsEntry add coverImageURL STRING null;
+alter table BlogsEntry add smallImageFileEntryId LONG;
+
+alter table DDMStructure add version VARCHAR(75) null;
+
+update DDMStructure set version = '1.0';
+
+create table DDMStructureLayout (
+	uuid_ VARCHAR(75) null,
+	structureLayoutId LONG not null primary key,
+	groupId LONG,
+	companyId LONG,
+	userId LONG,
+	userName VARCHAR(75) null,
+	createDate DATE null,
+	modifiedDate DATE null,
+	structureVersionId LONG,
+	definition TEXT null
+);
+
+create table DDMStructureVersion (
+	structureVersionId LONG not null primary key,
+	groupId LONG,
+	companyId LONG,
+	userId LONG,
+	userName VARCHAR(75) null,
+	createDate DATE null,
+	structureId LONG,
+	version VARCHAR(75) null,
+	name STRING null,
+	description STRING null,
+	definition TEXT null,
+	storageType VARCHAR(75) null,
+	type_ INTEGER
+);
+
+alter table DDMTemplate add resourceClassNameId LONG;
+alter table DDMTemplate add version VARCHAR(75) null;
+
+update DDMTemplate set version = '1.0';
+
+create table DDMTemplateVersion (
+	templateVersionId LONG not null primary key,
+	groupId LONG,
+	companyId LONG,
+	userId LONG,
+	userName VARCHAR(75) null,
+	createDate DATE null,
+	templateId LONG,
+	version VARCHAR(75) null,
+	name STRING null,
+	description STRING null,
+	language VARCHAR(75) null,
+	script TEXT null
+);
+
+alter table DLFolder add restrictionType INTEGER;
+
+update DLFolder set restrictionType = 1 where overrideFileEntryTypes = 1;
+
+alter table DLFolder drop column overrideFileEntryTypes;
 
 create table ExportImportConfiguration (
 	mvccVersion LONG default 0,
@@ -9,7 +79,7 @@ create table ExportImportConfiguration (
 	userName VARCHAR(75) null,
 	createDate DATE null,
 	modifiedDate DATE null,
-	name VARCHAR(75) null,
+	name VARCHAR(200) null,
 	description STRING null,
 	type_ INTEGER,
 	settings_ TEXT null,
@@ -18,6 +88,12 @@ create table ExportImportConfiguration (
 	statusByUserName VARCHAR(75) null,
 	statusDate DATE null
 );
+
+alter table Group_ add groupKey STRING;
+
+update Group_ set groupKey = name;
+
+alter table Group_ add inheritContent BOOLEAN;
 
 alter table JournalFolder add restrictionType INTEGER;
 
@@ -51,5 +127,7 @@ insert into Region (regionId, countryId, regionCode, name, active_) values (3300
 
 update Region set regionCode = 'BB' where regionId = 4004 and regionCode = 'BR';
 update Region set name = 'Monza e Brianza', regionCode = 'MB' where regionId = 8060 and regionCode = 'MZ';
+
+alter table Subscription add groupId LONG;
 
 alter table UserNotificationEvent add actionRequired BOOLEAN;

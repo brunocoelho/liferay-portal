@@ -58,7 +58,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see UserIdMapperPersistence
- * @see UserIdMapperUtil
+ * @see com.liferay.portal.service.persistence.UserIdMapperUtil
  * @generated
  */
 @ProviderType
@@ -1880,7 +1880,7 @@ public class UserIdMapperPersistenceImpl extends BasePersistenceImpl<UserIdMappe
 		MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

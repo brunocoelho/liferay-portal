@@ -62,7 +62,11 @@ long parentCategoryId = BeanParamUtil.getLong(category, request, "parentCategory
 
 			<aui:button name="selectCategoryButton" value="select" />
 
-			<aui:button disabled="<%= (parentCategoryId <= 0) %>" name="removeCategoryButton" onClick='<%= renderResponse.getNamespace() + "removeCategory();" %>' value="remove" />
+			<%
+			String taglibRemoveFolder = "Liferay.Util.removeEntitySelection('parentCategoryId', 'parentCategoryName', this, '" + renderResponse.getNamespace() + "');";
+			%>
+
+			<aui:button disabled="<%= (parentCategoryId <= 0) %>" name="removeCategoryButton" onClick="<%= taglibRemoveFolder %>" value="remove" />
 		</div>
 
 		<aui:input label="merge-with-parent-category" name="mergeWithParentCategory" type="checkbox" />
@@ -75,16 +79,6 @@ long parentCategoryId = BeanParamUtil.getLong(category, request, "parentCategory
 	</aui:button-row>
 </aui:form>
 
-<aui:script>
-	function <portlet:namespace />removeCategory() {
-		document.<portlet:namespace />fm.<portlet:namespace />parentCategoryId.value = '<%= MBCategoryConstants.DEFAULT_PARENT_CATEGORY_ID %>';
-
-		document.getElementById('<portlet:namespace />parentCategoryName').value = '';
-
-		Liferay.Util.toggleDisabled('#<portlet:namespace />removeCategoryButton', true);
-	}
-</aui:script>
-
 <%
 if (category != null) {
 	MBUtil.addPortletBreadcrumbEntries(category, request, renderResponse);
@@ -93,8 +87,8 @@ if (category != null) {
 }
 %>
 
-<aui:script use="aui-base">
-	A.one('#<portlet:namespace />selectCategoryButton').on(
+<aui:script sandbox="<%= true %>">
+	$('#<portlet:namespace />selectCategoryButton').on(
 		'click',
 		function(event) {
 			Liferay.Util.selectEntity(
@@ -109,9 +103,11 @@ if (category != null) {
 					uri: '<portlet:renderURL windowState="<%= LiferayWindowState.POP_UP.toString() %>"><portlet:param name="struts_action" value="/message_boards/select_category" /><portlet:param name="mbCategoryId" value="<%= String.valueOf((category == null) ? MBCategoryConstants.DEFAULT_PARENT_CATEGORY_ID : category.getParentCategoryId()) %>" /><portlet:param name="excludedMBCategoryId" value="<%= String.valueOf(categoryId) %>" /></portlet:renderURL>'
 				},
 				function(event) {
-					document.<portlet:namespace />fm.<portlet:namespace />parentCategoryId.value = event.categoryid;
+					var form = $(document.<portlet:namespace />fm);
 
-					document.getElementById('<portlet:namespace />parentCategoryName').value = A.Lang.String.unescapeEntities(event.name);
+					form.fm('parentCategoryId').val(event.categoryid);
+
+					form.fm('parentCategoryName').val(_.unescape(event.name));
 
 					Liferay.Util.toggleDisabled('#<portlet:namespace />removeCategoryButton', false);
 				}

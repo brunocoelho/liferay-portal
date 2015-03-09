@@ -40,6 +40,15 @@ public class TicketLocalServiceUtil {
 	 *
 	 * Never modify this class directly. Add custom service methods to {@link com.liferay.portal.service.impl.TicketLocalServiceImpl} and rerun ServiceBuilder to regenerate this class.
 	 */
+	public static com.liferay.portal.model.Ticket addDistinctTicket(
+		long companyId, java.lang.String className, long classPK, int type,
+		java.lang.String extraInfo, java.util.Date expirationDate,
+		com.liferay.portal.service.ServiceContext serviceContext) {
+		return getService()
+				   .addDistinctTicket(companyId, className, classPK, type,
+			extraInfo, expirationDate, serviceContext);
+	}
+
 	public static com.liferay.portal.model.Ticket addTicket(long companyId,
 		java.lang.String className, long classPK, int type,
 		java.lang.String extraInfo, java.util.Date expirationDate,
@@ -157,10 +166,10 @@ public class TicketLocalServiceUtil {
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public static long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery) {
@@ -168,11 +177,11 @@ public class TicketLocalServiceUtil {
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public static long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,

@@ -145,20 +145,20 @@ public interface ClassNameLocalService extends BaseLocalService,
 		com.liferay.portal.kernel.util.OrderByComparator<T> orderByComparator);
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery);
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,
@@ -167,18 +167,9 @@ public interface ClassNameLocalService extends BaseLocalService,
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public com.liferay.portal.model.ClassName fetchClassName(long classNameId);
 
-	@com.liferay.portal.kernel.spring.aop.Skip
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public com.liferay.portal.model.ClassName fetchClassName(
 		java.lang.String value);
-
-	@com.liferay.portal.kernel.spring.aop.Skip
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public long fetchClassNameId(java.lang.Class<?> clazz);
-
-	@com.liferay.portal.kernel.spring.aop.Skip
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public long fetchClassNameId(java.lang.String value);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery getActionableDynamicQuery();

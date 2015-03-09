@@ -81,6 +81,71 @@
 		};
 	};
 
+	Util.addInputFocus = function() {
+		A.use(
+			'aui-base',
+			function(A) {
+				var handleFocus = function(event) {
+					var target = event.target;
+
+					var tagName = target.get('tagName');
+
+					if (tagName) {
+						tagName = tagName.toLowerCase();
+					}
+
+					var nodeType = target.get('type');
+
+					if (((tagName == 'input') && (/text|password/).test(nodeType)) ||
+						(tagName == 'textarea')) {
+
+						var action = 'addClass';
+
+						if (/blur|focusout/.test(event.type)) {
+							action = 'removeClass';
+						}
+
+						target[action]('focus');
+					}
+				};
+
+				A.on('focus', handleFocus, document);
+				A.on('blur', handleFocus, document);
+			}
+		);
+
+		Util.addInputFocus = function(){};
+	};
+
+	Util.addInputType = function(el) {
+		Util.addInputType = Lang.emptyFn;
+
+		if (Liferay.Browser.isIe() && Liferay.Browser.getMajorVersion() < 7) {
+			Util.addInputType = function(el) {
+				var item;
+
+				if (el) {
+					el = A.one(el);
+				}
+				else {
+					el = A.one(document.body);
+				}
+
+				var defaultType = 'text';
+
+				el.all('input').each(
+					function(item, index) {
+						var type = item.get('type') || defaultType;
+
+						item.addClass(type);
+					}
+				);
+			};
+		}
+
+		return Util.addInputType(el);
+	};
+
 	Util.camelize = function(value, separator) {
 		var regex = REGEX_DASH;
 
@@ -140,6 +205,17 @@
 
 	Util.randomMinMax = function(min, max) {
 		return (Math.round(Math.random() * (max - min))) + min;
+	};
+
+	Util.selectAndCopy = function(el) {
+		el.focus();
+		el.select();
+
+		if (document.all) {
+			var textRange = el.createTextRange();
+
+			textRange.execCommand('copy');
+		}
 	};
 
 	Util.setBox = function(oldBox, newBox) {
@@ -261,6 +337,19 @@
 
 	Liferay.provide(
 		Util,
+		'check',
+		function(form, name, checked) {
+			var checkbox = A.one(form[name]);
+
+			if (checkbox) {
+				checkbox.attr('checked', checked);
+			}
+		},
+		['aui-base']
+	);
+
+	Liferay.provide(
+		Util,
 		'disableSelectBoxes',
 		function(toggleBoxId, value, selectBoxId) {
 			var selectBox = A.one('#' + selectBoxId);
@@ -314,6 +403,24 @@
 				textarea.attr('textareatabs', 'disabled');
 
 				textarea.on('keydown', Util.textareaTabs);
+			}
+		},
+		['aui-base']
+	);
+
+	Liferay.provide(
+		Util,
+		'removeItem',
+		function(box, value) {
+			box = A.one(box);
+
+			var selectedIndex = box.get('selectedIndex');
+
+			if (!value) {
+				box.all('option').item(selectedIndex).remove(true);
+			}
+			else {
+				box.all('option[value=' + value + STR_RIGHT_SQUARE_BRACKET).item(selectedIndex).remove(true);
 			}
 		},
 		['aui-base']

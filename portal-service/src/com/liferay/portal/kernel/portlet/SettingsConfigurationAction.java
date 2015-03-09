@@ -19,7 +19,7 @@ import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.settings.ModifiableSettings;
 import com.liferay.portal.kernel.settings.Settings;
-import com.liferay.portal.kernel.settings.SettingsFactory;
+import com.liferay.portal.kernel.settings.SettingsDescriptor;
 import com.liferay.portal.kernel.settings.SettingsFactoryUtil;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -42,8 +42,8 @@ import com.liferay.portal.util.PortalUtil;
 import com.liferay.portlet.PortletConfigFactoryUtil;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -232,7 +232,7 @@ public class SettingsConfigurationAction
 				WebKeys.PORTLET_PREFERENCES_MAP);
 
 		if (portletPreferencesMap == null) {
-			portletPreferencesMap = new HashMap<String, String[]>();
+			portletPreferencesMap = new HashMap<>();
 
 			portletRequest.setAttribute(
 				WebKeys.PORTLET_PREFERENCES_MAP, portletPreferencesMap);
@@ -317,11 +317,10 @@ public class SettingsConfigurationAction
 	protected void updateMultiValuedKeys(ActionRequest actionRequest) {
 		String settingsId = getSettingsId(actionRequest);
 
-		SettingsFactory settingsFactory =
-			SettingsFactoryUtil.getSettingsFactory();
+		SettingsDescriptor<?> settingsDescriptor =
+			SettingsFactoryUtil.getSettingsDescriptor(settingsId);
 
-		List<String> multiValuedKeys = settingsFactory.getMultiValuedKeys(
-			settingsId);
+		Set<String> multiValuedKeys = settingsDescriptor.getMultiValuedKeys();
 
 		for (String multiValuedKey : multiValuedKeys) {
 			String multiValuedValue = getParameter(

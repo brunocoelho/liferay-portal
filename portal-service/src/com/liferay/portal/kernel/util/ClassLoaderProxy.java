@@ -90,7 +90,7 @@ public class ClassLoaderProxy {
 
 			Class<?> clazz = Class.forName(_className, true, _classLoader);
 
-			List<Class<?>> parameterTypes = new ArrayList<Class<?>>();
+			List<Class<?>> parameterTypes = new ArrayList<>();
 
 			for (int i = 0; i < args.length; i++) {
 				Object arg = args[i];
@@ -185,27 +185,26 @@ public class ClassLoaderProxy {
 		try {
 			UnsyncByteArrayOutputStream unsyncByteArrayOutputStream =
 				new UnsyncByteArrayOutputStream();
-			ObjectOutputStream objectOutputStream = new ObjectOutputStream(
-				unsyncByteArrayOutputStream);
 
-			objectOutputStream.writeObject(throwable);
+			try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(
+					unsyncByteArrayOutputStream)) {
 
-			objectOutputStream.flush();
-			objectOutputStream.close();
+				objectOutputStream.writeObject(throwable);
+
+				objectOutputStream.flush();
+			}
 
 			UnsyncByteArrayInputStream unsyncByteArrayInputStream =
 				new UnsyncByteArrayInputStream(
 					unsyncByteArrayOutputStream.unsafeGetByteArray(), 0,
 					unsyncByteArrayOutputStream.size());
-			ObjectInputStream objectInputStream =
-				new ClassLoaderObjectInputStream(
-					unsyncByteArrayInputStream, contextClassLoader);
 
-			throwable = (Throwable)objectInputStream.readObject();
+			try (ObjectInputStream objectInputStream =
+					new ClassLoaderObjectInputStream(
+						unsyncByteArrayInputStream, contextClassLoader)) {
 
-			objectInputStream.close();
-
-			return throwable;
+				return (Throwable)objectInputStream.readObject();
+			}
 		}
 		catch (Throwable throwable2) {
 			_log.error(throwable2, throwable2);
@@ -259,10 +258,11 @@ public class ClassLoaderProxy {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(ClassLoaderProxy.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		ClassLoaderProxy.class);
 
-	private ClassLoader _classLoader;
-	private String _className;
-	private Object _obj;
+	private final ClassLoader _classLoader;
+	private final String _className;
+	private final Object _obj;
 
 }

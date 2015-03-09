@@ -113,11 +113,6 @@ public class AssetCategoryServiceSoap {
 		}
 	}
 
-	/**
-	* @deprecated As of 6.2.0, Replaced by {@link #deleteCategories(long[],
-	ServiceContext)}
-	*/
-	@Deprecated
 	public static void deleteCategories(long[] categoryIds)
 		throws RemoteException {
 		try {
@@ -130,6 +125,10 @@ public class AssetCategoryServiceSoap {
 		}
 	}
 
+	/**
+	* @deprecated As of 7.0.0, Replaced by {@link #deleteCategories(long[])}
+	*/
+	@Deprecated
 	public static com.liferay.portlet.asset.model.AssetCategorySoap[] deleteCategories(
 		long[] categoryIds,
 		com.liferay.portal.service.ServiceContext serviceContext)
@@ -152,6 +151,20 @@ public class AssetCategoryServiceSoap {
 		throws RemoteException {
 		try {
 			AssetCategoryServiceUtil.deleteCategory(categoryId);
+		}
+		catch (Exception e) {
+			_log.error(e, e);
+
+			throw new RemoteException(e.getMessage());
+		}
+	}
+
+	public static com.liferay.portlet.asset.model.AssetCategorySoap fetchCategory(
+		long categoryId) throws RemoteException {
+		try {
+			com.liferay.portlet.asset.model.AssetCategory returnValue = AssetCategoryServiceUtil.fetchCategory(categoryId);
+
+			return com.liferay.portlet.asset.model.AssetCategorySoap.toSoapModel(returnValue);
 		}
 		catch (Exception e) {
 			_log.error(e, e);

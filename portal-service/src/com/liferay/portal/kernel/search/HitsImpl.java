@@ -157,17 +157,6 @@ public class HitsImpl implements Hits {
 	}
 
 	@Override
-	public void setScores(Float[] scores) {
-		float[] primScores = new float[scores.length];
-
-		for (int i = 0; i < scores.length; i++) {
-			primScores[i] = scores[i].floatValue();
-		}
-
-		setScores(primScores);
-	}
-
-	@Override
 	public void setSearchTime(float time) {
 		_searchTime = time;
 	}
@@ -196,7 +185,7 @@ public class HitsImpl implements Hits {
 
 	@Override
 	public List<Document> toList() {
-		List<Document> subset = new ArrayList<Document>(_docs.length);
+		List<Document> subset = new ArrayList<>(_docs.length);
 
 		for (Document _doc : _docs) {
 			subset.add(_doc);

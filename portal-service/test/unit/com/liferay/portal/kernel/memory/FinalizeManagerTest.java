@@ -15,10 +15,12 @@
 package com.liferay.portal.kernel.memory;
 
 import com.liferay.portal.kernel.memory.FinalizeManager.ReferenceFactory;
-import com.liferay.portal.kernel.test.CodeCoverageAssertor;
 import com.liferay.portal.kernel.test.GCUtil;
-import com.liferay.portal.kernel.test.NewClassLoaderJUnitTestRunner;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
+import com.liferay.portal.kernel.test.rule.NewEnv;
+import com.liferay.portal.kernel.test.rule.NewEnvTestRule;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.ThreadUtil;
 
@@ -31,24 +33,27 @@ import java.util.concurrent.LinkedBlockingDeque;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Shuyang Zhou
  */
-@RunWith(NewClassLoaderJUnitTestRunner.class)
+@NewEnv(type = NewEnv.Type.CLASSLOADER)
 public class FinalizeManagerTest {
 
 	@ClassRule
-	public static CodeCoverageAssertor codeCoverageAssertor =
-		new CodeCoverageAssertor();
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			CodeCoverageAssertor.INSTANCE, NewEnvTestRule.INSTANCE);
 
 	@After
 	public void tearDown() {
 		System.clearProperty(_THREAD_ENABLED_KEY);
 	}
 
+	@NewEnv(type = NewEnv.Type.NONE)
 	@Test
 	public void testBadFinalizeAction() {
 		final RuntimeException runtimeException = new RuntimeException();
@@ -83,6 +88,7 @@ public class FinalizeManagerTest {
 		Assert.assertNull(getReferent(reference));
 	}
 
+	@NewEnv(type = NewEnv.Type.NONE)
 	@Test
 	public void testConstructor() {
 		new FinalizeManager();
@@ -100,7 +106,7 @@ public class FinalizeManagerTest {
 			object, markFinalizeAction, FinalizeManager.WEAK_REFERENCE_FACTORY);
 
 		Map<Reference<?>, FinalizeAction> finalizeActions =
-			(Map<Reference<?>, FinalizeAction>)ReflectionTestUtil.getFieldValue(
+			ReflectionTestUtil.getFieldValue(
 				FinalizeManager.class, "_finalizeActions");
 
 		Assert.assertEquals(markFinalizeAction, finalizeActions.get(reference));
@@ -111,7 +117,7 @@ public class FinalizeManagerTest {
 
 		object = null;
 
-		GCUtil.gc();
+		GCUtil.gc(true);
 
 		ReflectionTestUtil.invoke(
 			FinalizeManager.class, "_pollingCleanup", new Class<?>[0]);
@@ -138,7 +144,7 @@ public class FinalizeManagerTest {
 			FinalizeManager.SOFT_REFERENCE_FACTORY);
 
 		Map<Reference<?>, FinalizeAction> finalizeActions =
-			(Map<Reference<?>, FinalizeAction>)ReflectionTestUtil.getFieldValue(
+			ReflectionTestUtil.getFieldValue(
 				FinalizeManager.class, "_finalizeActions");
 
 		Assert.assertEquals(1, finalizeActions.size());
@@ -240,11 +246,14 @@ public class FinalizeManagerTest {
 
 		// First GC to trigger Object#finalize
 
-		if (referenceType == ReferenceType.SOFT) {
-			GCUtil.fullGC();
+		if (referenceType == ReferenceType.PHANTOM) {
+			GCUtil.gc(false);
+		}
+		else if (referenceType == ReferenceType.SOFT) {
+			GCUtil.fullGC(true);
 		}
 		else {
-			GCUtil.gc();
+			GCUtil.gc(true);
 		}
 
 		Assert.assertEquals(id, _finalizedIds.take());
@@ -254,7 +263,7 @@ public class FinalizeManagerTest {
 
 			// Second GC to trigger ReferenceQueue#enqueue
 
-			GCUtil.gc();
+			GCUtil.gc(false);
 		}
 
 		if (threadEnabled) {
@@ -324,7 +333,7 @@ public class FinalizeManagerTest {
 	}
 
 	private <T> T getReferent(Reference<T> reference) {
-		return (T)ReflectionTestUtil.getFieldValue(reference, "referent");
+		return ReflectionTestUtil.getFieldValue(reference, "referent");
 	}
 
 	private void waitUntilMarked(MarkFinalizeAction markFinalizeAction)
@@ -345,7 +354,7 @@ public class FinalizeManagerTest {
 		FinalizeManager.class.getName() + ".thread.enabled";
 
 	private final BlockingQueue<String> _finalizedIds =
-		new LinkedBlockingDeque<String>();
+		new LinkedBlockingDeque<>();
 
 	private static enum ReferenceType {
 

@@ -444,7 +444,7 @@ public class CalEventLocalServiceImpl extends CalEventLocalServiceBaseImpl {
 
 	@Override
 	public File exportEvent(long userId, long eventId) throws PortalException {
-		List<CalEvent> events = new ArrayList<CalEvent>();
+		List<CalEvent> events = new ArrayList<>();
 
 		CalEvent event = calEventPersistence.findByPrimaryKey(eventId);
 
@@ -518,10 +518,9 @@ public class CalEventLocalServiceImpl extends CalEventLocalServiceBaseImpl {
 
 		// Time zone sensitive
 
-		List<CalEvent> timeZoneSensitiveEvents =
-			calEventFinder.findByG_SD_T(
-				groupId, CalendarUtil.getGTDate(cal),
-				CalendarUtil.getLTDate(cal), true, types);
+		List<CalEvent> timeZoneSensitiveEvents = calEventFinder.findByG_SD_T(
+			groupId, CalendarUtil.getGTDate(cal), CalendarUtil.getLTDate(cal),
+			true, types);
 
 		// Time zone insensitive
 
@@ -532,14 +531,13 @@ public class CalEventLocalServiceImpl extends CalEventLocalServiceBaseImpl {
 			cal.get(Calendar.YEAR), cal.get(Calendar.MONTH),
 			cal.get(Calendar.DATE));
 
-		List<CalEvent> timeZoneInsensitiveEvents =
-			calEventFinder.findByG_SD_T(
-				groupId, CalendarUtil.getGTDate(tzICal),
-				CalendarUtil.getLTDate(tzICal), false, types);
+		List<CalEvent> timeZoneInsensitiveEvents = calEventFinder.findByG_SD_T(
+			groupId, CalendarUtil.getGTDate(tzICal),
+			CalendarUtil.getLTDate(tzICal), false, types);
 
 		// Create new list
 
-		events = new ArrayList<CalEvent>();
+		events = new ArrayList<>();
 
 		events.addAll(timeZoneSensitiveEvents);
 		events.addAll(timeZoneInsensitiveEvents);
@@ -640,7 +638,7 @@ public class CalEventLocalServiceImpl extends CalEventLocalServiceBaseImpl {
 				cal.get(Calendar.YEAR), cal.get(Calendar.MONTH),
 				cal.get(Calendar.DATE));
 
-			List<CalEvent> repeatingEvents = new ArrayList<CalEvent>();
+			List<CalEvent> repeatingEvents = new ArrayList<>();
 
 			for (CalEvent event : events) {
 				TZSRecurrence recurrence = event.getRecurrenceObj();
@@ -1679,7 +1677,7 @@ public class CalEventLocalServiceImpl extends CalEventLocalServiceBaseImpl {
 		if (Recur.DAILY.equals(frequency)) {
 			recurrence.setFrequency(Recurrence.DAILY);
 
-			List<DayAndPosition> dayPosList = new ArrayList<DayAndPosition>();
+			List<DayAndPosition> dayPosList = new ArrayList<>();
 
 			List<WeekDay> weekDays = recur.getDayList();
 
@@ -1696,7 +1694,7 @@ public class CalEventLocalServiceImpl extends CalEventLocalServiceBaseImpl {
 		else if (Recur.WEEKLY.equals(frequency)) {
 			recurrence.setFrequency(Recurrence.WEEKLY);
 
-			List<DayAndPosition> dayPosList = new ArrayList<DayAndPosition>();
+			List<DayAndPosition> dayPosList = new ArrayList<>();
 
 			List<WeekDay> weekDays = recur.getDayList();
 
@@ -1775,7 +1773,7 @@ public class CalEventLocalServiceImpl extends CalEventLocalServiceBaseImpl {
 	private static final long _CALENDAR_EVENT_CHECK_INTERVAL =
 		PropsValues.CALENDAR_EVENT_CHECK_INTERVAL * Time.MINUTE;
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		CalEventLocalServiceImpl.class);
 
 }

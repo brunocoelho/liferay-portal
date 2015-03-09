@@ -19,12 +19,11 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.search.BaseIndexer;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchEngineUtil;
 import com.liferay.portal.kernel.search.Summary;
+import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
-import com.liferay.portal.util.PortletKeys;
 import com.liferay.portlet.calendar.model.CalEvent;
 import com.liferay.portlet.calendar.service.CalEventLocalServiceUtil;
 
@@ -32,29 +31,22 @@ import java.util.Locale;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
 
 /**
  * @author Brett Swaim
  */
+@OSGiBeanProperties
 public class CalIndexer extends BaseIndexer {
 
-	public static final String[] CLASS_NAMES = {CalEvent.class.getName()};
-
-	public static final String PORTLET_ID = PortletKeys.CALENDAR;
+	public static final String CLASS_NAME = CalEvent.class.getName();
 
 	public CalIndexer() {
 		setPermissionAware(true);
 	}
 
 	@Override
-	public String[] getClassNames() {
-		return CLASS_NAMES;
-	}
-
-	@Override
-	public String getPortletId() {
-		return PORTLET_ID;
+	public String getClassName() {
+		return CLASS_NAME;
 	}
 
 	@Override
@@ -68,7 +60,7 @@ public class CalIndexer extends BaseIndexer {
 	protected Document doGetDocument(Object obj) throws Exception {
 		CalEvent event = (CalEvent)obj;
 
-		Document document = getBaseModelDocument(PORTLET_ID, event);
+		Document document = getBaseModelDocument(CLASS_NAME, event);
 
 		document.addText(
 			Field.DESCRIPTION, HtmlUtil.extractText(event.getDescription()));
@@ -80,19 +72,13 @@ public class CalIndexer extends BaseIndexer {
 
 	@Override
 	protected Summary doGetSummary(
-		Document document, Locale locale, String snippet, PortletURL portletURL,
+		Document document, Locale locale, String snippet,
 		PortletRequest portletRequest, PortletResponse portletResponse) {
-
-		String eventId = document.get(Field.ENTRY_CLASS_PK);
-
-		portletURL.setParameter("struts_action", "/calendar/view_event");
-		portletURL.setParameter("eventId", eventId);
 
 		Summary summary = createSummary(
 			document, Field.TITLE, Field.DESCRIPTION);
 
 		summary.setMaxContentLength(200);
-		summary.setPortletURL(portletURL);
 
 		return summary;
 	}
@@ -120,11 +106,6 @@ public class CalIndexer extends BaseIndexer {
 		long companyId = GetterUtil.getLong(ids[0]);
 
 		reindexEvents(companyId);
-	}
-
-	@Override
-	protected String getPortletId(SearchContext searchContext) {
-		return PORTLET_ID;
 	}
 
 	protected void reindexEvents(long companyId) throws PortalException {

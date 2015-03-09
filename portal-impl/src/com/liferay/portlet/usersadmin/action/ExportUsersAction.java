@@ -16,8 +16,7 @@ package com.liferay.portlet.usersadmin.action;
 
 import com.liferay.portal.kernel.bean.BeanPropertiesUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
-import com.liferay.portal.kernel.search.Hits;
-import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.portlet.DynamicActionRequest;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -28,6 +27,7 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.ProgressTracker;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.User;
 import com.liferay.portal.security.permission.ActionKeys;
 import com.liferay.portal.security.permission.PermissionChecker;
@@ -45,7 +45,6 @@ import com.liferay.portlet.ActionResponseImpl;
 import com.liferay.portlet.expando.model.ExpandoBridge;
 import com.liferay.portlet.usersadmin.search.UserSearch;
 import com.liferay.portlet.usersadmin.search.UserSearchTerms;
-import com.liferay.portlet.usersadmin.util.UsersAdminUtil;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -76,6 +75,17 @@ public class ExportUsersAction extends PortletAction {
 		throws Exception {
 
 		try {
+			String keywords = ParamUtil.getString(actionRequest, "keywords");
+
+			if (Validator.isNotNull(keywords)) {
+				DynamicActionRequest dynamicActionRequest =
+					new DynamicActionRequest(actionRequest);
+
+				dynamicActionRequest.setParameter("keywords", StringPool.BLANK);
+
+				actionRequest = dynamicActionRequest;
+			}
+
 			String csv = getUsersCSV(actionRequest, actionResponse);
 
 			String fileName = "users.csv";
@@ -161,8 +171,7 @@ public class ExportUsersAction extends PortletAction {
 		UserSearchTerms searchTerms =
 			(UserSearchTerms)userSearch.getSearchTerms();
 
-		LinkedHashMap<String, Object> params =
-			new LinkedHashMap<String, Object>();
+		LinkedHashMap<String, Object> params = new LinkedHashMap<>();
 
 		long organizationId = searchTerms.getOrganizationId();
 
@@ -196,26 +205,6 @@ public class ExportUsersAction extends PortletAction {
 			PropsValues.USERS_SEARCH_WITH_INDEX) {
 
 			params.put("expandoAttributes", searchTerms.getKeywords());
-
-			Hits hits = null;
-
-			if (searchTerms.isAdvancedSearch()) {
-				hits = UserLocalServiceUtil.search(
-					themeDisplay.getCompanyId(), searchTerms.getFirstName(),
-					searchTerms.getMiddleName(), searchTerms.getLastName(),
-					searchTerms.getScreenName(), searchTerms.getEmailAddress(),
-					searchTerms.getStatus(), params,
-					searchTerms.isAndOperator(), QueryUtil.ALL_POS,
-					QueryUtil.ALL_POS, (Sort)null);
-			}
-			else {
-				hits = UserLocalServiceUtil.search(
-					themeDisplay.getCompanyId(), searchTerms.getKeywords(),
-					searchTerms.getStatus(), params, QueryUtil.ALL_POS,
-					QueryUtil.ALL_POS, (Sort)null);
-			}
-
-			return UsersAdminUtil.getUsers(hits);
 		}
 
 		if (searchTerms.isAdvancedSearch()) {

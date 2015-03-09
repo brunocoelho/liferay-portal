@@ -44,8 +44,7 @@ public class BlogsEntryServiceUtil {
 	/**
 	* @deprecated As of 7.0.0, replaced by {@link #addEntry(String, String,
 	String, String, int, int, int, int, int, boolean, boolean,
-	String[], boolean, String, String, InputStream,
-	ServiceContext)}
+	String[], ImageSelector, ImageSelector, ServiceContext)}
 	*/
 	@Deprecated
 	public static com.liferay.portlet.blogs.model.BlogsEntry addEntry(
@@ -72,17 +71,15 @@ public class BlogsEntryServiceUtil {
 		int displayDateMonth, int displayDateDay, int displayDateYear,
 		int displayDateHour, int displayDateMinute, boolean allowPingbacks,
 		boolean allowTrackbacks, java.lang.String[] trackbacks,
-		boolean smallImage, java.lang.String smallImageURL,
-		java.lang.String smallImageFileName,
-		java.io.InputStream smallImageInputStream,
+		com.liferay.portal.kernel.servlet.taglib.ui.ImageSelector coverImageImageSelector,
+		com.liferay.portal.kernel.servlet.taglib.ui.ImageSelector smallImageImageSelector,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 		return getService()
 				   .addEntry(title, subtitle, description, content,
 			displayDateMonth, displayDateDay, displayDateYear, displayDateHour,
 			displayDateMinute, allowPingbacks, allowTrackbacks, trackbacks,
-			smallImage, smallImageURL, smallImageFileName,
-			smallImageInputStream, serviceContext);
+			coverImageImageSelector, smallImageImageSelector, serviceContext);
 	}
 
 	public static void deleteEntry(long entryId)
@@ -228,6 +225,13 @@ public class BlogsEntryServiceUtil {
 		getService().unsubscribe(groupId);
 	}
 
+	/**
+	* @deprecated As of 7.0.0, replaced by {@link #updateEntry(long, String,
+	String, String, String, int, int, int, int, int, boolean,
+	boolean, String[], ImageSelector, ImageSelector,
+	ServiceContext)}
+	*/
+	@Deprecated
 	public static com.liferay.portlet.blogs.model.BlogsEntry updateEntry(
 		long entryId, java.lang.String title, java.lang.String description,
 		java.lang.String content, int displayDateMonth, int displayDateDay,
@@ -252,17 +256,15 @@ public class BlogsEntryServiceUtil {
 		int displayDateMonth, int displayDateDay, int displayDateYear,
 		int displayDateHour, int displayDateMinute, boolean allowPingbacks,
 		boolean allowTrackbacks, java.lang.String[] trackbacks,
-		boolean smallImage, java.lang.String smallImageURL,
-		java.lang.String smallImageFileName,
-		java.io.InputStream smallImageInputStream,
+		com.liferay.portal.kernel.servlet.taglib.ui.ImageSelector coverImageImageSelector,
+		com.liferay.portal.kernel.servlet.taglib.ui.ImageSelector smallImageImageSelector,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 		return getService()
 				   .updateEntry(entryId, title, subtitle, description, content,
 			displayDateMonth, displayDateDay, displayDateYear, displayDateHour,
 			displayDateMinute, allowPingbacks, allowTrackbacks, trackbacks,
-			smallImage, smallImageURL, smallImageFileName,
-			smallImageInputStream, serviceContext);
+			coverImageImageSelector, smallImageImageSelector, serviceContext);
 	}
 
 	public static BlogsEntryService getService() {

@@ -18,40 +18,42 @@ import com.liferay.portal.kernel.backgroundtask.BackgroundTaskConstants;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskResult;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskStatus;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskStatusRegistryUtil;
-import com.liferay.portal.kernel.backgroundtask.BaseBackgroundTaskExecutor;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
-import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.lar.MissingReference;
 import com.liferay.portal.kernel.lar.MissingReferences;
 import com.liferay.portal.kernel.staging.StagingUtil;
+import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.BackgroundTask;
+import com.liferay.portal.model.LayoutSet;
 import com.liferay.portal.service.BackgroundTaskLocalServiceUtil;
+import com.liferay.portal.service.LayoutSetLocalServiceUtil;
+import com.liferay.portal.service.ServiceContext;
+import com.liferay.portal.service.ServiceContextThreadLocal;
+import com.liferay.portal.service.UserLocalServiceUtil;
+import com.liferay.portal.spring.transaction.TransactionAttributeBuilder;
 
 import java.io.Serializable;
 
+import java.util.HashMap;
 import java.util.Map;
+
+import org.springframework.transaction.interceptor.TransactionAttribute;
 
 /**
  * @author Mate Thurzo
  */
 public abstract class BaseStagingBackgroundTaskExecutor
-	extends BaseBackgroundTaskExecutor {
+	extends BaseExportImportBackgroundTaskExecutor {
 
 	public BaseStagingBackgroundTaskExecutor() {
 		setBackgroundTaskStatusMessageTranslator(
 			new DefaultExportImportBackgroundTaskStatusMessageTranslator());
 
-		setSerial(true);
-	}
+		// Isolation level guarantees this will be serial in a group
 
-	@Override
-	public String handleException(BackgroundTask backgroundTask, Exception e) {
-		JSONObject jsonObject = StagingUtil.getExceptionMessagesJSONObject(
-			getLocale(backgroundTask), e, backgroundTask.getTaskContextMap());
-
-		return jsonObject.toString();
+		setIsolationLevel(BackgroundTaskConstants.ISOLATION_LEVEL_GROUP);
 	}
 
 	protected void clearBackgroundTaskStatus(BackgroundTask backgroundTask) {
@@ -62,6 +64,30 @@ public abstract class BaseStagingBackgroundTaskExecutor
 		backgroundTaskStatus.clearAttributes();
 	}
 
+	protected void initThreadLocals(long groupId, boolean privateLayout)
+		throws PortalException {
+
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.popServiceContext();
+
+		if (serviceContext == null) {
+			serviceContext = new ServiceContext();
+		}
+
+		LayoutSet layoutSet = LayoutSetLocalServiceUtil.getLayoutSet(
+			groupId, privateLayout);
+
+		serviceContext.setCompanyId(layoutSet.getCompanyId());
+		serviceContext.setSignedIn(false);
+
+		long defaultUserId = UserLocalServiceUtil.getDefaultUserId(
+			layoutSet.getCompanyId());
+
+		serviceContext.setUserId(defaultUserId);
+
+		ServiceContextThreadLocal.pushServiceContext(serviceContext);
+	}
+
 	protected void markBackgroundTask(
 		long backgroundTaskId, String backgroundTaskState) {
 
@@ -69,21 +95,20 @@ public abstract class BaseStagingBackgroundTaskExecutor
 			BackgroundTaskLocalServiceUtil.fetchBackgroundTask(
 				backgroundTaskId);
 
-		if (backgroundTask == null) {
+		if ((backgroundTask == null) || Validator.isNull(backgroundTaskState)) {
 			return;
 		}
 
 		Map<String, Serializable> taskContextMap =
 			backgroundTask.getTaskContextMap();
 
-		if (Validator.isNull(backgroundTaskState)) {
-			return;
+		if (taskContextMap == null) {
+			taskContextMap = new HashMap<>();
 		}
 
 		taskContextMap.put(backgroundTaskState, Boolean.TRUE);
 
-		backgroundTask.setTaskContext(
-			JSONFactoryUtil.serialize(taskContextMap));
+		backgroundTask.setTaskContextMap(taskContextMap);
 
 		BackgroundTaskLocalServiceUtil.updateBackgroundTask(backgroundTask);
 	}
@@ -113,5 +138,9 @@ public abstract class BaseStagingBackgroundTaskExecutor
 
 		return backgroundTaskResult;
 	}
+
+	protected TransactionAttribute transactionAttribute =
+		TransactionAttributeBuilder.build(
+			Propagation.REQUIRED, new Class<?>[] {Exception.class});
 
 }

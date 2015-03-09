@@ -15,6 +15,7 @@
 package com.liferay.portal.security.pacl;
 
 import com.liferay.portal.kernel.security.pacl.permission.PortalServicePermission;
+import com.liferay.portal.spring.aop.AdvisedSupportProxy;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -30,7 +31,8 @@ import org.springframework.aop.framework.AdvisedSupport;
  * @author Brian Wing Shun Chan
  * @author Raymond Augé
  */
-public class PACLInvocationHandler implements InvocationHandler {
+public class PACLInvocationHandler
+	implements AdvisedSupportProxy, InvocationHandler {
 
 	public PACLInvocationHandler(InvocationHandler invocationHandler) {
 		this(invocationHandler, null);
@@ -41,6 +43,11 @@ public class PACLInvocationHandler implements InvocationHandler {
 
 		_invocationHandler = invocationHandler;
 		_advisedSupport = advisedSupport;
+	}
+
+	@Override
+	public AdvisedSupport getAdvisedSupport() {
+		return _advisedSupport;
 	}
 
 	@Override
@@ -85,9 +92,7 @@ public class PACLInvocationHandler implements InvocationHandler {
 		}
 	}
 
-	@SuppressWarnings("unused")
-	private AdvisedSupport _advisedSupport;
-
+	private final AdvisedSupport _advisedSupport;
 	private InvocationHandler _invocationHandler;
 
 	private class InvokePrivilegedExceptionAction
@@ -113,10 +118,10 @@ public class PACLInvocationHandler implements InvocationHandler {
 			}
 		}
 
-		private Object[] _arguments;
+		private final Object[] _arguments;
 		private InvocationHandler _invocationHandler;
-		private Method _method;
-		private Object _proxy;
+		private final Method _method;
+		private final Object _proxy;
 
 	}
 

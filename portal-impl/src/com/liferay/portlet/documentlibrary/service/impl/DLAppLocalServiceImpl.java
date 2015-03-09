@@ -14,7 +14,6 @@
 
 package com.liferay.portlet.documentlibrary.service.impl;
 
-import com.liferay.portal.InvalidRepositoryException;
 import com.liferay.portal.NoSuchGroupException;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -22,10 +21,10 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.repository.InvalidRepositoryIdException;
 import com.liferay.portal.kernel.repository.LocalRepository;
-import com.liferay.portal.kernel.repository.capabilities.TrashCapability;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.repository.model.Folder;
+import com.liferay.portal.kernel.repository.util.RepositoryTrashUtil;
 import com.liferay.portal.kernel.systemevent.SystemEventHierarchyEntryThreadLocal;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
@@ -36,6 +35,7 @@ import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.Repository;
+import com.liferay.portal.model.UserConstants;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFolder;
 import com.liferay.portal.service.ServiceContext;
 import com.liferay.portlet.documentlibrary.NoSuchFileEntryException;
@@ -49,7 +49,6 @@ import com.liferay.portlet.documentlibrary.model.DLFolder;
 import com.liferay.portlet.documentlibrary.model.DLFolderConstants;
 import com.liferay.portlet.documentlibrary.service.base.DLAppLocalServiceBaseImpl;
 import com.liferay.portlet.documentlibrary.util.DLAppUtil;
-import com.liferay.portlet.documentlibrary.util.DLProcessorRegistryUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,10 +58,10 @@ import java.util.List;
 
 /**
  * Provides the local service for accessing, adding, deleting, moving,
- * subscription handling of, trash handling of, and updating document library
- * file entries, file ranks, and folders. All portlets should interact with the
- * document library through this class or through DLAppService, rather than
- * through the individual document library service classes.
+ * subscription handling of, and updating document library file entries, file
+ * ranks, and folders. All portlets should interact with the document library
+ * through this class or through DLAppService, rather than through the
+ * individual document library service classes.
  *
  * <p>
  * This class provides a unified interface to all Liferay and third party
@@ -85,6 +84,18 @@ import java.util.List;
  * @see    DLAppServiceImpl
  */
 public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
+
+	@Override
+	public FileEntry addFileEntry(
+			long userId, long repositoryId, long folderId,
+			String sourceFileName, String mimeType, byte[] bytes,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		return addFileEntry(
+			userId, repositoryId, folderId, sourceFileName, mimeType, null,
+			StringPool.BLANK, StringPool.BLANK, bytes, serviceContext);
+	}
 
 	/**
 	 * Adds a file entry and associated metadata based on a byte array.
@@ -201,7 +212,7 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 			changeLog, file, serviceContext);
 
 		dlAppHelperLocalService.addFileEntry(
-			userId, fileEntry, fileEntry.getFileVersion(), serviceContext);
+			userId, fileEntry, null, serviceContext);
 
 		return fileEntry;
 	}
@@ -289,7 +300,7 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 			changeLog, is, size, serviceContext);
 
 		dlAppHelperLocalService.addFileEntry(
-			userId, fileEntry, fileEntry.getFileVersion(), serviceContext);
+			userId, fileEntry, null, serviceContext);
 
 		return fileEntry;
 	}
@@ -426,7 +437,7 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 	 * Deletes the file ranks associated to a given file entry. This method is
 	 * only supported by the Liferay repository.
 	 *
-	 * @param  fileEntryId the primary key of the file entry
+	 * @param fileEntryId the primary key of the file entry
 	 */
 	@Override
 	public void deleteFileRanksByFileEntryId(long fileEntryId) {
@@ -437,7 +448,7 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 	 * Deletes the file ranks associated to a given user. This method is only
 	 * supported by the Liferay repository.
 	 *
-	 * @param  userId the primary key of the user
+	 * @param userId the primary key of the user
 	 */
 	@Override
 	public void deleteFileRanksByUserId(long userId) {
@@ -493,9 +504,9 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 	public void deleteFolder(long folderId) throws PortalException {
 		LocalRepository localRepository = getFolderLocalRepository(folderId);
 
-		List<FileEntry> fileEntries =
-			localRepository.getRepositoryFileEntries(
-				folderId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+		List<FileEntry> fileEntries = localRepository.getRepositoryFileEntries(
+			UserConstants.USER_ID_DEFAULT, folderId, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS, null);
 
 		for (FileEntry fileEntry : fileEntries) {
 			dlAppHelperLocalService.deleteFileEntry(fileEntry);
@@ -718,12 +729,8 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 
 				// Move file entries within repository
 
-				FileEntry fileEntry = fromLocalRepository.moveFileEntry(
+				return fromLocalRepository.moveFileEntry(
 					userId, fileEntryId, newFolderId, serviceContext);
-
-				dlAppHelperLocalService.moveFileEntry(fileEntry);
-
-				return fileEntry;
 			}
 
 			// Move file entries between repositories
@@ -737,6 +744,12 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 		}
 	}
 
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link
+	 *             RepositoryTrashUtil#moveFileEntryFromTrash(long, long, long,
+	 *             long, ServiceContext)}
+	 */
+	@Deprecated
 	@Override
 	public FileEntry moveFileEntryFromTrash(
 			long userId, long fileEntryId, long newFolderId,
@@ -746,30 +759,16 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 		LocalRepository localRepository = getFileEntryLocalRepository(
 			fileEntryId);
 
-		if (!localRepository.isCapabilityProvided(TrashCapability.class)) {
-			throw new InvalidRepositoryException(
-				"Repository " + localRepository.getRepositoryId() +
-					" does not support trash operations");
-		}
-
-		TrashCapability trashCapability = localRepository.getCapability(
-			TrashCapability.class);
-
-		FileEntry fileEntry = localRepository.getFileEntry(fileEntryId);
-		Folder destinationFolder = localRepository.getFolder(newFolderId);
-
-		return trashCapability.moveFileEntryFromTrash(
-			userId, fileEntry, destinationFolder, serviceContext);
+		return RepositoryTrashUtil.moveFileEntryFromTrash(
+			userId, localRepository.getRepositoryId(), fileEntryId, newFolderId,
+			serviceContext);
 	}
 
 	/**
-	 * Moves the file entry with the primary key to the trash portlet.
-	 *
-	 * @param  userId the primary key of the user
-	 * @param  fileEntryId the primary key of the file entry
-	 * @return the file entry
-	 * @throws PortalException if the file entry could not be found
+	 * @deprecated As of 7.0.0, replaced by {@link
+	 *             RepositoryTrashUtil#moveFileEntryToTrash(long, long, long)}
 	 */
+	@Deprecated
 	@Override
 	public FileEntry moveFileEntryToTrash(long userId, long fileEntryId)
 		throws PortalException {
@@ -777,12 +776,8 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 		LocalRepository localRepository = getFileEntryLocalRepository(
 			fileEntryId);
 
-		TrashCapability trashCapability = localRepository.getCapability(
-			TrashCapability.class);
-
-		FileEntry fileEntry = localRepository.getFileEntry(fileEntryId);
-
-		return trashCapability.moveFileEntryToTrash(userId, fileEntry);
+		return RepositoryTrashUtil.moveFileEntryToTrash(
+			userId, localRepository.getRepositoryId(), fileEntryId);
 	}
 
 	@Override
@@ -811,28 +806,20 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 				}
 			}
 
-			Folder folder = null;
-
 			if (sourceLocalRepository.getRepositoryId() ==
 					destinationLocalRepository.getRepositoryId()) {
 
 				// Move file entries within repository
 
-				folder = sourceLocalRepository.moveFolder(
+				return sourceLocalRepository.moveFolder(
 					userId, folderId, parentFolderId, serviceContext);
 			}
-			else {
 
-				// Move file entries between repositories
+			// Move file entries between repositories
 
-				folder = moveFolders(
-					userId, folderId, parentFolderId, sourceLocalRepository,
-					destinationLocalRepository, serviceContext);
-			}
-
-			dlAppHelperLocalService.moveFolder(folder);
-
-			return folder;
+			return moveFolders(
+				userId, folderId, parentFolderId, sourceLocalRepository,
+				destinationLocalRepository, serviceContext);
 		}
 		finally {
 			SystemEventHierarchyEntryThreadLocal.pop(Folder.class);
@@ -840,12 +827,11 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 	}
 
 	/**
-	 * Restores the file entry with the primary key from the trash portlet.
-	 *
-	 * @param  userId the primary key of the user
-	 * @param  fileEntryId the primary key of the file entry
-	 * @throws PortalException if the file entry could not be found
+	 * @deprecated As of 7.0.0, replaced by {@link
+	 *             RepositoryTrashUtil#restoreFileEntryFromTrash(long, long,
+	 *             long)}
 	 */
+	@Deprecated
 	@Override
 	public void restoreFileEntryFromTrash(long userId, long fileEntryId)
 		throws PortalException {
@@ -853,12 +839,8 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 		LocalRepository localRepository = getFileEntryLocalRepository(
 			fileEntryId);
 
-		TrashCapability trashCapability = localRepository.getCapability(
-			TrashCapability.class);
-
-		FileEntry fileEntry = localRepository.getFileEntry(fileEntryId);
-
-		trashCapability.restoreFileEntryFromTrash(userId, fileEntry);
+		RepositoryTrashUtil.restoreFileEntryFromTrash(
+			userId, localRepository.getRepositoryId(), fileEntryId);
 	}
 
 	/**
@@ -903,7 +885,7 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 		}
 
 		subscriptionLocalService.addSubscription(
-			userId, groupId, Folder.class.getName(), folderId);
+			userId, groupId, DLFolder.class.getName(), folderId);
 	}
 
 	/**
@@ -948,7 +930,7 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 		}
 
 		subscriptionLocalService.deleteSubscription(
-			userId, Folder.class.getName(), folderId);
+			userId, DLFolder.class.getName(), folderId);
 	}
 
 	/**
@@ -970,10 +952,7 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 			long[] assetLinkEntryIds)
 		throws PortalException {
 
-		LocalRepository localRepository = getFileEntryLocalRepository(
-			fileEntry.getFileEntryId());
-
-		localRepository.updateAsset(
+		dlAppHelperLocalService.updateAsset(
 			userId, fileEntry, fileVersion, assetCategoryIds, assetTagNames,
 			assetLinkEntryIds);
 	}
@@ -1097,8 +1076,6 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 			userId, fileEntryId, sourceFileName, mimeType, title, description,
 			changeLog, majorVersion, file, serviceContext);
 
-		DLProcessorRegistryUtil.cleanUp(fileEntry.getLatestFileVersion(true));
-
 		dlAppHelperLocalService.updateFileEntry(
 			userId, fileEntry, null, fileEntry.getFileVersion(),
 			serviceContext);
@@ -1182,23 +1159,12 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 		LocalRepository localRepository = getFileEntryLocalRepository(
 			fileEntryId);
 
-		FileEntry oldFileEntry = localRepository.getFileEntry(fileEntryId);
-
-		FileVersion oldFileVersion = oldFileEntry.getFileVersion();
-
 		FileEntry fileEntry = localRepository.updateFileEntry(
 			userId, fileEntryId, sourceFileName, mimeType, title, description,
 			changeLog, majorVersion, is, size, serviceContext);
 
-		if (is != null) {
-			DLProcessorRegistryUtil.cleanUp(
-				fileEntry.getLatestFileVersion(true));
-
-			oldFileVersion = null;
-		}
-
 		dlAppHelperLocalService.updateFileEntry(
-			userId, fileEntry, oldFileVersion, fileEntry.getFileVersion(),
+			userId, fileEntry, null, fileEntry.getFileVersion(),
 			serviceContext);
 
 		return fileEntry;
@@ -1253,10 +1219,9 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 	 * Updates all file shortcuts to the existing file entry to the new file
 	 * entry. This method is only supported by the Liferay repository.
 	 *
-	 * @param  toRepositoryId the primary key of the repository
-	 * @param  oldToFileEntryId the primary key of the old file entry pointed to
-	 * @param  newToFileEntryId the primary key of the new file entry to point
-	 *         to
+	 * @param toRepositoryId the primary key of the repository
+	 * @param oldToFileEntryId the primary key of the old file entry pointed to
+	 * @param newToFileEntryId the primary key of the new file entry to point to
 	 */
 	@Override
 	public void updateFileShortcuts(
@@ -1278,13 +1243,13 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 	 *         the file entry type to default all Liferay file entries to </li>
 	 *         <li> dlFileEntryTypesSearchContainerPrimaryKeys - a
 	 *         comma-delimited list of file entry type primary keys allowed in
-	 *         the given folder and all descendants </li> <li>
-	 *         overrideFileEntryTypes - boolean specifying whether to override
-	 *         ancestral folder's restriction of file entry types allowed </li>
+	 *         the given folder and all descendants </li> <li> restrictionType -
+	 *         specifying restriction type of file entry types allowed </li>
 	 *         <li> workflowDefinitionXYZ - the workflow definition name
 	 *         specified per file entry type. The parameter name must be the
-	 *         string <code>workflowDefinition</code> appended by the <code>
-	 *         fileEntryTypeId</code> (optionally <code>0</code>). </li> </ul>
+	 *         string <code>workflowDefinition</code> appended by the
+	 *         <code>fileEntryTypeId</code> (optionally <code>0</code>).</li>
+	 *         </ul>
 	 * @return the folder
 	 * @throws PortalException if the current or new parent folder could not be
 	 *         found, or if the new parent folder's information was invalid
@@ -1350,8 +1315,7 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 		}
 
 		dlAppHelperLocalService.addFileEntry(
-			userId, destinationFileEntry, destinationFileEntry.getFileVersion(),
-			serviceContext);
+			userId, destinationFileEntry, null, serviceContext);
 
 		return destinationFileEntry;
 	}
@@ -1390,6 +1354,8 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 		dlAppHelperLocalService.deleteRepositoryFileEntries(repositoryId);
 
 		localRepository.deleteAll();
+
+		repositoryLocalService.deleteRepository(repositoryId);
 	}
 
 	protected LocalRepository getFileEntryLocalRepository(long fileEntryId)
@@ -1450,16 +1416,11 @@ public class DLAppLocalServiceImpl extends DLAppLocalServiceBaseImpl {
 			long folderId, long groupId)
 		throws PortalException {
 
-		LocalRepository localRepository = null;
-
 		if (folderId == DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
-			localRepository = getLocalRepository(groupId);
-		}
-		else {
-			localRepository = getFolderLocalRepository(folderId);
+			return getLocalRepository(groupId);
 		}
 
-		return localRepository;
+		return getFolderLocalRepository(folderId);
 	}
 
 	protected LocalRepository getLocalRepository(long repositoryId)

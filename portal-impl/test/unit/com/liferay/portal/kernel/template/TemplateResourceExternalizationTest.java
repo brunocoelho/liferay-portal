@@ -59,12 +59,11 @@ public class TemplateResourceExternalizationTest {
 		UnsyncByteArrayOutputStream unsyncByteArrayOutputStream =
 			new UnsyncByteArrayOutputStream();
 
-		ObjectOutput objectOutput = new ObjectOutputStream(
-			unsyncByteArrayOutputStream);
+		try (ObjectOutput objectOutput = new ObjectOutputStream(
+				unsyncByteArrayOutputStream)) {
 
-		cacheTemplateResource.writeExternal(objectOutput);
-
-		objectOutput.close();
+			cacheTemplateResource.writeExternal(objectOutput);
+		}
 
 		byte[] externalizedData = unsyncByteArrayOutputStream.toByteArray();
 
@@ -107,26 +106,25 @@ public class TemplateResourceExternalizationTest {
 		String ddmTemplateKey = "testKey";
 		final long templateId = 100;
 
-		DDMTemplate ddmTemplate =
-			(DDMTemplate)ProxyUtil.newProxyInstance(
-				getClass().getClassLoader(), new Class<?>[] {DDMTemplate.class},
-				new InvocationHandler() {
+		DDMTemplate ddmTemplate = (DDMTemplate)ProxyUtil.newProxyInstance(
+			getClass().getClassLoader(), new Class<?>[] {DDMTemplate.class},
+			new InvocationHandler() {
 
-					@Override
-					public Object invoke(
-							Object proxy, Method method, Object[] arguments)
-						throws Throwable {
+				@Override
+				public Object invoke(
+						Object proxy, Method method, Object[] arguments)
+					throws Throwable {
 
-						String methodName = method.getName();
+					String methodName = method.getName();
 
-						if (methodName.equals("getTemplateId")) {
-							return templateId;
-						}
-
-						throw new UnsupportedOperationException();
+					if (methodName.equals("getTemplateId")) {
+						return templateId;
 					}
 
-				});
+					throw new UnsupportedOperationException();
+				}
+
+			});
 
 		DDMTemplateResource ddmTemplateResource = new DDMTemplateResource(
 			ddmTemplateKey, ddmTemplate);
@@ -136,12 +134,11 @@ public class TemplateResourceExternalizationTest {
 		UnsyncByteArrayOutputStream unsyncByteArrayOutputStream =
 			new UnsyncByteArrayOutputStream();
 
-		ObjectOutput objectOutput = new MockObjectOutput(
-			unsyncByteArrayOutputStream);
+		try (ObjectOutput objectOutput = new MockObjectOutput(
+				unsyncByteArrayOutputStream)) {
 
-		ddmTemplateResource.writeExternal(objectOutput);
-
-		objectOutput.close();
+			ddmTemplateResource.writeExternal(objectOutput);
+		}
 
 		byte[] externalizedData = unsyncByteArrayOutputStream.toByteArray();
 
@@ -208,12 +205,11 @@ public class TemplateResourceExternalizationTest {
 		UnsyncByteArrayOutputStream unsyncByteArrayOutputStream =
 			new UnsyncByteArrayOutputStream();
 
-		ObjectOutput objectOutput = new MockObjectOutput(
-			unsyncByteArrayOutputStream);
+		try (ObjectOutput objectOutput = new MockObjectOutput(
+				unsyncByteArrayOutputStream)) {
 
-		stringTemplateResource.writeExternal(objectOutput);
-
-		objectOutput.close();
+			stringTemplateResource.writeExternal(objectOutput);
+		}
 
 		byte[] externalizedData = unsyncByteArrayOutputStream.toByteArray();
 
@@ -268,12 +264,11 @@ public class TemplateResourceExternalizationTest {
 		UnsyncByteArrayOutputStream unsyncByteArrayOutputStream =
 			new UnsyncByteArrayOutputStream();
 
-		ObjectOutput objectOutput = new MockObjectOutput(
-			unsyncByteArrayOutputStream);
+		try (ObjectOutput objectOutput = new MockObjectOutput(
+				unsyncByteArrayOutputStream)) {
 
-		urlTemplateResource.writeExternal(objectOutput);
-
-		objectOutput.close();
+			urlTemplateResource.writeExternal(objectOutput);
+		}
 
 		byte[] externalizedData = unsyncByteArrayOutputStream.toByteArray();
 

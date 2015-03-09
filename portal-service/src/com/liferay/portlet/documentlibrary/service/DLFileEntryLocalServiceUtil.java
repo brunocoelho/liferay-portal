@@ -57,14 +57,14 @@ public class DLFileEntryLocalServiceUtil {
 		java.lang.String sourceFileName, java.lang.String mimeType,
 		java.lang.String title, java.lang.String description,
 		java.lang.String changeLog, long fileEntryTypeId,
-		java.util.Map<java.lang.String, com.liferay.portlet.dynamicdatamapping.storage.Fields> fieldsMap,
+		java.util.Map<java.lang.String, com.liferay.portlet.dynamicdatamapping.storage.DDMFormValues> ddmFormValuesMap,
 		java.io.File file, java.io.InputStream is, long size,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 		return getService()
 				   .addFileEntry(userId, groupId, repositoryId, folderId,
 			sourceFileName, mimeType, title, description, changeLog,
-			fileEntryTypeId, fieldsMap, file, is, size, serviceContext);
+			fileEntryTypeId, ddmFormValuesMap, file, is, size, serviceContext);
 	}
 
 	public static com.liferay.portlet.documentlibrary.model.DLFileVersion cancelCheckOut(
@@ -237,6 +237,20 @@ public class DLFileEntryLocalServiceUtil {
 		return getService().deletePersistedModel(persistedModel);
 	}
 
+	public static void deleteRepositoryFileEntries(long repositoryId,
+		long folderId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+		getService().deleteRepositoryFileEntries(repositoryId, folderId);
+	}
+
+	public static void deleteRepositoryFileEntries(long repositoryId,
+		long folderId, boolean includeTrashedEntries)
+		throws com.liferay.portal.kernel.exception.PortalException {
+		getService()
+			.deleteRepositoryFileEntries(repositoryId, folderId,
+			includeTrashedEntries);
+	}
+
 	public static com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery() {
 		return getService().dynamicQuery();
 	}
@@ -292,10 +306,10 @@ public class DLFileEntryLocalServiceUtil {
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public static long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery) {
@@ -303,11 +317,11 @@ public class DLFileEntryLocalServiceUtil {
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public static long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,
@@ -342,6 +356,11 @@ public class DLFileEntryLocalServiceUtil {
 		return getService().fetchFileEntryByAnyImageId(imageId);
 	}
 
+	public static com.liferay.portlet.documentlibrary.model.DLFileEntry fetchFileEntryByFileName(
+		long groupId, long folderId, java.lang.String fileName) {
+		return getService().fetchFileEntryByFileName(groupId, folderId, fileName);
+	}
+
 	public static com.liferay.portlet.documentlibrary.model.DLFileEntry fetchFileEntryByName(
 		long groupId, long folderId, java.lang.String name) {
 		return getService().fetchFileEntryByName(groupId, folderId, name);
@@ -365,6 +384,11 @@ public class DLFileEntryLocalServiceUtil {
 		return getService().getDDMStructureFileEntries(ddmStructureIds);
 	}
 
+	public static java.util.List<com.liferay.portlet.documentlibrary.model.DLFileEntry> getDDMStructureFileEntries(
+		long groupId, long[] ddmStructureIds) {
+		return getService().getDDMStructureFileEntries(groupId, ddmStructureIds);
+	}
+
 	/**
 	* Returns a range of all the document library file entries.
 	*
@@ -381,11 +405,28 @@ public class DLFileEntryLocalServiceUtil {
 		return getService().getDLFileEntries(start, end);
 	}
 
+	/**
+	* Returns all the document library file entries matching the UUID and company.
+	*
+	* @param uuid the UUID of the document library file entries
+	* @param companyId the primary key of the company
+	* @return the matching document library file entries, or an empty list if no matches were found
+	*/
 	public static java.util.List<com.liferay.portlet.documentlibrary.model.DLFileEntry> getDLFileEntriesByUuidAndCompanyId(
 		java.lang.String uuid, long companyId) {
 		return getService().getDLFileEntriesByUuidAndCompanyId(uuid, companyId);
 	}
 
+	/**
+	* Returns a range of document library file entries matching the UUID and company.
+	*
+	* @param uuid the UUID of the document library file entries
+	* @param companyId the primary key of the company
+	* @param start the lower bound of the range of document library file entries
+	* @param end the upper bound of the range of document library file entries (not inclusive)
+	* @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	* @return the range of matching document library file entries, or an empty list if no matches were found
+	*/
 	public static java.util.List<com.liferay.portlet.documentlibrary.model.DLFileEntry> getDLFileEntriesByUuidAndCompanyId(
 		java.lang.String uuid, long companyId, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator<com.liferay.portlet.documentlibrary.model.DLFileEntry> orderByComparator) {
@@ -666,6 +707,15 @@ public class DLFileEntryLocalServiceUtil {
 	}
 
 	public static java.util.List<com.liferay.portlet.documentlibrary.model.DLFileEntry> getGroupFileEntries(
+		long groupId, long userId, long repositoryId, long rootFolderId,
+		int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<com.liferay.portlet.documentlibrary.model.DLFileEntry> obc) {
+		return getService()
+				   .getGroupFileEntries(groupId, userId, repositoryId,
+			rootFolderId, start, end, obc);
+	}
+
+	public static java.util.List<com.liferay.portlet.documentlibrary.model.DLFileEntry> getGroupFileEntries(
 		long groupId, long userId, long rootFolderId, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator<com.liferay.portlet.documentlibrary.model.DLFileEntry> obc) {
 		return getService()
@@ -710,6 +760,15 @@ public class DLFileEntryLocalServiceUtil {
 		return getService().getPersistedModel(primaryKeyObj);
 	}
 
+	public static java.util.List<com.liferay.portlet.documentlibrary.model.DLFileEntry> getRepositoryFileEntries(
+		long repositoryId, int start, int end) {
+		return getService().getRepositoryFileEntries(repositoryId, start, end);
+	}
+
+	public static int getRepositoryFileEntriesCount(long repositoryId) {
+		return getService().getRepositoryFileEntriesCount(repositoryId);
+	}
+
 	public static boolean hasExtraSettings() {
 		return getService().hasExtraSettings();
 	}
@@ -728,6 +787,12 @@ public class DLFileEntryLocalServiceUtil {
 	public static boolean isFileEntryCheckedOut(long fileEntryId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 		return getService().isFileEntryCheckedOut(fileEntryId);
+	}
+
+	public static boolean isKeepFileVersionLabel(long fileEntryId,
+		com.liferay.portal.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+		return getService().isKeepFileVersionLabel(fileEntryId, serviceContext);
 	}
 
 	public static com.liferay.portal.model.Lock lockFileEntry(long userId,
@@ -809,14 +874,23 @@ public class DLFileEntryLocalServiceUtil {
 		java.lang.String mimeType, java.lang.String title,
 		java.lang.String description, java.lang.String changeLog,
 		boolean majorVersion, long fileEntryTypeId,
-		java.util.Map<java.lang.String, com.liferay.portlet.dynamicdatamapping.storage.Fields> fieldsMap,
+		java.util.Map<java.lang.String, com.liferay.portlet.dynamicdatamapping.storage.DDMFormValues> ddmFormValuesMap,
 		java.io.File file, java.io.InputStream is, long size,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 		return getService()
 				   .updateFileEntry(userId, fileEntryId, sourceFileName,
 			mimeType, title, description, changeLog, majorVersion,
-			fileEntryTypeId, fieldsMap, file, is, size, serviceContext);
+			fileEntryTypeId, ddmFormValuesMap, file, is, size, serviceContext);
+	}
+
+	public static com.liferay.portlet.documentlibrary.model.DLFileEntry updateFileEntryType(
+		long userId, long fileEntryId, long fileEntryTypeId,
+		com.liferay.portal.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+		return getService()
+				   .updateFileEntryType(userId, fileEntryId, fileEntryTypeId,
+			serviceContext);
 	}
 
 	public static void updateSmallImage(long smallImageId, long largeImageId)
@@ -832,6 +906,13 @@ public class DLFileEntryLocalServiceUtil {
 		return getService()
 				   .updateStatus(userId, fileVersionId, status, serviceContext,
 			workflowContext);
+	}
+
+	public static void validateFile(long groupId, long folderId,
+		long fileEntryId, java.lang.String fileName, java.lang.String title)
+		throws com.liferay.portal.kernel.exception.PortalException {
+		getService()
+			.validateFile(groupId, folderId, fileEntryId, fileName, title);
 	}
 
 	public static boolean verifyFileEntryCheckOut(long fileEntryId,

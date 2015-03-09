@@ -14,7 +14,6 @@
 
 package com.liferay.portlet.documentlibrary.util;
 
-import com.liferay.portal.kernel.bean.ClassLoaderBeanHandler;
 import com.liferay.portal.kernel.lar.PortletDataContext;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -24,19 +23,18 @@ import com.liferay.portal.kernel.security.pacl.DoPrivileged;
 import com.liferay.portal.kernel.util.InstanceFactory;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
-import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.xml.Element;
-import com.liferay.portal.repository.liferayrepository.model.LiferayFileVersion;
 import com.liferay.portal.util.ClassLoaderUtil;
 import com.liferay.portal.util.PrefsPropsUtil;
 import com.liferay.portal.util.PropsValues;
-import com.liferay.portlet.documentlibrary.model.DLFileEntry;
-import com.liferay.portlet.documentlibrary.model.DLProcessorConstants;
-
-import java.lang.reflect.InvocationHandler;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import com.liferay.registry.Registry;
+import com.liferay.registry.RegistryUtil;
+import com.liferay.registry.ServiceReference;
+import com.liferay.registry.ServiceRegistration;
+import com.liferay.registry.collections.ServiceReferenceMapper;
+import com.liferay.registry.collections.ServiceTrackerCollections;
+import com.liferay.registry.collections.ServiceTrackerMap;
+import com.liferay.registry.collections.StringServiceRegistrationMap;
 
 /**
  * @author Mika Koivisto
@@ -45,6 +43,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class DLProcessorRegistryImpl implements DLProcessorRegistry {
 
 	public void afterPropertiesSet() throws Exception {
+		_dlProcessorServiceTrackerMap.open();
+
 		ClassLoader classLoader = ClassLoaderUtil.getPortalClassLoader();
 
 		for (String dlProcessorClassName : _DL_FILE_ENTRY_PROCESSORS) {
@@ -63,7 +63,13 @@ public class DLProcessorRegistryImpl implements DLProcessorRegistry {
 			return;
 		}
 
-		for (DLProcessor dlProcessor : _dlProcessors.values()) {
+		Iterable<String> dlProcessorTypes =
+			_dlProcessorServiceTrackerMap.keySet();
+
+		for (String dlProcessorType : dlProcessorTypes) {
+			DLProcessor dlProcessor = _dlProcessorServiceTrackerMap.getService(
+				dlProcessorType);
+
 			if (dlProcessor.isSupported(fileEntry.getMimeType())) {
 				dlProcessor.cleanUp(fileEntry);
 			}
@@ -76,7 +82,13 @@ public class DLProcessorRegistryImpl implements DLProcessorRegistry {
 			return;
 		}
 
-		for (DLProcessor dlProcessor : _dlProcessors.values()) {
+		Iterable<String> dlProcessorTypes =
+			_dlProcessorServiceTrackerMap.keySet();
+
+		for (String dlProcessorType : dlProcessorTypes) {
+			DLProcessor dlProcessor = _dlProcessorServiceTrackerMap.getService(
+				dlProcessorType);
+
 			if (dlProcessor.isSupported(fileVersion)) {
 				dlProcessor.cleanUp(fileVersion);
 			}
@@ -99,7 +111,13 @@ public class DLProcessorRegistryImpl implements DLProcessorRegistry {
 			return;
 		}
 
-		for (DLProcessor dlProcessor : _dlProcessors.values()) {
+		Iterable<String> dlProcessorTypes =
+			_dlProcessorServiceTrackerMap.keySet();
+
+		for (String dlProcessorType : dlProcessorTypes) {
+			DLProcessor dlProcessor = _dlProcessorServiceTrackerMap.getService(
+				dlProcessorType);
+
 			if (dlProcessor.isSupported(latestFileVersion)) {
 				dlProcessor.exportGeneratedFiles(
 					portletDataContext, fileEntry, fileEntryElement);
@@ -109,7 +127,7 @@ public class DLProcessorRegistryImpl implements DLProcessorRegistry {
 
 	@Override
 	public DLProcessor getDLProcessor(String dlProcessorType) {
-		return _dlProcessors.get(dlProcessorType);
+		return _dlProcessorServiceTrackerMap.getService(dlProcessorType);
 	}
 
 	@Override
@@ -128,7 +146,13 @@ public class DLProcessorRegistryImpl implements DLProcessorRegistry {
 			return;
 		}
 
-		for (DLProcessor dlProcessor : _dlProcessors.values()) {
+		Iterable<String> dlProcessorTypes =
+			_dlProcessorServiceTrackerMap.keySet();
+
+		for (String dlProcessorType : dlProcessorTypes) {
+			DLProcessor dlProcessor = _dlProcessorServiceTrackerMap.getService(
+				dlProcessorType);
+
 			if (dlProcessor.isSupported(fileVersion)) {
 				dlProcessor.importGeneratedFiles(
 					portletDataContext, fileEntry, importedFileEntry,
@@ -165,11 +189,19 @@ public class DLProcessorRegistryImpl implements DLProcessorRegistry {
 
 	@Override
 	public void register(DLProcessor dlProcessor) {
-		String type = _getType(dlProcessor);
+		Registry registry = RegistryUtil.getRegistry();
 
-		if (type != null) {
-			_dlProcessors.put(type, dlProcessor);
+		ServiceRegistration<DLProcessor> previousServiceRegistration =
+			_serviceRegistrations.remove(dlProcessor.getType());
+
+		if (previousServiceRegistration != null) {
+			previousServiceRegistration.unregister();
 		}
+
+		ServiceRegistration<DLProcessor> serviceRegistration =
+			registry.registerService(DLProcessor.class, dlProcessor);
+
+		_serviceRegistrations.put(dlProcessor.getType(), serviceRegistration);
 	}
 
 	@Override
@@ -196,7 +228,13 @@ public class DLProcessorRegistryImpl implements DLProcessorRegistry {
 			return;
 		}
 
-		for (DLProcessor dlProcessor : _dlProcessors.values()) {
+		Iterable<String> dlProcessorTypes =
+			_dlProcessorServiceTrackerMap.keySet();
+
+		for (String dlProcessorType : dlProcessorTypes) {
+			DLProcessor dlProcessor = _dlProcessorServiceTrackerMap.getService(
+				dlProcessorType);
+
 			if (dlProcessor.isSupported(latestFileVersion)) {
 				dlProcessor.trigger(fileVersion, latestFileVersion);
 			}
@@ -205,28 +243,17 @@ public class DLProcessorRegistryImpl implements DLProcessorRegistry {
 
 	@Override
 	public void unregister(DLProcessor dlProcessor) {
-		String type = _getType(dlProcessor);
+		ServiceRegistration<DLProcessor> serviceRegistration =
+			_serviceRegistrations.remove(dlProcessor.getType());
 
-		_dlProcessors.remove(type);
+		serviceRegistration.unregister();
 	}
 
 	private FileVersion _getLatestFileVersion(
 		FileEntry fileEntry, boolean trusted) {
 
-		FileVersion latestFileVersion = null;
-
 		try {
-			if (fileEntry.getModel() instanceof DLFileEntry) {
-				DLFileEntry dlFileEntry = (DLFileEntry)fileEntry.getModel();
-
-				latestFileVersion = new LiferayFileVersion(
-					dlFileEntry.getLatestFileVersion(trusted));
-			}
-			else {
-				latestFileVersion = fileEntry.getLatestFileVersion(trusted);
-			}
-
-			return latestFileVersion;
+			return fileEntry.getLatestFileVersion(trusted);
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -235,49 +262,39 @@ public class DLProcessorRegistryImpl implements DLProcessorRegistry {
 		}
 	}
 
-	private String _getType(DLProcessor dlProcessor) {
-		if (ProxyUtil.isProxyClass(dlProcessor.getClass())) {
-			InvocationHandler invocationHandler =
-				ProxyUtil.getInvocationHandler(dlProcessor);
-
-			if (invocationHandler instanceof ClassLoaderBeanHandler) {
-				ClassLoaderBeanHandler classLoaderBeanHandler =
-					(ClassLoaderBeanHandler)invocationHandler;
-
-				Object bean = classLoaderBeanHandler.getBean();
-
-				if (bean instanceof DLProcessor) {
-					dlProcessor = (DLProcessor)bean;
-				}
-			}
-		}
-
-		if (dlProcessor instanceof AudioProcessor) {
-			return DLProcessorConstants.AUDIO_PROCESSOR;
-		}
-		else if (dlProcessor instanceof ImageProcessor) {
-			return DLProcessorConstants.IMAGE_PROCESSOR;
-		}
-		else if (dlProcessor instanceof PDFProcessor) {
-			return DLProcessorConstants.PDF_PROCESSOR;
-		}
-		else if (dlProcessor instanceof RawMetadataProcessor) {
-			return DLProcessorConstants.RAW_METADATA_PROCESSOR;
-		}
-		else if (dlProcessor instanceof VideoProcessor) {
-			return DLProcessorConstants.VIDEO_PROCESSOR;
-		}
-
-		return null;
-	}
-
 	private static final String[] _DL_FILE_ENTRY_PROCESSORS =
 		PropsUtil.getArray(PropsKeys.DL_FILE_ENTRY_PROCESSORS);
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		DLProcessorRegistryImpl.class);
 
-	private Map<String, DLProcessor> _dlProcessors =
-		new ConcurrentHashMap<String, DLProcessor>();
+	private final ServiceTrackerMap<String, DLProcessor>
+		_dlProcessorServiceTrackerMap =
+			ServiceTrackerCollections.singleValueMap(
+				DLProcessor.class, null,
+				new ServiceReferenceMapper<String, DLProcessor>() {
+
+					@Override
+					public void map(
+						ServiceReference<DLProcessor> serviceReference,
+						Emitter<String> emitter) {
+
+						Registry registry = RegistryUtil.getRegistry();
+
+						DLProcessor dlProcessor = registry.getService(
+							serviceReference);
+
+						try {
+							emitter.emit(dlProcessor.getType());
+						}
+						finally {
+							registry.ungetService(serviceReference);
+						}
+					}
+
+			});
+
+	private final StringServiceRegistrationMap<DLProcessor>
+		_serviceRegistrations = new StringServiceRegistrationMap<>();
 
 }

@@ -19,9 +19,9 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BaseIndexWriter;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.kernel.search.IndexWriter;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
+import com.liferay.portal.kernel.search.SpellCheckIndexWriter;
 import com.liferay.portal.kernel.util.PortalRunMode;
 import com.liferay.portal.search.elasticsearch.connection.ElasticsearchConnectionManager;
 import com.liferay.portal.search.elasticsearch.util.DocumentTypes;
@@ -47,7 +47,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Michael C. Han
  * @author Milen Dyankov
  */
-@Component(immediate = true, service = IndexWriter.class)
+@Component(immediate = true, service = ElasticsearchIndexWriter.class)
 public class ElasticsearchIndexWriter extends BaseIndexWriter {
 
 	@Override
@@ -132,8 +132,8 @@ public class ElasticsearchIndexWriter extends BaseIndexWriter {
 	}
 
 	@Override
-	public void deletePortletDocuments(
-			SearchContext searchContext, String portletId)
+	public void deleteEntityDocuments(
+			SearchContext searchContext, String className)
 		throws SearchException {
 
 		try {
@@ -146,7 +146,7 @@ public class ElasticsearchIndexWriter extends BaseIndexWriter {
 			BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
 			boolQueryBuilder.must(
-				QueryBuilders.termQuery(Field.PORTLET_ID, portletId));
+				QueryBuilders.termQuery(Field.ENTRY_CLASS_NAME, className));
 
 			deleteByQueryRequestBuilder.setQuery(boolQueryBuilder);
 
@@ -159,7 +159,7 @@ public class ElasticsearchIndexWriter extends BaseIndexWriter {
 		}
 		catch (Exception e) {
 			throw new SearchException(
-				"Unable to delete data for portlet " + portletId, e);
+				"Unable to delete data for entity " + className, e);
 		}
 	}
 
@@ -179,6 +179,14 @@ public class ElasticsearchIndexWriter extends BaseIndexWriter {
 	}
 
 	@Override
+	@Reference
+	public void setSpellCheckIndexWriter(
+		SpellCheckIndexWriter spellCheckIndexWriter) {
+
+		super.setSpellCheckIndexWriter(spellCheckIndexWriter);
+	}
+
+	@Override
 	public void updateDocument(SearchContext searchContext, Document document)
 		throws SearchException {
 
@@ -195,7 +203,7 @@ public class ElasticsearchIndexWriter extends BaseIndexWriter {
 			DocumentTypes.LIFERAY, searchContext, documents, true);
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		ElasticsearchIndexWriter.class);
 
 	private ElasticsearchConnectionManager _elasticsearchConnectionManager;

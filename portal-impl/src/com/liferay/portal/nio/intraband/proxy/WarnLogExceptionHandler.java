@@ -23,6 +23,9 @@ import com.liferay.portal.kernel.nio.intraband.proxy.ExceptionHandler;
  */
 public class WarnLogExceptionHandler implements ExceptionHandler {
 
+	public static final WarnLogExceptionHandler INSTANCE =
+		new WarnLogExceptionHandler();
+
 	@Override
 	public void onException(Exception e) {
 		if (_log.isWarnEnabled()) {
@@ -30,7 +33,10 @@ public class WarnLogExceptionHandler implements ExceptionHandler {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private WarnLogExceptionHandler() {
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
 		WarnLogExceptionHandler.class);
 
 }

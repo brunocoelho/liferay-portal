@@ -267,14 +267,14 @@ public interface WebsiteModel extends AttachedModel, BaseModel<Website>,
 	 *
 	 * @return the type ID of this website
 	 */
-	public int getTypeId();
+	public long getTypeId();
 
 	/**
 	 * Sets the type ID of this website.
 	 *
 	 * @param typeId the type ID of this website
 	 */
-	public void setTypeId(int typeId);
+	public void setTypeId(long typeId);
 
 	/**
 	 * Returns the primary of this website.
@@ -334,19 +334,19 @@ public interface WebsiteModel extends AttachedModel, BaseModel<Website>,
 	public Object clone();
 
 	@Override
-	public int compareTo(Website website);
+	public int compareTo(com.liferay.portal.model.Website website);
 
 	@Override
 	public int hashCode();
 
 	@Override
-	public CacheModel<Website> toCacheModel();
+	public CacheModel<com.liferay.portal.model.Website> toCacheModel();
 
 	@Override
-	public Website toEscapedModel();
+	public com.liferay.portal.model.Website toEscapedModel();
 
 	@Override
-	public Website toUnescapedModel();
+	public com.liferay.portal.model.Website toUnescapedModel();
 
 	@Override
 	public String toString();

@@ -85,7 +85,12 @@ for (int i = values.size() - 1; i >= 0; i--) {
 			</liferay-ui:search-container-row>
 
 			<aui:script>
-				var fieldsQuantities = opener.document.<portlet:namespace />fm.<portlet:namespace />fieldsQuantities.value;
+				var form = $(document.<portlet:namespace />fm);
+
+				var openerForm = $(Liferay.Util.getOpener().document.<portlet:namespace />fm);
+
+				var fieldsQuantities = openerForm.fm('fieldsQuantities').val();
+
 				var itemQuantities = [];
 
 				if (fieldsQuantities) {
@@ -100,11 +105,20 @@ for (int i = values.size() - 1; i >= 0; i--) {
 				for (int i = searchContainer.getStart(); i < searchContainer.getResultEnd(); i++) {
 				%>
 
-					document.<portlet:namespace />fm.<portlet:namespace />fieldsQuantity<%= i %>.value = itemQuantities[<%= i %>];
+					form.fm('fieldsQuantity<%= i %>').val(itemQuantities[<%= i %>]);
 
 				<%
 				}
 				%>
+
+				function <portlet:namespace />closeDialog() {
+					Liferay.fire(
+						'closeWindow',
+						{
+							id: '<portlet:namespace />itemQuantities'
+						}
+					);
+				}
 
 				function <portlet:namespace />setItemQuantities() {
 
@@ -112,26 +126,22 @@ for (int i = values.size() - 1; i >= 0; i--) {
 					for (int i = searchContainer.getStart(); i < searchContainer.getResultEnd(); i++) {
 					%>
 
-						itemQuantities.splice(<%= i %>, 1, document.<portlet:namespace />fm.<portlet:namespace />fieldsQuantity<%= i %>.value);
+						itemQuantities.splice(<%= i %>, 1, form.fm('fieldsQuantity<%= i %>').val());
 
 					<%
 					}
 					%>
 
-					opener.document.<portlet:namespace />fm.<portlet:namespace />fieldsQuantities.value = itemQuantities.join(',');
+					openerForm.fm('fieldsQuantities').val(itemQuantities.join(','));
 				}
 
 				function <portlet:namespace />updateItemQuantities() {
 					<portlet:namespace />setItemQuantities();
 
-					self.close();
+					<portlet:namespace />closeDialog();
 				}
 
-				AUI().all('.taglib-page-iterator li a').each(
-					function(node) {
-						node.on('click', <portlet:namespace />setItemQuantities);
-					}
-				);
+				AUI.$('.taglib-page-iterator').on('click', 'li a', <portlet:namespace />setItemQuantities);
 			</aui:script>
 
 			<liferay-ui:search-iterator />
@@ -141,7 +151,7 @@ for (int i = values.size() - 1; i >= 0; i--) {
 	<aui:button-row>
 		<aui:button onClick='<%= renderResponse.getNamespace() + "updateItemQuantities();" %>' value="update" />
 
-		<aui:button onClick="self.close();" type="cancel" />
+		<aui:button onClick='<%= renderResponse.getNamespace() + "closeDialog();" %>' type="cancel" />
 	</aui:button-row>
 </aui:form>
 

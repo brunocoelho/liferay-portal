@@ -14,7 +14,12 @@ package ${packagePath}.service.persistence.impl;
 
 <#assign noSuchEntity = serviceBuilder.getNoSuchEntityException(entity)>
 
-import ${packagePath}.${noSuchEntity}Exception;
+<#if osgiModule>
+	import ${packagePath}.exception.${noSuchEntity}Exception;
+<#else>
+	import ${packagePath}.${noSuchEntity}Exception;
+</#if>
+
 import ${packagePath}.model.${entity.name};
 import ${packagePath}.model.impl.${entity.name}Impl;
 import ${packagePath}.model.impl.${entity.name}ModelImpl;
@@ -89,7 +94,7 @@ import java.util.Map;
 import java.util.Set;
 
 <#list referenceList as tempEntity>
-	<#if tempEntity.hasColumns() && (entity.name == "Counter" || tempEntity.name != "Counter")>
+	<#if tempEntity.hasColumns() && (entity.name == "Counter" || tempEntity.name != "Counter") && (tempEntity.packagePath != packagePath)>
 		import ${tempEntity.packagePath}.service.persistence.${tempEntity.name}Persistence;
 	</#if>
 </#list>
@@ -103,7 +108,7 @@ import java.util.Set;
  *
  * @author ${author}
  * @see ${entity.name}Persistence
- * @see ${entity.name}Util
+ * @see ${packagePath}.service.persistence.${entity.name}Util
  * @generated
  */
 @ProviderType
@@ -1764,7 +1769,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 
 			@Override
 			public long getMvccVersion() {
-				return 0;
+				return -1;
 			}
 
 			@Override

@@ -189,6 +189,7 @@ public class MBMessageStagedModelDataHandler
 
 		messageElement.addAttribute(
 			"question", String.valueOf(thread.isQuestion()));
+		messageElement.addAttribute("threadUuid", thread.getUuid());
 
 		boolean hasAttachmentsFileEntries =
 			message.getAttachmentsFileEntriesCount() > 0;
@@ -221,19 +222,13 @@ public class MBMessageStagedModelDataHandler
 			PortletDataContext portletDataContext, MBMessage message)
 		throws Exception {
 
-		long userId = portletDataContext.getUserId(message.getUserUuid());
-
-		if (message.isDiscussion()) {
-			StagedModelDataHandlerUtil.importReferenceStagedModels(
-				portletDataContext, message, MBDiscussion.class);
-		}
-		else if (message.getCategoryId() !=
-					MBCategoryConstants.DEFAULT_PARENT_CATEGORY_ID) {
-
+		if (!message.isRoot()) {
 			StagedModelDataHandlerUtil.importReferenceStagedModel(
-				portletDataContext, message, MBCategory.class,
-				message.getCategoryId());
+				portletDataContext, message, MBMessage.class,
+				message.getParentMessageId());
 		}
+
+		long userId = portletDataContext.getUserId(message.getUserUuid());
 
 		Map<Long, Long> categoryIds =
 			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
@@ -248,10 +243,19 @@ public class MBMessageStagedModelDataHandler
 
 		long threadId = MapUtil.getLong(threadIds, message.getThreadId(), 0);
 
-		if (!message.isRoot()) {
-			StagedModelDataHandlerUtil.importReferenceStagedModel(
-				portletDataContext, message, MBMessage.class,
-				message.getParentMessageId());
+		Element messageElement =
+			portletDataContext.getImportDataStagedModelElement(message);
+
+		if (threadId == 0) {
+			String threadUuid = messageElement.attributeValue("threadUuid");
+
+			MBThread thread =
+				MBThreadLocalServiceUtil.fetchMBThreadByUuidAndGroupId(
+					threadUuid, portletDataContext.getScopeGroupId());
+
+			if (thread != null) {
+				threadId = thread.getThreadId();
+			}
 		}
 
 		Map<Long, Long> messageIds =
@@ -262,11 +266,8 @@ public class MBMessageStagedModelDataHandler
 			messageIds, message.getParentMessageId(),
 			message.getParentMessageId());
 
-		Element element = portletDataContext.getImportDataStagedModelElement(
-			message);
-
 		List<ObjectValuePair<String, InputStream>> inputStreamOVPs =
-			getAttachments(portletDataContext, element, message);
+			getAttachments(portletDataContext, messageElement, message);
 
 		try {
 			ServiceContext serviceContext =
@@ -344,7 +345,8 @@ public class MBMessageStagedModelDataHandler
 			if (importedMessage.isRoot() && !importedMessage.isDiscussion()) {
 				MBThreadLocalServiceUtil.updateQuestion(
 					importedMessage.getThreadId(),
-					GetterUtil.getBoolean(element.attributeValue("question")));
+					GetterUtil.getBoolean(
+						messageElement.attributeValue("question")));
 			}
 
 			if (message.isDiscussion()) {
@@ -357,6 +359,14 @@ public class MBMessageStagedModelDataHandler
 			}
 
 			threadIds.put(message.getThreadId(), importedMessage.getThreadId());
+
+			// Keep thread UUID
+
+			MBThread thread = importedMessage.getThread();
+
+			thread.setUuid(messageElement.attributeValue("threadUuid"));
+
+			MBThreadLocalServiceUtil.updateMBThread(thread);
 
 			portletDataContext.importClassedModel(message, importedMessage);
 		}
@@ -418,7 +428,7 @@ public class MBMessageStagedModelDataHandler
 		}
 
 		List<ObjectValuePair<String, InputStream>> inputStreamOVPs =
-			new ArrayList<ObjectValuePair<String, InputStream>>();
+			new ArrayList<>();
 
 		List<Element> attachmentElements =
 			portletDataContext.getReferenceDataElements(
@@ -460,8 +470,7 @@ public class MBMessageStagedModelDataHandler
 			}
 
 			ObjectValuePair<String, InputStream> inputStreamOVP =
-				new ObjectValuePair<String, InputStream>(
-					fileEntry.getTitle(), inputStream);
+				new ObjectValuePair<>(fileEntry.getTitle(), inputStream);
 
 			inputStreamOVPs.add(inputStreamOVP);
 		}
@@ -475,7 +484,7 @@ public class MBMessageStagedModelDataHandler
 		return inputStreamOVPs;
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		MBMessageStagedModelDataHandler.class);
 
 }

@@ -43,7 +43,7 @@ public class DerbyDB extends BaseDB {
 		template = reword(template );
 		//template = _removeLongInserts(derby);
 		template = removeNull(template);
-		template = StringUtil.replace(template , "\\'", "''");
+		template = StringUtil.replace(template, "\\'", "''");
 
 		return template;
 	}
@@ -104,45 +104,45 @@ public class DerbyDB extends BaseDB {
 
 	@Override
 	protected String reword(String data) throws IOException {
-		UnsyncBufferedReader unsyncBufferedReader = new UnsyncBufferedReader(
-			new UnsyncStringReader(data));
+		try (UnsyncBufferedReader unsyncBufferedReader =
+				new UnsyncBufferedReader(new UnsyncStringReader(data))) {
 
-		StringBundler sb = new StringBundler();
+			StringBundler sb = new StringBundler();
 
-		String line = null;
+			String line = null;
 
-		while ((line = unsyncBufferedReader.readLine()) != null) {
-			if (line.startsWith(ALTER_COLUMN_NAME) ||
-				line.startsWith(ALTER_COLUMN_TYPE)) {
+			while ((line = unsyncBufferedReader.readLine()) != null) {
+				if (line.startsWith(ALTER_COLUMN_NAME) ||
+					line.startsWith(ALTER_COLUMN_TYPE)) {
 
-				line = "-- " + line;
+					line = "-- " + line;
 
-				if (_log.isWarnEnabled()) {
-					_log.warn(
-						"This statement is not supported by Derby: " + line);
+					if (_log.isWarnEnabled()) {
+						_log.warn(
+							"This statement is not supported by Derby: " +
+								line);
+					}
 				}
-			}
-			else if (line.startsWith(ALTER_TABLE_NAME)) {
-				String[] template = buildTableNameTokens(line);
+				else if (line.startsWith(ALTER_TABLE_NAME)) {
+					String[] template = buildTableNameTokens(line);
 
-				line = StringUtil.replace(
-					"alter table @old-table@ to @new-table@;",
-					RENAME_TABLE_TEMPLATE, template);
-			}
-			else if (line.contains(DROP_INDEX)) {
-				String[] tokens = StringUtil.split(line, ' ');
+					line = StringUtil.replace(
+						"alter table @old-table@ to @new-table@;",
+						RENAME_TABLE_TEMPLATE, template);
+				}
+				else if (line.contains(DROP_INDEX)) {
+					String[] tokens = StringUtil.split(line, ' ');
 
-				line = StringUtil.replace(
-					"drop index @index@;", "@index@", tokens[2]);
+					line = StringUtil.replace(
+						"drop index @index@;", "@index@", tokens[2]);
+				}
+
+				sb.append(line);
+				sb.append("\n");
 			}
 
-			sb.append(line);
-			sb.append("\n");
+			return sb.toString();
 		}
-
-		unsyncBufferedReader.close();
-
-		return sb.toString();
 	}
 
 	private static final String[] _DERBY = {
@@ -156,8 +156,8 @@ public class DerbyDB extends BaseDB {
 
 	private static final boolean _SUPPORTS_ALTER_COLUMN_TYPE = false;
 
-	private static Log _log = LogFactoryUtil.getLog(DerbyDB.class);
+	private static final Log _log = LogFactoryUtil.getLog(DerbyDB.class);
 
-	private static DerbyDB _instance = new DerbyDB();
+	private static final DerbyDB _instance = new DerbyDB();
 
 }

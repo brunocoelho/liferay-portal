@@ -15,6 +15,7 @@
 package com.liferay.portal.kernel.process;
 
 import com.liferay.portal.kernel.concurrent.AbortPolicy;
+import com.liferay.portal.kernel.concurrent.BaseFutureListener;
 import com.liferay.portal.kernel.concurrent.DefaultNoticeableFuture;
 import com.liferay.portal.kernel.concurrent.FutureListener;
 import com.liferay.portal.kernel.concurrent.NoticeableFuture;
@@ -29,7 +30,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -45,6 +45,9 @@ public class ProcessUtil {
 
 	public static final ConsumerOutputProcessor CONSUMER_OUTPUT_PROCESSOR =
 		new ConsumerOutputProcessor();
+
+	public static final EchoOutputProcessor ECHO_OUTPUT_PROCESSOR =
+		new EchoOutputProcessor();
 
 	public static final LoggingOutputProcessor LOGGING_OUTPUT_PROCESSOR =
 		new LoggingOutputProcessor();
@@ -140,8 +143,7 @@ public class ProcessUtil {
 			final Process process) {
 
 		final DefaultNoticeableFuture<ObjectValuePair<O, E>>
-			defaultNoticeableFuture =
-				new DefaultNoticeableFuture<ObjectValuePair<O, E>>();
+			defaultNoticeableFuture = new DefaultNoticeableFuture<>();
 
 		defaultNoticeableFuture.addFutureListener(
 			new FutureListener<ObjectValuePair<O, E>>() {
@@ -162,66 +164,68 @@ public class ProcessUtil {
 			});
 
 		final AtomicMarkableReference<O> stdOutReference =
-			new AtomicMarkableReference<O>(null, false);
+			new AtomicMarkableReference<>(null, false);
 
 		final AtomicMarkableReference<E> stdErrReference =
-			new AtomicMarkableReference<E>(null, false);
+			new AtomicMarkableReference<>(null, false);
 
 		stdOutNoticeableFuture.addFutureListener(
-			new FutureListener<O>() {
+			new BaseFutureListener<O>() {
 
 				@Override
-				public void complete(Future<O> future) {
-					try {
-						O stdOut = future.get();
+				public void completeWithCancel(Future<O> future) {
+					defaultNoticeableFuture.cancel(true);
+				}
 
-						stdOutReference.set(stdOut, true);
+				@Override
+				public void completeWithException(
+					Future<O> future, Throwable throwable) {
 
-						boolean[] markHolder = new boolean[1];
+					defaultNoticeableFuture.setException(throwable);
+				}
 
-						E stdErr = stdErrReference.get(markHolder);
+				@Override
+				public void completeWithResult(Future<O> future, O stdOut) {
+					stdOutReference.set(stdOut, true);
 
-						if (markHolder[0]) {
-							defaultNoticeableFuture.set(
-								new ObjectValuePair<O, E>(stdOut, stdErr));
-						}
-					}
-					catch (Throwable t) {
-						if (t instanceof ExecutionException) {
-							t = t.getCause();
-						}
+					boolean[] markHolder = new boolean[1];
 
-						defaultNoticeableFuture.setException(t);
+					E stdErr = stdErrReference.get(markHolder);
+
+					if (markHolder[0]) {
+						defaultNoticeableFuture.set(
+							new ObjectValuePair<O, E>(stdOut, stdErr));
 					}
 				}
 
 			});
 
 		stdErrNoticeableFuture.addFutureListener(
-			new FutureListener<E>() {
+			new BaseFutureListener<E>() {
 
 				@Override
-				public void complete(Future<E> future) {
-					try {
-						E stdErr = future.get();
+				public void completeWithCancel(Future<E> future) {
+					defaultNoticeableFuture.cancel(true);
+				}
 
-						stdErrReference.set(stdErr, true);
+				@Override
+				public void completeWithException(
+					Future<E> future, Throwable throwable) {
 
-						boolean[] markHolder = new boolean[1];
+					defaultNoticeableFuture.setException(throwable);
+				}
 
-						O stdOut = stdOutReference.get(markHolder);
+				@Override
+				public void completeWithResult(Future<E> future, E stdErr) {
+					stdErrReference.set(stdErr, true);
 
-						if (markHolder[0]) {
-							defaultNoticeableFuture.set(
-								new ObjectValuePair<O, E>(stdOut, stdErr));
-						}
-					}
-					catch (Throwable t) {
-						if (t instanceof ExecutionException) {
-							t = t.getCause();
-						}
+					boolean[] markHolder = new boolean[1];
 
-						defaultNoticeableFuture.setException(t);
+					O stdOut = stdOutReference.get(markHolder);
+
+					if (markHolder[0]) {
+						defaultNoticeableFuture.set(
+							new ObjectValuePair<O, E>(stdOut, stdErr));
 					}
 				}
 

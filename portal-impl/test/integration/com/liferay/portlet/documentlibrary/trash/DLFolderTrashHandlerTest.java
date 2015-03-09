@@ -15,42 +15,44 @@
 package com.liferay.portlet.documentlibrary.trash;
 
 import com.liferay.portal.kernel.repository.model.Folder;
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.Sync;
+import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.BaseModel;
 import com.liferay.portal.model.ClassedModel;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.service.ServiceContext;
-import com.liferay.portal.test.Sync;
-import com.liferay.portal.test.SynchronousDestinationExecutionTestListener;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
-import com.liferay.portal.util.test.RandomTestUtil;
-import com.liferay.portal.util.test.TestPropsValues;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portlet.documentlibrary.model.DLFolder;
 import com.liferay.portlet.documentlibrary.model.DLFolderConstants;
 import com.liferay.portlet.documentlibrary.service.DLAppServiceUtil;
 import com.liferay.portlet.documentlibrary.service.DLFolderLocalServiceUtil;
-import com.liferay.portlet.documentlibrary.util.test.DLAppTestUtil;
-import com.liferay.portlet.trash.BaseTrashHandlerTestCase;
+import com.liferay.portlet.trash.test.BaseTrashHandlerTestCase;
 import com.liferay.portlet.trash.util.TrashUtil;
 
+import org.junit.ClassRule;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Alexander Chow
  * @author Eudaldo Alonso
  */
-@ExecutionTestListeners(
-	listeners = {
-		MainServletExecutionTestListener.class,
-		SynchronousDestinationExecutionTestListener.class
-	})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 @Sync
 public class DLFolderTrashHandlerTest extends BaseTrashHandlerTestCase {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE,
+			SynchronousDestinationTestRule.INSTANCE);
 
 	@Ignore()
 	@Override
@@ -125,12 +127,13 @@ public class DLFolderTrashHandlerTest extends BaseTrashHandlerTestCase {
 	protected BaseModel<?> addBaseModelWithWorkflow(long groupId, long folderId)
 		throws Exception {
 
-		String name = getSearchKeywords();
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				groupId, TestPropsValues.getUserId());
 
-		name += RandomTestUtil.randomString(
-			_FOLDER_NAME_MAX_LENGTH - name.length());
-
-		Folder folder = DLAppTestUtil.addFolder(groupId, folderId, name);
+		Folder folder = DLAppServiceUtil.addFolder(
+			groupId, folderId, getSearchKeywords(),
+			RandomTestUtil.randomString(), serviceContext);
 
 		return (DLFolder)folder.getModel();
 	}
@@ -178,9 +181,10 @@ public class DLFolderTrashHandlerTest extends BaseTrashHandlerTestCase {
 			Group group, long parentBaseModelId, ServiceContext serviceContext)
 		throws Exception {
 
-		Folder folder = DLAppTestUtil.addFolder(
+		Folder folder = DLAppServiceUtil.addFolder(
 			group.getGroupId(), parentBaseModelId,
-			RandomTestUtil.randomString(_FOLDER_NAME_MAX_LENGTH));
+			RandomTestUtil.randomString(_FOLDER_NAME_MAX_LENGTH),
+			RandomTestUtil.randomString(), serviceContext);
 
 		return (DLFolder)folder.getModel();
 	}
@@ -196,7 +200,7 @@ public class DLFolderTrashHandlerTest extends BaseTrashHandlerTestCase {
 
 	@Override
 	protected String getSearchKeywords() {
-		return "Title";
+		return _FOLDER_NAME;
 	}
 
 	@Override
@@ -253,6 +257,8 @@ public class DLFolderTrashHandlerTest extends BaseTrashHandlerTestCase {
 
 		return dlFolder;
 	}
+
+	private static final String _FOLDER_NAME = RandomTestUtil.randomString(100);
 
 	private static final int _FOLDER_NAME_MAX_LENGTH = 100;
 

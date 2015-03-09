@@ -1,4 +1,4 @@
-@import "compass";
+@import "bourbon";
 @import "mixins";
 
 /* ---------- Add/remove page ---------- */
@@ -9,7 +9,7 @@
 
 		&.lfr-nav-hover {
 			.delete-tab {
-				@include opacity(1);
+				opacity: 1;
 			}
 		}
 	}
@@ -25,7 +25,7 @@
 		margin-top: -8px;
 		overflow: hidden;
 
-		@include opacity(0);
+		opacity: 0;
 
 		padding: 3px 0;
 		position: absolute;
@@ -41,7 +41,7 @@
 	.drag-handle {
 		background-color: #555;
 
-		@include border-radius(50%);
+		border-radius: 50%;
 
 		color: #FFF;
 		cursor: pointer;
@@ -79,6 +79,9 @@
 				}
 
 				.add-page-editor-input {
+					left: 5px;
+					position: relative;
+					top: 2px;
 					width: 70%;
 					z-index: 1;
 				}
@@ -130,11 +133,55 @@
 
 /* ---------- General navigation ---------- */
 
-.navigation-pane .app-view-navigation-entry .overlay.entry-action .btn {
-	padding: 11px 14px;
+.navigation-pane {
+	.body-row {
+		height: 100%;
+		overflow: hidden;
+		position: relative;
+		width: 100%;
 
-	@include respond-to(desktop) {
-		padding: 14px 10px;
+		ul li a .icon {
+			float: left;
+			margin-right: 5px;
+		}
+	}
+
+	.lfr-component {
+		margin-left: 0;
+	}
+
+	.navigation-entry {
+		position: relative;
+
+		&.folder.error {
+			display: block;
+			padding: 6px 8px;
+		}
+
+		.browse-folder, .nav-item-label {
+			@include ellipsis;
+
+			display: inline;
+		}
+
+		.overlay.entry-action {
+			bottom: 0;
+			display: block;
+			overflow: hidden;
+			position: absolute;
+			right: 0;
+			top: 0;
+
+			.btn {
+				border-width: 0;
+				margin: 0;
+				padding: 11px 14px;
+
+				@include respond-to(desktop) {
+					padding: 11px;
+				}
+			}
+		}
 	}
 }
 

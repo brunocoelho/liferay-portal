@@ -1,4 +1,3 @@
-
 /**
  * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
  *
@@ -17,7 +16,7 @@ package com.liferay.portal.kernel.concurrent;
 
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
-import com.liferay.portal.kernel.test.CodeCoverageAssertor;
+import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 import com.liferay.portal.kernel.util.SetUtil;
 
 import java.io.ObjectInputStream;
@@ -46,8 +45,8 @@ import org.junit.Test;
 public class ConcurrentMapperHashMapTest {
 
 	@ClassRule
-	public static CodeCoverageAssertor codeCoverageAssertor =
-		new CodeCoverageAssertor();
+	public static final CodeCoverageAssertor codeCoverageAssertor =
+		CodeCoverageAssertor.INSTANCE;
 
 	@After
 	public void tearDown() {
@@ -285,7 +284,7 @@ public class ConcurrentMapperHashMapTest {
 		_assertEventQueue(Event.MAP_KEY, Event.MAP_VALUE);
 
 		Assert.assertEquals(1, keySet.size());
-		Assert.assertEquals(SetUtil.fromArray(new Key[]{_testKey}), keySet);
+		Assert.assertEquals(SetUtil.fromArray(new Key[] {_testKey}), keySet);
 
 		_assertEventQueue(Event.UNMAP_KEY_FOR_QUERY);
 
@@ -679,12 +678,11 @@ public class ConcurrentMapperHashMapTest {
 		UnsyncByteArrayOutputStream unsyncByteArrayOutputStream =
 			new UnsyncByteArrayOutputStream();
 
-		ObjectOutputStream objectOutputStream = new ObjectOutputStream(
-			unsyncByteArrayOutputStream);
+		try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(
+				unsyncByteArrayOutputStream)) {
 
-		objectOutputStream.writeObject(_concurrentMap);
-
-		objectOutputStream.close();
+			objectOutputStream.writeObject(_concurrentMap);
+		}
 
 		ObjectInputStream objectInputStream = new ObjectInputStream(
 			new UnsyncByteArrayInputStream(
@@ -891,7 +889,7 @@ public class ConcurrentMapperHashMapTest {
 	}
 
 	protected Map<Key, Value> _createDataMap() {
-		Map<Key, Value> map = new HashMap<Key, Value>();
+		Map<Key, Value> map = new HashMap<>();
 
 		map.put(_testKey, _testValue);
 		map.put(new Key("testKey2"), _testValue2);
@@ -907,9 +905,9 @@ public class ConcurrentMapperHashMapTest {
 		_eventQueue.clear();
 	}
 
-	private static final Queue<Event> _eventQueue =  new LinkedList<Event>();
+	private static final Queue<Event> _eventQueue = new LinkedList<>();
 
-	private ConcurrentMap<Key, Value> _concurrentMap =
+	private final ConcurrentMap<Key, Value> _concurrentMap =
 		new ConcurrentTypeReferenceHashMap();
 	private final Key _testKey = new Key("testKey");
 	private final Value _testValue = new Value("testValue");

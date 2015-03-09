@@ -226,22 +226,21 @@ public class DLAppServiceWrapper implements DLAppService,
 	* @param groupId the primary key of the group
 	* @param folderId the primary key of the folder where the file entry will
 	eventually reside
+	* @param folderName the temporary folder's name
 	* @param fileName the file's original name
-	* @param tempFolderName the temporary folder's name
 	* @param file the file's data (optionally <code>null</code>)
 	* @param mimeType the file's MIME type
 	* @return the temporary file entry
 	* @throws PortalException if the file name was invalid
-	* @see com.liferay.portal.kernel.util.TempFileUtil
+	* @see com.liferay.portal.kernel.util.TempFileEntryUtil
 	*/
 	@Override
 	public com.liferay.portal.kernel.repository.model.FileEntry addTempFileEntry(
-		long groupId, long folderId, java.lang.String fileName,
-		java.lang.String tempFolderName, java.io.File file,
-		java.lang.String mimeType)
+		long groupId, long folderId, java.lang.String folderName,
+		java.lang.String fileName, java.io.File file, java.lang.String mimeType)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		return _dlAppService.addTempFileEntry(groupId, folderId, fileName,
-			tempFolderName, file, mimeType);
+		return _dlAppService.addTempFileEntry(groupId, folderId, folderName,
+			fileName, file, mimeType);
 	}
 
 	/**
@@ -257,23 +256,23 @@ public class DLAppServiceWrapper implements DLAppService,
 	* @param groupId the primary key of the group
 	* @param folderId the primary key of the folder where the file entry will
 	eventually reside
+	* @param folderName the temporary folder's name
 	* @param fileName the file's original name
-	* @param tempFolderName the temporary folder's name
 	* @param inputStream the file's data
 	* @param mimeType the file's MIME type
 	* @return the temporary file entry
 	* @throws PortalException if the file name was invalid or if a portal
 	exception occurred
-	* @see com.liferay.portal.kernel.util.TempFileUtil
+	* @see com.liferay.portal.kernel.util.TempFileEntryUtil
 	*/
 	@Override
 	public com.liferay.portal.kernel.repository.model.FileEntry addTempFileEntry(
-		long groupId, long folderId, java.lang.String fileName,
-		java.lang.String tempFolderName, java.io.InputStream inputStream,
+		long groupId, long folderId, java.lang.String folderName,
+		java.lang.String fileName, java.io.InputStream inputStream,
 		java.lang.String mimeType)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		return _dlAppService.addTempFileEntry(groupId, folderId, fileName,
-			tempFolderName, inputStream, mimeType);
+		return _dlAppService.addTempFileEntry(groupId, folderId, folderName,
+			fileName, inputStream, mimeType);
 	}
 
 	/**
@@ -551,17 +550,17 @@ public class DLAppServiceWrapper implements DLAppService,
 	* @param groupId the primary key of the group
 	* @param folderId the primary key of the folder where the file entry was
 	eventually to reside
+	* @param folderName the temporary folder's name
 	* @param fileName the file's original name
-	* @param tempFolderName the temporary folder's name
 	* @throws PortalException if the file name was invalid
-	* @see com.liferay.portal.kernel.util.TempFileUtil
+	* @see com.liferay.portal.kernel.util.TempFileEntryUtil
 	*/
 	@Override
 	public void deleteTempFileEntry(long groupId, long folderId,
-		java.lang.String fileName, java.lang.String tempFolderName)
+		java.lang.String folderName, java.lang.String fileName)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		_dlAppService.deleteTempFileEntry(groupId, folderId, fileName,
-			tempFolderName);
+		_dlAppService.deleteTempFileEntry(groupId, folderId, folderName,
+			fileName);
 	}
 
 	/**
@@ -1671,18 +1670,17 @@ public class DLAppServiceWrapper implements DLAppService,
 	* @param groupId the primary key of the group
 	* @param folderId the primary key of the folder where the file entry will
 	eventually reside
-	* @param tempFolderName the temporary folder's name
+	* @param folderName the temporary folder's name
 	* @return the temporary file entry names
 	* @throws PortalException if the folder was invalid
 	* @see #addTempFileEntry(long, long, String, String, File, String)
-	* @see com.liferay.portal.kernel.util.TempFileUtil
+	* @see com.liferay.portal.kernel.util.TempFileEntryUtil
 	*/
 	@Override
-	public java.lang.String[] getTempFileEntryNames(long groupId,
-		long folderId, java.lang.String tempFolderName)
+	public java.lang.String[] getTempFileNames(long groupId, long folderId,
+		java.lang.String folderName)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		return _dlAppService.getTempFileEntryNames(groupId, folderId,
-			tempFolderName);
+		return _dlAppService.getTempFileNames(groupId, folderId, folderName);
 	}
 
 	/**
@@ -2331,13 +2329,13 @@ public class DLAppServiceWrapper implements DLAppService,
 	the file entry type to default all Liferay file entries to </li>
 	<li> dlFileEntryTypesSearchContainerPrimaryKeys - a
 	comma-delimited list of file entry type primary keys allowed in
-	the given folder and all descendants </li> <li>
-	overrideFileEntryTypes - boolean specifying whether to override
-	ancestral folder's restriction of file entry types allowed </li>
+	the given folder and all descendants </li> <li> restrictionType -
+	specifying restriction type of file entry types allowed </li>
 	<li> workflowDefinitionXYZ - the workflow definition name
 	specified per file entry type. The parameter name must be the
-	string <code>workflowDefinition</code> appended by the <code>
-	fileEntryTypeId</code> (optionally <code>0</code>). </li> </ul>
+	string <code>workflowDefinition</code> appended by the
+	<code>fileEntryTypeId</code> (optionally <code>0</code>).</li>
+	</ul>
 	* @return the folder
 	* @throws PortalException if the current or new parent folder could not be
 	found or if the new parent folder's information was invalid

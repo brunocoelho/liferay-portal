@@ -28,6 +28,8 @@ import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.HttpUtil;
@@ -59,6 +61,7 @@ import com.liferay.portal.util.PortletKeys;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.PortletURLFactoryUtil;
 import com.liferay.portlet.documentlibrary.DLPortletInstanceSettings;
+import com.liferay.portlet.documentlibrary.action.EditFileEntryAction;
 import com.liferay.portlet.documentlibrary.model.DLFileEntry;
 import com.liferay.portlet.documentlibrary.model.DLFileEntryConstants;
 import com.liferay.portlet.documentlibrary.model.DLFileEntryType;
@@ -172,7 +175,7 @@ public class DLImpl implements DL {
 
 		portletURL.setParameter("struts_action", "/document_library/view");
 
-		Map<String, Object> data = new HashMap<String, Object>();
+		Map<String, Object> data = new HashMap<>();
 
 		data.put("direction-right", Boolean.TRUE.toString());
 
@@ -240,7 +243,7 @@ public class DLImpl implements DL {
 			portletURL.setParameter(
 				"folderId", String.valueOf(ancestorFolder.getFolderId()));
 
-			Map<String, Object> data = new HashMap<String, Object>();
+			Map<String, Object> data = new HashMap<>();
 
 			data.put("direction-right", Boolean.TRUE.toString());
 			data.put("folder-id", ancestorFolder.getFolderId());
@@ -262,7 +265,7 @@ public class DLImpl implements DL {
 
 			Folder unescapedFolder = folder.toUnescapedModel();
 
-			Map<String, Object> data = new HashMap<String, Object>();
+			Map<String, Object> data = new HashMap<>();
 
 			data.put("direction-right", Boolean.TRUE.toString());
 			data.put("folder-id", folderId);
@@ -511,8 +514,7 @@ public class DLImpl implements DL {
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		Map<String, String> definitionTerms =
-			new LinkedHashMap<String, String>();
+		Map<String, String> definitionTerms = new LinkedHashMap<>();
 
 		definitionTerms.put(
 			"[$COMPANY_ID$]",
@@ -560,8 +562,11 @@ public class DLImpl implements DL {
 
 		definitionTerms.put("[$PORTAL_URL$]", company.getVirtualHostname());
 
+		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
+
 		definitionTerms.put(
-			"[$PORTLET_NAME$]", PortalUtil.getPortletTitle(portletRequest));
+			"[$PORTLET_NAME$]", HtmlUtil.escape(portletDisplay.getTitle()));
+
 		definitionTerms.put(
 			"[$SITE_NAME$]",
 			LanguageUtil.get(
@@ -588,8 +593,7 @@ public class DLImpl implements DL {
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		Map<String, String> definitionTerms =
-			new LinkedHashMap<String, String>();
+		Map<String, String> definitionTerms = new LinkedHashMap<>();
 
 		definitionTerms.put(
 			"[$COMPANY_ID$]",
@@ -619,8 +623,12 @@ public class DLImpl implements DL {
 			"[$DOCUMENT_USER_NAME$]",
 			LanguageUtil.get(
 				themeDisplay.getLocale(), "the-user-who-added-the-document"));
+
+		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
+
 		definitionTerms.put(
-			"[$PORTLET_NAME$]", PortalUtil.getPortletTitle(portletRequest));
+			"[$PORTLET_NAME$]", HtmlUtil.escape(portletDisplay.getTitle()));
+
 		definitionTerms.put(
 			"[$SITE_NAME$]",
 			LanguageUtil.get(
@@ -632,7 +640,7 @@ public class DLImpl implements DL {
 
 	@Override
 	public List<Object> getEntries(Hits hits) {
-		List<Object> entries = new ArrayList<Object>();
+		List<Object> entries = new ArrayList<>();
 
 		for (Document document : hits.getDocs()) {
 			String entryClassName = GetterUtil.getString(
@@ -672,7 +680,7 @@ public class DLImpl implements DL {
 
 	@Override
 	public List<FileEntry> getFileEntries(Hits hits) {
-		List<FileEntry> entries = new ArrayList<FileEntry>();
+		List<FileEntry> entries = new ArrayList<>();
 
 		for (Document document : hits.getDocs()) {
 			long fileEntryId = GetterUtil.getLong(
@@ -717,7 +725,7 @@ public class DLImpl implements DL {
 			SubscriptionLocalServiceUtil.getUserSubscriptions(
 				userId, DLFileEntryType.class.getName());
 
-		Set<Long> classPKs = new HashSet<Long>(subscriptions.size());
+		Set<Long> classPKs = new HashSet<>(subscriptions.size());
 
 		for (Subscription subscription : subscriptions) {
 			classPKs.add(subscription.getClassPK());
@@ -738,6 +746,49 @@ public class DLImpl implements DL {
 	@Override
 	public String getFileIconCssClass(String extension) {
 		return "icon-file-alt";
+	}
+
+	@Override
+	public String getFileName(
+		long groupId, long folderId, String tempFileName) {
+
+		String extension = FileUtil.getExtension(tempFileName);
+
+		int pos = tempFileName.lastIndexOf(
+			EditFileEntryAction.TEMP_RANDOM_SUFFIX);
+
+		if (pos != -1) {
+			tempFileName = tempFileName.substring(0, pos);
+
+			if (Validator.isNotNull(extension)) {
+				tempFileName = tempFileName + StringPool.PERIOD + extension;
+			}
+		}
+
+		while (true) {
+			try {
+				DLAppLocalServiceUtil.getFileEntry(
+					groupId, folderId, tempFileName);
+
+				StringBundler sb = new StringBundler(5);
+
+				sb.append(FileUtil.stripExtension(tempFileName));
+				sb.append(StringPool.DASH);
+				sb.append(StringUtil.randomString());
+
+				if (Validator.isNotNull(extension)) {
+					sb.append(StringPool.PERIOD);
+					sb.append(extension);
+				}
+
+				tempFileName = sb.toString();
+			}
+			catch (Exception e) {
+				break;
+			}
+		}
+
+		return tempFileName;
 	}
 
 	@Override
@@ -827,13 +878,13 @@ public class DLImpl implements DL {
 		sb.append(fileEntry.getFolderId());
 		sb.append(StringPool.SLASH);
 
-		String title = fileEntry.getTitle();
+		String fileName = fileEntry.getFileName();
 
 		if (fileEntry.isInTrash()) {
-			title = TrashUtil.getOriginalTitle(fileEntry.getTitle());
+			fileName = TrashUtil.getOriginalTitle(fileEntry.getFileName());
 		}
 
-		sb.append(HttpUtil.encodeURL(HtmlUtil.unescape(title)));
+		sb.append(HttpUtil.encodeURL(HtmlUtil.unescape(fileName)));
 
 		sb.append(StringPool.SLASH);
 		sb.append(HttpUtil.encodeURL(fileEntry.getUuid()));
@@ -894,27 +945,51 @@ public class DLImpl implements DL {
 		OrderByComparator<T> orderByComparator = null;
 
 		if (orderByCol.equals("creationDate")) {
-			orderByComparator = new RepositoryModelCreateDateComparator<T>(
+			orderByComparator = new RepositoryModelCreateDateComparator<>(
 				orderByAsc);
 		}
 		else if (orderByCol.equals("downloads")) {
-			orderByComparator = new RepositoryModelReadCountComparator<T>(
+			orderByComparator = new RepositoryModelReadCountComparator<>(
 				orderByAsc);
 		}
 		else if (orderByCol.equals("modifiedDate")) {
-			orderByComparator = new RepositoryModelModifiedDateComparator<T>(
+			orderByComparator = new RepositoryModelModifiedDateComparator<>(
 				orderByAsc);
 		}
 		else if (orderByCol.equals("size")) {
-			orderByComparator = new RepositoryModelSizeComparator<T>(
-				orderByAsc);
+			orderByComparator = new RepositoryModelSizeComparator<>(orderByAsc);
 		}
 		else {
-			orderByComparator = new RepositoryModelNameComparator<T>(
-				orderByAsc);
+			orderByComparator = new RepositoryModelNameComparator<>(orderByAsc);
 		}
 
 		return orderByComparator;
+	}
+
+	@Override
+	public String getSanitizedFileName(String title, String extension) {
+		String fileName = StringUtil.replace(
+			title, StringPool.SLASH, StringPool.UNDERLINE);
+
+		if (Validator.isNotNull(extension) &&
+			!StringUtil.endsWith(fileName, StringPool.PERIOD + extension)) {
+
+			fileName += StringPool.PERIOD + extension;
+		}
+
+		if (fileName.length() > 255) {
+			int x = fileName.length() - 1;
+
+			if (Validator.isNotNull(extension)) {
+				x = fileName.lastIndexOf(StringPool.PERIOD);
+			}
+
+			int y = x - (fileName.length() - 255);
+
+			fileName = fileName.substring(0, y) + fileName.substring(x);
+		}
+
+		return fileName;
 	}
 
 	@Override
@@ -939,6 +1014,11 @@ public class DLImpl implements DL {
 		return sb.toString();
 	}
 
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #getThumbnailSrc(FileEntry,
+	 *             ThemeDisplay)}
+	 */
+	@Deprecated
 	@Override
 	public String getThumbnailSrc(
 			FileEntry fileEntry, DLFileShortcut dlFileShortcut,
@@ -946,14 +1026,27 @@ public class DLImpl implements DL {
 		throws Exception {
 
 		return getThumbnailSrc(
-			fileEntry, fileEntry.getFileVersion(), dlFileShortcut,
-			themeDisplay);
+			fileEntry, fileEntry.getFileVersion(), themeDisplay);
+	}
+
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #getThumbnailSrc(FileEntry,
+	 *             FileVersion, ThemeDisplay)}
+	 */
+	@Deprecated
+	@Override
+	public String getThumbnailSrc(
+			FileEntry fileEntry, FileVersion fileVersion,
+			DLFileShortcut dlFileShortcut, ThemeDisplay themeDisplay)
+		throws Exception {
+
+		return getThumbnailSrc(fileEntry, fileVersion, themeDisplay);
 	}
 
 	@Override
 	public String getThumbnailSrc(
 			FileEntry fileEntry, FileVersion fileVersion,
-			DLFileShortcut dlFileShortcut, ThemeDisplay themeDisplay)
+			ThemeDisplay themeDisplay)
 		throws Exception {
 
 		String thumbnailQueryString = null;
@@ -972,6 +1065,15 @@ public class DLImpl implements DL {
 
 		return getImageSrc(
 			fileEntry, fileVersion, themeDisplay, thumbnailQueryString);
+	}
+
+	@Override
+	public String getThumbnailSrc(
+			FileEntry fileEntry, ThemeDisplay themeDisplay)
+		throws Exception {
+
+		return getThumbnailSrc(
+			fileEntry, fileEntry.getFileVersion(), themeDisplay);
 	}
 
 	@Override
@@ -1076,22 +1178,12 @@ public class DLImpl implements DL {
 			webDavURL.append(MANUAL_CHECK_IN_REQUIRED_PATH);
 		}
 
-		String fileEntryTitle = null;
+		String fileEntryFileName = null;
 
 		Group group = null;
 
 		if (fileEntry != null) {
-			String extension = fileEntry.getExtension();
-
-			fileEntryTitle = HtmlUtil.unescape(fileEntry.getTitle());
-
-			if (openDocumentUrl && isOfficeExtension(extension) &&
-				!fileEntryTitle.endsWith(StringPool.PERIOD + extension)) {
-
-				webDavURL.append(OFFICE_EXTENSION_PATH);
-
-				fileEntryTitle += StringPool.PERIOD + extension;
-			}
+			fileEntryFileName = HtmlUtil.unescape(fileEntry.getFileName());
 
 			group = GroupLocalServiceUtil.getGroup(fileEntry.getGroupId());
 		}
@@ -1127,7 +1219,7 @@ public class DLImpl implements DL {
 
 		if (fileEntry != null) {
 			sb.append(StringPool.SLASH);
-			sb.append(HttpUtil.encodeURL(fileEntryTitle, true));
+			sb.append(HttpUtil.encodeURL(fileEntryFileName, true));
 		}
 
 		webDavURL.append(sb.toString());
@@ -1148,7 +1240,9 @@ public class DLImpl implements DL {
 				return false;
 			}
 
-			if (dlFolder.isOverrideFileEntryTypes()) {
+			if (dlFolder.getRestrictionType() !=
+					DLFolderConstants.RESTRICTION_TYPE_INHERIT) {
+
 				break;
 			}
 
@@ -1213,7 +1307,7 @@ public class DLImpl implements DL {
 			boolean recursive)
 		throws PortalException {
 
-		List<Long> ancestorFolderIds = new ArrayList<Long>();
+		List<Long> ancestorFolderIds = new ArrayList<>();
 
 		if (folderId != DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 			Folder folder = DLAppLocalServiceUtil.getFolder(folderId);
@@ -1233,7 +1327,7 @@ public class DLImpl implements DL {
 		long[] folderIdsArray = ArrayUtil.toLongArray(ancestorFolderIds);
 
 		return SubscriptionLocalServiceUtil.isSubscribed(
-			companyId, userId, Folder.class.getName(), folderIdsArray);
+			companyId, userId, DLFolder.class.getName(), folderIdsArray);
 	}
 
 	@Override
@@ -1263,8 +1357,7 @@ public class DLImpl implements DL {
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		Map<String, Serializable> workflowContext =
-			new HashMap<String, Serializable>();
+		Map<String, Serializable> workflowContext = new HashMap<>();
 
 		workflowContext.put(
 			WorkflowConstants.CONTEXT_URL,
@@ -1281,6 +1374,22 @@ public class DLImpl implements DL {
 	protected String getEntryURL(
 			DLFileVersion dlFileVersion, ServiceContext serviceContext)
 		throws PortalException {
+
+		if (Validator.equals(
+				serviceContext.getCommand(), Constants.ADD_WEBDAV) ||
+			Validator.equals(
+				serviceContext.getCommand(), Constants.UPDATE_WEBDAV)) {
+
+			return serviceContext.getPortalURL() +
+				serviceContext.getCurrentURL();
+		}
+
+		String entryURL = GetterUtil.getString(
+			serviceContext.getAttribute("entryURL"));
+
+		if (Validator.isNotNull(entryURL)) {
+			return entryURL;
+		}
 
 		HttpServletRequest request = serviceContext.getRequest();
 
@@ -1367,13 +1476,12 @@ public class DLImpl implements DL {
 
 	private static final String _STRUCTURE_KEY_PREFIX = "AUTO_";
 
-	private static Log _log = LogFactoryUtil.getLog(DLImpl.class);
+	private static final Log _log = LogFactoryUtil.getLog(DLImpl.class);
 
-	private static Set<String> _allMediaGalleryMimeTypes =
-		new TreeSet<String>();
-	private static Set<String> _fileIcons = new HashSet<String>();
-	private static Map<String, String> _genericNames =
-		new HashMap<String, String>();
+	private static final Set<String> _allMediaGalleryMimeTypes =
+		new TreeSet<>();
+	private static final Set<String> _fileIcons = new HashSet<>();
+	private static final Map<String, String> _genericNames = new HashMap<>();
 
 	static {
 		_allMediaGalleryMimeTypes.addAll(

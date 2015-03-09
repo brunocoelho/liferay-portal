@@ -184,6 +184,7 @@ boolean showPortletCssIcon = false;
 boolean showPortletIcon = (portletResourcePortlet != null) ? Validator.isNotNull(portletResourcePortlet.getIcon()) : Validator.isNotNull(portlet.getIcon());
 boolean showPrintIcon = portlet.hasPortletMode(responseContentType, LiferayPortletMode.PRINT);
 boolean showRefreshIcon = portlet.isAjaxable() && (portlet.getRenderWeight() == 0);
+boolean showStagingIcon = false;
 
 Boolean portletParallelRender = (Boolean)request.getAttribute(WebKeys.PORTLET_PARALLEL_RENDER);
 
@@ -211,7 +212,7 @@ if (!portletId.equals(PortletKeys.PORTLET_CONFIGURATION)) {
 		}
 	}
 
-	if (layoutTypePortlet.isCustomizable() && !layoutTypePortlet.isColumnDisabled(columnId) && LayoutPermissionUtil.contains(permissionChecker, layout, ActionKeys.CUSTOMIZE)) {
+	if (layoutTypePortlet.isCustomizable() && !layoutTypePortlet.isColumnDisabled(columnId) && !portlet.isPreferencesCompanyWide() && portlet.isPreferencesUniquePerLayout() && LayoutPermissionUtil.contains(permissionChecker, layout, ActionKeys.CUSTOMIZE)) {
 		showConfigurationIcon = true;
 
 		if (PropsValues.PORTLET_CSS_ENABLED) {
@@ -224,6 +225,10 @@ if (group.isLayoutPrototype()) {
 	showExportImportIcon = false;
 }
 
+if ((group.isStaged() || group.isStagedRemotely()) && !group.hasLocalOrRemoteStagingGroup()) {
+	showStagingIcon = true;
+}
+
 if (portlet.hasPortletMode(responseContentType, PortletMode.EDIT)) {
 	if (PortletPermissionUtil.contains(permissionChecker, layout, portletId, ActionKeys.PREFERENCES)) {
 		showEditIcon = true;
@@ -231,7 +236,7 @@ if (portlet.hasPortletMode(responseContentType, PortletMode.EDIT)) {
 }
 
 if (portlet.hasPortletMode(responseContentType, LiferayPortletMode.EDIT_DEFAULTS)) {
-	if (showEditIcon && !layout.isPrivateLayout() && themeDisplay.isShowAddContentIcon()) {
+	if (showEditIcon && themeDisplay.isShowAddContentIcon()) {
 		showEditDefaultsIcon = true;
 	}
 }
@@ -366,6 +371,7 @@ portletDisplay.setShowPortletCssIcon(showPortletCssIcon);
 portletDisplay.setShowPortletIcon(showPortletIcon);
 portletDisplay.setShowPrintIcon(showPrintIcon);
 portletDisplay.setShowRefreshIcon(showRefreshIcon);
+portletDisplay.setShowStagingIcon(showStagingIcon);
 portletDisplay.setStateExclusive(themeDisplay.isStateExclusive());
 portletDisplay.setStateMax(stateMax);
 portletDisplay.setStateMin(stateMin);
@@ -621,6 +627,22 @@ String urlRefresh = "javascript:;";
 
 portletDisplay.setURLRefresh(urlRefresh);
 
+// URL staging
+
+PortletURLImpl urlStaging = new PortletURLImpl(request, PortletKeys.PORTLET_CONFIGURATION, plid, PortletRequest.RENDER_PHASE);
+
+urlStaging.setWindowState(LiferayWindowState.POP_UP);
+
+urlStaging.setParameter("struts_action", "/portlet_configuration/staging");
+urlStaging.setParameter("cmd", Constants.PUBLISH_TO_LIVE);
+urlStaging.setParameter("redirect", currentURL);
+urlStaging.setParameter("returnToFullPageURL", currentURL);
+urlStaging.setParameter("portletResource", portletDisplay.getId());
+
+urlStaging.setEscapeXml(false);
+
+portletDisplay.setURLStaging(urlStaging.toString() + "&" + PortalUtil.getPortletNamespace(PortletKeys.PORTLET_CONFIGURATION));
+
 // URL back
 
 String urlBack = null;
@@ -791,10 +813,6 @@ Boolean renderPortletBoundary = GetterUtil.getBoolean(request.getAttribute(WebKe
 		freeformStyles = sb.toString();
 	}
 
-	if ((portletVisibility != null) && !layout.isTypeControlPanel()) {
-		cssClasses += " lfr-configurator-visibility";
-	}
-
 	if (portletDisplay.isStateMin()) {
 		cssClasses += " portlet-minimized";
 	}
@@ -820,10 +838,16 @@ Boolean renderPortletBoundary = GetterUtil.getBoolean(request.getAttribute(WebKe
 	if (portletResourcePortlet != null) {
 		cssClasses += StringPool.SPACE + portletResourcePortlet.getCssClassWrapper();
 	}
+
+	String defaultScreenCssClasses = StringPool.BLANK;
+
+	if ((portletVisibility != null) && !layout.isTypeControlPanel()) {
+		defaultScreenCssClasses += " lfr-configurator-visibility";
+	}
 	%>
 
 	<div class="<%= cssClasses %>" id="p_p_id<%= HtmlUtil.escapeAttribute(renderResponseImpl.getNamespace()) %>" <%= freeformStyles %>>
-		<div id="p_p_id<%= HtmlUtil.escapeAttribute(renderResponseImpl.getNamespace()) %>-defaultScreen">
+		<div class="<%= defaultScreenCssClasses %>" id="p_p_id<%= HtmlUtil.escapeAttribute(renderResponseImpl.getNamespace()) %>-defaultScreen">
 </c:if>
 
 <c:choose>

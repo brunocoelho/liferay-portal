@@ -14,6 +14,8 @@
 
 package com.liferay.portal.cluster;
 
+import com.liferay.portal.kernel.concurrent.ThreadPoolExecutor;
+import com.liferay.portal.kernel.executor.PortalExecutorManager;
 import com.liferay.portal.kernel.test.CaptureHandler;
 import com.liferay.portal.kernel.test.JDKLoggerTestUtil;
 
@@ -22,13 +24,20 @@ import java.io.DataOutput;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+
+import org.jgroups.Receiver;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -41,13 +50,13 @@ public class BaseClusterTestCase {
 
 	@Before
 	public void setUp() {
-		_captureHandler = JDKLoggerTestUtil.configureJDKLogger(
+		_clusterBaseCaptureHandler = JDKLoggerTestUtil.configureJDKLogger(
 			ClusterBase.class.getName(), Level.OFF);
 	}
 
 	@After
 	public void tearDown() {
-		_captureHandler.close();
+		_clusterBaseCaptureHandler.close();
 	}
 
 	@Aspect
@@ -55,7 +64,8 @@ public class BaseClusterTestCase {
 
 		@Around(
 			"set(* com.liferay.portal.util.PropsValues." +
-				"CLUSTER_LINK_AUTODETECT_ADDRESS)")
+				"CLUSTER_LINK_AUTODETECT_ADDRESS)"
+		)
 		public Object disableAutodetectedAddress(
 				ProceedingJoinPoint proceedingJoinPoint)
 			throws Throwable {
@@ -69,7 +79,8 @@ public class BaseClusterTestCase {
 	public static class DisableClusterLinkAdvice {
 
 		@Around(
-			"set(* com.liferay.portal.util.PropsValues.CLUSTER_LINK_ENABLED)")
+			"set(* com.liferay.portal.util.PropsValues.CLUSTER_LINK_ENABLED)"
+		)
 		public Object disableClusterLink(
 				ProceedingJoinPoint proceedingJoinPoint)
 			throws Throwable {
@@ -83,7 +94,8 @@ public class BaseClusterTestCase {
 	public static class EnableClusterLinkAdvice {
 
 		@Around(
-			"set(* com.liferay.portal.util.PropsValues.CLUSTER_LINK_ENABLED)")
+			"set(* com.liferay.portal.util.PropsValues.CLUSTER_LINK_ENABLED)"
+		)
 		public Object enableClusterLink(ProceedingJoinPoint proceedingJoinPoint)
 			throws Throwable {
 
@@ -95,12 +107,92 @@ public class BaseClusterTestCase {
 	@Aspect
 	public static class JChannelExceptionAdvice {
 
-		@Around("call(* org.jgroups.JChannel.send(..))")
-		public Object throwException(ProceedingJoinPoint proceedingJoinPoint)
+		public static void setConnectException(Exception exception) {
+			_connectException = exception;
+		}
+
+		@Around("call(* org.jgroups.JChannel.connect(..))")
+		public void connect(ProceedingJoinPoint proceedingJoinPoint)
 			throws Throwable {
 
+			if (_connectException != null) {
+				throw _connectException;
+			}
+
+			proceedingJoinPoint.proceed();
+		}
+
+		@Around("call(* org.jgroups.JChannel.send(..))")
+		public Object send() throws Exception {
 			throw new Exception();
 		}
+
+		private static Exception _connectException;
+
+	}
+
+	@Aspect
+	public static class JGroupsReceiverAdvice {
+
+		public static Object getJGroupsMessagePayload(
+				Receiver receiver, org.jgroups.Address sourceAddress)
+			throws InterruptedException {
+
+			_countDownLatch.await(10, TimeUnit.MINUTES);
+
+			List<org.jgroups.Message> jGroupsMessages = _jGroupsMessages.get(
+				receiver);
+
+			if ((jGroupsMessages == null) || jGroupsMessages.isEmpty()) {
+				return null;
+			}
+
+			for (org.jgroups.Message jGroupsMessage : jGroupsMessages) {
+				if (sourceAddress.equals(jGroupsMessage.getSrc())) {
+					return jGroupsMessage.getObject();
+				}
+			}
+
+			return null;
+		}
+
+		public static void reset(int expectedMessageNumber) {
+			_countDownLatch = new CountDownLatch(expectedMessageNumber);
+
+			_jGroupsMessages.clear();
+		}
+
+		@Around(
+			"execution(* com.liferay.portal.cluster.JGroupsReceiver." +
+				"doReceive(org.jgroups.Message))"
+		)
+		public void doReceive(ProceedingJoinPoint proceedingJoinPoint) {
+			Receiver receiver = (Receiver)proceedingJoinPoint.getThis();
+
+			List<org.jgroups.Message> jGroupsMessages = _jGroupsMessages.get(
+				receiver);
+
+			if (jGroupsMessages == null) {
+				jGroupsMessages = new ArrayList<>();
+
+				List<org.jgroups.Message> previousJgroupsMessages =
+					_jGroupsMessages.putIfAbsent(receiver, jGroupsMessages);
+
+				if (previousJgroupsMessages != null) {
+					jGroupsMessages = previousJgroupsMessages;
+				}
+			}
+
+			Object[] args = proceedingJoinPoint.getArgs();
+
+			jGroupsMessages.add((org.jgroups.Message)args[0]);
+
+			_countDownLatch.countDown();
+		}
+
+		private static CountDownLatch _countDownLatch;
+		private static final ConcurrentMap<Receiver, List<org.jgroups.Message>>
+			_jGroupsMessages = new ConcurrentHashMap<>();
 
 	}
 
@@ -161,6 +253,47 @@ public class BaseClusterTestCase {
 
 	}
 
-	private CaptureHandler _captureHandler;
+	protected class MockPortalExecutorManager implements PortalExecutorManager {
+
+		@Override
+		public ThreadPoolExecutor getPortalExecutor(String name) {
+			return _threadPoolExecutor;
+		}
+
+		@Override
+		public ThreadPoolExecutor getPortalExecutor(
+			String name, boolean createIfAbsent) {
+
+			return _threadPoolExecutor;
+		}
+
+		@Override
+		public ThreadPoolExecutor registerPortalExecutor(
+			String name, ThreadPoolExecutor threadPoolExecutor) {
+
+			return _threadPoolExecutor;
+		}
+
+		@Override
+		public void shutdown() {
+			shutdown(false);
+		}
+
+		@Override
+		public void shutdown(boolean interrupt) {
+			if (interrupt) {
+				_threadPoolExecutor.shutdownNow();
+			}
+			else {
+				_threadPoolExecutor.shutdown();
+			}
+		}
+
+		private final ThreadPoolExecutor _threadPoolExecutor =
+			new ThreadPoolExecutor(10, 10);
+
+	}
+
+	private CaptureHandler _clusterBaseCaptureHandler;
 
 }

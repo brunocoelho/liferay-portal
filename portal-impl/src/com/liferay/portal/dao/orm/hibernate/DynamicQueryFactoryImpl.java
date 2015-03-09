@@ -14,10 +14,12 @@
 
 package com.liferay.portal.dao.orm.hibernate;
 
+import com.liferay.portal.kernel.concurrent.ConcurrentReferenceKeyHashMap;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQueryFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.memory.FinalizeManager;
 import com.liferay.portal.kernel.security.pacl.permission.PortalRuntimePermission;
 import com.liferay.portal.security.lang.DoPrivilegedUtil;
 import com.liferay.portal.util.ClassLoaderUtil;
@@ -26,6 +28,7 @@ import java.security.PrivilegedAction;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 
 import org.hibernate.criterion.DetachedCriteria;
 
@@ -114,7 +117,7 @@ public class DynamicQueryFactoryImpl implements DynamicQueryFactory {
 		Map<String, Class<?>> classes = _classes.get(classLoader);
 
 		if (classes == null) {
-			classes = new HashMap<String, Class<?>>();
+			classes = new HashMap<>();
 
 			_classes.put(classLoader, classes);
 		}
@@ -130,12 +133,15 @@ public class DynamicQueryFactoryImpl implements DynamicQueryFactory {
 		return clazz;
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		DynamicQueryFactoryImpl.class);
 
-	private Map<ClassLoader, Map<String, Class<?>>> _classes =
-		new HashMap<ClassLoader, Map<String, Class<?>>>();
-	private ClassLoader _portalClassLoader =
+	private static final
+		ConcurrentMap<ClassLoader, Map<String, Class<?>>> _classes =
+			new ConcurrentReferenceKeyHashMap<>(
+				FinalizeManager.WEAK_REFERENCE_FACTORY);
+
+	private final ClassLoader _portalClassLoader =
 		DynamicQueryFactoryImpl.class.getClassLoader();
 
 	private class DynamicQueryPrivilegedAction
@@ -156,8 +162,8 @@ public class DynamicQueryFactoryImpl implements DynamicQueryFactory {
 			return new DynamicQueryImpl(DetachedCriteria.forClass(_clazz));
 		}
 
-		private String _alias;
-		private Class<?> _clazz;
+		private final String _alias;
+		private final Class<?> _clazz;
 
 	}
 

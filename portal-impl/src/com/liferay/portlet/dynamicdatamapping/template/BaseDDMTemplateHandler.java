@@ -20,7 +20,7 @@ import com.liferay.portal.kernel.template.BaseTemplateHandler;
 import com.liferay.portal.kernel.template.TemplateVariableCodeHandler;
 import com.liferay.portal.kernel.template.TemplateVariableGroup;
 import com.liferay.portal.kernel.templateparser.TemplateNode;
-import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.Company;
 import com.liferay.portal.security.permission.PermissionChecker;
 import com.liferay.portlet.dynamicdatamapping.model.DDMStructure;
@@ -43,7 +43,7 @@ public abstract class BaseDDMTemplateHandler extends BaseTemplateHandler {
 		throws Exception {
 
 		Map<String, TemplateVariableGroup> templateVariableGroups =
-			new LinkedHashMap<String, TemplateVariableGroup>();
+			new LinkedHashMap<>();
 
 		addTemplateVariableGroup(
 			templateVariableGroups, getGeneralVariablesTemplateVariableGroup());
@@ -54,6 +54,11 @@ public abstract class BaseDDMTemplateHandler extends BaseTemplateHandler {
 			templateVariableGroups, getUtilTemplateVariableGroup());
 
 		return templateVariableGroups;
+	}
+
+	@Override
+	public boolean isDisplayTemplateHandler() {
+		return false;
 	}
 
 	protected void addTemplateVariableGroup(
@@ -88,9 +93,6 @@ public abstract class BaseDDMTemplateHandler extends BaseTemplateHandler {
 		return templateVariableGroup;
 	}
 
-	protected abstract TemplateVariableCodeHandler
-		getTemplateVariableCodeHandler();
-
 	protected TemplateVariableGroup getStructureFieldsTemplateVariableGroup(
 			long ddmStructureId, Locale locale)
 		throws PortalException {
@@ -108,14 +110,14 @@ public abstract class BaseDDMTemplateHandler extends BaseTemplateHandler {
 		List<String> fieldNames = ddmStructure.getRootFieldNames();
 
 		for (String fieldName : fieldNames) {
-			if (fieldName.startsWith(StringPool.UNDERLINE)) {
-				continue;
-			}
-
 			String label = ddmStructure.getFieldLabel(fieldName, locale);
 			String tip = ddmStructure.getFieldTip(fieldName, locale);
 			String dataType = ddmStructure.getFieldDataType(fieldName);
 			boolean repeatable = ddmStructure.getFieldRepeatable(fieldName);
+
+			if (Validator.isNull(dataType)) {
+				continue;
+			}
 
 			templateVariableGroup.addFieldVariable(
 				label, getFieldVariableClass(), fieldName, tip, dataType,
@@ -124,6 +126,9 @@ public abstract class BaseDDMTemplateHandler extends BaseTemplateHandler {
 
 		return templateVariableGroup;
 	}
+
+	protected abstract TemplateVariableCodeHandler
+		getTemplateVariableCodeHandler();
 
 	protected TemplateVariableGroup getUtilTemplateVariableGroup() {
 		TemplateVariableGroup templateVariableGroup = new TemplateVariableGroup(

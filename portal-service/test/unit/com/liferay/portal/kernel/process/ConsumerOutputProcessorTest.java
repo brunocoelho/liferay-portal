@@ -15,7 +15,7 @@
 package com.liferay.portal.kernel.process;
 
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
-import com.liferay.portal.kernel.test.CodeCoverageAssertor;
+import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -27,8 +27,8 @@ import org.junit.Test;
 public class ConsumerOutputProcessorTest extends BaseOutputProcessorTestCase {
 
 	@ClassRule
-	public static CodeCoverageAssertor codeCoverageAssertor =
-		new CodeCoverageAssertor();
+	public static final CodeCoverageAssertor codeCoverageAssertor =
+		CodeCoverageAssertor.INSTANCE;
 
 	@Test
 	public void testConsumeFail() {

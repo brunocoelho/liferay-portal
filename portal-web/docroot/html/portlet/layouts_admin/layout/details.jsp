@@ -20,7 +20,9 @@
 Group group = layoutsAdminDisplayContext.getGroup();
 Layout selLayout = layoutsAdminDisplayContext.getSelLayout();
 
-LayoutTypePortletImpl selLayoutTypePortlet = new LayoutTypePortletImpl(selLayout);
+LayoutType selLayoutType = selLayout.getLayoutType();
+
+String[] types = LayoutTypeControllerTracker.getTypes();
 
 Locale defaultLocale = LocaleUtil.getDefault();
 String defaultLanguageId = LocaleUtil.toLanguageId(defaultLocale);
@@ -36,7 +38,7 @@ String defaultLanguageId = LocaleUtil.toLanguageId(defaultLocale);
 StringBuilder friendlyURLBase = new StringBuilder();
 %>
 
-<c:if test="<%= !group.isLayoutPrototype() && PortalUtil.isLayoutFriendliable(selLayout) %>">
+<c:if test="<%= !group.isLayoutPrototype() && selLayoutType.isURLFriendliable() %>">
 
 	<%
 	friendlyURLBase.append(themeDisplay.getPortalURL());
@@ -90,15 +92,15 @@ StringBuilder friendlyURLBase = new StringBuilder();
 			<aui:input name="name" />
 
 			<div class="form-group">
-				<aui:input helpMessage="if-checked-this-page-wont-show-up-in-the-navigation-menu" label="hide-from-navigation-menu" name="hidden" />
+				<aui:input helpMessage="if-checked-this-page-does-not-show-up-in-the-navigation-menu" label="hide-from-navigation-menu" name="hidden" />
 			</div>
 
 			<c:choose>
-				<c:when test="<%= PortalUtil.isLayoutFriendliable(selLayout) %>">
+				<c:when test="<%= selLayoutType.isURLFriendliable() %>">
 					<aui:field-wrapper cssClass="input-flex-add-on" helpMessage='<%= LanguageUtil.format(request, "for-example-x", "<em>/news</em>", false) %>' label="friendly-url" name="friendlyURL">
 						<span class="input-group-addon" id="<portlet:namespace />urlBase"><liferay-ui:message key="<%= StringUtil.shorten(friendlyURLBase.toString(), 40) %>" /></span>
 
-						<liferay-ui:input-localized availableLocales="<%= LanguageUtil.getAvailableLocales(themeDisplay.getSiteGroupId()) %>" cssClass="form-control" defaultLanguageId="<%= LocaleUtil.toLanguageId(themeDisplay.getSiteDefaultLocale()) %>" name="friendlyURL" xml="<%= selLayout.getFriendlyURLsXML() %>" />
+						<liferay-ui:input-localized cssClass="form-control" defaultLanguageId="<%= LocaleUtil.toLanguageId(themeDisplay.getSiteDefaultLocale()) %>" name="friendlyURL" xml="<%= selLayout.getFriendlyURLsXML() %>" />
 					</aui:field-wrapper>
 				</c:when>
 				<c:otherwise>
@@ -112,7 +114,7 @@ StringBuilder friendlyURLBase = new StringBuilder();
 				LayoutSetPrototype layoutSetPrototype = LayoutSetPrototypeLocalServiceUtil.getLayoutSetPrototype(group.getClassPK());
 
 				boolean layoutSetPrototypeUpdateable = GetterUtil.getBoolean(layoutSetPrototype.getSettingsProperty("layoutsUpdateable"), true);
-				boolean layoutUpdateable = GetterUtil.getBoolean(selLayoutTypePortlet.getTypeSettingsProperty("layoutUpdateable"), true);
+				boolean layoutUpdateable = GetterUtil.getBoolean(selLayoutType.getTypeSettingsProperty("layoutUpdateable"), true);
 				%>
 
 				<aui:input disabled="<%= !layoutSetPrototypeUpdateable %>" helpMessage="allow-site-administrators-to-modify-this-page-for-their-site-help" label="allow-site-administrators-to-modify-this-page-for-their-site" name="TypeSettingsProperties--layoutUpdateable--" type="checkbox" value="<%= layoutUpdateable %>" />
@@ -150,16 +152,18 @@ StringBuilder friendlyURLBase = new StringBuilder();
 		<aui:select name="type">
 
 			<%
-			for (int i = 0; i < PropsValues.LAYOUT_TYPES.length; i++) {
-				if (PropsValues.LAYOUT_TYPES[i].equals("article") && (group.isLayoutPrototype() || group.isLayoutSetPrototype())) {
+			for (String type : types) {
+				if (type.equals("article") && (group.isLayoutPrototype() || group.isLayoutSetPrototype())) {
 					continue;
 				}
+
+				LayoutTypeController layoutTypeController = LayoutTypeControllerTracker.getLayoutTypeController(type);
 			%>
 
-				<aui:option disabled="<%= selLayout.isFirstParent() && !PortalUtil.isLayoutFirstPageable(PropsValues.LAYOUT_TYPES[i]) %>" label='<%= "layout.types." + PropsValues.LAYOUT_TYPES[i] %>' selected="<%= selLayout.getType().equals(PropsValues.LAYOUT_TYPES[i]) %>" value="<%= PropsValues.LAYOUT_TYPES[i] %>" />
+				<aui:option disabled="<%= selLayout.isFirstParent() && !layoutTypeController.isFirstPageable() %>" label='<%= "layout.types." + type %>' selected="<%= selLayout.getType().equals(type) %>" value="<%= type %>" />
 
 			<%
-			}
+				}
 			%>
 
 		</aui:select>
@@ -167,21 +171,21 @@ StringBuilder friendlyURLBase = new StringBuilder();
 		<div id="<portlet:namespace />layoutTypeForm">
 
 			<%
-			for (int i = 0; i < PropsValues.LAYOUT_TYPES.length; i++) {
-				String curLayoutType = PropsValues.LAYOUT_TYPES[i];
-
-				if (PropsValues.LAYOUT_TYPES[i].equals("article") && (group.isLayoutPrototype() || group.isLayoutSetPrototype())) {
+			for (String type : types) {
+				if (type.equals("article") && (group.isLayoutPrototype() || group.isLayoutSetPrototype())) {
 					continue;
 				}
+
+				LayoutTypeController layoutTypeController = LayoutTypeControllerTracker.getLayoutTypeController(type);
 			%>
 
-				<div class="layout-type-form layout-type-form-<%= curLayoutType %> <%= selLayout.getType().equals(PropsValues.LAYOUT_TYPES[i]) ? "" : "hide" %>">
+				<div class="layout-type-form layout-type-form-<%= type %> <%= selLayout.getType().equals(type) ? "" : "hide" %>">
 
 					<%
 					request.setAttribute(WebKeys.SEL_LAYOUT, selLayout);
 					%>
 
-					<liferay-util:include page="<%= StrutsUtil.TEXT_HTML_DIR + PortalUtil.getLayoutEditPage(curLayoutType) %>">
+					<liferay-util:include page="<%= layoutTypeController.getEditPage() %>">
 						<liferay-util:param name="idPrefix" value="details" />
 					</liferay-util:include>
 				</div>
@@ -195,64 +199,52 @@ StringBuilder friendlyURLBase = new StringBuilder();
 </aui:fieldset>
 
 <aui:script>
-	Liferay.Util.toggleBoxes('<portlet:namespace />layoutPrototypeLinkEnabled','<portlet:namespace />layoutPrototypeMergeAlert');
-	Liferay.Util.toggleBoxes('<portlet:namespace />layoutPrototypeLinkEnabled','<portlet:namespace />typeOptions', true);
+	Liferay.Util.toggleBoxes('<portlet:namespace />layoutPrototypeLinkEnabled', '<portlet:namespace />layoutPrototypeMergeAlert');
+	Liferay.Util.toggleBoxes('<portlet:namespace />layoutPrototypeLinkEnabled', '<portlet:namespace />typeOptions', true);
 </aui:script>
 
-<aui:script use="aui-base">
-	var templateLink = A.one('#templateLink');
-
+<aui:script sandbox="<%= true %>">
 	function toggleLayoutTypeFields(type) {
 		var currentType = 'layout-type-form-' + type;
 
-		var typeFormContainer = A.one('#<portlet:namespace />layoutTypeForm');
+		$('#<portlet:namespace />layoutTypeForm').find('.layout-type-form').each(
+			function(index, item) {
+				item = $(item);
 
-		typeFormContainer.all('.layout-type-form').each(
-			function(item, index, collection) {
 				var visible = item.hasClass(currentType);
 
-				var disabled = !visible;
+				item.toggleClass('hide', !visible);
 
-				item.toggle(visible);
-
-				item.all('input, select, textarea').attr('disabled', disabled);
+				item.find('input, select, textarea').prop('disabled', !visible);
 			}
 		);
-
-		if (templateLink) {
-			templateLink.toggle(type == 'portlet');
-		}
 	}
 
 	toggleLayoutTypeFields('<%= HtmlUtil.escapeJS(selLayout.getType()) %>');
 
-	var typeSelector = A.one('#<portlet:namespace />type');
+	$('#<portlet:namespace />type').on(
+		'change',
+		function(event) {
+			var type = $(event.currentTarget).val();
 
-	if (typeSelector) {
-		typeSelector.on(
-			'change',
-			function(event) {
-				var type = event.currentTarget.val();
+			toggleLayoutTypeFields(type);
 
-				toggleLayoutTypeFields(type);
-
-				Liferay.fire(
-					'<portlet:namespace />toggleLayoutTypeFields',
-					{
-						type: type
-					}
-				);
-			}
-		);
-	}
+			Liferay.fire(
+				'<portlet:namespace />toggleLayoutTypeFields',
+				{
+					type: type
+				}
+			);
+		}
+	);
 
 	var friendlyURLBase = '<%= friendlyURLBase.toString() %>';
 
 	if (friendlyURLBase.length > 40) {
-		A.one('#<portlet:namespace />urlBase').on(
+		$('#<portlet:namespace />urlBase').on(
 			'mouseenter',
 			function(event) {
-				Liferay.Portal.ToolTip.show(event.currentTarget, '<%= friendlyURLBase.toString() %>');
+				Liferay.Portal.ToolTip.show(event.currentTarget, friendlyURLBase);
 			}
 		);
 	}

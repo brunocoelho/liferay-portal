@@ -53,7 +53,7 @@ public class AddressLocalServiceWrapper implements AddressLocalService,
 		java.lang.String className, long classPK, java.lang.String street1,
 		java.lang.String street2, java.lang.String street3,
 		java.lang.String city, java.lang.String zip, long regionId,
-		long countryId, int typeId, boolean mailing, boolean primary)
+		long countryId, long typeId, boolean mailing, boolean primary)
 		throws com.liferay.portal.kernel.exception.PortalException {
 		return _addressLocalService.addAddress(userId, className, classPK,
 			street1, street2, street3, city, zip, regionId, countryId, typeId,
@@ -65,7 +65,7 @@ public class AddressLocalServiceWrapper implements AddressLocalService,
 		java.lang.String className, long classPK, java.lang.String street1,
 		java.lang.String street2, java.lang.String street3,
 		java.lang.String city, java.lang.String zip, long regionId,
-		long countryId, int typeId, boolean mailing, boolean primary,
+		long countryId, long typeId, boolean mailing, boolean primary,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 		return _addressLocalService.addAddress(userId, className, classPK,
@@ -184,10 +184,10 @@ public class AddressLocalServiceWrapper implements AddressLocalService,
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	@Override
 	public long dynamicQueryCount(
@@ -196,11 +196,11 @@ public class AddressLocalServiceWrapper implements AddressLocalService,
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	@Override
 	public long dynamicQueryCount(
@@ -348,7 +348,7 @@ public class AddressLocalServiceWrapper implements AddressLocalService,
 	public com.liferay.portal.model.Address updateAddress(long addressId,
 		java.lang.String street1, java.lang.String street2,
 		java.lang.String street3, java.lang.String city, java.lang.String zip,
-		long regionId, long countryId, int typeId, boolean mailing,
+		long regionId, long countryId, long typeId, boolean mailing,
 		boolean primary)
 		throws com.liferay.portal.kernel.exception.PortalException {
 		return _addressLocalService.updateAddress(addressId, street1, street2,

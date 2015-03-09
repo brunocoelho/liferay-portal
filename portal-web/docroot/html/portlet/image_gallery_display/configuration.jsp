@@ -17,16 +17,14 @@
 <%@ include file="/html/portlet/image_gallery_display/init.jsp" %>
 
 <%
-dlPortletInstanceSettings = DLPortletInstanceSettings.getInstance(layout, portletId, request.getParameterMap());
-
-IGConfigurationDisplayContext igConfigurationDisplayContext = new IGConfigurationDisplayContext(request, dlPortletInstanceSettings);
+DLPortletInstanceSettingsHelper dlPortletInstanceSettingsHelper = new DLPortletInstanceSettingsHelper(igRequestHelper);
 %>
 
-<liferay-portlet:actionURL portletConfiguration="true" var="configurationActionURL">
+<liferay-portlet:actionURL portletConfiguration="<%= true %>" var="configurationActionURL">
 	<liferay-portlet:param name="settingsScope" value="portletInstance" />
 </liferay-portlet:actionURL>
 
-<liferay-portlet:renderURL portletConfiguration="true" var="configurationRenderURL" />
+<liferay-portlet:renderURL portletConfiguration="<%= true %>" var="configurationRenderURL" />
 
 <aui:form action="<%= configurationActionURL %>" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + renderResponse.getNamespace() + "saveConfiguration();" %>'>
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
@@ -50,11 +48,11 @@ IGConfigurationDisplayContext igConfigurationDisplayContext = new IGConfiguratio
 				<aui:field-wrapper label="show-media-type">
 					<liferay-ui:input-move-boxes
 						leftBoxName="currentMimeTypes"
-						leftList="<%= igConfigurationDisplayContext.getCurrentMimeTypes() %>"
+						leftList="<%= dlPortletInstanceSettingsHelper.getCurrentMimeTypes() %>"
 						leftReorder="true"
 						leftTitle="current"
 						rightBoxName="availableMimeTypes"
-						rightList="<%= igConfigurationDisplayContext.getAvailableMimeTypes() %>"
+						rightList="<%= dlPortletInstanceSettingsHelper.getAvailableMimeTypes() %>"
 						rightTitle="available"
 					/>
 				</aui:field-wrapper>
@@ -78,14 +76,14 @@ IGConfigurationDisplayContext igConfigurationDisplayContext = new IGConfiguratio
 
 		<liferay-ui:panel collapsible="<%= true %>" extended="<%= true %>" id="imageGalleryDisplayFoldersListingPanel" persistState="<%= true %>" title="folders-listing">
 			<aui:fieldset>
-				<aui:field-wrapper label="root-folder">
+				<aui:field-wrapper>
 					<div class="form-group">
 						<aui:input label="root-folder" name="rootFolderName" type="resource" value="<%= rootFolderName %>" />
 
 						<aui:button name="openFolderSelectorButton" value="select" />
 
 						<%
-						String taglibRemoveFolder = "Liferay.Util.removeFolderSelection('rootFolderId', 'rootFolderName', '" + renderResponse.getNamespace() + "');";
+						String taglibRemoveFolder = "Liferay.Util.removeEntitySelection('rootFolderId', 'rootFolderName', this, '" + renderResponse.getNamespace() + "');";
 						%>
 
 						<aui:button disabled="<%= rootFolderId <= 0 %>" name="removeFolderButton" onClick="<%= taglibRemoveFolder %>" value="remove" />
@@ -105,8 +103,8 @@ IGConfigurationDisplayContext igConfigurationDisplayContext = new IGConfiguratio
 	</aui:button-row>
 </aui:form>
 
-<aui:script use="aui-base">
-	A.one('#<portlet:namespace />openFolderSelectorButton').on(
+<aui:script>
+	AUI.$('#<portlet:namespace />openFolderSelectorButton').on(
 		'click',
 		function(event) {
 			Liferay.Util.selectEntity(
@@ -138,17 +136,12 @@ IGConfigurationDisplayContext igConfigurationDisplayContext = new IGConfiguratio
 			);
 		}
 	);
-</aui:script>
 
-<aui:script>
-	Liferay.provide(
-		window,
-		'<portlet:namespace />saveConfiguration',
-		function() {
-			document.<portlet:namespace />fm.<portlet:namespace />mimeTypes.value = Liferay.Util.listSelect(document.<portlet:namespace />fm.<portlet:namespace />currentMimeTypes);
+	function <portlet:namespace />saveConfiguration() {
+		var form = AUI.$(document.<portlet:namespace />fm);
 
-			submitForm(document.<portlet:namespace />fm);
-		},
-		['liferay-util-list-fields']
-	);
+		form.fm('mimeTypes').val(Liferay.Util.listSelect(form.fm('currentMimeTypes')));
+
+		submitForm(form);
+	}
 </aui:script>

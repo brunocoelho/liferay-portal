@@ -284,7 +284,9 @@ public class SystemEventAdvice
 
 		ClassedModel classedModel = (ClassedModel)arguments[0];
 
-		if (!(classedModel.getPrimaryKeyObj() instanceof Long)) {
+		if ((classedModel == null) ||
+			!(classedModel.getPrimaryKeyObj() instanceof Long)) {
+
 			if (_log.isDebugEnabled() && (phase == _PHASE_BEFORE)) {
 				_log.debug(
 					"The first parameter of " + methodInvocation +
@@ -325,9 +327,10 @@ public class SystemEventAdvice
 
 	private static final int _PHASE_DURING_FINALLY = 2;
 
-	private static Log _log = LogFactoryUtil.getLog(SystemEventAdvice.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		SystemEventAdvice.class);
 
-	private static SystemEvent _nullSystemEvent = new SystemEvent() {
+	private static final SystemEvent _nullSystemEvent = new SystemEvent() {
 
 		@Override
 		public Class<? extends Annotation> annotationType() {

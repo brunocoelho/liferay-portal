@@ -64,12 +64,12 @@ public interface EmailAddressLocalService extends BaseLocalService,
 	@java.lang.Deprecated
 	public com.liferay.portal.model.EmailAddress addEmailAddress(long userId,
 		java.lang.String className, long classPK, java.lang.String address,
-		int typeId, boolean primary)
+		long typeId, boolean primary)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	public com.liferay.portal.model.EmailAddress addEmailAddress(long userId,
 		java.lang.String className, long classPK, java.lang.String address,
-		int typeId, boolean primary,
+		long typeId, boolean primary,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
@@ -162,20 +162,20 @@ public interface EmailAddressLocalService extends BaseLocalService,
 		com.liferay.portal.kernel.util.OrderByComparator<T> orderByComparator);
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery);
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,
@@ -289,7 +289,7 @@ public interface EmailAddressLocalService extends BaseLocalService,
 		com.liferay.portal.model.EmailAddress emailAddress);
 
 	public com.liferay.portal.model.EmailAddress updateEmailAddress(
-		long emailAddressId, java.lang.String address, int typeId,
+		long emailAddressId, java.lang.String address, long typeId,
 		boolean primary)
 		throws com.liferay.portal.kernel.exception.PortalException;
 }

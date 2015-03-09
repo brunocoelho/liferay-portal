@@ -30,8 +30,8 @@ public class AccessControlThreadLocal {
 		_remoteAccess.set(remoteAccess);
 	}
 
-	private static ThreadLocal<Boolean> _remoteAccess =
-		new AutoResetThreadLocal<Boolean>(
+	private static final ThreadLocal<Boolean> _remoteAccess =
+		new AutoResetThreadLocal<>(
 			AutoResetThreadLocal.class + "._remoteAccess", false);
 
 }

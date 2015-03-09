@@ -55,7 +55,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see OrgGroupRolePersistence
- * @see OrgGroupRoleUtil
+ * @see com.liferay.portal.service.persistence.OrgGroupRoleUtil
  * @generated
  */
 @ProviderType
@@ -1640,7 +1640,7 @@ public class OrgGroupRolePersistenceImpl extends BasePersistenceImpl<OrgGroupRol
 		MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

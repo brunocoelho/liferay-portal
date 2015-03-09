@@ -39,8 +39,11 @@ import javax.portlet.PortletURL;
  */
 public class EntrySearch extends SearchContainer<TrashEntry> {
 
-	static List<String> headerNames = new ArrayList<String>();
-	static Map<String, String> orderableHeaders = new HashMap<String, String>();
+	public static final String EMPTY_RESULTS_MESSAGE =
+		"the-recycle-bin-is-empty";
+
+	public static List<String> headerNames = new ArrayList<>();
+	public static Map<String, String> orderableHeaders = new HashMap<>();
 
 	static {
 		headerNames.add("name");
@@ -53,9 +56,6 @@ public class EntrySearch extends SearchContainer<TrashEntry> {
 		orderableHeaders.put("removed-date", "removed-date");
 		orderableHeaders.put("removed-by", "removed-by");
 	}
-
-	public static final String EMPTY_RESULTS_MESSAGE =
-		"the-recycle-bin-is-empty";
 
 	public EntrySearch(PortletRequest portletRequest, PortletURL iteratorURL) {
 		super(
@@ -104,6 +104,6 @@ public class EntrySearch extends SearchContainer<TrashEntry> {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(EntrySearch.class);
+	private static final Log _log = LogFactoryUtil.getLog(EntrySearch.class);
 
 }

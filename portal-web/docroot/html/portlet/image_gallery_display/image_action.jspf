@@ -15,17 +15,11 @@
 --%>
 
 <%
-boolean hasLock = fileEntry.hasLock();
+for (MenuItem menuItem : igViewFileVersionDisplayContext.getMenuItems()) {
 %>
 
-<%@ include file="/html/portlet/document_library/action/download.jspf" %>
+	<liferay-ui:menu-item menuItem="<%= menuItem %>" />
 
-<%@ include file="/html/portlet/document_library/action/view.jspf" %>
-
-<%@ include file="/html/portlet/document_library/action/view_original.jspf" %>
-
-<%@ include file="/html/portlet/document_library/action/edit.jspf" %>
-
-<%@ include file="/html/portlet/document_library/action/permissions.jspf" %>
-
-<%@ include file="/html/portlet/document_library/action/delete.jspf" %>
+<%
+}
+%>

@@ -148,7 +148,7 @@ public class JournalFolderServiceImpl extends JournalFolderServiceBaseImpl {
 		long groupId, long folderId, int status, int start, int end,
 		OrderByComparator<?> obc) {
 
-		QueryDefinition<?> queryDefinition = new QueryDefinition<Object>(
+		QueryDefinition<?> queryDefinition = new QueryDefinition<>(
 			status, start, end, (OrderByComparator<Object>)obc);
 
 		return journalFolderFinder.filterFindF_A_ByG_F(
@@ -168,8 +168,8 @@ public class JournalFolderServiceImpl extends JournalFolderServiceBaseImpl {
 	public int getFoldersAndArticlesCount(
 		long groupId, List<Long> folderIds, int status) {
 
-		QueryDefinition<JournalArticle> queryDefinition =
-			new QueryDefinition<JournalArticle>(status);
+		QueryDefinition<JournalArticle> queryDefinition = new QueryDefinition<>(
+			status);
 
 		if (folderIds.size() <= PropsValues.SQL_DATA_MAX_PARAMETERS) {
 			return journalArticleFinder.filterCountByG_F(
@@ -258,7 +258,7 @@ public class JournalFolderServiceImpl extends JournalFolderServiceBaseImpl {
 	public List<Long> getSubfolderIds(
 		long groupId, long folderId, boolean recurse) {
 
-		List<Long> folderIds = new ArrayList<Long>();
+		List<Long> folderIds = new ArrayList<>();
 
 		getSubfolderIds(folderIds, groupId, folderId, recurse);
 

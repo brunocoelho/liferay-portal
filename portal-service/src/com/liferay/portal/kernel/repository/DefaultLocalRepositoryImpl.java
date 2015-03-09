@@ -68,10 +68,40 @@ public class DefaultLocalRepositoryImpl implements LocalRepository {
 
 	@Override
 	public Folder addFolder(
-		long userId, long parentFolderId, String title, String description,
+		long userId, long parentFolderId, String name, String description,
 		ServiceContext serviceContext) {
 
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void checkInFileEntry(
+			long userId, long fileEntryId, boolean major, String changeLog,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		_repository.checkInFileEntry(
+			userId, fileEntryId, major, changeLog, serviceContext);
+	}
+
+	@Override
+	public void checkInFileEntry(
+			long userId, long fileEntryId, String lockUuid,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		_repository.checkInFileEntry(
+			userId, fileEntryId, lockUuid, serviceContext);
+	}
+
+	@Override
+	public FileEntry copyFileEntry(
+			long userId, long groupId, long fileEntryId, long destFolderId,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		return _repository.copyFileEntry(
+			userId, groupId, fileEntryId, destFolderId, serviceContext);
 	}
 
 	@Override
@@ -124,20 +154,20 @@ public class DefaultLocalRepositoryImpl implements LocalRepository {
 	}
 
 	@Override
-	public Folder getFolder(long parentFolderId, String title)
+	public Folder getFolder(long parentFolderId, String name)
 		throws PortalException {
 
-		return _repository.getFolder(parentFolderId, title);
+		return _repository.getFolder(parentFolderId, name);
 	}
 
 	@Override
 	public List<FileEntry> getRepositoryFileEntries(
-			long rootFolderId, int start, int end,
+			long userId, long rootFolderId, int start, int end,
 			OrderByComparator<FileEntry> obc)
 		throws PortalException {
 
 		return _repository.getRepositoryFileEntries(
-			0, rootFolderId, start, end, obc);
+			userId, rootFolderId, start, end, obc);
 	}
 
 	@Override
@@ -169,6 +199,20 @@ public class DefaultLocalRepositoryImpl implements LocalRepository {
 	}
 
 	@Override
+	public void revertFileEntry(
+			long userId, long fileEntryId, String version,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		_repository.revertFileEntry(
+			userId, fileEntryId, version, serviceContext);
+	}
+
+	/**
+	 * @deprecated As of 7.0.0
+	 */
+	@Deprecated
+	@Override
 	public void updateAsset(
 		long userId, FileEntry fileEntry, FileVersion fileVersion,
 		long[] assetCategoryIds, String[] assetTagNames,
@@ -198,12 +242,12 @@ public class DefaultLocalRepositoryImpl implements LocalRepository {
 
 	@Override
 	public Folder updateFolder(
-		long folderId, long parentFolderId, String title, String description,
+		long folderId, long parentFolderId, String name, String description,
 		ServiceContext serviceContext) {
 
 		throw new UnsupportedOperationException();
 	}
 
-	private Repository _repository;
+	private final Repository _repository;
 
 }

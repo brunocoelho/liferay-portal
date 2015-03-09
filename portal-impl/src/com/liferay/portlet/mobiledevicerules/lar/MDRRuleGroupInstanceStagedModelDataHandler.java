@@ -134,10 +134,6 @@ public class MDRRuleGroupInstanceStagedModelDataHandler
 		long userId = portletDataContext.getUserId(
 			ruleGroupInstance.getUserUuid());
 
-		StagedModelDataHandlerUtil.importReferenceStagedModel(
-			portletDataContext, ruleGroupInstance, MDRRuleGroup.class,
-			ruleGroupInstance.getRuleGroupId());
-
 		Map<Long, Long> ruleGroupIds =
 			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
 				MDRRuleGroup.class);
@@ -231,7 +227,7 @@ public class MDRRuleGroupInstanceStagedModelDataHandler
 			ruleGroupInstance, importedRuleGroupInstance);
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		MDRRuleGroupInstanceStagedModelDataHandler.class);
 
 }

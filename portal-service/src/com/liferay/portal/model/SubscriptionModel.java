@@ -39,8 +39,8 @@ import java.util.Date;
  * @generated
  */
 @ProviderType
-public interface SubscriptionModel extends AttachedModel, AuditedModel,
-	BaseModel<Subscription>, MVCCModel {
+public interface SubscriptionModel extends AttachedModel, BaseModel<Subscription>,
+	GroupedModel, MVCCModel {
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
@@ -90,6 +90,22 @@ public interface SubscriptionModel extends AttachedModel, AuditedModel,
 	 * @param subscriptionId the subscription ID of this subscription
 	 */
 	public void setSubscriptionId(long subscriptionId);
+
+	/**
+	 * Returns the group ID of this subscription.
+	 *
+	 * @return the group ID of this subscription
+	 */
+	@Override
+	public long getGroupId();
+
+	/**
+	 * Sets the group ID of this subscription.
+	 *
+	 * @param groupId the group ID of this subscription
+	 */
+	@Override
+	public void setGroupId(long groupId);
 
 	/**
 	 * Returns the company ID of this subscription.
@@ -282,19 +298,19 @@ public interface SubscriptionModel extends AttachedModel, AuditedModel,
 	public Object clone();
 
 	@Override
-	public int compareTo(Subscription subscription);
+	public int compareTo(com.liferay.portal.model.Subscription subscription);
 
 	@Override
 	public int hashCode();
 
 	@Override
-	public CacheModel<Subscription> toCacheModel();
+	public CacheModel<com.liferay.portal.model.Subscription> toCacheModel();
 
 	@Override
-	public Subscription toEscapedModel();
+	public com.liferay.portal.model.Subscription toEscapedModel();
 
 	@Override
-	public Subscription toUnescapedModel();
+	public com.liferay.portal.model.Subscription toUnescapedModel();
 
 	@Override
 	public String toString();

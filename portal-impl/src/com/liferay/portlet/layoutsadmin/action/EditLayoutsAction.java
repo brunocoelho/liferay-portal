@@ -87,7 +87,6 @@ import com.liferay.portal.service.permission.LayoutSetPrototypePermissionUtil;
 import com.liferay.portal.service.permission.UserPermissionUtil;
 import com.liferay.portal.struts.PortletAction;
 import com.liferay.portal.theme.ThemeDisplay;
-import com.liferay.portal.util.LayoutSettings;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.util.WebKeys;
@@ -295,8 +294,6 @@ public class EditLayoutsAction extends PortletAction {
 			}
 			else if (e instanceof SystemException) {
 				SessionErrors.add(actionRequest, e.getClass(), e);
-
-				redirect = ParamUtil.getString(actionRequest, "pagesRedirect");
 
 				sendRedirect(
 					portletConfig, actionRequest, actionResponse, redirect,
@@ -928,12 +925,22 @@ public class EditLayoutsAction extends PortletAction {
 
 				Layout copyLayout = null;
 
+				String layoutTemplateId = ParamUtil.getString(
+					uploadPortletRequest, "layoutTemplateId",
+					PropsValues.DEFAULT_LAYOUT_TEMPLATE_ID);
+
 				if (copyLayoutId > 0) {
 					try {
 						copyLayout = LayoutLocalServiceUtil.getLayout(
 							groupId, privateLayout, copyLayoutId);
 
 						if (copyLayout.isTypePortlet()) {
+							LayoutTypePortlet copyLayoutTypePortlet =
+								(LayoutTypePortlet)copyLayout.getLayoutType();
+
+							layoutTemplateId =
+								copyLayoutTypePortlet.getLayoutTemplateId();
+
 							typeSettingsProperties =
 								copyLayout.getTypeSettingsProperties();
 						}
@@ -950,10 +957,6 @@ public class EditLayoutsAction extends PortletAction {
 
 				LayoutTypePortlet layoutTypePortlet =
 					(LayoutTypePortlet)layout.getLayoutType();
-
-				String layoutTemplateId = ParamUtil.getString(
-					uploadPortletRequest, "layoutTemplateId",
-					PropsValues.DEFAULT_LAYOUT_TEMPLATE_ID);
 
 				layoutTypePortlet.setLayoutTemplateId(
 					themeDisplay.getUserId(), layoutTemplateId);
@@ -1001,10 +1004,10 @@ public class EditLayoutsAction extends PortletAction {
 				PropertiesParamUtil.getProperties(
 					actionRequest, "TypeSettingsProperties--");
 
-			if (type.equals(LayoutConstants.TYPE_PORTLET)) {
-				LayoutTypePortlet layoutTypePortlet =
-					(LayoutTypePortlet)layout.getLayoutType();
+			LayoutTypePortlet layoutTypePortlet =
+				(LayoutTypePortlet)layout.getLayoutType();
 
+			if (type.equals(LayoutConstants.TYPE_PORTLET)) {
 				String layoutTemplateId = ParamUtil.getString(
 					uploadPortletRequest, "layoutTemplateId",
 					PropsValues.DEFAULT_LAYOUT_TEMPLATE_ID);
@@ -1025,6 +1028,8 @@ public class EditLayoutsAction extends PortletAction {
 						if (copyLayout.isTypePortlet()) {
 							layoutTypeSettingsProperties =
 								copyLayout.getTypeSettingsProperties();
+
+							ActionUtil.removePortletIds(actionRequest, layout);
 
 							ActionUtil.copyPreferences(
 								actionRequest, layout, copyLayout);
@@ -1063,14 +1068,12 @@ public class EditLayoutsAction extends PortletAction {
 					layout.getPlid());
 			}
 
-			LayoutSettings layoutSettings = LayoutSettings.getInstance(layout);
-
 			HttpServletResponse response = PortalUtil.getHttpServletResponse(
 				actionResponse);
 
 			EventsProcessorUtil.process(
 				PropsKeys.LAYOUT_CONFIGURATION_ACTION_UPDATE,
-				layoutSettings.getConfigurationActionUpdate(),
+				layoutTypePortlet.getConfigurationActionUpdate(),
 				uploadPortletRequest, response);
 		}
 
@@ -1275,6 +1278,7 @@ public class EditLayoutsAction extends PortletAction {
 
 	private static final boolean _CHECK_METHOD_ON_PROCESS_ACTION = false;
 
-	private static Log _log = LogFactoryUtil.getLog(EditLayoutsAction.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		EditLayoutsAction.class);
 
 }

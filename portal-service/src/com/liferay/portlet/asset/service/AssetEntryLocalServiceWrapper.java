@@ -281,10 +281,10 @@ public class AssetEntryLocalServiceWrapper implements AssetEntryLocalService,
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	@Override
 	public long dynamicQueryCount(
@@ -293,11 +293,11 @@ public class AssetEntryLocalServiceWrapper implements AssetEntryLocalService,
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	@Override
 	public long dynamicQueryCount(
@@ -491,9 +491,32 @@ public class AssetEntryLocalServiceWrapper implements AssetEntryLocalService,
 	}
 
 	@Override
+	public java.util.List<com.liferay.portlet.asset.model.AssetEntry> getEntries(
+		long[] groupIds, long[] classNameIds, java.lang.String keywords,
+		java.lang.String userName, java.lang.String title,
+		java.lang.String description, boolean advancedSearch,
+		boolean andOperator, int start, int end, java.lang.String orderByCol1,
+		java.lang.String orderByCol2, java.lang.String orderByType1,
+		java.lang.String orderByType2) {
+		return _assetEntryLocalService.getEntries(groupIds, classNameIds,
+			keywords, userName, title, description, advancedSearch,
+			andOperator, start, end, orderByCol1, orderByCol2, orderByType1,
+			orderByType2);
+	}
+
+	@Override
 	public int getEntriesCount(
 		com.liferay.portlet.asset.service.persistence.AssetEntryQuery entryQuery) {
 		return _assetEntryLocalService.getEntriesCount(entryQuery);
+	}
+
+	@Override
+	public int getEntriesCount(long[] groupIds, long[] classNameIds,
+		java.lang.String keywords, java.lang.String userName,
+		java.lang.String title, java.lang.String description,
+		boolean advancedSearch, boolean andOperator) {
+		return _assetEntryLocalService.getEntriesCount(groupIds, classNameIds,
+			keywords, userName, title, description, advancedSearch, andOperator);
 	}
 
 	@Override

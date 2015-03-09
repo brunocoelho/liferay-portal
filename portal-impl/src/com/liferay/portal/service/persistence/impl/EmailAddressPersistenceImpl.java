@@ -59,7 +59,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see EmailAddressPersistence
- * @see EmailAddressUtil
+ * @see com.liferay.portal.service.persistence.EmailAddressUtil
  * @generated
  */
 @ProviderType
@@ -4606,7 +4606,7 @@ public class EmailAddressPersistenceImpl extends BasePersistenceImpl<EmailAddres
 		MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

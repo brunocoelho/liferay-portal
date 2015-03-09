@@ -217,10 +217,10 @@ public class ShoppingCategoryLocalServiceWrapper
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	@Override
 	public long dynamicQueryCount(
@@ -229,11 +229,11 @@ public class ShoppingCategoryLocalServiceWrapper
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	@Override
 	public long dynamicQueryCount(
@@ -288,6 +288,12 @@ public class ShoppingCategoryLocalServiceWrapper
 		long categoryId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 		return _shoppingCategoryLocalService.getCategory(categoryId);
+	}
+
+	@Override
+	public com.liferay.portlet.shopping.model.ShoppingCategory getCategory(
+		long groupId, java.lang.String categoryName) {
+		return _shoppingCategoryLocalService.getCategory(groupId, categoryName);
 	}
 
 	@Override

@@ -208,10 +208,10 @@ public class ShoppingCategoryLocalServiceUtil {
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public static long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery) {
@@ -219,11 +219,11 @@ public class ShoppingCategoryLocalServiceUtil {
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public static long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,
@@ -267,6 +267,11 @@ public class ShoppingCategoryLocalServiceUtil {
 		long categoryId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 		return getService().getCategory(categoryId);
+	}
+
+	public static com.liferay.portlet.shopping.model.ShoppingCategory getCategory(
+		long groupId, java.lang.String categoryName) {
+		return getService().getCategory(groupId, categoryName);
 	}
 
 	public static java.util.List<com.liferay.portlet.shopping.model.ShoppingCategory> getParentCategories(

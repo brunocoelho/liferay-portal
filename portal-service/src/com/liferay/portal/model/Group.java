@@ -42,7 +42,8 @@ public interface Group extends GroupModel, PersistedModel, TreeModel {
 
 	/**
 	* @deprecated As of 7.0.0, replaced by {@link
-	#getChildrenWithLayouts(boolean, int, int, OrderByComparator}
+	#getChildrenWithLayouts(boolean, int, int,
+	OrderByComparator)}
 	*/
 	@java.lang.Deprecated()
 	public java.util.List<com.liferay.portal.model.Group> getChildrenWithLayouts(
@@ -66,6 +67,13 @@ public interface Group extends GroupModel, PersistedModel, TreeModel {
 
 	public java.lang.String getDescriptiveName(java.util.Locale locale)
 		throws com.liferay.portal.kernel.exception.PortalException;
+
+	public java.lang.String getDisplayURL(
+		com.liferay.portal.theme.ThemeDisplay themeDisplay);
+
+	public java.lang.String getDisplayURL(
+		com.liferay.portal.theme.ThemeDisplay themeDisplay,
+		boolean privateLayout);
 
 	public java.lang.String getIconCssClass();
 
@@ -182,6 +190,8 @@ public interface Group extends GroupModel, PersistedModel, TreeModel {
 	public boolean isUser();
 
 	public boolean isUserGroup();
+
+	public boolean isUserPersonalPanel();
 
 	public boolean isUserPersonalSite();
 

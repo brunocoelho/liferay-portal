@@ -113,8 +113,7 @@ public class ThreadLocalCacheManager {
 			threadLocalCacheMaps.get(lifecycle);
 
 		if (threadLocalCacheMap == null) {
-			threadLocalCacheMap =
-				new HashMap<Serializable, ThreadLocalCache<?>>();
+			threadLocalCacheMap = new HashMap<>();
 
 			threadLocalCacheMaps.put(lifecycle, threadLocalCacheMap);
 		}
@@ -122,7 +121,7 @@ public class ThreadLocalCacheManager {
 		ThreadLocalCache<?> threadLocalCache = threadLocalCacheMap.get(name);
 
 		if (threadLocalCache == null) {
-			threadLocalCache = new ThreadLocalCache<T>(name, lifecycle);
+			threadLocalCache = new ThreadLocalCache<>(name, lifecycle);
 
 			threadLocalCacheMap.put(name, threadLocalCache);
 		}
@@ -131,16 +130,15 @@ public class ThreadLocalCacheManager {
 	}
 
 	private static final EmptyThreadLocalCahce<?> _emptyThreadLocalCache =
-		new EmptyThreadLocalCahce<Object>();
-
-	private static ThreadLocal
+		new EmptyThreadLocalCahce<>();
+	private static final ThreadLocal
 		<Map<Lifecycle, Boolean>>
 			_threadLocalCacheDisabledFlags = new InitialThreadLocal
 				<Map<Lifecycle, Boolean>>(
 					ThreadLocalCacheManager.class +
 						"._threadLocalCacheDisabledFlags",
 					new EnumMap<Lifecycle, Boolean>(Lifecycle.class));
-	private static ThreadLocal
+	private static final ThreadLocal
 		<Map<Lifecycle, Map<Serializable, ThreadLocalCache<?>>>>
 			_threadLocalCacheMaps = new InitialThreadLocal
 				<Map<Lifecycle, Map<Serializable, ThreadLocalCache<?>>>>(

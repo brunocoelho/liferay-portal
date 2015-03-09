@@ -46,8 +46,7 @@ public class PortletFilterFactory {
 	}
 
 	private PortletFilterFactory() {
-		_portletFilters =
-			new ConcurrentHashMap<String, Map<String, PortletFilter>>();
+		_portletFilters = new ConcurrentHashMap<>();
 	}
 
 	private PortletFilter _create(
@@ -61,7 +60,7 @@ public class PortletFilterFactory {
 			portletApp.getServletContextName());
 
 		if (portletFilters == null) {
-			portletFilters = new ConcurrentHashMap<String, PortletFilter>();
+			portletFilters = new ConcurrentHashMap<>();
 
 			_portletFilters.put(
 				portletApp.getServletContextName(), portletFilters);
@@ -156,8 +155,9 @@ public class PortletFilterFactory {
 		return portletFilter;
 	}
 
-	private static PortletFilterFactory _instance = new PortletFilterFactory();
+	private static final PortletFilterFactory _instance =
+		new PortletFilterFactory();
 
-	private Map<String, Map<String, PortletFilter>> _portletFilters;
+	private final Map<String, Map<String, PortletFilter>> _portletFilters;
 
 }

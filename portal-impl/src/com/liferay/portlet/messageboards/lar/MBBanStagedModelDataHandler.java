@@ -122,7 +122,12 @@ public class MBBanStagedModelDataHandler
 		MBBanLocalServiceUtil.addBan(userId, user.getUserId(), serviceContext);
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
+	@Override
+	protected void importReferenceStagedModels(
+		PortletDataContext portletDataContext, MBBan ban) {
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
 		MBBanStagedModelDataHandler.class);
 
 }

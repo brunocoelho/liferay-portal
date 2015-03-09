@@ -37,8 +37,8 @@ public class PortalSessionThreadLocal {
 		_sessionId.set(session.getId());
 	}
 
-	private static ThreadLocal<String> _sessionId =
-		new AutoResetThreadLocal<String>(
+	private static final ThreadLocal<String> _sessionId =
+		new AutoResetThreadLocal<>(
 			PortalSessionThreadLocal.class + "._sessionId");
 
 }

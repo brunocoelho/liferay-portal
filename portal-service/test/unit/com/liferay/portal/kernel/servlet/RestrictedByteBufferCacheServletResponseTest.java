@@ -15,8 +15,8 @@
 package com.liferay.portal.kernel.servlet;
 
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
-import com.liferay.portal.kernel.test.CodeCoverageAssertor;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -36,8 +36,8 @@ import org.junit.Test;
 public class RestrictedByteBufferCacheServletResponseTest {
 
 	@ClassRule
-	public static CodeCoverageAssertor codeCoverageAssertor =
-		new CodeCoverageAssertor();
+	public static final CodeCoverageAssertor codeCoverageAssertor =
+		CodeCoverageAssertor.INSTANCE;
 
 	@Test
 	public void testConstructor() {
@@ -117,9 +117,8 @@ public class RestrictedByteBufferCacheServletResponseTest {
 				new RestrictedByteBufferCacheServletResponse(
 					stubHttpServletResponse, 1024);
 
-		ByteBuffer emptyByteBuffer =
-			(ByteBuffer)ReflectionTestUtil.getFieldValue(
-				restrictedByteBufferCacheServletResponse, "_emptyByteBuffer");
+		ByteBuffer emptyByteBuffer = ReflectionTestUtil.getFieldValue(
+			restrictedByteBufferCacheServletResponse, "_emptyByteBuffer");
 
 		Assert.assertSame(
 			emptyByteBuffer,

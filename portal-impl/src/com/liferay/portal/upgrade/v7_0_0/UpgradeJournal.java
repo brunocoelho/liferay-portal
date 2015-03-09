@@ -15,34 +15,26 @@
 package com.liferay.portal.upgrade.v7_0_0;
 
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
-import com.liferay.portal.kernel.dao.shard.ShardUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.template.TemplateConstants;
-import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.upgrade.util.UpgradeProcessUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.LocalizationUtil;
-import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.DocumentException;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
-import com.liferay.portal.model.Company;
-import com.liferay.portal.model.ResourceConstants;
-import com.liferay.portal.model.ResourcePermission;
 import com.liferay.portal.model.RoleConstants;
 import com.liferay.portal.security.permission.ActionKeys;
 import com.liferay.portal.upgrade.v7_0_0.util.JournalArticleTable;
 import com.liferay.portal.util.PortalUtil;
+import com.liferay.portlet.dynamicdatamapping.io.DDMFormXSDDeserializerUtil;
+import com.liferay.portlet.dynamicdatamapping.model.DDMForm;
 import com.liferay.portlet.dynamicdatamapping.model.DDMStructure;
 import com.liferay.portlet.dynamicdatamapping.model.DDMStructureConstants;
 import com.liferay.portlet.dynamicdatamapping.model.DDMTemplate;
@@ -58,7 +50,6 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -67,7 +58,7 @@ import java.util.Map;
  * @author Gergely Mathe
  * @author Eudaldo Alonso
  */
-public class UpgradeJournal extends UpgradeProcess {
+public class UpgradeJournal extends UpgradeBaseJournal {
 
 	protected String addBasicWebContentStructureAndTemplate(long companyId)
 		throws Exception {
@@ -99,9 +90,13 @@ public class UpgradeJournal extends UpgradeProcess {
 			return name;
 		}
 
+		String ddmStructureUUID = PortalUUIDUtil.generate();
+
 		long ddmStructureId = addDDMStructure(
-			increment(), groupId, companyId, name, localizedName,
-			localizedDescription, xsd);
+			ddmStructureUUID, increment(), groupId, companyId, name,
+			localizedName, localizedDescription, xsd);
+
+		String ddmTemplateUUID = PortalUUIDUtil.generate();
 
 		Element templateElement = structureElement.element("template");
 
@@ -110,15 +105,28 @@ public class UpgradeJournal extends UpgradeProcess {
 			templateElement.elementText("cacheable"));
 
 		addDDMTemplate(
-			increment(), groupId, companyId, ddmStructureId, name,
-			localizedName, localizedDescription, getContent(fileName),
+			ddmTemplateUUID, increment(), groupId, companyId, ddmStructureId,
+			name, localizedName, localizedDescription, getContent(fileName),
 			cacheable);
+
+		long stagingGroupId = getStagingGroupId(groupId);
+
+		if (stagingGroupId > 0) {
+			ddmStructureId = addDDMStructure(
+				ddmStructureUUID, increment(), stagingGroupId, companyId, name,
+				localizedName, localizedDescription, xsd);
+
+			addDDMTemplate(
+				ddmTemplateUUID, increment(), stagingGroupId, companyId,
+				ddmStructureId, name, localizedName, localizedDescription,
+				getContent(fileName), cacheable);
+		}
 
 		return name;
 	}
 
 	protected long addDDMStructure(
-			long ddmStructureId, long groupId, long companyId,
+			String uuid, long ddmStructureId, long groupId, long companyId,
 			String ddmStructureKey, String localizedName,
 			String localizedDescription, String xsd)
 		throws Exception {
@@ -136,15 +144,15 @@ public class UpgradeJournal extends UpgradeProcess {
 			sb.append("insert into DDMStructure (uuid_, structureId, ");
 			sb.append("groupId, companyId, userId, userName, createDate, ");
 			sb.append("modifiedDate, parentStructureId, classNameId, ");
-			sb.append("structureKey, name, description, definition, ");
+			sb.append("structureKey, version, name, description, definition, ");
 			sb.append("storageType, type_) values (?, ?, ?, ?, ?, ?, ?, ?, ");
-			sb.append("?, ?, ?, ?, ?, ?, ?, ?)");
+			sb.append("?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
 			String sql = sb.toString();
 
 			ps = con.prepareStatement(sql);
 
-			ps.setString(1, PortalUUIDUtil.generate());
+			ps.setString(1, uuid);
 			ps.setLong(2, ddmStructureId);
 			ps.setLong(3, groupId);
 			ps.setLong(4, companyId);
@@ -155,18 +163,35 @@ public class UpgradeJournal extends UpgradeProcess {
 			ps.setLong(9, DDMStructureConstants.DEFAULT_PARENT_STRUCTURE_ID);
 			ps.setLong(10, PortalUtil.getClassNameId(JournalArticle.class));
 			ps.setString(11, ddmStructureKey);
-			ps.setString(12, localizedName);
-			ps.setString(13, localizedDescription);
-			ps.setString(14, xsd);
-			ps.setString(15, "xml");
-			ps.setInt(16, DDMStructureConstants.TYPE_DEFAULT);
+			ps.setString(12, DDMStructureConstants.VERSION_DEFAULT);
+			ps.setString(13, localizedName);
+			ps.setString(14, localizedDescription);
+			ps.setString(15, xsd);
+			ps.setString(16, "xml");
+			ps.setInt(17, DDMStructureConstants.TYPE_DEFAULT);
 
 			ps.executeUpdate();
+
+			long ddmStructureVersionId = increment();
+
+			addStructureVersion(
+				ddmStructureVersionId, groupId, companyId,
+				getDefaultUserId(companyId), StringPool.BLANK, now,
+				ddmStructureId, localizedName, localizedDescription, xsd, "xml",
+				DDMStructureConstants.TYPE_DEFAULT);
+
+			String ddmStructureLayoutDefinition =
+				getDefaultDDMFormLayoutDefinition(xsd);
+
+			addStructureLayout(
+				PortalUUIDUtil.generate(), increment(), groupId, companyId,
+				getDefaultUserId(companyId), StringPool.BLANK, now, now,
+				ddmStructureVersionId, ddmStructureLayoutDefinition);
 
 			Map<String, Long> bitwiseValues = getBitwiseValues(
 				DDMStructure.class.getName());
 
-			List<String> actionIds = new ArrayList<String>();
+			List<String> actionIds = new ArrayList<>();
 
 			actionIds.add(ActionKeys.VIEW);
 
@@ -192,7 +217,7 @@ public class UpgradeJournal extends UpgradeProcess {
 	}
 
 	protected long addDDMTemplate(
-			long ddmTemplateId, long groupId, long companyId,
+			String uuid, long ddmTemplateId, long groupId, long companyId,
 			long ddmStructureId, String templateKey, String localizedName,
 			String localizedDescription, String script, boolean cacheable)
 		throws Exception {
@@ -205,20 +230,21 @@ public class UpgradeJournal extends UpgradeProcess {
 		try {
 			con = DataAccess.getUpgradeOptimizedConnection();
 
-			StringBundler sb = new StringBundler(6);
+			StringBundler sb = new StringBundler(7);
 
 			sb.append("insert into DDMTemplate (uuid_, templateId, groupId, ");
 			sb.append("companyId, userId, userName, createDate, modifiedDate,");
-			sb.append("classNameId, classPK , templateKey, name, description,");
-			sb.append("type_, mode_, language, script, cacheable, smallImage,");
-			sb.append("smallImageId, smallImageURL) values (?, ?, ?, ?, ?, ?,");
-			sb.append("?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			sb.append("classNameId, classPK, templateKey, version, name, ");
+			sb.append("description, type_, mode_, language, script, ");
+			sb.append("cacheable, smallImage, smallImageId, smallImageURL) ");
+			sb.append("values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ");
+			sb.append("?, ?, ?, ?, ?, ?, ?)");
 
 			String sql = sb.toString();
 
 			ps = con.prepareStatement(sql);
 
-			ps.setString(1, PortalUUIDUtil.generate());
+			ps.setString(1, uuid);
 			ps.setLong(2, ddmTemplateId);
 			ps.setLong(3, groupId);
 			ps.setLong(4, companyId);
@@ -229,23 +255,29 @@ public class UpgradeJournal extends UpgradeProcess {
 			ps.setLong(9, PortalUtil.getClassNameId(DDMStructure.class));
 			ps.setLong(10, ddmStructureId);
 			ps.setString(11, templateKey);
-			ps.setString(12, localizedName);
-			ps.setString(13, localizedDescription);
-			ps.setString(14, DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY);
-			ps.setString(15, DDMTemplateConstants.TEMPLATE_MODE_CREATE);
-			ps.setString(16, TemplateConstants.LANG_TYPE_FTL);
-			ps.setString(17, script);
-			ps.setBoolean(18, cacheable);
-			ps.setBoolean(19, false);
-			ps.setLong(20, 0);
-			ps.setString(21, StringPool.BLANK);
+			ps.setString(12, DDMTemplateConstants.VERSION_DEFAULT);
+			ps.setString(13, localizedName);
+			ps.setString(14, localizedDescription);
+			ps.setString(15, DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY);
+			ps.setString(16, DDMTemplateConstants.TEMPLATE_MODE_CREATE);
+			ps.setString(17, TemplateConstants.LANG_TYPE_FTL);
+			ps.setString(18, script);
+			ps.setBoolean(19, cacheable);
+			ps.setBoolean(20, false);
+			ps.setLong(21, 0);
+			ps.setString(22, StringPool.BLANK);
 
 			ps.executeUpdate();
+
+			addTemplateVersion(
+				increment(), groupId, companyId, getDefaultUserId(companyId),
+				StringPool.BLANK, now, ddmTemplateId, localizedName,
+				localizedDescription, TemplateConstants.LANG_TYPE_FTL, script);
 
 			Map<String, Long> bitwiseValues = getBitwiseValues(
 				DDMTemplate.class.getName());
 
-			List<String> actionIds = new ArrayList<String>();
+			List<String> actionIds = new ArrayList<>();
 
 			actionIds.add(ActionKeys.VIEW);
 
@@ -268,51 +300,6 @@ public class UpgradeJournal extends UpgradeProcess {
 		}
 
 		return ddmTemplateId;
-	}
-
-	protected void addResourcePermission(
-			long companyId, String className, long primKey, long roleId,
-			long actionIds)
-		throws Exception {
-
-		Connection con = null;
-		PreparedStatement ps = null;
-
-		try {
-			long resourcePermissionId = increment(
-				ResourcePermission.class.getName());
-
-			con = DataAccess.getUpgradeOptimizedConnection();
-
-			StringBundler sb = new StringBundler(3);
-
-			sb.append("insert into ResourcePermission (resourcePermissionId, ");
-			sb.append("companyId, name, scope, primKey, roleId, ownerId, ");
-			sb.append("actionIds) values (?, ?, ?, ?, ?, ?, ?, ?)");
-
-			String sql = sb.toString();
-
-			ps = con.prepareStatement(sql);
-
-			ps.setLong(1, resourcePermissionId);
-			ps.setLong(2, companyId);
-			ps.setString(3, className);
-			ps.setInt(4, ResourceConstants.SCOPE_INDIVIDUAL);
-			ps.setLong(5, primKey);
-			ps.setLong(6, roleId);
-			ps.setLong(7, 0);
-			ps.setLong(8, actionIds);
-
-			ps.executeUpdate();
-		}
-		catch (Exception e) {
-			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to add resource permission " + className, e);
-			}
-		}
-		finally {
-			DataAccess.cleanUp(con, ps);
-		}
 	}
 
 	protected String convertStaticContentToDynamic(String content)
@@ -367,10 +354,28 @@ public class UpgradeJournal extends UpgradeProcess {
 
 	@Override
 	protected void doUpgrade() throws Exception {
-		updateBasicWebContentStructure();
-
 		try {
+			runSQL(
+				"alter_column_name JournalArticle structureId " +
+					"DDMStructureKey VARCHAR(75) null");
+
+			runSQL(
+				"alter_column_name JournalArticle templateId DDMTemplateKey " +
+					"VARCHAR(75) null");
+
 			runSQL("alter_column_type JournalArticle description TEXT null");
+
+			runSQL(
+				"alter_column_name JournalFeed structureId DDMStructureKey " +
+					"TEXT null");
+
+			runSQL(
+				"alter_column_name JournalFeed templateId DDMTemplateKey " +
+					"TEXT null");
+
+			runSQL(
+				"alter_column_name JournalFeed rendererTemplateId " +
+					"DDMRendererTemplateKey TEXT null");
 		}
 		catch (SQLException sqle) {
 			upgradeTable(
@@ -379,101 +384,8 @@ public class UpgradeJournal extends UpgradeProcess {
 				JournalArticleTable.TABLE_SQL_CREATE,
 				JournalArticleTable.TABLE_SQL_ADD_INDEXES);
 		}
-	}
 
-	protected long getBitwiseValue(
-		Map<String, Long> bitwiseValues, List<String> actionIds) {
-
-		long bitwiseValue = 0;
-
-		for (String actionId : actionIds) {
-			Long actionIdBitwiseValue = bitwiseValues.get(actionId);
-
-			if (actionIdBitwiseValue == null) {
-				continue;
-			}
-
-			bitwiseValue |= actionIdBitwiseValue;
-		}
-
-		return bitwiseValue;
-	}
-
-	protected Map<String, Long> getBitwiseValues(String name) throws Exception {
-		Map<String, Long> bitwiseValues = _bitwiseValues.get(name);
-
-		if (bitwiseValues != null) {
-			return bitwiseValues;
-		}
-
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-
-		String currentShardName = null;
-
-		try {
-			currentShardName = ShardUtil.setTargetSource(
-				PropsUtil.get(PropsKeys.SHARD_DEFAULT_NAME));
-
-			con = DataAccess.getUpgradeOptimizedConnection();
-
-			ps = con.prepareStatement(
-				"select actionId, bitwiseValue from ResourceAction " +
-					"where name = ?");
-
-			ps.setString(1, name);
-
-			rs = ps.executeQuery();
-
-			bitwiseValues = new HashMap<String, Long>();
-
-			while (rs.next()) {
-				String actionId = rs.getString("actionId");
-				long bitwiseValue = rs.getLong("bitwiseValue");
-
-				bitwiseValues.put(actionId, bitwiseValue);
-			}
-
-			_bitwiseValues.put(name, bitwiseValues);
-
-			return bitwiseValues;
-		}
-		finally {
-			if (Validator.isNotNull(currentShardName)) {
-				ShardUtil.setTargetSource(currentShardName);
-			}
-
-			DataAccess.cleanUp(con, ps, rs);
-		}
-	}
-
-	protected long getCompanyGroupId(long companyId) throws Exception {
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-
-		try {
-			con = DataAccess.getUpgradeOptimizedConnection();
-
-			ps = con.prepareStatement(
-				"select groupId from Group_ where classNameId = ? and " +
-					"classPK = ?");
-
-			ps.setLong(1, PortalUtil.getClassNameId(Company.class.getName()));
-			ps.setLong(2, companyId);
-
-			rs = ps.executeQuery();
-
-			if (rs.next()) {
-				return rs.getLong("groupId");
-			}
-
-			return 0;
-		}
-		finally {
-			DataAccess.cleanUp(con, ps, rs);
-		}
+		updateBasicWebContentStructure();
 	}
 
 	protected String getContent(String fileName) {
@@ -495,7 +407,15 @@ public class UpgradeJournal extends UpgradeProcess {
 		return rootElement.elements("structure");
 	}
 
-	protected long getDefaultUserId(long companyId) throws Exception {
+	protected String getDefaultDDMFormLayoutDefinition(String xsd)
+		throws Exception {
+
+		DDMForm ddmForm = DDMFormXSDDeserializerUtil.deserialize(xsd);
+
+		return getDefaultDDMFormLayoutDefinition(ddmForm);
+	}
+
+	protected long getStagingGroupId(long groupId) throws Exception {
 		Connection con = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -504,56 +424,17 @@ public class UpgradeJournal extends UpgradeProcess {
 			con = DataAccess.getUpgradeOptimizedConnection();
 
 			ps = con.prepareStatement(
-				"select userId from User_ where companyId = ? and " +
-					"defaultUser = ?");
+				"select groupId from Group_ where liveGroupId = ?");
 
-			ps.setLong(1, companyId);
-			ps.setBoolean(2, true);
+			ps.setLong(1, groupId);
 
 			rs = ps.executeQuery();
 
 			if (rs.next()) {
-				return rs.getLong("userId");
+				return rs.getLong("groupId");
 			}
 
 			return 0;
-		}
-		finally {
-			DataAccess.cleanUp(con, ps, rs);
-		}
-	}
-
-	protected long getRoleId(long companyId, String name) throws Exception {
-		String roleIdsKey = companyId + StringPool.POUND + name;
-
-		Long roleId = _roleIds.get(roleIdsKey);
-
-		if (roleId != null) {
-			return roleId;
-		}
-
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-
-		try {
-			con = DataAccess.getUpgradeOptimizedConnection();
-
-			ps = con.prepareStatement(
-				"select roleId from Role_ where companyId = ? and name = ?");
-
-			ps.setLong(1, companyId);
-			ps.setString(2, name);
-
-			rs = ps.executeQuery();
-
-			if (rs.next()) {
-				roleId = rs.getLong("roleId");
-			}
-
-			_roleIds.put(roleIdsKey, roleId);
-
-			return roleId;
 		}
 		finally {
 			DataAccess.cleanUp(con, ps, rs);
@@ -594,22 +475,6 @@ public class UpgradeJournal extends UpgradeProcess {
 		}
 	}
 
-	protected String localize(
-			long groupId, String key, String defaultLanguageId)
-		throws Exception {
-
-		Map<Locale, String> localizationMap = new HashMap<Locale, String>();
-
-		Locale[] locales = LanguageUtil.getAvailableLocales(groupId);
-
-		for (Locale locale : locales) {
-			localizationMap.put(locale, LanguageUtil.get(locale, key));
-		}
-
-		return LocalizationUtil.updateLocalization(
-			localizationMap, StringPool.BLANK, key, defaultLanguageId);
-	}
-
 	protected void updateBasicWebContentStructure() throws Exception {
 		Connection con = null;
 		PreparedStatement ps = null;
@@ -645,8 +510,8 @@ public class UpgradeJournal extends UpgradeProcess {
 			con = DataAccess.getUpgradeOptimizedConnection();
 
 			ps = con.prepareStatement(
-				"update JournalArticle set structureId = ?, templateId = ?, " +
-					"content = ? where id_ = ?");
+				"update JournalArticle set ddmStructureKey = ?, " +
+					"ddmTemplateKey = ?, content = ? where id_ = ?");
 
 			ps.setString(1, ddmStructureKey);
 			ps.setString(2, ddmTemplateKey);
@@ -670,8 +535,8 @@ public class UpgradeJournal extends UpgradeProcess {
 
 			ps = con.prepareStatement(
 				"select id_, content from JournalArticle where companyId = " +
-					companyId + " and structureId is NULL or structureId " +
-						"LIKE ''");
+					companyId + " and ddmStructureKey is null or " +
+						"ddmStructureKey like ''");
 
 			String name = addBasicWebContentStructureAndTemplate(companyId);
 
@@ -689,10 +554,6 @@ public class UpgradeJournal extends UpgradeProcess {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(UpgradeJournal.class);
-
-	private Map<String, Map<String, Long>> _bitwiseValues =
-		new HashMap<String, Map<String, Long>>();
-	private Map<String, Long> _roleIds = new HashMap<String, Long>();
+	private static final Log _log = LogFactoryUtil.getLog(UpgradeJournal.class);
 
 }

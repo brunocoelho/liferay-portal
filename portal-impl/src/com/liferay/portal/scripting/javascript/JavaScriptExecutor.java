@@ -82,7 +82,7 @@ public class JavaScriptExecutor extends BaseScriptingExecutor {
 				return null;
 			}
 
-			Map<String, Object> outputObjects = new HashMap<String, Object>();
+			Map<String, Object> outputObjects = new HashMap<>();
 
 			for (String outputName : outputNames) {
 				Object property = ScriptableObject.getProperty(
@@ -113,7 +113,8 @@ public class JavaScriptExecutor extends BaseScriptingExecutor {
 	}
 
 	protected Script getCompiledScript(
-		String script, ClassLoader... classLoaders) {
+			String script, ClassLoader... classLoaders)
+		throws ScriptingException {
 
 		String key = String.valueOf(script.hashCode());
 
@@ -136,6 +137,9 @@ public class JavaScriptExecutor extends BaseScriptingExecutor {
 
 			compiledScript = context.compileString(script, "script", 0, null);
 		}
+		catch (Exception e) {
+			throw new ScriptingException(e.getMessage() + "\n\n", e);
+		}
 		finally {
 			Context.exit();
 		}
@@ -150,7 +154,7 @@ public class JavaScriptExecutor extends BaseScriptingExecutor {
 
 	private static final String _LANGUAGE = "javascript";
 
-	private PortalCache<String, Script> _portalCache =
+	private final PortalCache<String, Script> _portalCache =
 		SingleVMPoolUtil.getCache(_CACHE_NAME);
 
 }

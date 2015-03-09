@@ -35,9 +35,9 @@ if (Validator.isNull(backURL)) {
 	backURL = redirect;
 }
 
-if (Validator.isNull(backURL)) {
-	PortletURL portletURL = liferayPortletResponse.createRenderURL();
+PortletURL portletURL = liferayPortletResponse.createRenderURL();
 
+if (Validator.isNull(backURL)) {
 	backURL = portletURL.toString();
 }
 
@@ -102,7 +102,7 @@ if (Validator.isNotNull(historyKey)) {
 					String contentCssClass = "form-navigator-content";
 
 					if (!displayStyle.equals("steps")) {
-						contentCssClass += " col-md-8";
+						contentCssClass += " col-md-8 col-md-pull-4";
 					}
 					%>
 
@@ -111,7 +111,15 @@ if (Validator.isNotNull(historyKey)) {
 					</div>
 				</liferay-util:buffer>
 
-				<ul class="col-md-4 form-navigator list-group nav">
+				<%
+				String listGroupCssClass = "form-navigator list-group nav";
+
+				if (!displayStyle.equals("steps")) {
+					listGroupCssClass += " col-md-4 col-md-push-8";
+				}
+				%>
+
+				<ul class="<%= listGroupCssClass %>">
 					<%= Validator.isNotNull(htmlTop) ? htmlTop : StringPool.BLANK %>
 
 					<%
@@ -309,7 +317,7 @@ if (Validator.isNotNull(historyKey)) {
 					var redirect = A.one('#<portlet:namespace />redirect');
 
 					if (redirect) {
-						var url = new A.Url(redirect.val() || location.href);
+						var url = new A.Url(redirect.val() || '<%= portletURL %>');
 
 						url.setAnchor(null);
 						url.setParameter('<portlet:namespace />historyKey', sectionId);

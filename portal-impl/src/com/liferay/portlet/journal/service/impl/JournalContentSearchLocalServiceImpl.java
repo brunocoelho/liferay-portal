@@ -18,15 +18,16 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.StringPool;
-import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.model.Layout;
 import com.liferay.portal.model.LayoutTypePortlet;
 import com.liferay.portal.model.PortletConstants;
 import com.liferay.portal.util.PortletKeys;
+import com.liferay.portlet.asset.provider.DisplayInformationProvider;
 import com.liferay.portlet.journal.model.JournalContentSearch;
 import com.liferay.portlet.journal.service.base.JournalContentSearchLocalServiceBaseImpl;
+import com.liferay.registry.collections.ServiceTrackerCollections;
+import com.liferay.registry.collections.ServiceTrackerMap;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +47,7 @@ public class JournalContentSearchLocalServiceImpl
 			_log.info("Checking journal content search for " + companyId);
 		}
 
-		List<Layout> layouts = new ArrayList<Layout>();
+		List<Layout> layouts = new ArrayList<>();
 
 		List<Group> groups = groupLocalService.search(
 			companyId, null, null, null, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
@@ -78,25 +79,36 @@ public class JournalContentSearchLocalServiceImpl
 				String rootPortletId = PortletConstants.getRootPortletId(
 					portletId);
 
-				if (rootPortletId.equals(PortletKeys.JOURNAL_CONTENT)) {
-					PortletPreferences preferences =
-						portletPreferencesLocalService.getPreferences(
-							layout.getCompanyId(),
-							PortletKeys.PREFS_OWNER_ID_DEFAULT,
-							PortletKeys.PREFS_OWNER_TYPE_LAYOUT,
-							layout.getPlid(), portletId);
+				DisplayInformationProvider displayInformationProvider =
+					_serviceTrackerMap.getService(rootPortletId);
 
-					String articleId = preferences.getValue(
-						"articleId", StringPool.BLANK);
-
-					if (Validator.isNotNull(articleId)) {
-						updateContentSearch(
-							layout.getGroupId(), layout.isPrivateLayout(),
-							layout.getLayoutId(), portletId, articleId);
-					}
+				if (displayInformationProvider == null) {
+					continue;
 				}
+
+				PortletPreferences portletPreferences =
+					portletPreferencesLocalService.getPreferences(
+						layout.getCompanyId(),
+						PortletKeys.PREFS_OWNER_ID_DEFAULT,
+						PortletKeys.PREFS_OWNER_TYPE_LAYOUT, layout.getPlid(),
+						portletId);
+
+				String classPK = displayInformationProvider.getClassPK(
+					portletPreferences);
+
+				updateContentSearch(
+					layout.getGroupId(), layout.isPrivateLayout(),
+					layout.getLayoutId(), portletId, classPK);
 			}
 		}
+	}
+
+	@Override
+	public void deleteArticleContentSearch(
+		long groupId, boolean privateLayout, long layoutId, String portletId) {
+
+		journalContentSearchPersistence.removeByG_P_L_P(
+			groupId, privateLayout, layoutId, portletId);
 	}
 
 	@Override
@@ -171,7 +183,7 @@ public class JournalContentSearchLocalServiceImpl
 	public List<Long> getLayoutIds(
 		long groupId, boolean privateLayout, String articleId) {
 
-		List<Long> layoutIds = new ArrayList<Long>();
+		List<Long> layoutIds = new ArrayList<>();
 
 		List<JournalContentSearch> contentSearches =
 			journalContentSearchPersistence.findByG_P_A(
@@ -259,8 +271,7 @@ public class JournalContentSearchLocalServiceImpl
 		journalContentSearchPersistence.removeByG_P_L_P(
 			groupId, privateLayout, layoutId, portletId);
 
-		List<JournalContentSearch> contentSearches =
-			new ArrayList<JournalContentSearch>();
+		List<JournalContentSearch> contentSearches = new ArrayList<>();
 
 		for (String articleId : articleIds) {
 			JournalContentSearch contentSearch = updateContentSearch(
@@ -272,7 +283,15 @@ public class JournalContentSearchLocalServiceImpl
 		return contentSearches;
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		JournalContentSearchLocalServiceImpl.class);
+
+	private static final ServiceTrackerMap<String, DisplayInformationProvider>
+		_serviceTrackerMap = ServiceTrackerCollections.singleValueMap(
+			DisplayInformationProvider.class, "javax.portlet.name");
+
+	static {
+		_serviceTrackerMap.open();
+	}
 
 }

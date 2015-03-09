@@ -159,10 +159,10 @@ public class ClassNameLocalServiceWrapper implements ClassNameLocalService,
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	@Override
 	public long dynamicQueryCount(
@@ -171,11 +171,11 @@ public class ClassNameLocalServiceWrapper implements ClassNameLocalService,
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	@Override
 	public long dynamicQueryCount(
@@ -193,16 +193,6 @@ public class ClassNameLocalServiceWrapper implements ClassNameLocalService,
 	public com.liferay.portal.model.ClassName fetchClassName(
 		java.lang.String value) {
 		return _classNameLocalService.fetchClassName(value);
-	}
-
-	@Override
-	public long fetchClassNameId(java.lang.Class<?> clazz) {
-		return _classNameLocalService.fetchClassNameId(clazz);
-	}
-
-	@Override
-	public long fetchClassNameId(java.lang.String value) {
-		return _classNameLocalService.fetchClassNameId(value);
 	}
 
 	@Override

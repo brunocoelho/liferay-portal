@@ -28,6 +28,7 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.Layout;
 import com.liferay.portal.model.LayoutConstants;
 import com.liferay.portal.model.LayoutPrototype;
+import com.liferay.portal.model.LayoutType;
 import com.liferay.portal.security.permission.ActionKeys;
 import com.liferay.portal.service.LayoutLocalServiceUtil;
 import com.liferay.portal.service.LayoutPrototypeServiceUtil;
@@ -38,7 +39,6 @@ import com.liferay.portal.service.permission.GroupPermissionUtil;
 import com.liferay.portal.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.struts.JSONAction;
 import com.liferay.portal.theme.ThemeDisplay;
-import com.liferay.portal.util.LayoutSettings;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portal.util.WebKeys;
 import com.liferay.portlet.sites.util.SitesUtil;
@@ -168,11 +168,11 @@ public class UpdateLayoutAction extends JSONAction {
 				description, type, hidden, friendlyURL, serviceContext);
 		}
 
-		LayoutSettings layoutSettings = LayoutSettings.getInstance(layout);
+		LayoutType layoutType = layout.getLayoutType();
 
 		EventsProcessorUtil.process(
 			PropsKeys.LAYOUT_CONFIGURATION_ACTION_UPDATE,
-			layoutSettings.getConfigurationActionUpdate(), request, response);
+			layoutType.getConfigurationActionUpdate(), request, response);
 
 		String layoutURL = PortalUtil.getLayoutURL(layout, themeDisplay);
 
@@ -189,11 +189,10 @@ public class UpdateLayoutAction extends JSONAction {
 
 		boolean deleteable = LayoutPermissionUtil.contains(
 			themeDisplay.getPermissionChecker(), layout, ActionKeys.DELETE);
-		boolean sortable =
-			GroupPermissionUtil.contains(
-				themeDisplay.getPermissionChecker(), layout.getGroupId(),
-				ActionKeys.MANAGE_LAYOUTS) &&
-			SitesUtil.isLayoutSortable(layout);
+		boolean sortable = GroupPermissionUtil.contains(
+			themeDisplay.getPermissionChecker(), layout.getGroupId(),
+			ActionKeys.MANAGE_LAYOUTS) &&
+		SitesUtil.isLayoutSortable(layout);
 		boolean updateable = LayoutPermissionUtil.contains(
 			themeDisplay.getPermissionChecker(), layout, ActionKeys.UPDATE);
 

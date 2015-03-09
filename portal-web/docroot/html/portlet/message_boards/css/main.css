@@ -1,4 +1,4 @@
-@import "compass";
+@import "bourbon";
 @import "mixins";
 
 .portlet-asset-publisher, .portlet-message-boards, .portlet-trash {
@@ -141,7 +141,7 @@
 		padding: 5px;
 
 		.user-name {
-			@include hyphenation;
+			@include hyphens;
 		}
 	}
 
@@ -299,7 +299,7 @@
 	}
 
 	.category-description {
-		@include hyphenation;
+		@include hyphens;
 	}
 
 	.category-title {

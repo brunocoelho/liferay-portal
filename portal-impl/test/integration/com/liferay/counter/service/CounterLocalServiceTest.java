@@ -15,6 +15,8 @@
 package com.liferay.counter.service;
 
 import com.liferay.counter.model.Counter;
+import com.liferay.portal.cache.key.SimpleCacheKeyGenerator;
+import com.liferay.portal.kernel.cache.key.CacheKeyGeneratorUtil;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.process.ClassPathUtil;
 import com.liferay.portal.kernel.process.ProcessCallable;
@@ -23,15 +25,15 @@ import com.liferay.portal.kernel.process.ProcessConfig;
 import com.liferay.portal.kernel.process.ProcessConfig.Builder;
 import com.liferay.portal.kernel.process.ProcessException;
 import com.liferay.portal.kernel.process.ProcessExecutorUtil;
-import com.liferay.portal.kernel.scheduler.SchedulerEngineHelperUtil;
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
+import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portal.util.InitUtil;
-import com.liferay.portal.util.PropsUtil;
-import com.liferay.portal.util.PropsValues;
+import com.liferay.registry.BasicRegistryImpl;
+import com.liferay.registry.RegistryUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,15 +44,20 @@ import java.util.concurrent.Future;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Shuyang Zhou
  */
-@ExecutionTestListeners(listeners = {MainServletExecutionTestListener.class})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 public class CounterLocalServiceTest {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE);
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
@@ -82,7 +89,7 @@ public class CounterLocalServiceTest {
 
 		ProcessConfig processConfig = builder.build();
 
-		List<Future<Long[]>> futuresList = new ArrayList<Future<Long[]>>();
+		List<Future<Long[]>> futuresList = new ArrayList<>();
 
 		for (int i = 0; i < _PROCESS_COUNT; i++) {
 			ProcessCallable<Long[]> processCallable =
@@ -100,7 +107,7 @@ public class CounterLocalServiceTest {
 
 		int total = _PROCESS_COUNT * _INCREMENT_COUNT;
 
-		List<Long> ids = new ArrayList<Long>(total);
+		List<Long> ids = new ArrayList<>(total);
 
 		for (Future<Long[]> futures : futuresList) {
 			ids.addAll(Arrays.asList(futures.get()));
@@ -117,11 +124,11 @@ public class CounterLocalServiceTest {
 		}
 	}
 
+	private static String _COUNTER_NAME;
+
 	private static final int _INCREMENT_COUNT = 10000;
 
 	private static final int _PROCESS_COUNT = 4;
-
-	private static String _COUNTER_NAME;
 
 	private static class IncrementProcessCallable
 		implements ProcessCallable<Long[]> {
@@ -136,14 +143,29 @@ public class CounterLocalServiceTest {
 
 		@Override
 		public Long[] call() throws ProcessException {
+			RegistryUtil.setRegistry(new BasicRegistryImpl());
+
+			System.setProperty(
+				PropsKeys.COUNTER_INCREMENT + "." + _counterName, "1");
+
 			System.setProperty("catalina.base", ".");
 			System.setProperty("external-properties", "portal-test.properties");
 
-			PropsUtil.set(PropsValues.COUNTER_INCREMENT + _COUNTER_NAME, "1");
+			CacheKeyGeneratorUtil cacheKeyGeneratorUtil =
+				new CacheKeyGeneratorUtil();
 
-			InitUtil.initWithSpringAndModuleFramework();
+			cacheKeyGeneratorUtil.setDefaultCacheKeyGenerator(
+				new SimpleCacheKeyGenerator());
 
-			List<Long> ids = new ArrayList<Long>();
+			InitUtil.initWithSpring(
+				Arrays.asList(
+					"META-INF/base-spring.xml", "META-INF/hibernate-spring.xml",
+					"META-INF/infrastructure-spring.xml",
+					"META-INF/management-spring.xml",
+					"META-INF/counter-spring.xml"),
+				false);
+
+			List<Long> ids = new ArrayList<>();
 
 			try {
 				for (int i = 0; i < _incrementCount; i++) {
@@ -152,16 +174,6 @@ public class CounterLocalServiceTest {
 			}
 			catch (SystemException se) {
 				throw new ProcessException(se);
-			}
-			finally {
-				try {
-					SchedulerEngineHelperUtil.shutdown();
-
-					InitUtil.stopModuleFramework();
-				}
-				catch (Exception e) {
-					throw new ProcessException(e);
-				}
 			}
 
 			return ids.toArray(new Long[ids.size()]);
@@ -174,9 +186,9 @@ public class CounterLocalServiceTest {
 
 		private static final long serialVersionUID = 1L;
 
-		private String _counterName;
-		private int _incrementCount;
-		private String _processName;
+		private final String _counterName;
+		private final int _incrementCount;
+		private final String _processName;
 
 	}
 

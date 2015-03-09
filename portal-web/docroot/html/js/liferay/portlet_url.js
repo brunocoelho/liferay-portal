@@ -52,7 +52,7 @@ AUI.add(
 			};
 
 			if (!basePortletURL) {
-				instance.options.basePortletURL = themeDisplay.getPathContext() + themeDisplay.getPathMain() + '/portal/layout?p_l_id=' + themeDisplay.getPlid();
+				instance.options.basePortletURL = themeDisplay.getPathMain() + '/portal/layout?p_l_id=' + themeDisplay.getPlid();
 			}
 
 			A.each(
@@ -323,7 +323,7 @@ AUI.add(
 					portletURL.setParameter('modelResource', modelResource);
 					portletURL.setParameter('modelResourceDescription', modelResourceDescription);
 					portletURL.setParameter('resourcePrimKey', resourcePrimKey);
-					portletURL.setPortletId(86);
+					portletURL.setPortletId(Liferay.PortletKeys.PORTLET_CONFIGURATION);
 					portletURL.setWindowState('MAXIMIZED');
 
 					return portletURL;

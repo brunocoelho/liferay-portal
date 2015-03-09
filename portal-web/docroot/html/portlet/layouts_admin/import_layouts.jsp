@@ -21,11 +21,13 @@ long groupId = ParamUtil.getLong(request, "groupId");
 boolean privateLayout = ParamUtil.getBoolean(request, "privateLayout");
 boolean validate = ParamUtil.getBoolean(request, "validate", true);
 
-String[] tempFileEntryNames = LayoutServiceUtil.getTempFileEntryNames(groupId, ExportImportHelper.TEMP_FOLDER_NAME);
+String[] tempFileNames = LayoutServiceUtil.getTempFileNames(groupId, ExportImportHelper.TEMP_FOLDER_NAME);
 %>
 
 <portlet:renderURL var="backURL">
 	<portlet:param name="struts_action" value="/layouts_admin/edit_layout_set" />
+	<portlet:param name="tabs1" value='<%= privateLayout ? "my-dashboard" : "my-profile" %>' />
+	<portlet:param name="groupId" value="<%= String.valueOf(groupId) %>" />
 </portlet:renderURL>
 
 <liferay-ui:header
@@ -52,7 +54,7 @@ String[] tempFileEntryNames = LayoutServiceUtil.getTempFileEntryNames(groupId, E
 			</div>
 
 			<c:choose>
-				<c:when test="<%= (tempFileEntryNames.length > 0) && !validate %>">
+				<c:when test="<%= (tempFileNames.length > 0) && !validate %>">
 					<liferay-util:include page="/html/portlet/layouts_admin/import_layouts_resources.jsp" />
 				</c:when>
 				<c:otherwise>

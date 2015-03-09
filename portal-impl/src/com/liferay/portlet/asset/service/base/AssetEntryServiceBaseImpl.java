@@ -42,8 +42,6 @@ import com.liferay.portlet.asset.service.persistence.AssetTagFinder;
 import com.liferay.portlet.asset.service.persistence.AssetTagPersistence;
 import com.liferay.portlet.blogs.service.persistence.BlogsEntryFinder;
 import com.liferay.portlet.blogs.service.persistence.BlogsEntryPersistence;
-import com.liferay.portlet.bookmarks.service.persistence.BookmarksEntryFinder;
-import com.liferay.portlet.bookmarks.service.persistence.BookmarksEntryPersistence;
 import com.liferay.portlet.documentlibrary.service.persistence.DLFileEntryFinder;
 import com.liferay.portlet.documentlibrary.service.persistence.DLFileEntryPersistence;
 import com.liferay.portlet.journal.service.persistence.JournalArticleFinder;
@@ -55,9 +53,6 @@ import com.liferay.portlet.social.service.persistence.SocialActivityCounterFinde
 import com.liferay.portlet.social.service.persistence.SocialActivityCounterPersistence;
 import com.liferay.portlet.social.service.persistence.SocialActivityFinder;
 import com.liferay.portlet.social.service.persistence.SocialActivityPersistence;
-import com.liferay.portlet.wiki.service.persistence.WikiPageFinder;
-import com.liferay.portlet.wiki.service.persistence.WikiPagePersistence;
-import com.liferay.portlet.wiki.service.persistence.WikiPageResourcePersistence;
 
 import javax.sql.DataSource;
 
@@ -625,82 +620,6 @@ public abstract class AssetEntryServiceBaseImpl extends BaseServiceImpl
 	}
 
 	/**
-	 * Returns the bookmarks entry local service.
-	 *
-	 * @return the bookmarks entry local service
-	 */
-	public com.liferay.portlet.bookmarks.service.BookmarksEntryLocalService getBookmarksEntryLocalService() {
-		return bookmarksEntryLocalService;
-	}
-
-	/**
-	 * Sets the bookmarks entry local service.
-	 *
-	 * @param bookmarksEntryLocalService the bookmarks entry local service
-	 */
-	public void setBookmarksEntryLocalService(
-		com.liferay.portlet.bookmarks.service.BookmarksEntryLocalService bookmarksEntryLocalService) {
-		this.bookmarksEntryLocalService = bookmarksEntryLocalService;
-	}
-
-	/**
-	 * Returns the bookmarks entry remote service.
-	 *
-	 * @return the bookmarks entry remote service
-	 */
-	public com.liferay.portlet.bookmarks.service.BookmarksEntryService getBookmarksEntryService() {
-		return bookmarksEntryService;
-	}
-
-	/**
-	 * Sets the bookmarks entry remote service.
-	 *
-	 * @param bookmarksEntryService the bookmarks entry remote service
-	 */
-	public void setBookmarksEntryService(
-		com.liferay.portlet.bookmarks.service.BookmarksEntryService bookmarksEntryService) {
-		this.bookmarksEntryService = bookmarksEntryService;
-	}
-
-	/**
-	 * Returns the bookmarks entry persistence.
-	 *
-	 * @return the bookmarks entry persistence
-	 */
-	public BookmarksEntryPersistence getBookmarksEntryPersistence() {
-		return bookmarksEntryPersistence;
-	}
-
-	/**
-	 * Sets the bookmarks entry persistence.
-	 *
-	 * @param bookmarksEntryPersistence the bookmarks entry persistence
-	 */
-	public void setBookmarksEntryPersistence(
-		BookmarksEntryPersistence bookmarksEntryPersistence) {
-		this.bookmarksEntryPersistence = bookmarksEntryPersistence;
-	}
-
-	/**
-	 * Returns the bookmarks entry finder.
-	 *
-	 * @return the bookmarks entry finder
-	 */
-	public BookmarksEntryFinder getBookmarksEntryFinder() {
-		return bookmarksEntryFinder;
-	}
-
-	/**
-	 * Sets the bookmarks entry finder.
-	 *
-	 * @param bookmarksEntryFinder the bookmarks entry finder
-	 */
-	public void setBookmarksEntryFinder(
-		BookmarksEntryFinder bookmarksEntryFinder) {
-		this.bookmarksEntryFinder = bookmarksEntryFinder;
-	}
-
-	/**
 	 * Returns the document library file entry local service.
 	 *
 	 * @return the document library file entry local service
@@ -1098,118 +1017,6 @@ public abstract class AssetEntryServiceBaseImpl extends BaseServiceImpl
 	}
 
 	/**
-	 * Returns the wiki page local service.
-	 *
-	 * @return the wiki page local service
-	 */
-	public com.liferay.portlet.wiki.service.WikiPageLocalService getWikiPageLocalService() {
-		return wikiPageLocalService;
-	}
-
-	/**
-	 * Sets the wiki page local service.
-	 *
-	 * @param wikiPageLocalService the wiki page local service
-	 */
-	public void setWikiPageLocalService(
-		com.liferay.portlet.wiki.service.WikiPageLocalService wikiPageLocalService) {
-		this.wikiPageLocalService = wikiPageLocalService;
-	}
-
-	/**
-	 * Returns the wiki page remote service.
-	 *
-	 * @return the wiki page remote service
-	 */
-	public com.liferay.portlet.wiki.service.WikiPageService getWikiPageService() {
-		return wikiPageService;
-	}
-
-	/**
-	 * Sets the wiki page remote service.
-	 *
-	 * @param wikiPageService the wiki page remote service
-	 */
-	public void setWikiPageService(
-		com.liferay.portlet.wiki.service.WikiPageService wikiPageService) {
-		this.wikiPageService = wikiPageService;
-	}
-
-	/**
-	 * Returns the wiki page persistence.
-	 *
-	 * @return the wiki page persistence
-	 */
-	public WikiPagePersistence getWikiPagePersistence() {
-		return wikiPagePersistence;
-	}
-
-	/**
-	 * Sets the wiki page persistence.
-	 *
-	 * @param wikiPagePersistence the wiki page persistence
-	 */
-	public void setWikiPagePersistence(WikiPagePersistence wikiPagePersistence) {
-		this.wikiPagePersistence = wikiPagePersistence;
-	}
-
-	/**
-	 * Returns the wiki page finder.
-	 *
-	 * @return the wiki page finder
-	 */
-	public WikiPageFinder getWikiPageFinder() {
-		return wikiPageFinder;
-	}
-
-	/**
-	 * Sets the wiki page finder.
-	 *
-	 * @param wikiPageFinder the wiki page finder
-	 */
-	public void setWikiPageFinder(WikiPageFinder wikiPageFinder) {
-		this.wikiPageFinder = wikiPageFinder;
-	}
-
-	/**
-	 * Returns the wiki page resource local service.
-	 *
-	 * @return the wiki page resource local service
-	 */
-	public com.liferay.portlet.wiki.service.WikiPageResourceLocalService getWikiPageResourceLocalService() {
-		return wikiPageResourceLocalService;
-	}
-
-	/**
-	 * Sets the wiki page resource local service.
-	 *
-	 * @param wikiPageResourceLocalService the wiki page resource local service
-	 */
-	public void setWikiPageResourceLocalService(
-		com.liferay.portlet.wiki.service.WikiPageResourceLocalService wikiPageResourceLocalService) {
-		this.wikiPageResourceLocalService = wikiPageResourceLocalService;
-	}
-
-	/**
-	 * Returns the wiki page resource persistence.
-	 *
-	 * @return the wiki page resource persistence
-	 */
-	public WikiPageResourcePersistence getWikiPageResourcePersistence() {
-		return wikiPageResourcePersistence;
-	}
-
-	/**
-	 * Sets the wiki page resource persistence.
-	 *
-	 * @param wikiPageResourcePersistence the wiki page resource persistence
-	 */
-	public void setWikiPageResourcePersistence(
-		WikiPageResourcePersistence wikiPageResourcePersistence) {
-		this.wikiPageResourcePersistence = wikiPageResourcePersistence;
-	}
-
-	/**
 	 * Returns the asset link local service.
 	 *
 	 * @return the asset link local service
@@ -1437,14 +1244,6 @@ public abstract class AssetEntryServiceBaseImpl extends BaseServiceImpl
 	protected BlogsEntryPersistence blogsEntryPersistence;
 	@BeanReference(type = BlogsEntryFinder.class)
 	protected BlogsEntryFinder blogsEntryFinder;
-	@BeanReference(type = com.liferay.portlet.bookmarks.service.BookmarksEntryLocalService.class)
-	protected com.liferay.portlet.bookmarks.service.BookmarksEntryLocalService bookmarksEntryLocalService;
-	@BeanReference(type = com.liferay.portlet.bookmarks.service.BookmarksEntryService.class)
-	protected com.liferay.portlet.bookmarks.service.BookmarksEntryService bookmarksEntryService;
-	@BeanReference(type = BookmarksEntryPersistence.class)
-	protected BookmarksEntryPersistence bookmarksEntryPersistence;
-	@BeanReference(type = BookmarksEntryFinder.class)
-	protected BookmarksEntryFinder bookmarksEntryFinder;
 	@BeanReference(type = com.liferay.portlet.documentlibrary.service.DLFileEntryLocalService.class)
 	protected com.liferay.portlet.documentlibrary.service.DLFileEntryLocalService dlFileEntryLocalService;
 	@BeanReference(type = com.liferay.portlet.documentlibrary.service.DLFileEntryService.class)
@@ -1487,18 +1286,6 @@ public abstract class AssetEntryServiceBaseImpl extends BaseServiceImpl
 	protected SocialActivityCounterPersistence socialActivityCounterPersistence;
 	@BeanReference(type = SocialActivityCounterFinder.class)
 	protected SocialActivityCounterFinder socialActivityCounterFinder;
-	@BeanReference(type = com.liferay.portlet.wiki.service.WikiPageLocalService.class)
-	protected com.liferay.portlet.wiki.service.WikiPageLocalService wikiPageLocalService;
-	@BeanReference(type = com.liferay.portlet.wiki.service.WikiPageService.class)
-	protected com.liferay.portlet.wiki.service.WikiPageService wikiPageService;
-	@BeanReference(type = WikiPagePersistence.class)
-	protected WikiPagePersistence wikiPagePersistence;
-	@BeanReference(type = WikiPageFinder.class)
-	protected WikiPageFinder wikiPageFinder;
-	@BeanReference(type = com.liferay.portlet.wiki.service.WikiPageResourceLocalService.class)
-	protected com.liferay.portlet.wiki.service.WikiPageResourceLocalService wikiPageResourceLocalService;
-	@BeanReference(type = WikiPageResourcePersistence.class)
-	protected WikiPageResourcePersistence wikiPageResourcePersistence;
 	@BeanReference(type = com.liferay.portlet.asset.service.AssetLinkLocalService.class)
 	protected com.liferay.portlet.asset.service.AssetLinkLocalService assetLinkLocalService;
 	@BeanReference(type = AssetLinkPersistence.class)

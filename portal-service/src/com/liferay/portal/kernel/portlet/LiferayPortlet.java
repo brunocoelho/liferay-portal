@@ -27,6 +27,8 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.model.Portlet;
+import com.liferay.portal.model.PortletApp;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.PortalUtil;
 
@@ -52,6 +54,7 @@ import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
 import javax.portlet.WindowState;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -400,6 +403,17 @@ public class LiferayPortlet extends GenericPortlet {
 		return method;
 	}
 
+	protected ServletContext getServletContext() {
+		LiferayPortletConfig liferayPortletConfig =
+			(LiferayPortletConfig)getPortletConfig();
+
+		Portlet portlet = liferayPortletConfig.getPortlet();
+
+		PortletApp portletApp = portlet.getPortletApp();
+
+		return portletApp.getServletContext();
+	}
+
 	@Override
 	protected String getTitle(RenderRequest renderRequest) {
 		try {
@@ -509,11 +523,11 @@ public class LiferayPortlet extends GenericPortlet {
 
 	private static final boolean _PROCESS_PORTLET_REQUEST = true;
 
-	private static Log _log = LogFactoryUtil.getLog(LiferayPortlet.class);
+	private static final Log _log = LogFactoryUtil.getLog(LiferayPortlet.class);
 
-	private Map<String, Method> _actionMethods =
-		new ConcurrentHashMap<String, Method>();
-	private Map<String, Method> _resourceMethods =
-		new ConcurrentHashMap<String, Method>();
+	private final Map<String, Method> _actionMethods =
+		new ConcurrentHashMap<>();
+	private final Map<String, Method> _resourceMethods =
+		new ConcurrentHashMap<>();
 
 }

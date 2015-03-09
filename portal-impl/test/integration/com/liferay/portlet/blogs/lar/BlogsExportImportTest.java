@@ -15,35 +15,39 @@
 package com.liferay.portlet.blogs.lar;
 
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
-import com.liferay.portal.lar.BasePortletExportImportTestCase;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.Sync;
+import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.lar.test.BasePortletExportImportTestCase;
 import com.liferay.portal.model.StagedModel;
-import com.liferay.portal.test.Sync;
-import com.liferay.portal.test.SynchronousDestinationExecutionTestListener;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
+import com.liferay.portal.service.ServiceContext;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portal.util.PortletKeys;
-import com.liferay.portal.util.test.RandomTestUtil;
-import com.liferay.portal.util.test.TestPropsValues;
 import com.liferay.portlet.blogs.model.BlogsEntry;
 import com.liferay.portlet.blogs.service.BlogsEntryLocalServiceUtil;
-import com.liferay.portlet.blogs.util.test.BlogsTestUtil;
 
+import java.util.Date;
 import java.util.Map;
 
-import org.junit.runner.RunWith;
+import org.junit.ClassRule;
+import org.junit.Rule;
 
 /**
  * @author Juan Fernández
  */
-@ExecutionTestListeners(
-	listeners = {
-		MainServletExecutionTestListener.class,
-		SynchronousDestinationExecutionTestListener.class
-	})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 @Sync
 public class BlogsExportImportTest extends BasePortletExportImportTestCase {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE,
+			SynchronousDestinationTestRule.INSTANCE);
 
 	@Override
 	public String getNamespace() {
@@ -57,9 +61,31 @@ public class BlogsExportImportTest extends BasePortletExportImportTestCase {
 
 	@Override
 	protected StagedModel addStagedModel(long groupId) throws Exception {
-		return BlogsTestUtil.addEntry(
-			TestPropsValues.getUserId(), groupId, RandomTestUtil.randomString(),
-			true);
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				groupId, TestPropsValues.getUserId());
+
+		return BlogsEntryLocalServiceUtil.addEntry(
+			TestPropsValues.getUserId(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), serviceContext);
+	}
+
+	@Override
+	protected StagedModel addStagedModel(long groupId, Date createdDate)
+		throws Exception {
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				groupId, TestPropsValues.getUserId());
+
+		serviceContext.setCreateDate(createdDate);
+		serviceContext.setModifiedDate(createdDate);
+
+		BlogsEntry entry = BlogsEntryLocalServiceUtil.addEntry(
+			TestPropsValues.getUserId(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), serviceContext);
+
+		return entry;
 	}
 
 	@Override

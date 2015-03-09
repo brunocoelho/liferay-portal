@@ -49,6 +49,7 @@ import com.liferay.portal.service.persistence.GroupFinder;
 import com.liferay.portal.service.persistence.GroupPersistence;
 import com.liferay.portal.service.persistence.LockFinder;
 import com.liferay.portal.service.persistence.LockPersistence;
+import com.liferay.portal.service.persistence.RepositoryPersistence;
 import com.liferay.portal.service.persistence.UserFinder;
 import com.liferay.portal.service.persistence.UserPersistence;
 import com.liferay.portal.service.persistence.WebDAVPropsPersistence;
@@ -206,10 +207,10 @@ public abstract class DLFolderLocalServiceBaseImpl extends BaseLocalServiceImpl
 	}
 
 	/**
-	 * Returns the number of rows that match the dynamic query.
+	 * Returns the number of rows matching the dynamic query.
 	 *
 	 * @param dynamicQuery the dynamic query
-	 * @return the number of rows that match the dynamic query
+	 * @return the number of rows matching the dynamic query
 	 */
 	@Override
 	public long dynamicQueryCount(DynamicQuery dynamicQuery) {
@@ -217,11 +218,11 @@ public abstract class DLFolderLocalServiceBaseImpl extends BaseLocalServiceImpl
 	}
 
 	/**
-	 * Returns the number of rows that match the dynamic query.
+	 * Returns the number of rows matching the dynamic query.
 	 *
 	 * @param dynamicQuery the dynamic query
 	 * @param projection the projection to apply to the query
-	 * @return the number of rows that match the dynamic query
+	 * @return the number of rows matching the dynamic query
 	 */
 	@Override
 	public long dynamicQueryCount(DynamicQuery dynamicQuery,
@@ -359,12 +360,29 @@ public abstract class DLFolderLocalServiceBaseImpl extends BaseLocalServiceImpl
 		return dlFolderPersistence.findByPrimaryKey(primaryKeyObj);
 	}
 
+	/**
+	 * Returns all the document library folders matching the UUID and company.
+	 *
+	 * @param uuid the UUID of the document library folders
+	 * @param companyId the primary key of the company
+	 * @return the matching document library folders, or an empty list if no matches were found
+	 */
 	@Override
 	public List<DLFolder> getDLFoldersByUuidAndCompanyId(String uuid,
 		long companyId) {
 		return dlFolderPersistence.findByUuid_C(uuid, companyId);
 	}
 
+	/**
+	 * Returns a range of document library folders matching the UUID and company.
+	 *
+	 * @param uuid the UUID of the document library folders
+	 * @param companyId the primary key of the company
+	 * @param start the lower bound of the range of document library folders
+	 * @param end the upper bound of the range of document library folders (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the range of matching document library folders, or an empty list if no matches were found
+	 */
 	@Override
 	public List<DLFolder> getDLFoldersByUuidAndCompanyId(String uuid,
 		long companyId, int start, int end,
@@ -782,6 +800,63 @@ public abstract class DLFolderLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setLockFinder(LockFinder lockFinder) {
 		this.lockFinder = lockFinder;
+	}
+
+	/**
+	 * Returns the repository local service.
+	 *
+	 * @return the repository local service
+	 */
+	public com.liferay.portal.service.RepositoryLocalService getRepositoryLocalService() {
+		return repositoryLocalService;
+	}
+
+	/**
+	 * Sets the repository local service.
+	 *
+	 * @param repositoryLocalService the repository local service
+	 */
+	public void setRepositoryLocalService(
+		com.liferay.portal.service.RepositoryLocalService repositoryLocalService) {
+		this.repositoryLocalService = repositoryLocalService;
+	}
+
+	/**
+	 * Returns the repository remote service.
+	 *
+	 * @return the repository remote service
+	 */
+	public com.liferay.portal.service.RepositoryService getRepositoryService() {
+		return repositoryService;
+	}
+
+	/**
+	 * Sets the repository remote service.
+	 *
+	 * @param repositoryService the repository remote service
+	 */
+	public void setRepositoryService(
+		com.liferay.portal.service.RepositoryService repositoryService) {
+		this.repositoryService = repositoryService;
+	}
+
+	/**
+	 * Returns the repository persistence.
+	 *
+	 * @return the repository persistence
+	 */
+	public RepositoryPersistence getRepositoryPersistence() {
+		return repositoryPersistence;
+	}
+
+	/**
+	 * Sets the repository persistence.
+	 *
+	 * @param repositoryPersistence the repository persistence
+	 */
+	public void setRepositoryPersistence(
+		RepositoryPersistence repositoryPersistence) {
+		this.repositoryPersistence = repositoryPersistence;
 	}
 
 	/**
@@ -1531,6 +1606,12 @@ public abstract class DLFolderLocalServiceBaseImpl extends BaseLocalServiceImpl
 	protected LockPersistence lockPersistence;
 	@BeanReference(type = LockFinder.class)
 	protected LockFinder lockFinder;
+	@BeanReference(type = com.liferay.portal.service.RepositoryLocalService.class)
+	protected com.liferay.portal.service.RepositoryLocalService repositoryLocalService;
+	@BeanReference(type = com.liferay.portal.service.RepositoryService.class)
+	protected com.liferay.portal.service.RepositoryService repositoryService;
+	@BeanReference(type = RepositoryPersistence.class)
+	protected RepositoryPersistence repositoryPersistence;
 	@BeanReference(type = com.liferay.portal.service.ResourceLocalService.class)
 	protected com.liferay.portal.service.ResourceLocalService resourceLocalService;
 	@BeanReference(type = com.liferay.portal.service.UserLocalService.class)

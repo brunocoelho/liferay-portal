@@ -63,8 +63,9 @@ public class DDMFormFieldRendererRegistryImpl
 		return ddmFormFieldRenders.get(ddmFormFieldRenders.size() - 1);
 	}
 
-	@Override
-	public void register(DDMFormFieldRenderer ddmFormFieldRenderer) {
+	public void setDefaultDDMFormFieldRenderer(
+		DDMFormFieldRenderer ddmFormFieldRenderer) {
+
 		Registry registry = RegistryUtil.getRegistry();
 
 		ServiceRegistration<DDMFormFieldRenderer> serviceRegistration =
@@ -74,27 +75,11 @@ public class DDMFormFieldRendererRegistryImpl
 		_serviceRegistrations.put(ddmFormFieldRenderer, serviceRegistration);
 	}
 
-	public void setDefaultDDMFormFieldRenderer(
-		DDMFormFieldRenderer ddmFormFieldRenderer) {
-
-		register(ddmFormFieldRenderer);
-	}
-
-	@Override
-	public void unregister(DDMFormFieldRenderer ddmFormFieldRenderer) {
-		ServiceRegistration<DDMFormFieldRenderer> serviceRegistration =
-			_serviceRegistrations.remove(ddmFormFieldRenderer);
-
-		if (serviceRegistration != null) {
-			serviceRegistration.unregister();
-		}
-	}
-
-	private Map<String, List<DDMFormFieldRenderer>> _ddmFormFieldRenderersMap =
-		new HashMap<String, List<DDMFormFieldRenderer>>();
-	private ServiceRegistrationMap<DDMFormFieldRenderer> _serviceRegistrations =
-		new ServiceRegistrationMap<DDMFormFieldRenderer>();
-	private ServiceTracker<DDMFormFieldRenderer, DDMFormFieldRenderer>
+	private final Map<String, List<DDMFormFieldRenderer>>
+		_ddmFormFieldRenderersMap = new HashMap<>();
+	private final ServiceRegistrationMap<DDMFormFieldRenderer>
+		_serviceRegistrations = new ServiceRegistrationMap<>();
+	private final ServiceTracker<DDMFormFieldRenderer, DDMFormFieldRenderer>
 		_serviceTracker;
 
 	private class DDMFormFieldRendererServiceTrackerCustomizer
@@ -118,8 +103,7 @@ public class DDMFormFieldRendererRegistryImpl
 					_ddmFormFieldRenderersMap.get(supportedDDMFormFieldType);
 
 				if (ddmFormFieldRenderers == null) {
-					ddmFormFieldRenderers =
-						new ArrayList<DDMFormFieldRenderer>();
+					ddmFormFieldRenderers = new ArrayList<>();
 
 					_ddmFormFieldRenderersMap.put(
 						supportedDDMFormFieldType, ddmFormFieldRenderers);

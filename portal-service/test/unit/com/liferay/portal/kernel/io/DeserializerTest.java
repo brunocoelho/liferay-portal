@@ -15,7 +15,7 @@
 package com.liferay.portal.kernel.io;
 
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
-import com.liferay.portal.kernel.test.CodeCoverageAssertor;
+import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.StringPool;
 
@@ -35,11 +35,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import org.testng.Assert;
 
 /**
  * @author Shuyang Zhou
@@ -47,7 +46,7 @@ import org.testng.Assert;
 public class DeserializerTest {
 
 	@ClassRule
-	public static CodeCoverageAssertor codeCoverageAssertor =
+	public static final CodeCoverageAssertor codeCoverageAssertor =
 		new CodeCoverageAssertor() {
 
 			@Override
@@ -60,7 +59,7 @@ public class DeserializerTest {
 
 	@Before
 	public void setUp() {
-		Class<?> clazz =  getClass();
+		Class<?> clazz = getClass();
 
 		PortalClassLoaderUtil.setClassLoader(clazz.getClassLoader());
 	}
@@ -205,7 +204,8 @@ public class DeserializerTest {
 		Deserializer deserializer = new Deserializer(byteBuffer);
 
 		for (int i = 0; i < _COUNT; i++) {
-			Assert.assertEquals(doubles[i], deserializer.readDouble());
+			Assert.assertEquals(
+				(Double)doubles[i], (Double)deserializer.readDouble());
 		}
 	}
 
@@ -228,7 +228,8 @@ public class DeserializerTest {
 		Deserializer deserializer = new Deserializer(byteBuffer);
 
 		for (int i = 0; i < _COUNT; i++) {
-			Assert.assertEquals(floats[i], deserializer.readFloat());
+			Assert.assertEquals(
+				(Float)floats[i], (Float)deserializer.readFloat());
 		}
 	}
 
@@ -646,6 +647,6 @@ public class DeserializerTest {
 
 	private static final int _COUNT = 1024;
 
-	private Random _random = new Random();
+	private final Random _random = new Random();
 
 }

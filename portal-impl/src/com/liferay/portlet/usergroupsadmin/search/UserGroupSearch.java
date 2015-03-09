@@ -39,8 +39,11 @@ import javax.portlet.PortletURL;
  */
 public class UserGroupSearch extends SearchContainer<UserGroup> {
 
-	static List<String> headerNames = new ArrayList<String>();
-	static Map<String, String> orderableHeaders = new HashMap<String, String>();
+	public static final String EMPTY_RESULTS_MESSAGE =
+		"no-user-groups-were-found";
+
+	public static List<String> headerNames = new ArrayList<>();
+	public static Map<String, String> orderableHeaders = new HashMap<>();
 
 	static {
 		headerNames.add("name");
@@ -49,9 +52,6 @@ public class UserGroupSearch extends SearchContainer<UserGroup> {
 		orderableHeaders.put("name", "name");
 		orderableHeaders.put("description", "description");
 	}
-
-	public static final String EMPTY_RESULTS_MESSAGE =
-		"no-user-groups-were-found";
 
 	public UserGroupSearch(
 		PortletRequest portletRequest, PortletURL iteratorURL) {
@@ -112,6 +112,7 @@ public class UserGroupSearch extends SearchContainer<UserGroup> {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(UserGroupSearch.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		UserGroupSearch.class);
 
 }

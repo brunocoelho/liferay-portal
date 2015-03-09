@@ -100,7 +100,7 @@ public class AuthVerifierPipeline {
 		HttpServletRequest request = accessControlContext.getRequest();
 
 		List<AuthVerifierConfiguration> authVerifierConfigurations =
-			new ArrayList<AuthVerifierConfiguration>();
+			new ArrayList<>();
 
 		String requestURI = request.getRequestURI();
 
@@ -215,8 +215,7 @@ public class AuthVerifierPipeline {
 	private Map<String, Object> _mergeSettings(
 		Properties properties, Map<String, Object> settings) {
 
-		Map<String, Object> mergedSettings = new HashMap<String, Object>(
-			settings);
+		Map<String, Object> mergedSettings = new HashMap<>(settings);
 
 		if (properties != null) {
 			for (Map.Entry<Object, Object> entry : properties.entrySet()) {
@@ -290,13 +289,15 @@ public class AuthVerifierPipeline {
 		return _createGuestVerificationResult(accessControlContext);
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(AuthVerifierPipeline.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		AuthVerifierPipeline.class);
 
-	private static AuthVerifierPipeline _instance = new AuthVerifierPipeline();
+	private static final AuthVerifierPipeline _instance =
+		new AuthVerifierPipeline();
 
-	private List<AuthVerifierConfiguration> _authVerifierConfigurations =
-		new CopyOnWriteArrayList<AuthVerifierConfiguration>();
-	private ServiceTracker<AuthVerifier, AuthVerifierConfiguration>
+	private final List<AuthVerifierConfiguration> _authVerifierConfigurations =
+		new CopyOnWriteArrayList<>();
+	private final ServiceTracker<AuthVerifier, AuthVerifierConfiguration>
 		_serviceTracker;
 
 	private class AuthVerifierTrackerCustomizer
@@ -365,6 +366,7 @@ public class AuthVerifierPipeline {
 
 			_authVerifierConfigurations.remove(authVerifierConfiguration);
 		}
+
 	}
 
 }

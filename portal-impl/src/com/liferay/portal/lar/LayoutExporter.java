@@ -15,7 +15,9 @@
 package com.liferay.portal.lar;
 
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskThreadLocal;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.lar.ExportImportDateUtil;
 import com.liferay.portal.kernel.lar.ExportImportHelperUtil;
 import com.liferay.portal.kernel.lar.ExportImportPathUtil;
 import com.liferay.portal.kernel.lar.ExportImportThreadLocal;
@@ -27,14 +29,18 @@ import com.liferay.portal.kernel.lar.PortletDataHandlerKeys;
 import com.liferay.portal.kernel.lar.PortletDataHandlerStatusMessageSenderUtil;
 import com.liferay.portal.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.portal.kernel.lar.StagedModelType;
+import com.liferay.portal.kernel.lar.lifecycle.ExportImportLifecycleConstants;
+import com.liferay.portal.kernel.lar.lifecycle.ExportImportLifecycleManager;
 import com.liferay.portal.kernel.lar.xstream.XStreamAliasRegistryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.settings.Settings;
 import com.liferay.portal.kernel.settings.SettingsFactoryUtil;
 import com.liferay.portal.kernel.staging.LayoutStagingUtil;
+import com.liferay.portal.kernel.transaction.TransactionCommitCallbackRegistryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.DateRange;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
@@ -83,6 +89,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import org.apache.commons.lang.time.StopWatch;
 
@@ -179,12 +186,36 @@ public class LayoutExporter {
 			Map<String, String[]> parameterMap, Date startDate, Date endDate)
 		throws Exception {
 
+		PortletDataContext portletDataContext = null;
+
 		try {
 			ExportImportThreadLocal.setLayoutExportInProcess(true);
 
-			return doExportLayoutsAsFile(
-				groupId, privateLayout, layoutIds, parameterMap, startDate,
-				endDate);
+			portletDataContext = getPortletDataContext(
+				groupId, privateLayout, parameterMap, startDate, endDate);
+
+			ExportImportLifecycleManager.fireExportImportLifecycleEvent(
+				ExportImportLifecycleConstants.EVENT_LAYOUT_EXPORT_STARTED,
+				PortletDataContextFactoryUtil.clonePortletDataContext(
+					portletDataContext));
+
+			File file = doExportLayoutsAsFile(portletDataContext, layoutIds);
+
+			ExportImportLifecycleManager.fireExportImportLifecycleEvent(
+				ExportImportLifecycleConstants.EVENT_LAYOUT_EXPORT_SUCCEEDED,
+				PortletDataContextFactoryUtil.clonePortletDataContext(
+					portletDataContext));
+
+			return file;
+		}
+		catch (Throwable t) {
+			ExportImportLifecycleManager.fireExportImportLifecycleEvent(
+				ExportImportLifecycleConstants.EVENT_LAYOUT_EXPORT_FAILED,
+				PortletDataContextFactoryUtil.clonePortletDataContext(
+					portletDataContext),
+				t);
+
+			throw t;
 		}
 		finally {
 			ExportImportThreadLocal.setLayoutExportInProcess(false);
@@ -192,9 +223,11 @@ public class LayoutExporter {
 	}
 
 	protected File doExportLayoutsAsFile(
-			long groupId, boolean privateLayout, long[] layoutIds,
-			Map<String, String[]> parameterMap, Date startDate, Date endDate)
+			PortletDataContext portletDataContext, long[] layoutIds)
 		throws Exception {
+
+		Map<String, String[]> parameterMap =
+			portletDataContext.getParameterMap();
 
 		boolean exportIgnoreLastPublishDate = MapUtil.getBoolean(
 			parameterMap, PortletDataHandlerKeys.IGNORE_LAST_PUBLISH_DATE);
@@ -210,23 +243,22 @@ public class LayoutExporter {
 		}
 
 		LayoutSet layoutSet = LayoutSetLocalServiceUtil.getLayoutSet(
-			groupId, privateLayout);
+			portletDataContext.getGroupId(),
+			portletDataContext.isPrivateLayout());
 
 		long companyId = layoutSet.getCompanyId();
 		long defaultUserId = UserLocalServiceUtil.getDefaultUserId(companyId);
 
 		ServiceContext serviceContext =
-			ServiceContextThreadLocal.getServiceContext();
+			ServiceContextThreadLocal.popServiceContext();
 
 		if (serviceContext == null) {
 			serviceContext = new ServiceContext();
-
-			serviceContext.setCompanyId(companyId);
-			serviceContext.setSignedIn(false);
-			serviceContext.setUserId(defaultUserId);
-
-			ServiceContextThreadLocal.pushServiceContext(serviceContext);
 		}
+
+		serviceContext.setCompanyId(companyId);
+		serviceContext.setSignedIn(false);
+		serviceContext.setUserId(defaultUserId);
 
 		serviceContext.setAttribute("exporting", Boolean.TRUE);
 
@@ -235,24 +267,16 @@ public class LayoutExporter {
 
 		serviceContext.setAttribute("layoutSetBranchId", layoutSetBranchId);
 
+		ServiceContextThreadLocal.pushServiceContext(serviceContext);
+
 		if (exportIgnoreLastPublishDate) {
-			endDate = null;
-			startDate = null;
+			portletDataContext.setEndDate(null);
+			portletDataContext.setStartDate(null);
 		}
 
 		StopWatch stopWatch = new StopWatch();
 
 		stopWatch.start();
-
-		ZipWriter zipWriter = ZipWriterFactoryUtil.getZipWriter();
-
-		PortletDataContext portletDataContext =
-			PortletDataContextFactoryUtil.createExportPortletDataContext(
-				companyId, groupId, parameterMap, startDate, endDate,
-				zipWriter);
-
-		portletDataContext.setPortetDataContextListener(
-			new PortletDataContextListenerImpl(portletDataContext));
 
 		Document document = SAXReaderUtil.createDocument();
 
@@ -284,12 +308,14 @@ public class LayoutExporter {
 		headerElement.addAttribute(
 			"company-group-id",
 			String.valueOf(portletDataContext.getCompanyGroupId()));
-		headerElement.addAttribute("group-id", String.valueOf(groupId));
+		headerElement.addAttribute(
+			"group-id", String.valueOf(portletDataContext.getGroupId()));
 		headerElement.addAttribute(
 			"user-personal-site-group-id",
 			String.valueOf(portletDataContext.getUserPersonalSiteGroupId()));
 		headerElement.addAttribute(
-			"private-layout", String.valueOf(privateLayout));
+			"private-layout",
+			String.valueOf(portletDataContext.isPrivateLayout()));
 
 		Group group = layoutSet.getGroup();
 
@@ -368,11 +394,11 @@ public class LayoutExporter {
 			}
 		}
 
-		Map<String, Object[]> portletIds =
-			new LinkedHashMap<String, Object[]>();
+		Map<String, Object[]> portletIds = new LinkedHashMap<>();
 
 		List<Layout> layouts = LayoutLocalServiceUtil.getLayouts(
-			groupId, privateLayout);
+			portletDataContext.getGroupId(),
+			portletDataContext.isPrivateLayout());
 
 		if (group.isStagingGroup()) {
 			group = group.getLiveGroup();
@@ -401,8 +427,9 @@ public class LayoutExporter {
 			portletIds.put(
 				PortletPermissionUtil.getPrimaryKey(0, portletId),
 				new Object[] {
-					portletId, LayoutConstants.DEFAULT_PLID, groupId,
-					StringPool.BLANK, StringPool.BLANK
+					portletId, LayoutConstants.DEFAULT_PLID,
+					portletDataContext.getGroupId(), StringPool.BLANK,
+					StringPool.BLANK
 				});
 
 			if (!portlet.isScopeable()) {
@@ -412,8 +439,7 @@ public class LayoutExporter {
 			// Scoped data
 
 			for (Layout layout : layouts) {
-				if ((!ArrayUtil.contains(layoutIds, layout.getLayoutId()) &&
-					 ArrayUtil.isNotEmpty(layoutIds)) ||
+				if (!ArrayUtil.contains(layoutIds, layout.getLayoutId()) ||
 					!layout.isTypePortlet() || !layout.hasScopeGroup()) {
 
 					continue;
@@ -506,11 +532,12 @@ public class LayoutExporter {
 				layout = new LayoutImpl();
 
 				layout.setCompanyId(companyId);
-				layout.setGroupId(groupId);
+				layout.setGroupId(portletDataContext.getGroupId());
 			}
 
 			portletDataContext.setPlid(plid);
 			portletDataContext.setOldPlid(plid);
+			portletDataContext.setPortletId(portletId);
 			portletDataContext.setScopeGroupId(scopeGroupId);
 			portletDataContext.setScopeType(scopeType);
 			portletDataContext.setScopeLayoutUuid(scopeLayoutUuid);
@@ -519,21 +546,43 @@ public class LayoutExporter {
 				ExportImportHelperUtil.getExportPortletControlsMap(
 					companyId, portletId, parameterMap, type);
 
-			_portletExporter.exportPortlet(
-				portletDataContext, portletId, layout, portletsElement,
-				exportPermissions,
-				exportPortletControlsMap.get(
-					PortletDataHandlerKeys.PORTLET_ARCHIVED_SETUPS),
-				exportPortletControlsMap.get(
-					PortletDataHandlerKeys.PORTLET_DATA),
-				exportPortletControlsMap.get(
-					PortletDataHandlerKeys.PORTLET_SETUP),
-				exportPortletControlsMap.get(
-					PortletDataHandlerKeys.PORTLET_USER_PREFERENCES));
-			_portletExporter.exportService(
-				portletDataContext, portletId, servicesElement,
-				exportPortletControlsMap.get(
-					PortletDataHandlerKeys.PORTLET_SETUP));
+			try {
+				ExportImportLifecycleManager.fireExportImportLifecycleEvent(
+					ExportImportLifecycleConstants.EVENT_PORTLET_EXPORT_STARTED,
+					PortletDataContextFactoryUtil.clonePortletDataContext(
+						portletDataContext));
+
+				_portletExporter.exportPortlet(
+					portletDataContext, layout, portletsElement,
+					exportPermissions,
+					exportPortletControlsMap.get(
+						PortletDataHandlerKeys.PORTLET_ARCHIVED_SETUPS),
+					exportPortletControlsMap.get(
+						PortletDataHandlerKeys.PORTLET_DATA),
+					exportPortletControlsMap.get(
+						PortletDataHandlerKeys.PORTLET_SETUP),
+					exportPortletControlsMap.get(
+						PortletDataHandlerKeys.PORTLET_USER_PREFERENCES));
+				_portletExporter.exportService(
+					portletDataContext, servicesElement,
+					exportPortletControlsMap.get(
+						PortletDataHandlerKeys.PORTLET_SETUP));
+
+				ExportImportLifecycleManager.fireExportImportLifecycleEvent(
+					ExportImportLifecycleConstants.
+						EVENT_PORTLET_EXPORT_SUCCEEDED,
+					PortletDataContextFactoryUtil.clonePortletDataContext(
+						portletDataContext));
+			}
+			catch (Throwable t) {
+				ExportImportLifecycleManager.fireExportImportLifecycleEvent(
+					ExportImportLifecycleConstants.EVENT_PORTLET_EXPORT_FAILED,
+					PortletDataContextFactoryUtil.clonePortletDataContext(
+						portletDataContext),
+					t);
+
+				throw t;
+			}
 		}
 
 		portletDataContext.setScopeGroupId(previousScopeGroupId);
@@ -558,8 +607,22 @@ public class LayoutExporter {
 			_log.info("Exporting layouts takes " + stopWatch.getTime() + " ms");
 		}
 
+		boolean updateLastPublishDate = MapUtil.getBoolean(
+			portletDataContext.getParameterMap(),
+			PortletDataHandlerKeys.UPDATE_LAST_PUBLISH_DATE);
+
+		if (updateLastPublishDate) {
+			TransactionCommitCallbackRegistryUtil.registerCallback(
+				new UpdateLayoutSetLastPublishDateCallable(
+					portletDataContext.getDateRange(),
+					portletDataContext.getGroupId(),
+					portletDataContext.isPrivateLayout()));
+		}
+
 		portletDataContext.addZipEntry(
 			"/manifest.xml", document.formattedString());
+
+		ZipWriter zipWriter = portletDataContext.getZipWriter();
 
 		return zipWriter.getFile();
 	}
@@ -569,9 +632,7 @@ public class LayoutExporter {
 			Map<String, Object[]> portletIds, Layout layout)
 		throws Exception {
 
-		if (!ArrayUtil.contains(layoutIds, layout.getLayoutId()) &&
-			ArrayUtil.isNotEmpty(layoutIds)) {
-
+		if (!ArrayUtil.contains(layoutIds, layout.getLayoutId())) {
 			Element layoutElement = portletDataContext.getExportDataElement(
 				layout);
 
@@ -680,19 +741,85 @@ public class LayoutExporter {
 		}
 	}
 
+	protected PortletDataContext getPortletDataContext(
+			long groupId, boolean privateLayout,
+			Map<String, String[]> parameterMap, Date startDate, Date endDate)
+		throws PortalException {
+
+		Group group = GroupLocalServiceUtil.getGroup(groupId);
+
+		PortletDataContext portletDataContext =
+			PortletDataContextFactoryUtil.createExportPortletDataContext(
+				group.getCompanyId(), groupId, parameterMap, startDate, endDate,
+				ZipWriterFactoryUtil.getZipWriter());
+
+		portletDataContext.setPrivateLayout(privateLayout);
+
+		return portletDataContext;
+	}
+
 	private LayoutExporter() {
 		XStreamAliasRegistryUtil.register(LayoutImpl.class, "Layout");
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(LayoutExporter.class);
+	private static final Log _log = LogFactoryUtil.getLog(LayoutExporter.class);
 
-	private static LayoutExporter _instance = new LayoutExporter();
+	private static final LayoutExporter _instance = new LayoutExporter();
 
-	private DeletionSystemEventExporter _deletionSystemEventExporter =
+	private final DeletionSystemEventExporter _deletionSystemEventExporter =
 		DeletionSystemEventExporter.getInstance();
-	private PermissionExporter _permissionExporter =
+	private final PermissionExporter _permissionExporter =
 		PermissionExporter.getInstance();
-	private PortletExporter _portletExporter = PortletExporter.getInstance();
-	private ThemeExporter _themeExporter = ThemeExporter.getInstance();
+	private final PortletExporter _portletExporter =
+		PortletExporter.getInstance();
+	private final ThemeExporter _themeExporter = ThemeExporter.getInstance();
+
+	private class UpdateLayoutSetLastPublishDateCallable
+		implements Callable<Void> {
+
+		public UpdateLayoutSetLastPublishDateCallable(
+			DateRange dateRange, long groupId, boolean privateLayout) {
+
+			_dateRange = dateRange;
+			_groupId = groupId;
+			_privateLayout = privateLayout;
+		}
+
+		@Override
+		public Void call() throws PortalException {
+			Group group = GroupLocalServiceUtil.getGroup(_groupId);
+
+			if (group.isStagedRemotely()) {
+				return null;
+			}
+
+			Date endDate = null;
+
+			if (_dateRange != null) {
+				endDate = _dateRange.getEndDate();
+			}
+
+			if (ExportImportThreadLocal.isStagingInProcess() &&
+				group.hasStagingGroup()) {
+
+				Group stagingGroup = group.getStagingGroup();
+
+				ExportImportDateUtil.updateLastPublishDate(
+					stagingGroup.getGroupId(), _privateLayout, _dateRange,
+					endDate);
+			}
+			else {
+				ExportImportDateUtil.updateLastPublishDate(
+					_groupId, _privateLayout, _dateRange, endDate);
+			}
+
+			return null;
+		}
+
+		private final DateRange _dateRange;
+		private final long _groupId;
+		private final boolean _privateLayout;
+
+	}
 
 }

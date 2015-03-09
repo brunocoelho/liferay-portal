@@ -41,14 +41,20 @@ import com.liferay.portal.service.LayoutLocalServiceUtil;
 import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.PortalUtil;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.documentlibrary.service.DLAppLocalServiceUtil;
 import com.liferay.portlet.documentlibrary.util.DLUtil;
 import com.liferay.portlet.dynamicdatamapping.NoSuchTemplateException;
+import com.liferay.portlet.dynamicdatamapping.io.DDMFormValuesJSONDeserializerUtil;
+import com.liferay.portlet.dynamicdatamapping.model.DDMForm;
+import com.liferay.portlet.dynamicdatamapping.model.DDMFormField;
+import com.liferay.portlet.dynamicdatamapping.model.DDMFormLayout;
+import com.liferay.portlet.dynamicdatamapping.model.DDMFormLayoutColumn;
+import com.liferay.portlet.dynamicdatamapping.model.DDMFormLayoutRow;
 import com.liferay.portlet.dynamicdatamapping.model.DDMStructure;
 import com.liferay.portlet.dynamicdatamapping.model.DDMTemplate;
 import com.liferay.portlet.dynamicdatamapping.service.DDMStructureLocalServiceUtil;
 import com.liferay.portlet.dynamicdatamapping.service.DDMTemplateLocalServiceUtil;
+import com.liferay.portlet.dynamicdatamapping.storage.DDMFormValues;
 import com.liferay.portlet.dynamicdatamapping.storage.Field;
 import com.liferay.portlet.dynamicdatamapping.storage.FieldConstants;
 import com.liferay.portlet.dynamicdatamapping.storage.Fields;
@@ -96,20 +102,50 @@ public class DDMImpl implements DDM {
 
 	public static final String TYPE_DDM_LINK_TO_PAGE = "ddm-link-to-page";
 
+	public static final String TYPE_DDM_TEXT_HTML = "ddm-text-html";
+
 	public static final String TYPE_RADIO = "radio";
 
 	public static final String TYPE_SELECT = "select";
 
 	@Override
-	public DDMDisplay getDDMDisplay(ServiceContext serviceContext) {
-		String refererPortletName = (String)serviceContext.getAttribute(
-			"refererPortletName");
+	public DDMDisplay getDDMDisplay(long classNameId) {
+		List<DDMDisplay> ddmDisplays = DDMDisplayRegistryUtil.getDDMDisplays();
 
-		if (refererPortletName == null) {
-			refererPortletName = serviceContext.getPortletId();
+		for (DDMDisplay ddmDisplay : ddmDisplays) {
+			DDMPermissionHandler ddmPermissionHandler =
+				ddmDisplay.getDDMPermissionHandler();
+
+			if (ArrayUtil.contains(
+					ddmPermissionHandler.getResourceClassNameIds(),
+					classNameId)) {
+
+				return ddmDisplay;
+			}
 		}
 
-		return DDMDisplayRegistryUtil.getDDMDisplay(refererPortletName);
+		throw new IllegalArgumentException(
+			"No DDM display registered for " +
+				PortalUtil.getClassName(classNameId));
+	}
+
+	@Override
+	public DDMPermissionHandler getDDMPermissionHandler(long classNameId) {
+		DDMDisplay ddmDisplay = getDDMDisplay(classNameId);
+
+		return ddmDisplay.getDDMPermissionHandler();
+	}
+
+	@Override
+	public DDMFormLayout getDefaultDDMFormLayout(DDMForm ddmForm) {
+		DDMFormLayout ddmFormLayout = new DDMFormLayout();
+
+		for (DDMFormField ddmFormField : ddmForm.getDDMFormFields()) {
+			ddmFormLayout.addDDMFormLayoutRow(
+				getDefaultDDMFormLayoutRow(ddmFormField));
+		}
+
+		return ddmFormLayout;
 	}
 
 	@Override
@@ -231,7 +267,7 @@ public class DDMImpl implements DDM {
 				ddmStructure.getFieldProperty(fieldName, "localizable"), true);
 
 			if (!localizable && translating &&
-				!ddmStructure.isFieldPrivate(fieldName)) {
+				!fieldName.startsWith(StringPool.UNDERLINE)) {
 
 				continue;
 			}
@@ -256,6 +292,13 @@ public class DDMImpl implements DDM {
 	public Fields getFields(long ddmStructureId, ServiceContext serviceContext)
 		throws PortalException {
 
+		String serializedDDMFormValues = GetterUtil.getString(
+			serviceContext.getAttribute("ddmFormValues"));
+
+		if (Validator.isNotNull(serializedDDMFormValues)) {
+			return getFields(ddmStructureId, serializedDDMFormValues);
+		}
+
 		return getFields(ddmStructureId, 0, serviceContext);
 	}
 
@@ -264,6 +307,13 @@ public class DDMImpl implements DDM {
 			long ddmStructureId, String fieldNamespace,
 			ServiceContext serviceContext)
 		throws PortalException {
+
+		String serializedDDMFormValues = GetterUtil.getString(
+			serviceContext.getAttribute(fieldNamespace + "ddmFormValues"));
+
+		if (Validator.isNotNull(serializedDDMFormValues)) {
+			return getFields(ddmStructureId, serializedDDMFormValues);
+		}
 
 		return getFields(ddmStructureId, 0, fieldNamespace, serviceContext);
 	}
@@ -274,7 +324,7 @@ public class DDMImpl implements DDM {
 
 		DDMStructure ddmStructure = fieldsDisplayField.getDDMStructure();
 
-		List<String> fieldsDisplayValues = new ArrayList<String>();
+		List<String> fieldsDisplayValues = new ArrayList<>();
 
 		String[] values = splitFieldsDisplayValue(fieldsDisplayField);
 
@@ -433,7 +483,7 @@ public class DDMImpl implements DDM {
 
 		Locale defaultLocale = LocaleUtil.fromLanguageId(defaultLanguageId);
 
-		if (ddmStructure.isFieldPrivate(fieldName)) {
+		if (fieldName.startsWith(StringPool.UNDERLINE)) {
 			locale = LocaleUtil.getSiteDefault();
 
 			defaultLocale = LocaleUtil.getSiteDefault();
@@ -468,6 +518,18 @@ public class DDMImpl implements DDM {
 		}
 
 		return ddmStructure;
+	}
+
+	protected DDMFormLayoutRow getDefaultDDMFormLayoutRow(
+		DDMFormField ddmFormField) {
+
+		DDMFormLayoutRow ddmFormLayoutRow = new DDMFormLayoutRow();
+
+		ddmFormLayoutRow.addDDMFormLayoutColumn(
+			new DDMFormLayoutColumn(
+				ddmFormField.getName(), DDMFormLayoutColumn.FULL));
+
+		return ddmFormLayoutRow;
 	}
 
 	protected int getExistingFieldValueIndex(
@@ -509,9 +571,9 @@ public class DDMImpl implements DDM {
 				fieldNamespace + FIELDS_DISPLAY_NAME));
 
 		List<String> privateFieldNames = ListUtil.fromArray(
-			PropsValues.DYNAMIC_DATA_MAPPING_STRUCTURE_PRIVATE_FIELD_NAMES);
+			new String[] {FIELDS_DISPLAY_NAME});
 
-		List<String> fieldNames = new ArrayList<String>();
+		List<String> fieldNames = new ArrayList<>();
 
 		if ((fieldsDisplayValues.length == 0) ||
 			privateFieldNames.contains(fieldName)) {
@@ -532,6 +594,22 @@ public class DDMImpl implements DDM {
 		return fieldNames;
 	}
 
+	protected Fields getFields(
+			long ddmStructureId, String serializedDDMFormValues)
+		throws PortalException {
+
+		DDMStructure ddmStructure = DDMStructureLocalServiceUtil.getStructure(
+			ddmStructureId);
+
+		DDMFormValues ddmFormValues =
+			DDMFormValuesJSONDeserializerUtil.deserialize(
+				ddmStructure.getFullHierarchyDDMForm(),
+				serializedDDMFormValues);
+
+		return DDMFormValuesToFieldsConverterUtil.convert(
+			ddmStructure, ddmFormValues);
+	}
+
 	protected int getFieldValueIndex(
 		String[] fieldsDisplayValues, String fieldName, String instanceId) {
 
@@ -541,8 +619,10 @@ public class DDMImpl implements DDM {
 
 		int offset = 0;
 
+		String prefix = fieldName.concat(INSTANCE_SEPARATOR);
+
 		for (String fieldsDisplayValue : fieldsDisplayValues) {
-			if (fieldsDisplayValue.startsWith(fieldName)) {
+			if (fieldsDisplayValue.startsWith(prefix)) {
 				String fieldIstanceId = StringUtil.extractLast(
 					fieldsDisplayValue, DDMImpl.INSTANCE_SEPARATOR);
 
@@ -568,8 +648,7 @@ public class DDMImpl implements DDM {
 		List<String> fieldNames = getFieldNames(
 			fieldNamespace, fieldName, serviceContext);
 
-		List<Serializable> fieldValues = new ArrayList<Serializable>(
-			fieldNames.size());
+		List<Serializable> fieldValues = new ArrayList<>(fieldNames.size());
 
 		for (String fieldNameValue : fieldNames) {
 			Serializable fieldValue = serviceContext.getAttribute(
@@ -667,31 +746,30 @@ public class DDMImpl implements DDM {
 	protected String getImageFieldValue(
 		UploadRequest uploadRequest, String fieldNameValue) {
 
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
-
-		jsonObject.put("alt", StringPool.BLANK);
-		jsonObject.put("data", StringPool.BLANK);
-
 		try {
 			byte[] bytes = getImageBytes(uploadRequest, fieldNameValue);
 
 			if (ArrayUtil.isNotEmpty(bytes)) {
+				JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
+
 				jsonObject.put(
 					"alt", uploadRequest.getParameter(fieldNameValue + "Alt"));
 				jsonObject.put("data", UnicodeFormatter.bytesToHex(bytes));
+
+				return jsonObject.toString();
 			}
 		}
 		catch (Exception e) {
 		}
 
-		return jsonObject.toString();
+		return StringPool.BLANK;
 	}
 
 	protected Set<Locale> getMergedAvailableLocales(
 		Set<Locale> newFieldAvailableLocales,
 		Set<Locale> existingFieldAvailableLocales) {
 
-		Set<Locale> mergedAvailableLocales = new HashSet<Locale>();
+		Set<Locale> mergedAvailableLocales = new HashSet<>();
 
 		mergedAvailableLocales.addAll(newFieldAvailableLocales);
 		mergedAvailableLocales.addAll(existingFieldAvailableLocales);
@@ -709,7 +787,7 @@ public class DDMImpl implements DDM {
 			return newFieldValues;
 		}
 
-		List<Serializable> mergedLocaleValues = new ArrayList<Serializable>();
+		List<Serializable> mergedLocaleValues = new ArrayList<>();
 
 		int repetition = countFieldRepetition(
 			newFieldsDisplayValues, fieldName);

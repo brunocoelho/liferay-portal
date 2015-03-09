@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portlet.dynamicdatamapping.model.DDMForm;
 import com.liferay.portlet.dynamicdatamapping.model.LocalizedValue;
 import com.liferay.portlet.dynamicdatamapping.model.UnlocalizedValue;
 import com.liferay.portlet.dynamicdatamapping.model.Value;
@@ -41,14 +42,15 @@ public class DDMFormValuesJSONDeserializerImpl
 	implements DDMFormValuesJSONDeserializer {
 
 	@Override
-	public DDMFormValues deserialize(String serializedDDMFormValues)
+	public DDMFormValues deserialize(
+			DDMForm ddmForm, String serializedDDMFormValues)
 		throws PortalException {
 
 		try {
 			JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
 				serializedDDMFormValues);
 
-			DDMFormValues ddmFormValues = new DDMFormValues();
+			DDMFormValues ddmFormValues = new DDMFormValues(ddmForm);
 
 			setDDMFormValuesAvailableLocales(
 				jsonObject.getJSONArray("availableLanguageIds"), ddmFormValues);
@@ -66,7 +68,7 @@ public class DDMFormValuesJSONDeserializerImpl
 	}
 
 	protected Set<Locale> getAvailableLocales(JSONArray jsonArray) {
-		Set<Locale> availableLocales = new HashSet<Locale>();
+		Set<Locale> availableLocales = new HashSet<>();
 
 		for (int i = 0; i < jsonArray.length(); i++) {
 			Locale availableLocale = LocaleUtil.fromLanguageId(
@@ -95,8 +97,7 @@ public class DDMFormValuesJSONDeserializerImpl
 	protected List<DDMFormFieldValue> getDDMFormFieldValues(
 		JSONArray jsonArray) {
 
-		List<DDMFormFieldValue> ddmFormFieldValues =
-			new ArrayList<DDMFormFieldValue>();
+		List<DDMFormFieldValue> ddmFormFieldValues = new ArrayList<>();
 
 		for (int i = 0; i < jsonArray.length(); i++) {
 			DDMFormFieldValue ddmFormFieldValue = getDDMFormFieldValue(

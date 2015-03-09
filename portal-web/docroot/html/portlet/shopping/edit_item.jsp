@@ -25,7 +25,7 @@ long itemId = BeanParamUtil.getLong(item, request, "itemId");
 
 long categoryId = BeanParamUtil.getLong(item, request, "categoryId", ShoppingCategoryConstants.DEFAULT_PARENT_CATEGORY_ID);
 
-boolean hasInfiniteStock = BeanParamUtil.getBoolean(item, request, "hasInfiniteStock");
+boolean infiniteStock = BeanParamUtil.getBoolean(item, request, "infiniteStock");
 
 // Fields
 
@@ -81,7 +81,7 @@ int priceId = ParamUtil.getInteger(request, "priceId", -1);
 </portlet:actionURL>
 
 <aui:form action="<%= editItemURL %>" enctype="multipart/form-data" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + renderResponse.getNamespace() + "saveItem();" %>'>
-	<input name="scroll" type="hidden" value="" />
+	<aui:input name="scroll" type="hidden" />
 	<aui:input name="<%= Constants.CMD %>" type="hidden" />
 	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 	<aui:input name="categoryId" type="hidden" value="<%= categoryId %>" />
@@ -126,19 +126,41 @@ int priceId = ParamUtil.getInteger(request, "priceId", -1);
 			<div class="form-group">
 				<aui:input label="category" name="categoryName" type="resource" value="<%= categoryName %>" />
 
-				<portlet:renderURL var="selectCategoryURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-					<portlet:param name="struts_action" value="/shopping/select_category" />
-					<portlet:param name="categoryId" value="<%= String.valueOf(categoryId) %>" />
-				</portlet:renderURL>
+				<aui:button id="selectCategoryButton" value="select" />
 
 				<%
-				String taglibOpenCategoryWindow = "var categoryWindow = window.open('" + selectCategoryURL + "', 'category', 'directories=no,height=640,location=no,menubar=no,resizable=yes,scrollbars=yes,status=no,toolbar=no,width=680'); void(''); categoryWindow.focus();";
+				String taglibRemoveFolder = "Liferay.Util.removeEntitySelection('categoryId', 'categoryName', this, '" + renderResponse.getNamespace() + "');";
 				%>
 
-				<aui:button onClick="<%= taglibOpenCategoryWindow %>" value="select" />
-
-				<aui:button onClick='<%= renderResponse.getNamespace() + "removeCategory();" %>' value="remove" />
+				<aui:button onClick="<%= taglibRemoveFolder %>" value="remove" />
 			</div>
+
+			<aui:script sandbox="<%= true %>">
+				$('#<portlet:namespace />selectCategoryButton').on(
+					'click',
+					function(event) {
+						Liferay.Util.selectEntity(
+							{
+								dialog: {
+									constrain: true,
+									modal: true,
+									width: 680
+								},
+								id: '<portlet:namespace />selectCategory',
+								title: '<liferay-ui:message arguments="category" key="select-x" />',
+								uri: '<portlet:renderURL windowState="<%= LiferayWindowState.POP_UP.toString() %>"><portlet:param name="struts_action" value="/shopping/select_category" /><portlet:param name="categoryId" value="<%= String.valueOf(categoryId) %>" /></portlet:renderURL>'
+							},
+							function(event) {
+								var form = $(document.<portlet:namespace />fm);
+
+								form.fm('categoryId').val(event.categoryid);
+
+								form.fm('categoryName').val(_.unescape(event.name));
+							}
+						);
+					}
+				);
+			</aui:script>
 		</c:if>
 
 		<aui:input bean="<%= item %>" model="<%= ShoppingItem.class %>" name="sku" />
@@ -153,9 +175,9 @@ int priceId = ParamUtil.getInteger(request, "priceId", -1);
 
 		<aui:input bean="<%= item %>" model="<%= ShoppingItem.class %>" name="featured" />
 
-		<aui:input checked="<%= hasInfiniteStock %>" helpMessage="disable-stock-checking-help" label="disable-stock-checking" name="hasInfiniteStock" onChange='<%= renderResponse.getNamespace() + "toggleInfiniteStock(this);" %>' type="checkbox" />
+		<aui:input checked="<%= infiniteStock %>" helpMessage="disable-stock-checking-help" label="disable-stock-checking" name="infiniteStock" onChange='<%= renderResponse.getNamespace() + "toggleInfiniteStock(this);" %>' type="checkbox" />
 
-		<c:if test="<%= (fieldsCount == 0) && !hasInfiniteStock %>">
+		<c:if test="<%= (fieldsCount == 0) && !infiniteStock %>">
 			<aui:input bean="<%= item %>" model="<%= ShoppingItem.class %>" name="stockQuantity" />
 		</c:if>
 
@@ -228,13 +250,13 @@ int priceId = ParamUtil.getInteger(request, "priceId", -1);
 
 				<tr>
 					<td>
-						<aui:input cssClass="lfr-input-text-container" label="name" maxlength="<%= ModelHintsConstants.TEXT_MAX_LENGTH %>" name='<%= "fieldName" + i %>' style="width: 100px;" type="text" value="<%= fieldName %>" />
+						<aui:input cssClass="lfr-input-text-container" ignoreRequestValue="<%= true %>" label="name" maxlength="<%= ModelHintsConstants.TEXT_MAX_LENGTH %>" name='<%= "fieldName" + i %>' style="width: 100px;" type="text" value="<%= fieldName %>" />
 					</td>
 					<td>
-						<aui:input cssClass="lfr-input-text-container" label="values" name='<%= "fieldValues" + i %>' style="width: 100px;" type="text" value='<%= StringUtil.merge(fieldValues, ", ") %>' />
+						<aui:input cssClass="lfr-input-text-container" ignoreRequestValue="<%= true %>" label="values" name='<%= "fieldValues" + i %>' style="width: 100px;" type="text" value='<%= StringUtil.merge(fieldValues, ", ") %>' />
 					</td>
 					<td>
-						<aui:input cssClass="lfr-input-text-container" label="description" name='<%= "fieldDescription" + i %>' style="width: 150px;" type="text" value="<%= fieldDescription %>" />
+						<aui:input cssClass="lfr-input-text-container" ignoreRequestValue="<%= true %>" label="description" name='<%= "fieldDescription" + i %>' style="width: 150px;" type="text" value="<%= fieldDescription %>" />
 					</td>
 
 					<c:if test="<%= fieldsCount > 0 %>">
@@ -250,13 +272,13 @@ int priceId = ParamUtil.getInteger(request, "priceId", -1);
 
 			</table>
 
-			<c:if test="<%= (fieldsCount > 0) && !hasInfiniteStock %>">
+			<c:if test="<%= (fieldsCount > 0) && !infiniteStock %>">
 				<br />
 			</c:if>
 
 			<aui:button onClick='<%= renderResponse.getNamespace() + "addField();" %>' value="add-field" />
 
-			<c:if test="<%= (fieldsCount > 0) && !hasInfiniteStock %>">
+			<c:if test="<%= (fieldsCount > 0) && !infiniteStock %>">
 				<aui:button onClick='<%= renderResponse.getNamespace() + "editItemQuantities();" %>' value="edit-stock-quantity" />
 			</c:if>
 
@@ -294,7 +316,7 @@ int priceId = ParamUtil.getInteger(request, "priceId", -1);
 						}
 					}
 
-					double price = ParamUtil.getDouble(request, "price" + curPriceId);
+					double price = ParamUtil.getDouble(request, "price" + curPriceId, locale);
 					String priceParam = request.getParameter("price" + curPriceId);
 					if ((priceParam == null) || priceParam.equals(StringPool.NULL)) {
 						if (itemPrices[curPriceId] != null) {
@@ -302,7 +324,7 @@ int priceId = ParamUtil.getInteger(request, "priceId", -1);
 						}
 					}
 
-					double discount = ParamUtil.getDouble(request, "discount" + curPriceId) / 100;
+					double discount = ParamUtil.getDouble(request, "discount" + curPriceId, locale) / 100;
 					String discountParam = request.getParameter("discount" + curPriceId);
 					if ((discountParam == null) || discountParam.equals(StringPool.NULL)) {
 						if (itemPrices[curPriceId] != null) {
@@ -318,7 +340,7 @@ int priceId = ParamUtil.getInteger(request, "priceId", -1);
 						}
 					}
 
-					double shipping = ParamUtil.getDouble(request, "shipping" + curPriceId);
+					double shipping = ParamUtil.getDouble(request, "shipping" + curPriceId, locale);
 					String shippingParam = request.getParameter("shipping" + curPriceId);
 					if ((shippingParam == null) || shippingParam.equals(StringPool.NULL)) {
 						if (itemPrices[curPriceId] != null) {
@@ -378,19 +400,19 @@ int priceId = ParamUtil.getInteger(request, "priceId", -1);
 							<table class="lfr-table">
 							<tr>
 								<td>
-									<aui:input field="minQuantity" fieldParam='<%= "minQuantity" + i %>' label="min-qty" model="<%= ShoppingItemPrice.class %>" name="minQuantity" value="<%= String.valueOf(minQuantity) %>" />
+									<aui:input field="minQuantity" fieldParam='<%= "minQuantity" + i %>' ignoreRequestValue="<%= true %>" label="min-qty" model="<%= ShoppingItemPrice.class %>" name="minQuantity" value="<%= String.valueOf(minQuantity) %>" />
 								</td>
 								<td>
-									<aui:input field="maxQuantity" fieldParam='<%= "maxQuantity" + i %>' label="max-qty" model="<%= ShoppingItemPrice.class %>" name="maxQuantity" value="<%= String.valueOf(maxQuantity) %>" />
+									<aui:input field="maxQuantity" fieldParam='<%= "maxQuantity" + i %>' ignoreRequestValue="<%= true %>" label="max-qty" model="<%= ShoppingItemPrice.class %>" name="maxQuantity" value="<%= String.valueOf(maxQuantity) %>" />
 								</td>
 								<td>
-									<aui:input field="price" fieldParam='<%= "price" + i %>' format="<%= doubleFormat %>" label="price" model="<%= ShoppingItemPrice.class %>" name="price" value="<%= String.valueOf(price) %>" />
+									<aui:input field="price" fieldParam='<%= "price" + i %>' format="<%= doubleFormat %>" ignoreRequestValue="<%= true %>" label="price" model="<%= ShoppingItemPrice.class %>" name="price" value="<%= String.valueOf(price) %>" />
 								</td>
 								<td>
-									<aui:input field="discount" fieldParam='<%= "discount" + i %>' label="discount" model="<%= ShoppingItemPrice.class %>" name="discount" value="<%= percentFormat.format(discount) %>" />
+									<aui:input field="discount" fieldParam='<%= "discount" + i %>' ignoreRequestValue="<%= true %>" label="discount" model="<%= ShoppingItemPrice.class %>" name="discount" value="<%= String.valueOf(discount * 100) %>" />
 								</td>
 								<td>
-									<aui:input label="taxable" name='<%= "taxable" + i %>' param='<%= "taxable" + i %>' type="checkbox" value="<%= taxable %>" />
+									<aui:input ignoreRequestValue="<%= true %>" label="taxable" name='<%= "taxable" + i %>' param='<%= "taxable" + i %>' type="checkbox" value="<%= taxable %>" />
 								</td>
 							</tr>
 							</table>
@@ -398,16 +420,16 @@ int priceId = ParamUtil.getInteger(request, "priceId", -1);
 							<table class="lfr-table">
 							<tr>
 								<td>
-									<aui:input field="shipping" fieldParam='<%= "shipping" + i %>' format="<%= doubleFormat %>" model="<%= ShoppingItemPrice.class %>" name="shipping" value="<%= String.valueOf(shipping) %>" />
+									<aui:input field="shipping" fieldParam='<%= "shipping" + i %>' format="<%= doubleFormat %>" ignoreRequestValue="<%= true %>" model="<%= ShoppingItemPrice.class %>" name="shipping" value="<%= String.valueOf(shipping) %>" />
 								</td>
 								<td>
-									<aui:input label="use-shipping-formula" name='<%= "useShippingFormula" + i %>' type="checkbox" value="<%= useShippingFormula %>" />
+									<aui:input ignoreRequestValue="<%= true %>" label="use-shipping-formula" name='<%= "useShippingFormula" + i %>' type="checkbox" value="<%= useShippingFormula %>" />
 								</td>
 								<td>
-									<aui:input label="active" name='<%= "active" + i %>' type="checkbox" value="<%= active %>" />
+									<aui:input ignoreRequestValue="<%= true %>" label="active" name='<%= "active" + i %>' type="checkbox" value="<%= active %>" />
 								</td>
 								<td>
-									<aui:input checked="<%= defaultPrice %>" label="default" name="defaultPrice" onClick='<%= "document." + renderResponse.getNamespace() + "fm." + renderResponse.getNamespace() + "active" + i + ".checked = true;" %>' type="radio" value="<% i %>" />
+									<aui:input checked="<%= defaultPrice %>" ignoreRequestValue="<%= true %>" label="default" name="defaultPrice" onClick='<%= "document." + renderResponse.getNamespace() + "fm." + renderResponse.getNamespace() + "active" + i + ".checked = true;" %>' type="radio" value="<% i %>" />
 								</td>
 
 								<c:if test="<%= pricesCount > 1 %>">
@@ -520,77 +542,83 @@ int priceId = ParamUtil.getInteger(request, "priceId", -1);
 
 <aui:script>
 	function <portlet:namespace />addField() {
-		document.<portlet:namespace />fm.scroll.value = '<portlet:namespace />fields';
-		document.<portlet:namespace />fm.<portlet:namespace />fieldsCount.value = <%= fieldsCount + 1 %>;
+		var form = AUI.$(document.<portlet:namespace />fm);
 
-		submitForm(document.<portlet:namespace />fm);
+		form.fm('scroll').val('<portlet:namespace />fields');
+		form.fm('fieldsCount').val(<%= fieldsCount + 1 %>);
+
+		submitForm(form);
 	}
 
 	function <portlet:namespace />addPrice() {
-		document.<portlet:namespace />fm.scroll.value = '<portlet:namespace />prices';
-		document.<portlet:namespace />fm.<portlet:namespace />pricesCount.value = <%= pricesCount + 1 %>;
+		var form = AUI.$(document.<portlet:namespace />fm);
 
-		submitForm(document.<portlet:namespace />fm);
+		form.fm('scroll').val('<portlet:namespace />prices');
+		form.fm('pricesCount').val(<%= pricesCount + 1 %>);
+
+		submitForm(form);
 	}
 
 	function <portlet:namespace />deleteField(i) {
-		document.<portlet:namespace />fm.scroll.value = '<portlet:namespace />fields';
-		document.<portlet:namespace />fm.<portlet:namespace />fieldsCount.value = <%= fieldsCount - 1 %>;
-		document.<portlet:namespace />fm.<portlet:namespace />fieldId.value = i;
+		var form = AUI.$(document.<portlet:namespace />fm);
 
-		submitForm(document.<portlet:namespace />fm);
+		form.fm('scroll').val('<portlet:namespace />fields');
+		form.fm('fieldsCount').val(<%= fieldsCount - 1 %>);
+		form.fm('fieldId').val(i);
+
+		submitForm(form);
 	}
 
 	function <portlet:namespace />deletePrice(i) {
-		if (document.<portlet:namespace />fm.<portlet:namespace />defaultPrice[i].checked) {
+		var form = AUI.$(document.<portlet:namespace />fm);
+
+		if (form.fm('defaultPrice' + i).prop('checked')) {
 			alert('<%= UnicodeLanguageUtil.get(request, "you-cannot-delete-or-deactivate-a-default-price") %>');
 		}
-		else if (document.<portlet:namespace />fm.<portlet:namespace />pricesCount.value > 1) {
-			document.<portlet:namespace />fm.scroll.value = '<portlet:namespace />prices';
-			document.<portlet:namespace />fm.<portlet:namespace />pricesCount.value = <%= pricesCount - 1 %>;
-			document.<portlet:namespace />fm.<portlet:namespace />priceId.value = i;
+		else if (form.fm('pricesCount').val() > 1) {
+			form.fm('scroll').val('<portlet:namespace />prices');
+			form.fm('pricesCount').val(<%= pricesCount - 1 %>);
+			form.fm('priceId').val(i);
 
-			submitForm(document.<portlet:namespace />fm);
+			submitForm(form);
 		}
 	}
 
 	function <portlet:namespace />editItemQuantities() {
+		var form = AUI.$(document.<portlet:namespace />fm);
+
 		var itemQuantitiesURL = '<liferay-portlet:renderURL anchor="false" windowState="<%= LiferayWindowState.POP_UP.toString() %>"><portlet:param name="struts_action" value="/shopping/edit_item_quantities" /></liferay-portlet:renderURL>';
 
 		<%
 		for (int i = 0; i < fieldsCount; i++) {
 		%>
 
-			itemQuantitiesURL += '&<portlet:namespace />n<%= i %>=' + encodeURIComponent(document.<portlet:namespace />fm.<portlet:namespace />fieldName<%= i %>.value);
-			itemQuantitiesURL += '&<portlet:namespace />v<%= i %>=' + encodeURIComponent(document.<portlet:namespace />fm.<portlet:namespace />fieldValues<%= i %>.value);
+			itemQuantitiesURL += '&<portlet:namespace />n<%= i %>=' + encodeURIComponent(form.fm('fieldName<%= i %>').val());
+			itemQuantitiesURL += '&<portlet:namespace />v<%= i %>=' + encodeURIComponent(form.fm('fieldValues<%= i %>').val());
 
 		<%
 		}
 		%>
 
-		var itemQuantitiesWindow = window.open(itemQuantitiesURL, 'itemQuantities', 'directories=no,height=400,location=no,menubar=no,resizable=no,scrollbars=yes,status=no,toolbar=no,width=300');
-
-		void('');
-
-		itemQuantitiesWindow.focus();
-	}
-
-	function <portlet:namespace />removeCategory() {
-		document.<portlet:namespace />fm.<portlet:namespace />categoryId.value = '<%= ShoppingCategoryConstants.DEFAULT_PARENT_CATEGORY_ID %>';
-
-		document.getElementById('<portlet:namespace />categoryName').value = '';
+		Liferay.Util.openWindow(
+			{
+				dialog: {
+					width: 680
+				},
+				id: '<portlet:namespace />itemQuantities',
+				refreshWindow: window,
+				title: '<%= UnicodeLanguageUtil.get(request, "edit-stock-quantity") %>',
+				uri: itemQuantitiesURL
+			}
+		);
 	}
 
 	function <portlet:namespace />saveItem() {
-		document.<portlet:namespace />fm.<portlet:namespace /><%= Constants.CMD %>.value = '<%= (item == null) ? Constants.ADD : Constants.UPDATE %>';
+		var form = AUI.$(document.<portlet:namespace />fm);
 
-		submitForm(document.<portlet:namespace />fm);
-	}
+		form.fm('<%= Constants.CMD %>').val('<%= (item == null) ? Constants.ADD : Constants.UPDATE %>');
 
-	function <portlet:namespace />selectCategory(categoryId, categoryName) {
-		document.<portlet:namespace />fm.<portlet:namespace />categoryId.value = categoryId;
-
-		document.getElementById('<portlet:namespace />categoryName').value = categoryName;
+		submitForm(form);
 	}
 
 	function <portlet:namespace />toggleInfiniteStock(checkbox) {

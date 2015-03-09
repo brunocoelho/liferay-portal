@@ -67,6 +67,8 @@ public interface DDMTemplateLocalService extends BaseLocalService,
 	* @param classNameId the primary key of the class name for the template's
 	related model
 	* @param classPK the primary key of the template's related entity
+	* @param resourceClassNameId the primary key of the class name for
+	template's resource model
 	* @param nameMap the template's locales and localized names
 	* @param descriptionMap the template's locales and localized descriptions
 	* @param type the template's type. For more information, see {@link
@@ -85,6 +87,7 @@ public interface DDMTemplateLocalService extends BaseLocalService,
 	*/
 	public com.liferay.portlet.dynamicdatamapping.model.DDMTemplate addTemplate(
 		long userId, long groupId, long classNameId, long classPK,
+		long resourceClassNameId,
 		java.util.Map<java.util.Locale, java.lang.String> nameMap,
 		java.util.Map<java.util.Locale, java.lang.String> descriptionMap,
 		java.lang.String type, java.lang.String mode,
@@ -100,6 +103,8 @@ public interface DDMTemplateLocalService extends BaseLocalService,
 	* @param classNameId the primary key of the class name for the template's
 	related model
 	* @param classPK the primary key of the template's related entity
+	* @param resourceClassNameId the primary key of the class name for
+	template's resource model
 	* @param templateKey the unique string identifying the template
 	(optionally <code>null</code>)
 	* @param nameMap the template's locales and localized names
@@ -126,7 +131,7 @@ public interface DDMTemplateLocalService extends BaseLocalService,
 	*/
 	public com.liferay.portlet.dynamicdatamapping.model.DDMTemplate addTemplate(
 		long userId, long groupId, long classNameId, long classPK,
-		java.lang.String templateKey,
+		long resourceClassNameId, java.lang.String templateKey,
 		java.util.Map<java.util.Locale, java.lang.String> nameMap,
 		java.util.Map<java.util.Locale, java.lang.String> descriptionMap,
 		java.lang.String type, java.lang.String mode,
@@ -282,6 +287,9 @@ public interface DDMTemplateLocalService extends BaseLocalService,
 	public void deleteTemplates(long groupId)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
+	public void deleteTemplates(long groupId, long classNameId)
+		throws com.liferay.portal.kernel.exception.PortalException;
+
 	public com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery();
 
 	/**
@@ -328,20 +336,20 @@ public interface DDMTemplateLocalService extends BaseLocalService,
 		com.liferay.portal.kernel.util.OrderByComparator<T> orderByComparator);
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery);
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,
@@ -377,21 +385,24 @@ public interface DDMTemplateLocalService extends BaseLocalService,
 		long groupId, long classNameId, java.lang.String templateKey);
 
 	/**
-	* Returns the template matching the group and template key, optionally in
-	* the global scope.
+	* Returns the template matching the group and template key, optionally
+	* searching ancestor sites (that have sharing enabled) and global scoped
+	* sites.
 	*
 	* <p>
 	* This method first searches in the given group. If the template is still
 	* not found and <code>includeAncestorTemplates</code> is set to
-	* <code>true</code>, this method searches the global group.
+	* <code>true</code>, this method searches the group's ancestor sites (that
+	* have sharing enabled) and lastly searches global scoped sites.
 	* </p>
 	*
 	* @param groupId the primary key of the group
 	* @param classNameId the primary key of the class name for the template's
 	related model
 	* @param templateKey the unique string identifying the template
-	* @param includeAncestorTemplates whether to include the global scope in
-	the search
+	* @param includeAncestorTemplates whether to include ancestor sites (that
+	have sharing enabled) and include global scoped sites in the
+	search in the search
 	* @return the matching template, or <code>null</code> if a matching
 	template could not be found
 	* @throws PortalException if a portal exception occurred
@@ -452,10 +463,27 @@ public interface DDMTemplateLocalService extends BaseLocalService,
 	public java.util.List<com.liferay.portlet.dynamicdatamapping.model.DDMTemplate> getDDMTemplates(
 		int start, int end);
 
+	/**
+	* Returns all the d d m templates matching the UUID and company.
+	*
+	* @param uuid the UUID of the d d m templates
+	* @param companyId the primary key of the company
+	* @return the matching d d m templates, or an empty list if no matches were found
+	*/
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public java.util.List<com.liferay.portlet.dynamicdatamapping.model.DDMTemplate> getDDMTemplatesByUuidAndCompanyId(
 		java.lang.String uuid, long companyId);
 
+	/**
+	* Returns a range of d d m templates matching the UUID and company.
+	*
+	* @param uuid the UUID of the d d m templates
+	* @param companyId the primary key of the company
+	* @param start the lower bound of the range of d d m templates
+	* @param end the upper bound of the range of d d m templates (not inclusive)
+	* @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	* @return the range of matching d d m templates, or an empty list if no matches were found
+	*/
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public java.util.List<com.liferay.portlet.dynamicdatamapping.model.DDMTemplate> getDDMTemplatesByUuidAndCompanyId(
 		java.lang.String uuid, long companyId, int start, int end,
@@ -495,21 +523,24 @@ public interface DDMTemplateLocalService extends BaseLocalService,
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	/**
-	* Returns the template matching the group and template key, optionally in
-	* the parent sites.
+	* Returns the template matching the group and template key, optionally
+	* searching ancestor sites (that have sharing enabled) and global scoped
+	* sites.
 	*
 	* <p>
 	* This method first searches in the group. If the template is still not
 	* found and <code>includeAncestorTemplates</code> is set to
-	* <code>true</code>, this method searches the parent sites.
+	* <code>true</code>, this method searches the group's ancestor sites (that
+	* have sharing enabled) and lastly searches global scoped sites.
 	* </p>
 	*
 	* @param groupId the primary key of the group
 	* @param classNameId the primary key of the class name for the template's
 	related model
 	* @param templateKey the unique string identifying the template
-	* @param includeAncestorTemplates whether to include the parent sites in
-	the search
+	* @param includeAncestorTemplates whether to include ancestor sites (that
+	have sharing enabled) and include global scoped sites in the
+	search in the search
 	* @return the matching template
 	* @throws PortalException if a matching template could not be found
 	*/
@@ -734,6 +765,8 @@ public interface DDMTemplateLocalService extends BaseLocalService,
 	* @param classNameId the primary key of the class name for the template's
 	related model
 	* @param classPK the primary key of the template's related entity
+	* @param resourceClassNameId the primary key of the class name for
+	template's resource model
 	* @param keywords the keywords (space separated), which may occur in the
 	template's name or description (optionally <code>null</code>)
 	* @param type the template's type (optionally <code>null</code>). For more
@@ -752,8 +785,8 @@ public interface DDMTemplateLocalService extends BaseLocalService,
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public java.util.List<com.liferay.portlet.dynamicdatamapping.model.DDMTemplate> search(
 		long companyId, long groupId, long classNameId, long classPK,
-		java.lang.String keywords, java.lang.String type,
-		java.lang.String mode, int start, int end,
+		long resourceClassNameId, java.lang.String keywords,
+		java.lang.String type, java.lang.String mode, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator<com.liferay.portlet.dynamicdatamapping.model.DDMTemplate> orderByComparator);
 
 	/**
@@ -776,6 +809,8 @@ public interface DDMTemplateLocalService extends BaseLocalService,
 	* @param classNameId the primary key of the class name for the template's
 	related model
 	* @param classPK the primary key of the template's related entity
+	* @param resourceClassNameId the primary key of the class name for
+	template's resource model
 	* @param name the name keywords (optionally <code>null</code>)
 	* @param description the description keywords (optionally
 	<code>null</code>)
@@ -800,9 +835,10 @@ public interface DDMTemplateLocalService extends BaseLocalService,
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public java.util.List<com.liferay.portlet.dynamicdatamapping.model.DDMTemplate> search(
 		long companyId, long groupId, long classNameId, long classPK,
-		java.lang.String name, java.lang.String description,
-		java.lang.String type, java.lang.String mode,
-		java.lang.String language, boolean andOperator, int start, int end,
+		long resourceClassNameId, java.lang.String name,
+		java.lang.String description, java.lang.String type,
+		java.lang.String mode, java.lang.String language, boolean andOperator,
+		int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator<com.liferay.portlet.dynamicdatamapping.model.DDMTemplate> orderByComparator);
 
 	/**
@@ -825,6 +861,8 @@ public interface DDMTemplateLocalService extends BaseLocalService,
 	* @param classNameIds the primary keys of the entity's instances the
 	templates are related to
 	* @param classPKs the primary keys of the template's related entities
+	* @param resourceClassNameId the primary key of the class name for
+	template's resource model
 	* @param keywords the keywords (space separated), which may occur in the
 	template's name or description (optionally <code>null</code>)
 	* @param type the template's type (optionally <code>null</code>). For more
@@ -843,8 +881,8 @@ public interface DDMTemplateLocalService extends BaseLocalService,
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public java.util.List<com.liferay.portlet.dynamicdatamapping.model.DDMTemplate> search(
 		long companyId, long[] groupIds, long[] classNameIds, long[] classPKs,
-		java.lang.String keywords, java.lang.String type,
-		java.lang.String mode, int start, int end,
+		long resourceClassNameId, java.lang.String keywords,
+		java.lang.String type, java.lang.String mode, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator<com.liferay.portlet.dynamicdatamapping.model.DDMTemplate> orderByComparator);
 
 	/**
@@ -867,6 +905,8 @@ public interface DDMTemplateLocalService extends BaseLocalService,
 	* @param classNameIds the primary keys of the entity's instances the
 	templates are related to
 	* @param classPKs the primary keys of the template's related entities
+	* @param resourceClassNameId the primary key of the class name for
+	template's resource model
 	* @param name the name keywords (optionally <code>null</code>)
 	* @param description the description keywords (optionally
 	<code>null</code>)
@@ -891,9 +931,10 @@ public interface DDMTemplateLocalService extends BaseLocalService,
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public java.util.List<com.liferay.portlet.dynamicdatamapping.model.DDMTemplate> search(
 		long companyId, long[] groupIds, long[] classNameIds, long[] classPKs,
-		java.lang.String name, java.lang.String description,
-		java.lang.String type, java.lang.String mode,
-		java.lang.String language, boolean andOperator, int start, int end,
+		long resourceClassNameId, java.lang.String name,
+		java.lang.String description, java.lang.String type,
+		java.lang.String mode, java.lang.String language, boolean andOperator,
+		int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator<com.liferay.portlet.dynamicdatamapping.model.DDMTemplate> orderByComparator);
 
 	/**
@@ -906,6 +947,8 @@ public interface DDMTemplateLocalService extends BaseLocalService,
 	* @param classNameId the primary key of the class name for the template's
 	related model
 	* @param classPK the primary key of the template's related entity
+	* @param resourceClassNameId the primary key of the class name for
+	template's resource model
 	* @param keywords the keywords (space separated), which may occur in the
 	template's name or description (optionally <code>null</code>)
 	* @param type the template's type (optionally <code>null</code>). For more
@@ -918,8 +961,8 @@ public interface DDMTemplateLocalService extends BaseLocalService,
 	*/
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int searchCount(long companyId, long groupId, long classNameId,
-		long classPK, java.lang.String keywords, java.lang.String type,
-		java.lang.String mode);
+		long classPK, long resourceClassNameId, java.lang.String keywords,
+		java.lang.String type, java.lang.String mode);
 
 	/**
 	* Returns the number of templates matching the group, class name ID, class
@@ -930,6 +973,8 @@ public interface DDMTemplateLocalService extends BaseLocalService,
 	* @param classNameId the primary key of the class name for the template's
 	related model
 	* @param classPK the primary key of the template's related entity
+	* @param resourceClassNameId the primary key of the class name for
+	template's resource model
 	* @param name the name keywords (optionally <code>null</code>)
 	* @param description the description keywords (optionally
 	<code>null</code>)
@@ -948,9 +993,9 @@ public interface DDMTemplateLocalService extends BaseLocalService,
 	*/
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int searchCount(long companyId, long groupId, long classNameId,
-		long classPK, java.lang.String name, java.lang.String description,
-		java.lang.String type, java.lang.String mode,
-		java.lang.String language, boolean andOperator);
+		long classPK, long resourceClassNameId, java.lang.String name,
+		java.lang.String description, java.lang.String type,
+		java.lang.String mode, java.lang.String language, boolean andOperator);
 
 	/**
 	* Returns the number of templates matching the group IDs, class name IDs,
@@ -962,6 +1007,8 @@ public interface DDMTemplateLocalService extends BaseLocalService,
 	* @param classNameIds the primary keys of the entity's instance the
 	templates are related to
 	* @param classPKs the primary keys of the template's related entities
+	* @param resourceClassNameId the primary key of the class name for
+	template's resource model
 	* @param keywords the keywords (space separated), which may occur in the
 	template's name or description (optionally <code>null</code>)
 	* @param type the template's type (optionally <code>null</code>). For more
@@ -974,8 +1021,8 @@ public interface DDMTemplateLocalService extends BaseLocalService,
 	*/
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int searchCount(long companyId, long[] groupIds,
-		long[] classNameIds, long[] classPKs, java.lang.String keywords,
-		java.lang.String type, java.lang.String mode);
+		long[] classNameIds, long[] classPKs, long resourceClassNameId,
+		java.lang.String keywords, java.lang.String type, java.lang.String mode);
 
 	/**
 	* Returns the number of templates matching the group IDs, class name IDs,
@@ -986,6 +1033,8 @@ public interface DDMTemplateLocalService extends BaseLocalService,
 	* @param classNameIds the primary keys of the entity's instance the
 	templates are related to
 	* @param classPKs the primary keys of the template's related entities
+	* @param resourceClassNameId the primary key of the class name for
+	template's resource model
 	* @param name the name keywords (optionally <code>null</code>)
 	* @param description the description keywords (optionally
 	<code>null</code>)
@@ -1004,9 +1053,10 @@ public interface DDMTemplateLocalService extends BaseLocalService,
 	*/
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int searchCount(long companyId, long[] groupIds,
-		long[] classNameIds, long[] classPKs, java.lang.String name,
-		java.lang.String description, java.lang.String type,
-		java.lang.String mode, java.lang.String language, boolean andOperator);
+		long[] classNameIds, long[] classPKs, long resourceClassNameId,
+		java.lang.String name, java.lang.String description,
+		java.lang.String type, java.lang.String mode,
+		java.lang.String language, boolean andOperator);
 
 	/**
 	* Sets the Spring bean ID for this bean.

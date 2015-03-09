@@ -33,7 +33,7 @@ import org.apache.commons.fileupload.disk.DiskFileItem;
  */
 public class LiferayFileItem extends DiskFileItem implements FileItem {
 
-	public static final int THRESHOLD_SIZE = GetterUtil.getInteger(
+	public static final long THRESHOLD_SIZE = GetterUtil.getLong(
 		PropsUtil.get(LiferayFileItem.class.getName() + ".threshold.size"));
 
 	public LiferayFileItem(
@@ -154,7 +154,7 @@ public class LiferayFileItem extends DiskFileItem implements FileItem {
 
 	private String _encodedString;
 	private String _fileName;
-	private File _repository;
-	private int _sizeThreshold;
+	private final File _repository;
+	private final int _sizeThreshold;
 
 }

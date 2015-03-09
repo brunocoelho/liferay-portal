@@ -115,10 +115,7 @@ public class EditPublishConfigurationAction
 
 			SessionErrors.add(actionRequest, e.getClass());
 
-			String pagesRedirect = ParamUtil.getString(
-				actionRequest, "pagesRedirect");
-
-			sendRedirect(actionRequest, actionResponse, pagesRedirect);
+			sendRedirect(actionRequest, actionResponse);
 		}
 	}
 
@@ -273,7 +270,7 @@ public class EditPublishConfigurationAction
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		EditPublishConfigurationAction.class);
 
 }

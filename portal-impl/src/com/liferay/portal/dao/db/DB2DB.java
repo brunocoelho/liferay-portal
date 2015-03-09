@@ -200,7 +200,7 @@ public class DB2DB extends BaseDB {
 	}
 
 	protected void reorgTables(String[] templates) throws SQLException {
-		Set<String> tableNames = new HashSet<String>();
+		Set<String> tableNames = new HashSet<>();
 
 		for (String template : templates) {
 			if (template.startsWith("alter table")) {
@@ -228,56 +228,55 @@ public class DB2DB extends BaseDB {
 
 	@Override
 	protected String reword(String data) throws IOException {
-		UnsyncBufferedReader unsyncBufferedReader = new UnsyncBufferedReader(
-			new UnsyncStringReader(data));
+		try (UnsyncBufferedReader unsyncBufferedReader =
+				new UnsyncBufferedReader(new UnsyncStringReader(data))) {
 
-		StringBundler sb = new StringBundler();
+			StringBundler sb = new StringBundler();
 
-		String line = null;
+			String line = null;
 
-		while ((line = unsyncBufferedReader.readLine()) != null) {
-			if (line.startsWith(ALTER_COLUMN_NAME)) {
-				String[] template = buildColumnNameTokens(line);
+			while ((line = unsyncBufferedReader.readLine()) != null) {
+				if (line.startsWith(ALTER_COLUMN_NAME)) {
+					String[] template = buildColumnNameTokens(line);
 
-				line = StringUtil.replace(
-					"alter table @table@ add column @new-column@ @type@;\n",
-					REWORD_TEMPLATE, template);
+					line = StringUtil.replace(
+						"alter table @table@ add column @new-column@ @type@;\n",
+						REWORD_TEMPLATE, template);
 
-				line = line + StringUtil.replace(
-					"update @table@ set @new-column@ = @old-column@;\n",
-					REWORD_TEMPLATE, template);
+					line = line + StringUtil.replace(
+						"update @table@ set @new-column@ = @old-column@;\n",
+						REWORD_TEMPLATE, template);
 
-				line = line + StringUtil.replace(
-					"alter table @table@ drop column @old-column@",
-					REWORD_TEMPLATE, template);
+					line = line + StringUtil.replace(
+						"alter table @table@ drop column @old-column@",
+						REWORD_TEMPLATE, template);
+				}
+				else if (line.startsWith(ALTER_TABLE_NAME)) {
+					String[] template = buildTableNameTokens(line);
+
+					line = StringUtil.replace(
+						"alter table @old-table@ to @new-table@;",
+						RENAME_TABLE_TEMPLATE, template);
+				}
+				else if (line.contains(DROP_INDEX)) {
+					String[] tokens = StringUtil.split(line, ' ');
+
+					line = StringUtil.replace(
+						"drop index @index@;", "@index@", tokens[2]);
+				}
+
+				sb.append(line);
+				sb.append("\n");
 			}
-			else if (line.startsWith(ALTER_TABLE_NAME)) {
-				String[] template = buildTableNameTokens(line);
 
-				line = StringUtil.replace(
-					"alter table @old-table@ to @new-table@;",
-					RENAME_TABLE_TEMPLATE, template);
-			}
-			else if (line.contains(DROP_INDEX)) {
-				String[] tokens = StringUtil.split(line, ' ');
-
-				line = StringUtil.replace(
-					"drop index @index@;", "@index@", tokens[2]);
-			}
-
-			sb.append(line);
-			sb.append("\n");
+			return sb.toString();
 		}
-
-		unsyncBufferedReader.close();
-
-		return sb.toString();
 	}
 
 	private static final String[] _DB2 = {
 		"--", "1", "0", "'1970-01-01-00.00.00.000000'", "current timestamp",
 		" blob", " blob", " smallint", " timestamp", " double", " integer",
-		" bigint", " varchar(750)", " clob", " varchar",
+		" bigint", " varchar(4000)", " clob", " varchar",
 		" generated always as identity", "commit"
 	};
 
@@ -287,6 +286,6 @@ public class DB2DB extends BaseDB {
 
 	private static final boolean _SUPPORTS_SCROLLABLE_RESULTS = false;
 
-	private static DB2DB _instance = new DB2DB();
+	private static final DB2DB _instance = new DB2DB();
 
 }

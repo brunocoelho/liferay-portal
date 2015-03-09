@@ -18,11 +18,13 @@ import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
+ * @deprecated As of 7.0.0, replaced by {@link
+ *             UserEmailAddressException.MustNotBeReserved}
  */
+@Deprecated
 public class ReservedUserEmailAddressException extends PortalException {
 
 	public ReservedUserEmailAddressException() {
-		super();
 	}
 
 	public ReservedUserEmailAddressException(String msg) {

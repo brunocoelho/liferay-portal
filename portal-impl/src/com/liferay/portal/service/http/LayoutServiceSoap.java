@@ -261,9 +261,9 @@ public class LayoutServiceSoap {
 	* @param parentLayoutId the primary key of the parent layout (optionally
 	{@link
 	com.liferay.portal.model.LayoutConstants#DEFAULT_PARENT_LAYOUT_ID})
-	* @param name Map the layout's locales and localized names
-	* @param title Map the layout's locales and localized titles
-	* @param description Map the layout's locales and localized descriptions
+	* @param name the layout's locales and localized names
+	* @param title the layout's locales and localized titles
+	* @param description the layout's locales and localized descriptions
 	* @param type the layout's type (optionally {@link
 	com.liferay.portal.model.LayoutConstants#TYPE_PORTLET}). The
 	possible types can be found in {@link
@@ -355,11 +355,10 @@ public class LayoutServiceSoap {
 	}
 
 	public static void deleteTempFileEntry(long groupId,
-		java.lang.String fileName, java.lang.String tempFolderName)
+		java.lang.String folderName, java.lang.String fileName)
 		throws RemoteException {
 		try {
-			LayoutServiceUtil.deleteTempFileEntry(groupId, fileName,
-				tempFolderName);
+			LayoutServiceUtil.deleteTempFileEntry(groupId, folderName, fileName);
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -607,11 +606,11 @@ public class LayoutServiceSoap {
 		}
 	}
 
-	public static java.lang.String[] getTempFileEntryNames(long groupId,
-		java.lang.String tempFolderName) throws RemoteException {
+	public static java.lang.String[] getTempFileNames(long groupId,
+		java.lang.String folderName) throws RemoteException {
 		try {
-			java.lang.String[] returnValue = LayoutServiceUtil.getTempFileEntryNames(groupId,
-					tempFolderName);
+			java.lang.String[] returnValue = LayoutServiceUtil.getTempFileNames(groupId,
+					folderName);
 
 			return returnValue;
 		}
@@ -832,7 +831,7 @@ public class LayoutServiceSoap {
 	found, or if the layout parameters were invalid
 	* @deprecated As of 6.2.0, replaced by {@link #updateLayout(long, boolean,
 	long, long, Map, Map, Map, Map, Map, String, boolean, Map,
-	Boolean, byte[], ServiceContext)}
+	boolean, byte[], ServiceContext)}
 	*/
 	@Deprecated
 	public static com.liferay.portal.model.LayoutSoap updateLayout(

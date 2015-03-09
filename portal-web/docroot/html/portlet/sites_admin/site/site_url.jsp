@@ -17,7 +17,6 @@
 <%@ include file="/html/portlet/sites_admin/init.jsp" %>
 
 <%
-Group group = (Group)request.getAttribute("site.group");
 Group liveGroup = (Group)request.getAttribute("site.liveGroup");
 Long liveGroupId = (Long)request.getAttribute("site.liveGroupId");
 Group stagingGroup = (Group)request.getAttribute("site.stagingGroup");
@@ -105,7 +104,7 @@ String privateVirtualHost = ParamUtil.getString(request, "privateVirtualHost", B
 </liferay-ui:error>
 
 <aui:fieldset label="friendly-url">
-	<liferay-ui:message key="enter-the-friendly-url-that-will-be-used-by-both-public-and-private-pages" />
+	<liferay-ui:message key="enter-the-friendly-url-that-is-used-by-both-public-and-private-pages" />
 
 	<liferay-ui:message arguments="<%= new Object[] {themeDisplay.getPortalURL() + themeDisplay.getPathFriendlyURLPublic(), themeDisplay.getPortalURL() + themeDisplay.getPathFriendlyURLPrivateGroup()} %>" key="the-friendly-url-is-appended-to-x-for-public-pages-and-x-for-private-pages" translateArguments="<%= false %>" />
 
@@ -125,7 +124,7 @@ String privateVirtualHost = ParamUtil.getString(request, "privateVirtualHost", B
 </aui:fieldset>
 
 <aui:fieldset label="virtual-hosts">
-	<liferay-ui:message key="enter-the-public-and-private-virtual-host-that-will-map-to-the-public-and-private-friendly-url" />
+	<liferay-ui:message key="enter-the-public-and-private-virtual-host-that-map-to-the-public-and-private-friendly-url" />
 
 	<liferay-ui:message arguments="<%= new Object[] {HttpUtil.getProtocol(request), themeDisplay.getPortalURL() + themeDisplay.getPathFriendlyURLPublic()} %>" key="for-example,-if-the-public-virtual-host-is-www.helloworld.com-and-the-friendly-url-is-/helloworld" translateArguments="<%= false %>" />
 
@@ -165,33 +164,13 @@ String privateVirtualHost = ParamUtil.getString(request, "privateVirtualHost", B
 	</c:if>
 </aui:fieldset>
 
-<aui:fieldset label="documents-and-media">
-	<c:if test="<%= (group != null) && !group.isCompany() %>">
-
-		<%
-		UnicodeProperties typeSettingsProperties = null;
-
-		if (liveGroup != null) {
-			typeSettingsProperties = liveGroup.getTypeSettingsProperties();
-		}
-		else {
-			typeSettingsProperties = group.getTypeSettingsProperties();
-		}
-
-		boolean directoryIndexingEnabled = PropertiesParamUtil.getBoolean(typeSettingsProperties, request, "directoryIndexingEnabled");
-		%>
-
-		<aui:input helpMessage='<%= LanguageUtil.format(request, "directory-indexing-help", new Object[] {HtmlUtil.escape(group.getDescriptiveName(themeDisplay.getLocale())), themeDisplay.getPortalURL() + "/documents" + group.getFriendlyURL()}, false) %>' label="directory-indexing-enabled" name="TypeSettingsProperties--directoryIndexingEnabled--" type="checkbox" value="<%= directoryIndexingEnabled %>" />
-	</c:if>
-</aui:fieldset>
-
-<aui:script use="aui-base">
-	var friendlyURL = A.one('#<portlet:namespace />friendlyURL');
+<aui:script sandbox="<%= true %>">
+	var friendlyURL = $('#<portlet:namespace />friendlyURL');
 
 	friendlyURL.on(
-		['blur', 'change', 'focus'],
+		'change',
 		function(event) {
-			var value = A.Lang.trim(friendlyURL.val());
+			var value = friendlyURL.val().trim();
 
 			if (value == '/') {
 				value = '';
@@ -203,7 +182,7 @@ String privateVirtualHost = ParamUtil.getString(request, "privateVirtualHost", B
 						var str = '';
 
 						if (index == 0) {
-							str = '/' + match
+							str = '/' + match;
 						}
 
 						return str;

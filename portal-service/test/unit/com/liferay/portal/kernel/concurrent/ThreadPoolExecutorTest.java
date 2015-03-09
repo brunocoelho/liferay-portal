@@ -23,9 +23,11 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -263,7 +265,7 @@ public class ThreadPoolExecutorTest {
 
 		try {
 			Queue<MarkerBlockingJob> markerBlockingJobQueue =
-				new LinkedList<MarkerBlockingJob>();
+				new LinkedList<>();
 
 			Assert.assertEquals(0, threadPoolExecutor.getPoolSize());
 
@@ -368,7 +370,7 @@ public class ThreadPoolExecutorTest {
 
 		try {
 			Queue<MarkerBlockingJob> markerBlockingJobQueue =
-				new LinkedList<MarkerBlockingJob>();
+				new LinkedList<>();
 
 			Assert.assertEquals(0, threadPoolExecutor.getPoolSize());
 
@@ -933,8 +935,7 @@ public class ThreadPoolExecutorTest {
 		RecordUncaughtExceptionHandler recordUncaughtExceptionHandler =
 			threadFactory.getRecordUncaughtExceptionHandler();
 
-		Queue<MarkerBlockingJob> markerBlockingJobQueue =
-			new LinkedList<MarkerBlockingJob>();
+		Queue<MarkerBlockingJob> markerBlockingJobQueue = new LinkedList<>();
 
 		try {
 			for (int i = 0; i < 10; i++) {
@@ -1127,6 +1128,7 @@ public class ThreadPoolExecutorTest {
 		ReentrantLock takeLock = taskQueue.getTakeLock();
 
 		takeLock.lock();
+
 		try {
 			markerBlockingJob1.unBlock();
 
@@ -1206,6 +1208,37 @@ public class ThreadPoolExecutorTest {
 		Assert.assertTrue(threadPoolExecutor.isShutdown());
 		Assert.assertTrue(
 			threadPoolExecutor.awaitTermination(1, TimeUnit.SECONDS));
+	}
+
+	@Test
+	public void testTerminationNoticeableFuture() throws InterruptedException {
+		ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(
+			1, 1, TestUtil.KEEPALIVE_TIME, TimeUnit.MILLISECONDS, true, 1);
+
+		NoticeableFuture<Void> terminationNoticeableFutute =
+			threadPoolExecutor.terminationNoticeableFuture();
+
+		Assert.assertFalse(terminationNoticeableFutute.isDone());
+		Assert.assertFalse(terminationNoticeableFutute.cancel(true));
+
+		final AtomicBoolean marker = new AtomicBoolean();
+
+		terminationNoticeableFutute.addFutureListener(
+			new FutureListener<Void>() {
+
+				@Override
+				public void complete(Future<Void> future) {
+					marker.set(true);
+				}
+
+			});
+
+		threadPoolExecutor.shutdown();
+
+		Assert.assertTrue(
+			threadPoolExecutor.awaitTermination(1, TimeUnit.SECONDS));
+		Assert.assertTrue(terminationNoticeableFutute.isDone());
+		Assert.assertTrue(marker.get());
 	}
 
 }

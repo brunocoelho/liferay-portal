@@ -15,7 +15,6 @@
 package com.liferay.portal;
 
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.model.PasswordPolicy;
 import com.liferay.portal.model.User;
 
@@ -27,13 +26,14 @@ public class UserLockoutException extends PortalException {
 	/**
 	 * @deprecated As of 7.0.0, replaced by the inner classes
 	 */
+	@Deprecated
 	public UserLockoutException() {
-		super();
 	}
 
 	/**
 	 * @deprecated As of 7.0.0, replaced by the inner classes
 	 */
+	@Deprecated
 	public UserLockoutException(String msg) {
 		super(msg);
 	}
@@ -41,6 +41,7 @@ public class UserLockoutException extends PortalException {
 	/**
 	 * @deprecated As of 7.0.0, replaced by the inner classes
 	 */
+	@Deprecated
 	public UserLockoutException(String msg, Throwable cause) {
 		super(msg, cause);
 	}
@@ -48,6 +49,7 @@ public class UserLockoutException extends PortalException {
 	/**
 	 * @deprecated As of 7.0.0, replaced by the inner classes
 	 */
+	@Deprecated
 	public UserLockoutException(Throwable cause) {
 		super(cause);
 	}
@@ -60,20 +62,12 @@ public class UserLockoutException extends PortalException {
 					"User %s is locked out of a required LDAP server: %s",
 					fullUserDN, ldapMessage));
 
-			_fullUserDN = fullUserDN;
-			_ldapMessage = ldapMessage;
+			this.fullUserDN = fullUserDN;
+			this.ldapMessage = ldapMessage;
 		}
 
-		public String getFullUserDN() {
-			return _fullUserDN;
-		}
-
-		public String getLDAPMessage() {
-			return _ldapMessage;
-		}
-
-		private String _fullUserDN;
-		private String _ldapMessage;
+		public final String fullUserDN;
+		public final String ldapMessage;
 
 	}
 
@@ -86,24 +80,14 @@ public class UserLockoutException extends PortalException {
 						"be automatically unlocked on %s",
 					user.getUserId(), user.getLockoutDate(),
 					passwordPolicy.getName(),
-					DateUtil.newDate(
-						user.getLockoutDate().getTime() +
-							passwordPolicy.getLockoutDuration() * 1000)));
+					user.getUnlockDate(passwordPolicy)));
 
-			_user = user;
-			_passwordPolicy = passwordPolicy;
+			this.user = user;
+			this.passwordPolicy = passwordPolicy;
 		}
 
-		public PasswordPolicy getPasswordPolicy() {
-			return _passwordPolicy;
-		}
-
-		public User getUser() {
-			return _user;
-		}
-
-		private PasswordPolicy _passwordPolicy;
-		private User _user;
+		public final PasswordPolicy passwordPolicy;
+		public final User user;
 
 	}
 

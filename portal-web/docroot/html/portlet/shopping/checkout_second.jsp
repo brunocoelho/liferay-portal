@@ -24,7 +24,7 @@ Map<ShoppingCartItem, Integer> items = cart.getItems();
 ShoppingCoupon coupon = cart.getCoupon();
 
 int altShipping = cart.getAltShipping();
-String altShippingName = shoppingSettings.getAlternativeShippingName(altShipping);
+String altShippingName = shoppingGroupServiceSettings.getAlternativeShippingName(altShipping);
 
 ShoppingOrder order = ShoppingOrderLocalServiceUtil.getLatestOrder(user.getUserId(), themeDisplay.getScopeGroupId());
 %>
@@ -86,7 +86,7 @@ ShoppingOrder order = ShoppingOrderLocalServiceUtil.getLatestOrder(user.getUserI
 		</div>
 	</div>
 
-	<c:if test="<%= !shoppingSettings.usePayPal() %>">
+	<c:if test="<%= !shoppingGroupServiceSettings.usePayPal() %>">
 		<div class="well">
 			<h4><liferay-ui:message key="credit-card" /></h4>
 
@@ -298,16 +298,7 @@ ShoppingOrder order = ShoppingOrderLocalServiceUtil.getLatestOrder(user.getUserI
 				<td>
 					<%= currencyFormat.format(ShoppingUtil.calculateCouponDiscount(items, order.getBillingState(), coupon)) %>
 
-					<portlet:renderURL var="viewCouponURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-						<portlet:param name="struts_action" value="/shopping/view_coupon" />
-						<portlet:param name="couponId" value="<%= String.valueOf(coupon.getCouponId()) %>" />
-					</portlet:renderURL>
-
-					<%
-					String taglibOpenCouponWindow = "javascript:viewCouponWindow = window.open('" + viewCouponURL + "', 'viewCoupon', 'directories=no,height=200,location=no,menubar=no,resizable=no,scrollbars=yes,status=no,toolbar=no,width=280'); void(''); viewCouponWindow.focus();";
-					%>
-
-					<aui:a href="<%= taglibOpenCouponWindow %>" label='<%= "(" + coupon.getCouponId() + ")" %>' />
+					<aui:a href="javascript:;" label='<%= "(" + coupon.getCouponId() + ")" %>' onClick='<%= renderResponse.getNamespace() + "viewCoupon();" %>' />
 				</td>
 			</tr>
 		</c:if>
@@ -324,7 +315,7 @@ ShoppingOrder order = ShoppingOrderLocalServiceUtil.getLatestOrder(user.getUserI
 	</div>
 
 	<aui:button-row>
-		<aui:button type="submit" value='<%= shoppingSettings.usePayPal() ? "continue" : "finished" %>' />
+		<aui:button type="submit" value='<%= shoppingGroupServiceSettings.usePayPal() ? "continue" : "finished" %>' />
 
 		<portlet:actionURL var="checkoutURL">
 			<portlet:param name="struts_action" value="/shopping/checkout" />
@@ -334,3 +325,20 @@ ShoppingOrder order = ShoppingOrderLocalServiceUtil.getLatestOrder(user.getUserI
 		<aui:button href="<%= checkoutURL.toString() %>" value="back" />
 	</aui:button-row>
 </aui:form>
+
+<aui:script>
+	function <portlet:namespace />viewCoupon() {
+		Liferay.Util.openWindow(
+			{
+				dialog: {
+					height: 200,
+					width: 280
+				},
+				id: '<portlet:namespace />viewCoupon',
+				refreshWindow: window,
+				title: '<%= UnicodeLanguageUtil.get(request, "coupon") %>',
+				uri: '<portlet:renderURL windowState="<%= LiferayWindowState.POP_UP.toString() %>"><portlet:param name="struts_action" value="/shopping/view_coupon" /><portlet:param name="couponId" value="<%= String.valueOf(coupon.getCouponId()) %>" /></portlet:renderURL>'
+			}
+		);
+	}
+</aui:script>

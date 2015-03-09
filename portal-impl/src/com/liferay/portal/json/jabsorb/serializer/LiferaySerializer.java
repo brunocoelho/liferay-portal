@@ -107,7 +107,7 @@ public class LiferaySerializer extends AbstractSerializer {
 		String fieldName = null;
 
 		try {
-			Set<String> processedFieldNames = new HashSet<String>();
+			Set<String> processedFieldNames = new HashSet<>();
 
 			while (javaClass != null) {
 				Field[] declaredFields = javaClass.getDeclaredFields();
@@ -293,7 +293,7 @@ public class LiferaySerializer extends AbstractSerializer {
 		String fieldName = null;
 
 		try {
-			Set<String> processedFieldNames = new HashSet<String>();
+			Set<String> processedFieldNames = new HashSet<>();
 
 			while (javaClass != null) {
 				Field[] fields = javaClass.getDeclaredFields();
@@ -364,6 +364,7 @@ public class LiferaySerializer extends AbstractSerializer {
 	private static final Class<?>[] _SERIALIZABLE_CLASSES =
 		{Serializable.class};
 
-	private static Log _log = LogFactoryUtil.getLog(LiferaySerializer.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		LiferaySerializer.class);
 
 }

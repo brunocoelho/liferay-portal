@@ -15,13 +15,12 @@
 package com.liferay.portal.service.impl;
 
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskConstants;
-import com.liferay.portal.kernel.backgroundtask.BackgroundTaskExecutor;
+import com.liferay.portal.kernel.backgroundtask.BackgroundTaskLockHelperUtil;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskStatus;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskStatusRegistry;
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.cluster.Clusterable;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.messaging.MessageBusUtil;
@@ -33,7 +32,6 @@ import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.BackgroundTask;
-import com.liferay.portal.model.Lock;
 import com.liferay.portal.model.User;
 import com.liferay.portal.portletfilerepository.PortletFileRepositoryUtil;
 import com.liferay.portal.service.ServiceContext;
@@ -85,9 +83,7 @@ public class BackgroundTaskLocalServiceImpl
 		backgroundTask.setTaskExecutorClassName(taskExecutorClass.getName());
 
 		if (taskContextMap != null) {
-			String taskContext = JSONFactoryUtil.serialize(taskContextMap);
-
-			backgroundTask.setTaskContext(taskContext);
+			backgroundTask.setTaskContextMap(taskContextMap);
 		}
 
 		backgroundTask.setStatus(BackgroundTaskConstants.STATUS_NEW);
@@ -169,9 +165,7 @@ public class BackgroundTaskLocalServiceImpl
 		backgroundTask.setModifiedDate(serviceContext.getModifiedDate(now));
 
 		if (taskContextMap != null) {
-			String taskContext = JSONFactoryUtil.serialize(taskContextMap);
-
-			backgroundTask.setTaskContext(taskContext);
+			backgroundTask.setTaskContextMap(taskContextMap);
 		}
 
 		if ((status == BackgroundTaskConstants.STATUS_FAILED) ||
@@ -198,19 +192,7 @@ public class BackgroundTaskLocalServiceImpl
 		final BackgroundTask backgroundTask, final int status) {
 
 		try {
-			Lock lock = lockLocalService.getLock(
-				BackgroundTaskExecutor.class.getName(),
-				backgroundTask.getTaskExecutorClassName());
-
-			String owner =
-				backgroundTask.getName() + StringPool.POUND +
-					backgroundTask.getBackgroundTaskId();
-
-			if (owner.equals(lock.getOwner())) {
-				lockLocalService.unlock(
-					BackgroundTaskExecutor.class.getName(),
-					backgroundTask.getTaskExecutorClassName());
-			}
+			BackgroundTaskLockHelperUtil.unlockBackgroundTask(backgroundTask);
 		}
 		catch (Exception e) {
 		}

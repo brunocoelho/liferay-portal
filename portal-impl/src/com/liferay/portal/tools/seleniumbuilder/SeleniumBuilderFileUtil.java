@@ -96,7 +96,7 @@ public class SeleniumBuilderFileUtil {
 	public List<Element> getAllChildElements(
 		Element element, String elementName) {
 
-		List<Element> allChildElements = new ArrayList<Element>();
+		List<Element> allChildElements = new ArrayList<>();
 
 		List<Element> childElements = element.elements();
 
@@ -125,7 +125,7 @@ public class SeleniumBuilderFileUtil {
 	public Set<String> getChildElementAttributeValues(
 		Element element, String attributeName) {
 
-		Set<String> childElementAttributeValues = new TreeSet<String>();
+		Set<String> childElementAttributeValues = new TreeSet<>();
 
 		List<Element> childElements = element.elements();
 
@@ -144,6 +144,9 @@ public class SeleniumBuilderFileUtil {
 					childElementAttributeValues.add(
 						childElementName.substring(0, x));
 				}
+				else if (attributeName.equals("function")) {
+					childElementAttributeValues.add(childElementName);
+				}
 			}
 
 			childElementAttributeValues.addAll(
@@ -154,7 +157,7 @@ public class SeleniumBuilderFileUtil {
 	}
 
 	public Set<String> getChildElementLineNumbers(Element element) {
-		Set<String> childElementLineNumbers = new TreeSet<String>();
+		Set<String> childElementLineNumbers = new TreeSet<>();
 
 		List<Element> childElements = element.elements();
 
@@ -212,6 +215,10 @@ public class SeleniumBuilderFileUtil {
 		return _componentNames;
 	}
 
+	public String getDefaultCommandName(Element rootElement) {
+		return rootElement.attributeValue("default");
+	}
+
 	public String getHTMLFileName(String fileName) {
 		String javaFileName = getJavaFileName(fileName);
 
@@ -266,7 +273,7 @@ public class SeleniumBuilderFileUtil {
 
 			String pathTbody = content.substring(x, y + 8);
 
-			Map<String, Object> context = new HashMap<String, Object>();
+			Map<String, Object> context = new HashMap<>();
 
 			context.put("pathName", getName(fileName));
 			context.put("pathTbody", pathTbody);
@@ -455,6 +462,14 @@ public class SeleniumBuilderFileUtil {
 
 	protected void throwValidationException(
 		int errorCode, String fileName, Element element, String[] array,
+		String string1) {
+
+		throwValidationException(
+			errorCode, fileName, element, array, string1, null, null);
+	}
+
+	protected void throwValidationException(
+		int errorCode, String fileName, Element element, String[] array,
 		String string1, String string2, Exception e) {
 
 		String prefix = "Error " + errorCode + ": ";
@@ -543,6 +558,11 @@ public class SeleniumBuilderFileUtil {
 			throw new IllegalArgumentException(
 				prefix + "Description '" + string1 +
 					"' must end with a '.' in " + suffix);
+		}
+		else if (errorCode == 1018) {
+			throw new IllegalArgumentException(
+				prefix + "Missing (" + StringUtil.merge(array, "|") +
+					") in attribute " + string1 + " at " + suffix);
 		}
 		else if (errorCode == 2000) {
 			throw new IllegalArgumentException(
@@ -918,6 +938,34 @@ public class SeleniumBuilderFileUtil {
 					throwValidationException(
 						1005, fileName, executeElement, attributeName);
 				}
+
+				String attributeValue = attribute.getValue();
+
+				if (attributeName.equals("value1") &&
+					attributeValue.contains("move-file")) {
+
+					if (!attributeValue.contains("-Dfile") ||
+						!attributeValue.contains("-Dtofile")) {
+
+						throwValidationException(
+							1018, fileName, executeElement,
+							new String[] {"-Dfile", "-Dtofile"}, "value1");
+					}
+				}
+
+				if (attributeName.equals("value1") &&
+					attributeValue.contains("replace-file")) {
+
+					if (!attributeValue.contains("-Dfile") ||
+						!attributeValue.contains("-Dtoken") ||
+						!attributeValue.contains("-Dvalue")) {
+
+						throwValidationException(
+							1018, fileName, executeElement,
+							new String[] {"-Dfile", "-Dtoken", "-Dvalue"},
+							"value1");
+					}
+				}
 			}
 		}
 		else if (function != null) {
@@ -942,7 +990,8 @@ public class SeleniumBuilderFileUtil {
 				}
 
 				if (attributeName.equals("locator") ||
-					attributeName.equals("value")) {
+					attributeName.equals("value") ||
+					attributeName.startsWith("locator-key")) {
 
 					throwValidationException(
 						1005, fileName, executeElement, attributeName);
@@ -1134,8 +1183,7 @@ public class SeleniumBuilderFileUtil {
 		String[] allowedExecuteChildElementNames,
 		String[] allowedIfConditionElementNames) {
 
-		Map<String, Boolean> hasNeededAttributes =
-			new HashMap<String, Boolean>();
+		Map<String, Boolean> hasNeededAttributes = new HashMap<>();
 
 		for (String neededAttribute : neededAttributes) {
 			hasNeededAttributes.put(neededAttribute, false);
@@ -1186,6 +1234,12 @@ public class SeleniumBuilderFileUtil {
 			throwValidationException(1000, fileName, rootElement);
 		}
 
+		String defaultCommandName = getDefaultCommandName(rootElement);
+
+		if (defaultCommandName == null) {
+			throwValidationException(1003, fileName, rootElement, "default");
+		}
+
 		List<Element> elements = rootElement.elements();
 
 		if (elements.isEmpty()) {
@@ -1209,7 +1263,7 @@ public class SeleniumBuilderFileUtil {
 				validateBlockElement(
 					fileName, element, new String[] {"execute", "if"},
 					new String[] {"function", "selenium"}, new String[0],
-					new String[] {"condition"});
+					new String[] {"condition", "contains"});
 			}
 			else {
 				throwValidationException(1002, fileName, element, elementName);
@@ -1226,7 +1280,7 @@ public class SeleniumBuilderFileUtil {
 
 		List<Element> elements = ifElement.elements();
 
-		Set<String> elementNames = new HashSet<String>();
+		Set<String> elementNames = new HashSet<>();
 
 		boolean hasAllowedIfConditionElementNames = false;
 
@@ -1260,6 +1314,27 @@ public class SeleniumBuilderFileUtil {
 			else if (elementName.equals("contains")) {
 				validateSimpleElement(
 					fileName, element, new String[] {"string", "substring"});
+
+				if (fileName.endsWith(".function")) {
+					List<Attribute> attributes = element.attributes();
+
+					for (Attribute attribute : attributes) {
+						String attributeValue = attribute.getValue();
+
+						Matcher varElementMatcher = _varElementPattern.matcher(
+							attributeValue);
+
+						Matcher varElementFunctionMatcher =
+							_varElementFunctionPattern.matcher(attributeValue);
+
+						if (varElementMatcher.find() &&
+							!varElementFunctionMatcher.find()) {
+
+							throwValidationException(
+								1006, fileName, element, attribute.getName());
+						}
+					}
+				}
 			}
 			else if (elementName.equals("else")) {
 				if (ifElementName.equals("while")) {
@@ -1361,7 +1436,8 @@ public class SeleniumBuilderFileUtil {
 						"description", "echo", "execute", "fail", "for", "if",
 						"take-screenshot", "var", "while",
 					},
-					new String[] {"action", "macro"}, new String[] {"var"},
+					new String[] {"action", "function", "macro"},
+					new String[] {"var"},
 					new String[] {
 						"and", "condition", "contains", "equals", "isset",
 						"not", "or"
@@ -1452,9 +1528,9 @@ public class SeleniumBuilderFileUtil {
 
 		String locator = locatorElement.getText();
 
-		locator = locator.replace("${","");
-		locator = locator.replace("}","");
-		locator = locator.replace("/-/","/");
+		locator = locator.replace("${", "");
+		locator = locator.replace("}", "");
+		locator = locator.replace("/-/", "/");
 
 		if (locator.endsWith("/")) {
 			locator = locator.substring(0, locator.length() - 1);
@@ -1577,8 +1653,7 @@ public class SeleniumBuilderFileUtil {
 	protected void validateSimpleElement(
 		String fileName, Element element, String[] neededAttributes) {
 
-		Map<String, Boolean> hasNeededAttributes =
-			new HashMap<String, Boolean>();
+		Map<String, Boolean> hasNeededAttributes = new HashMap<>();
 
 		for (String neededAttribute : neededAttributes) {
 			hasNeededAttributes.put(neededAttribute, false);
@@ -1702,7 +1777,7 @@ public class SeleniumBuilderFileUtil {
 						"description", "echo", "execute", "fail", "for", "if",
 						"property", "take-screenshot", "var", "while"
 					},
-					new String[] {"action", "macro", "test-case"},
+					new String[] {"action", "function", "macro", "test-case"},
 					new String[] {"var"},
 					new String[] {
 						"and", "condition", "contains", "equals", "isset",
@@ -1732,7 +1807,7 @@ public class SeleniumBuilderFileUtil {
 						"description", "echo", "execute", "fail", "if",
 						"take-screenshot", "var", "while"
 					},
-					new String[] {"action", "macro", "test-case"},
+					new String[] {"action", "function", "macro", "test-case"},
 					new String[] {"var"},
 					new String[] {
 						"and", "condition", "contains", "equals", "isset",
@@ -1820,7 +1895,7 @@ public class SeleniumBuilderFileUtil {
 	protected void validateVarElement(String fileName, Element element) {
 		List<Attribute> attributes = element.attributes();
 
-		Map<String, String> attributeMap = new HashMap<String, String>();
+		Map<String, String> attributeMap = new HashMap<>();
 
 		for (Attribute attribute : attributes) {
 			String attributeName = attribute.getName();
@@ -1872,11 +1947,11 @@ public class SeleniumBuilderFileUtil {
 		}
 		else if (attributeMap.containsKey("locator-key")) {
 			throwValidationException(
-				1004, fileName, element, new String [] {"path"});
+				1004, fileName, element, new String[] {"path"});
 		}
 		else if (attributeMap.containsKey("path")) {
 			throwValidationException(
-				1004, fileName, element, new String [] {"locator-key"});
+				1004, fileName, element, new String[] {"locator-key"});
 		}
 
 		String varText = element.getText();
@@ -1895,7 +1970,8 @@ public class SeleniumBuilderFileUtil {
 
 			if (!methodValue.startsWith("MathUtil") &&
 				!methodValue.startsWith("selenium") &&
-				!methodValue.startsWith("StringUtil")) {
+				!methodValue.startsWith("StringUtil") &&
+				!methodValue.startsWith("TestPropsUtil")) {
 
 				throwValidationException(1005, fileName, element, "method");
 			}
@@ -1917,7 +1993,7 @@ public class SeleniumBuilderFileUtil {
 				!attributeMap.containsKey("pattern")) {
 
 				throwValidationException(
-					1004, fileName, element, new String [] {"value"});
+					1004, fileName, element, new String[] {"value"});
 			}
 		}
 		else {
@@ -1968,24 +2044,25 @@ public class SeleniumBuilderFileUtil {
 	private static final String _TPL_ROOT =
 		"com/liferay/portal/tools/seleniumbuilder/dependencies/";
 
-	private static List<String> _allowedNullAttributes = ListUtil.fromArray(
-		new String[] {
-			"arg1", "arg2", "delimiter", "message", "string", "substring",
-			"value"
+	private static final List<String> _allowedNullAttributes =
+		ListUtil.fromArray(
+			new String[] {
+				"arg1", "arg2", "delimiter", "message", "string", "substring",
+				"value"
 		});
-	private static List<String> _allowedVarAttributes = ListUtil.fromArray(
-		new String[] {
-			"attribute", "group", "input", "line-number", "locator",
-			"locator-key", "method", "name", "path", "pattern",
-			"property-value", "value"
+	private static final List<String> _allowedVarAttributes =
+		ListUtil.fromArray(
+			new String[] {
+				"attribute", "group", "input", "line-number", "locator",
+				"locator-key", "method", "name", "path", "pattern",
+				"property-value", "value"
 		});
-	private static List<String> _componentNames;
-	private static List<String> _methodNames = ListUtil.fromArray(
+	private static final List<String> _methodNames = ListUtil.fromArray(
 		new String[] {
 			"getFirstNumber", "getIPAddress", "increment", "length",
 			"lowercase", "replace", "uppercase"
 		});
-	private static List<String> _reservedTags = ListUtil.fromArray(
+	private static final List<String> _reservedTags = ListUtil.fromArray(
 		new String[] {
 			"and", "case", "command", "condition", "contains", "default",
 			"definition", "delimiter", "description", "echo", "else", "elseif",
@@ -1993,19 +2070,23 @@ public class SeleniumBuilderFileUtil {
 			"property", "set-up", "take-screenshot", "td", "tear-down", "then",
 			"tr", "while", "var"
 		});
-	private static List<String> _testcaseAvailablePropertyNames;
-	private static List<String> _testrayAvailableComponentNames;
 
-	private String _baseDirName;
-	private Pattern _pathTrElementStatementPattern = Pattern.compile(
+	private final String _baseDirName;
+	private final List<String> _componentNames;
+	private final Pattern _pathTrElementStatementPattern = Pattern.compile(
 		"[A-Z0-9].*");
-	private Pattern _pathTrElementWordPattern1 = Pattern.compile(
+	private final Pattern _pathTrElementWordPattern1 = Pattern.compile(
 		"[A-Za-z0-9\\-]+");
-	private Pattern _pathTrElementWordPattern2 = Pattern.compile(
+	private final Pattern _pathTrElementWordPattern2 = Pattern.compile(
 		"[A-Z0-9][A-Za-z0-9\\-]*");
-	private Pattern _tagPattern = Pattern.compile("<[a-z\\-]+");
-	private Pattern _varElementPattern = Pattern.compile("\\$\\{([^\\}]*?)\\}");
-	private Pattern _varElementStatementPattern = Pattern.compile(
+	private final Pattern _tagPattern = Pattern.compile("<[a-z\\-]+");
+	private final List<String> _testcaseAvailablePropertyNames;
+	private final List<String> _testrayAvailableComponentNames;
+	private final Pattern _varElementFunctionPattern = Pattern.compile(
+		"\\$\\{(locator|value)[0-9]+\\}");
+	private final Pattern _varElementPattern = Pattern.compile(
+		"\\$\\{([^\\}]*?)\\}");
+	private final Pattern _varElementStatementPattern = Pattern.compile(
 		"(.*)\\?(.*)\\(([^\\)]*?)\\)");
 
 }

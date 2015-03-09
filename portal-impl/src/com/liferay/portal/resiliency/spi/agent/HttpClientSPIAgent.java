@@ -67,7 +67,7 @@ public class HttpClientSPIAgent implements SPIAgent {
 		socketAddress = new InetSocketAddress(
 			InetAddressUtil.getLoopbackInetAddress(),
 			spiConfiguration.getConnectorPort());
-		socketBlockingQueue = new ArrayBlockingQueue<Socket>(
+		socketBlockingQueue = new ArrayBlockingQueue<>(
 			PropsValues.PORTAL_RESILIENCY_SPI_AGENT_CLIENT_POOL_MAX_SIZE);
 
 		String httpServletRequestContentString =
@@ -341,6 +341,7 @@ public class HttpClientSPIAgent implements SPIAgent {
 	protected final SocketAddress socketAddress;
 	protected final BlockingQueue<Socket> socketBlockingQueue;
 
-	private static Log _log = LogFactoryUtil.getLog(HttpClientSPIAgent.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		HttpClientSPIAgent.class);
 
 }

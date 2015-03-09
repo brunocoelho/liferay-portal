@@ -14,64 +14,58 @@
 
 package com.liferay.portal.search.lucene;
 
-import com.liferay.portal.cluster.AddressImpl;
-import com.liferay.portal.kernel.cluster.Address;
 import com.liferay.portal.kernel.cluster.ClusterEvent;
 import com.liferay.portal.kernel.cluster.ClusterEventListener;
 import com.liferay.portal.kernel.cluster.ClusterExecutor;
 import com.liferay.portal.kernel.cluster.ClusterExecutorUtil;
-import com.liferay.portal.kernel.cluster.ClusterMessageType;
 import com.liferay.portal.kernel.cluster.ClusterNode;
 import com.liferay.portal.kernel.cluster.ClusterNodeResponse;
 import com.liferay.portal.kernel.cluster.ClusterRequest;
-import com.liferay.portal.kernel.cluster.ClusterResponseCallback;
 import com.liferay.portal.kernel.cluster.FutureClusterResponses;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
+import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.portal.kernel.test.CaptureHandler;
 import com.liferay.portal.kernel.test.JDKLoggerTestUtil;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.rule.NewEnv;
+import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.MethodHandler;
 import com.liferay.portal.kernel.util.MethodKey;
-import com.liferay.portal.kernel.util.SocketUtil;
+import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.StreamUtil;
-import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.security.auth.TransientTokenUtil;
-import com.liferay.portal.test.AdviseWith;
-import com.liferay.portal.test.runners.AspectJMockingNewClassLoaderJUnitTestRunner;
+import com.liferay.portal.test.rule.AdviseWith;
+import com.liferay.portal.test.rule.AspectJNewEnvTestRule;
 import com.liferay.portal.util.PortalImpl;
 import com.liferay.portal.util.PortalInstances;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.uuid.PortalUUIDImpl;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.io.OutputStream;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-
-import java.nio.channels.ServerSocketChannel;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLStreamHandler;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -85,15 +79,16 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Tina Tian
  */
-@RunWith(AspectJMockingNewClassLoaderJUnitTestRunner.class)
+@NewEnv(type = NewEnv.Type.CLASSLOADER)
 public class LuceneHelperImplTest {
 
 	@Before
@@ -142,7 +137,13 @@ public class LuceneHelperImplTest {
 
 		luceneHelperUtil.setLuceneHelper(_luceneHelperImpl);
 
-		_clusterNode = new ClusterNode(_CLUSER_NODE_ID, _localhostInetAddress);
+		_captureHandler = JDKLoggerTestUtil.configureJDKLogger(
+			LuceneHelperImpl.class.getName(), Level.ALL);
+	}
+
+	@After
+	public void tearDown() {
+		_captureHandler.close();
 	}
 
 	@AdviseWith(
@@ -152,350 +153,211 @@ public class LuceneHelperImplTest {
 		}
 	)
 	@Test
-	public void testLoadIndexClusterEventListener1() throws Exception {
-		MockServer mockServer = new MockServer();
+	public void testGetBootupClusterNodeObjectValuePair() throws Exception {
+		_mockClusterExecutor.setNodeNumber(1);
+		_mockClusterExecutor.setPort(1);
+		_mockClusterExecutor.setPortalInetAddress(_localhostInetAddress);
 
-		mockServer.start();
+		Method method = LuceneHelperImpl.class.getDeclaredMethod(
+			"_getBootupClusterNodeObjectValuePair", String.class);
 
-		InetAddress inetAddress = mockServer.getInetAddress();
-		int port = mockServer.getPort();
+		method.setAccessible(true);
+
+		Object object = method.invoke(
+			_luceneHelperImpl, _mockClusterExecutor.getLocalClusterNodeId());
+
+		Assert.assertNotNull(object);
+
+		ObjectValuePair<String, URL> result =
+			(ObjectValuePair<String, URL>)object;
+
+		URL url = result.getValue();
+
+		Assert.assertEquals(
+			_localhostInetAddress.getHostAddress(), url.getHost());
+		Assert.assertEquals(1, url.getPort());
+	}
+
+	@AdviseWith(
+		adviceClasses = {
+			DisableIndexOnStartUpAdvice.class, EnableClusterLinkAdvice.class,
+			EnableLuceneReplicateWriteAdvice.class,
+			SkipGetBootupClusterNodeObjectValuePairAdvice.class
+		}
+	)
+	@Test
+	public void testGetLoadIndexesInputStreamFromCluster() throws Exception {
+		URL url = new URL("http://127.0.0.1:80/lucene/dump");
+
+		final MockURLConnection mockURLConnection = new MockURLConnection(url);
+
+		ReflectionTestUtil.setFieldValue(
+			url, "handler",
+			new URLStreamHandler() {
+
+				@Override
+				protected URLConnection openConnection(URL url) {
+					return mockURLConnection;
+				}
+
+			});
+
+		SkipGetBootupClusterNodeObjectValuePairAdvice.setURL(url);
+
+		InputStream inputStream =
+			_luceneHelperImpl.getLoadIndexesInputStreamFromCluster(
+				_COMPANY_ID, StringPool.BLANK);
+
+		Assert.assertNotNull(inputStream);
+
+		_mockIndexAccessor.loadIndex(inputStream);
+
+		mockURLConnection.assertOutputContent(
+			"transientToken=&companyId=" + _COMPANY_ID);
+
+		Assert.assertArrayEquals(
+			_RESPONSE_MESSAGE, _mockIndexAccessor.getResponseMessage());
+	}
+
+	@AdviseWith(
+		adviceClasses = {
+			DisableIndexOnStartUpAdvice.class, EnableClusterLinkAdvice.class,
+			EnableLuceneReplicateWriteAdvice.class,
+			LuceneClusterUtilAdvice.class
+		}
+	)
+	@Test
+	public void testLoadIndexClusterEventListener() throws Exception {
+
+		// Test 1, 2 nodes in cluster
+
+		ClusterNode newClusterNode = new ClusterNode(
+			"12345", _localhostInetAddress);
+
+		newClusterNode.setPortalProtocol(Http.HTTP);
+
+		ClusterEvent clusterEvent = ClusterEvent.join(newClusterNode);
+
+		_mockClusterExecutor.reset();
 
 		_mockClusterExecutor.setNodeNumber(2);
 
-		_mockClusterExecutor.setPort(port);
-		_mockClusterExecutor.setPortalInetAddress(inetAddress);
+		_fireClusterEventListeners(clusterEvent);
 
-		_clusterNode.setPortalInetSocketAddress(
-			new InetSocketAddress(inetAddress, port));
+		Assert.assertEquals(
+			_COMPANY_ID, LuceneClusterUtilAdvice.getCompanyId());
 
-		CaptureHandler captureHandler = JDKLoggerTestUtil.configureJDKLogger(
-			LuceneHelperImpl.class.getName(), Level.OFF);
+		// Test 2, more than 2 nodes in cluster with debug enabled
 
-		try {
-			ClusterEvent clusterEvent = ClusterEvent.join(_clusterNode);
+		_mockClusterExecutor.reset();
 
-			_fireClusterEventListeners(clusterEvent);
-
-			byte[] responseMessage = _mockIndexAccessor.getResponseMessage();
-
-			Assert.assertArrayEquals(_RESPONSE_MESSAGE, responseMessage);
-		}
-		finally {
-			captureHandler.close();
-		}
-
-		mockServer.join();
-	}
-
-	@AdviseWith(
-		adviceClasses = {
-			DisableIndexOnStartUpAdvice.class, EnableClusterLinkAdvice.class,
-			EnableLuceneReplicateWriteAdvice.class
-		}
-	)
-	@Test
-	public void testLoadIndexClusterEventListener2() {
-		_mockClusterExecutor.setNodeNumber(2);
-		_mockClusterExecutor.setThrowException(true);
-
-		CaptureHandler captureHandler = JDKLoggerTestUtil.configureJDKLogger(
-			LuceneHelperImpl.class.getName(), Level.SEVERE);
-
-		try {
-			List<LogRecord> logRecords = captureHandler.getLogRecords();
-
-			ClusterEvent clusterEvent = ClusterEvent.join(_clusterNode);
-
-			_fireClusterEventListeners(clusterEvent);
-
-			Assert.assertEquals(1, logRecords.size());
-
-			_assertLogger(
-				logRecords.get(0),
-				"Unable to load indexes for company " + _COMPANY_ID,
-				SystemException.class);
-		}
-		finally {
-			captureHandler.close();
-		}
-	}
-
-	@AdviseWith(
-		adviceClasses = {
-			DisableIndexOnStartUpAdvice.class, EnableClusterLinkAdvice.class,
-			EnableLuceneReplicateWriteAdvice.class
-		}
-	)
-	@Test
-	public void testLoadIndexClusterEventListener3() {
 		_mockClusterExecutor.setNodeNumber(3);
 
-		CaptureHandler captureHandler = null;
+		List<LogRecord> logRecords = _captureHandler.resetLogLevel(Level.FINE);
 
-		try {
+		_fireClusterEventListeners(clusterEvent);
 
-		// Debug is enabled
+		Assert.assertEquals(1, logRecords.size());
 
-			captureHandler = JDKLoggerTestUtil.configureJDKLogger(
-				LuceneHelperImpl.class.getName(), Level.FINE);
+		_assertLogger(
+			logRecords.get(0),
+			"Number of original cluster members is greater than one", null);
 
-			List<LogRecord> logRecords = captureHandler.getLogRecords();
+		Assert.assertNotEquals(
+			_COMPANY_ID, LuceneClusterUtilAdvice.getCompanyId());
 
-			ClusterEvent clusterEvent = ClusterEvent.join(_clusterNode);
+		// Test 3, more than 2 nodes in cluster with debug disabled
 
-			_fireClusterEventListeners(clusterEvent);
+		_mockClusterExecutor.reset();
 
-			Assert.assertEquals(1, logRecords.size());
+		_mockClusterExecutor.setNodeNumber(3);
 
-			_assertLogger(
-				logRecords.get(0),
-				"Number of original cluster members is greater than one", null);
+		logRecords = _captureHandler.resetLogLevel(Level.INFO);
 
-			// Debug is disabled
+		_fireClusterEventListeners(clusterEvent);
 
-			logRecords = captureHandler.resetLogLevel(Level.INFO);
+		Assert.assertTrue(logRecords.isEmpty());
 
-			_fireClusterEventListeners(clusterEvent);
-
-			Assert.assertTrue(logRecords.isEmpty());
-		}
-		finally {
-			if (captureHandler != null) {
-				captureHandler.close();
-			}
-		}
+		Assert.assertNotEquals(
+			_COMPANY_ID, LuceneClusterUtilAdvice.getCompanyId());
 	}
 
 	@AdviseWith(
 		adviceClasses = {
 			DisableIndexOnStartUpAdvice.class, EnableClusterLinkAdvice.class,
-			EnableLuceneReplicateWriteAdvice.class
+			EnableLuceneReplicateWriteAdvice.class,
+			LuceneClusterUtilAdvice.class
 		}
 	)
 	@Test
-	public void testLoadIndexFromCluster1() throws Exception {
-		MockServer mockServer = new MockServer();
+	public void testLoadIndexClusterEventListenerWithException() {
+		Exception exception = new Exception();
 
-		mockServer.start();
+		LuceneClusterUtilAdvice.setException(exception);
 
 		_mockClusterExecutor.setNodeNumber(2);
-		_mockClusterExecutor.setPort(mockServer.getPort());
-		_mockClusterExecutor.setPortalInetAddress(mockServer.getInetAddress());
+
+		List<LogRecord> logRecords = _captureHandler.resetLogLevel(
+			Level.SEVERE);
+
+		ClusterNode newClusterNode = new ClusterNode(
+			"12345", _localhostInetAddress);
+
+		newClusterNode.setPortalProtocol(Http.HTTP);
+
+		ClusterEvent clusterEvent = ClusterEvent.join(newClusterNode);
+
+		_fireClusterEventListeners(clusterEvent);
+
+		Assert.assertEquals(1, logRecords.size());
+
+		LogRecord logRecord = logRecords.get(0);
+
+		_assertLogger(
+			logRecord, "Unable to load indexes for company " + _COMPANY_ID,
+			Exception.class);
+
+		Assert.assertSame(exception, logRecord.getThrown());
+	}
+
+	@AdviseWith(
+		adviceClasses = {
+			DisableIndexOnStartUpAdvice.class, EnableClusterLinkAdvice.class,
+			EnableLuceneReplicateWriteAdvice.class,
+			SkipGetLoadIndexesInputStreamFromClusterAdvice.class
+		}
+	)
+	@Test
+	public void testLoadIndexFromCluster() throws Exception {
+		_mockClusterExecutor.setNodeNumber(2);
+		_mockClusterExecutor.setPort(1);
+		_mockClusterExecutor.setPortalInetAddress(_localhostInetAddress);
+
+		List<LogRecord> logRecords = _captureHandler.resetLogLevel(Level.INFO);
 
 		_luceneHelperImpl.loadIndexesFromCluster(_COMPANY_ID);
 
-		byte[] responseMessage = _mockIndexAccessor.getResponseMessage();
+		Assert.assertEquals(
+			_COMPANY_ID,
+			SkipGetLoadIndexesInputStreamFromClusterAdvice._companyId);
 
-		Assert.assertArrayEquals(_RESPONSE_MESSAGE, responseMessage);
+		Set<String> clusterNodeIds = _mockClusterExecutor.getClusterNodeIds();
 
-		mockServer.join();
-	}
+		Assert.assertTrue(
+			clusterNodeIds.contains(
+				SkipGetLoadIndexesInputStreamFromClusterAdvice.
+					_bootupClusterNodeId));
 
-	@AdviseWith(
-		adviceClasses = {
-			DisableIndexOnStartUpAdvice.class, EnableClusterLinkAdvice.class,
-			EnableLuceneReplicateWriteAdvice.class
-		}
-	)
-	@Test
-	public void testLoadIndexFromCluster2() {
-		_mockClusterExecutor.setNodeNumber(3);
-		_mockClusterExecutor.setAutoResponse(false);
+		Assert.assertEquals(2, logRecords.size());
 
-		CaptureHandler captureHandler = null;
+		_assertLogger(
+			logRecords.get(0),
+			"Start loading lucene index files from cluster node", null);
+		_assertLogger(
+			logRecords.get(1), "Lucene index files loaded successfully", null);
 
-		try {
-
-			// Debug is enabled
-
-			captureHandler = JDKLoggerTestUtil.configureJDKLogger(
-				LuceneHelperImpl.class.getName(), Level.FINE);
-
-			List<LogRecord> logRecords = captureHandler.getLogRecords();
-
-			_luceneHelperImpl.loadIndexesFromCluster(_COMPANY_ID);
-
-			Assert.assertEquals(2, logRecords.size());
-
-			_assertLogger(
-				logRecords.get(0),
-				"Unable to get cluster node response in 10000" +
-					TimeUnit.MILLISECONDS,
-				null);
-
-			_assertLogger(
-				logRecords.get(1),
-				"Unable to get cluster node response in 10000" +
-					TimeUnit.MILLISECONDS,
-				null);
-
-			// Debug is disabled
-
-			logRecords = captureHandler.resetLogLevel(Level.INFO);
-
-			_luceneHelperImpl.loadIndexesFromCluster(_COMPANY_ID);
-
-			Assert.assertTrue(logRecords.isEmpty());
-		}
-		finally {
-			if (captureHandler != null) {
-				captureHandler.close();
-			}
-		}
-	}
-
-	@AdviseWith(
-		adviceClasses = {
-			DisableIndexOnStartUpAdvice.class, EnableClusterLinkAdvice.class,
-			EnableLuceneReplicateWriteAdvice.class
-		}
-	)
-	@Test
-	public void testLoadIndexFromCluster3() {
-		_mockClusterExecutor.setNodeNumber(2);
-
-		CaptureHandler captureHandler = null;
-
-		try {
-
-			// Debug is enabled
-
-			captureHandler = JDKLoggerTestUtil.configureJDKLogger(
-				LuceneHelperImpl.class.getName(), Level.FINE);
-
-			List<LogRecord> logRecords = captureHandler.getLogRecords();
-
-			_luceneHelperImpl.loadIndexesFromCluster(_COMPANY_ID);
-
-			Assert.assertEquals(1, logRecords.size());
-
-			_assertLogger(logRecords.get(0), "invalid InetSocketAddress", null);
-
-			// Debug is disabled
-
-			logRecords = captureHandler.resetLogLevel(Level.INFO);
-
-			_luceneHelperImpl.loadIndexesFromCluster(_COMPANY_ID);
-
-			Assert.assertTrue(logRecords.isEmpty());
-		}
-		finally {
-			if (captureHandler != null) {
-				captureHandler.close();
-			}
-		}
-	}
-
-	@AdviseWith(
-		adviceClasses = {
-			DisableIndexOnStartUpAdvice.class, EnableClusterLinkAdvice.class,
-			EnableLuceneReplicateWriteAdvice.class
-		}
-	)
-	@Test
-	public void testLoadIndexFromCluster4() {
-		_mockClusterExecutor.setNodeNumber(2);
-		_mockClusterExecutor.setPort(1024);
-
-		CaptureHandler captureHandler = JDKLoggerTestUtil.configureJDKLogger(
-			LuceneHelperImpl.class.getName(), Level.FINE);
-
-		try {
-			List<LogRecord> logRecords = captureHandler.getLogRecords();
-
-			_luceneHelperImpl.loadIndexesFromCluster(_COMPANY_ID);
-
-			Assert.assertEquals(2, logRecords.size());
-
-			_assertLogger(
-				logRecords.get(0),
-				"Start loading lucene index files from cluster node", null);
-			_assertLogger(
-				logRecords.get(1),
-				"Unable to load index for company " + _COMPANY_ID,
-				SystemException.class);
-		}
-		finally {
-			captureHandler.close();
-		}
-	}
-
-	@AdviseWith(
-		adviceClasses = {
-			DisableIndexOnStartUpAdvice.class, EnableClusterLinkAdvice.class,
-			EnableLuceneReplicateWriteAdvice.class
-		}
-	)
-	@Test
-	public void testLoadIndexFromCluster5() {
-		_mockClusterExecutor.setNodeNumber(2);
-		_mockClusterExecutor.setInvokeMethodThrowException(true);
-		_mockClusterExecutor.setPort(1024);
-
-		CaptureHandler captureHandler = null;
-
-		try {
-
-			// Debug is enabled
-
-			captureHandler = JDKLoggerTestUtil.configureJDKLogger(
-				LuceneHelperImpl.class.getName(), Level.FINE);
-
-			List<LogRecord> logRecords = captureHandler.getLogRecords();
-
-			_luceneHelperImpl.loadIndexesFromCluster(_COMPANY_ID);
-
-			Assert.assertEquals(1, logRecords.size());
-
-			_assertLogger(
-				logRecords.get(0),
-				"Suppress exception caused by remote method invocation",
-				Exception.class);
-
-			// Debug is disabled
-
-			logRecords = captureHandler.resetLogLevel(Level.INFO);
-
-			_luceneHelperImpl.loadIndexesFromCluster(_COMPANY_ID);
-
-			Assert.assertTrue(logRecords.isEmpty());
-		}
-		finally {
-			if (captureHandler != null) {
-				captureHandler.close();
-			}
-		}
-	}
-
-	@AdviseWith(
-		adviceClasses = {
-			DisableIndexOnStartUpAdvice.class, EnableClusterLinkAdvice.class,
-			EnableLuceneReplicateWriteAdvice.class
-		}
-	)
-	@Test
-	public void testLoadIndexFromCluster6() {
-		_mockClusterExecutor.setNodeNumber(1);
-
-		CaptureHandler captureHandler = JDKLoggerTestUtil.configureJDKLogger(
-			LuceneHelperImpl.class.getName(), Level.FINE);
-
-		try {
-			List<LogRecord> logRecords = captureHandler.getLogRecords();
-
-			_luceneHelperImpl.loadIndexesFromCluster(_COMPANY_ID);
-
-			Assert.assertEquals(1, logRecords.size());
-
-			_assertLogger(
-				logRecords.get(0),
-				"Do not load indexes because there is either one portal " +
-					"instance or no portal instances in the cluster",
-				null);
-		}
-		finally {
-			captureHandler.close();
-		}
+		Assert.assertArrayEquals(
+			_RESPONSE_MESSAGE, _mockIndexAccessor.getResponseMessage());
 	}
 
 	@AdviseWith(
@@ -505,31 +367,173 @@ public class LuceneHelperImplTest {
 		}
 	)
 	@Test
-	public void testLoadIndexFromCluster7() {
-		CaptureHandler captureHandler = JDKLoggerTestUtil.configureJDKLogger(
-			LuceneHelperImpl.class.getName(), Level.FINE);
+	public void testLoadIndexFromClusterWithClusterLinkDisabled() {
+		List<LogRecord> logRecords = _captureHandler.resetLogLevel(Level.FINE);
 
-		try {
-			List<LogRecord> logRecords = captureHandler.getLogRecords();
+		_luceneHelperImpl.loadIndexesFromCluster(0);
 
-			_luceneHelperImpl.loadIndexesFromCluster(0);
+		Assert.assertEquals(1, logRecords.size());
 
-			Assert.assertEquals(1, logRecords.size());
-
-			_assertLogger(
-				logRecords.get(0), "Load index from cluster is not enabled",
-				null);
-		}
-		finally {
-			captureHandler.close();
-		}
+		_assertLogger(
+			logRecords.get(0), "Load index from cluster is not enabled", null);
 	}
+
+	@AdviseWith(
+		adviceClasses = {
+			DisableIndexOnStartUpAdvice.class, EnableClusterLinkAdvice.class,
+			EnableLuceneReplicateWriteAdvice.class
+		}
+	)
+	@Test
+	public void testLoadIndexFromClusterWithException() throws Exception {
+
+		// Test 1, unable to get response from cluster with debug enabled
+
+		_mockClusterExecutor.reset();
+
+		_mockClusterExecutor.setNodeNumber(3);
+		_mockClusterExecutor.setAutoResponse(false);
+
+		List<LogRecord> logRecords = _captureHandler.resetLogLevel(Level.FINE);
+
+		_luceneHelperImpl.loadIndexesFromCluster(_COMPANY_ID);
+
+		Assert.assertEquals(2, logRecords.size());
+
+		_assertLogger(
+			logRecords.get(0),
+			"Unable to get cluster node response in 10000" +
+				TimeUnit.MILLISECONDS,
+			null);
+
+		_assertLogger(
+			logRecords.get(1),
+			"Unable to get cluster node response in 10000" +
+				TimeUnit.MILLISECONDS,
+			null);
+
+		// Test 2, unable to get response from cluster with debug disabled
+
+		_mockClusterExecutor.reset();
+
+		_mockClusterExecutor.setNodeNumber(3);
+		_mockClusterExecutor.setAutoResponse(false);
+
+		logRecords = _captureHandler.resetLogLevel(Level.INFO);
+
+		_luceneHelperImpl.loadIndexesFromCluster(_COMPANY_ID);
+
+		Assert.assertTrue(logRecords.isEmpty());
+
+		// Test 3, unable to get address with debug enabled
+
+		_mockClusterExecutor.reset();
+
+		_mockClusterExecutor.setNodeNumber(2);
+
+		logRecords = _captureHandler.resetLogLevel(Level.FINE);
+
+		_luceneHelperImpl.loadIndexesFromCluster(_COMPANY_ID);
+
+		Assert.assertEquals(1, logRecords.size());
+
+		_assertLogger(logRecords.get(0), "invalid InetSocketAddress", null);
+
+		// Test 4, unable to get address with debug disabled
+
+		_mockClusterExecutor.reset();
+
+		_mockClusterExecutor.setNodeNumber(2);
+
+		logRecords = _captureHandler.resetLogLevel(Level.INFO);
+
+		_luceneHelperImpl.loadIndexesFromCluster(_COMPANY_ID);
+
+		Assert.assertTrue(logRecords.isEmpty());
+
+		// Test 5, unable to load index
+
+		_mockClusterExecutor.reset();
+
+		_mockClusterExecutor.setNodeNumber(2);
+		_mockClusterExecutor.setPort(1024);
+
+		logRecords = _captureHandler.resetLogLevel(Level.FINE);
+
+		_luceneHelperImpl.loadIndexesFromCluster(_COMPANY_ID);
+
+		Assert.assertEquals(2, logRecords.size());
+
+		_assertLogger(
+			logRecords.get(0),
+			"Start loading lucene index files from cluster node", null);
+		_assertLogger(
+			logRecords.get(1),
+			"Unable to load index for company " + _COMPANY_ID,
+			SystemException.class);
+
+		// Test 6, unable to invoke method on other nodes with debug enabled
+
+		_mockClusterExecutor.reset();
+
+		_mockClusterExecutor.setNodeNumber(2);
+		_mockClusterExecutor.setInvokeMethodThrowException(true);
+		_mockClusterExecutor.setPort(1024);
+
+		logRecords = _captureHandler.resetLogLevel(Level.FINE);
+
+		_luceneHelperImpl.loadIndexesFromCluster(_COMPANY_ID);
+
+		Assert.assertEquals(1, logRecords.size());
+
+		_assertLogger(
+			logRecords.get(0),
+			"Suppress exception caused by remote method invocation",
+			Exception.class);
+
+		// Test 7, unable to invoke method on other nodes with debug disabled
+
+		_mockClusterExecutor.reset();
+
+		_mockClusterExecutor.setNodeNumber(2);
+		_mockClusterExecutor.setInvokeMethodThrowException(true);
+		_mockClusterExecutor.setPort(1024);
+
+		logRecords = _captureHandler.resetLogLevel(Level.INFO);
+
+		_luceneHelperImpl.loadIndexesFromCluster(_COMPANY_ID);
+
+		Assert.assertTrue(logRecords.isEmpty());
+
+		// Test 8, no need to load from cluster
+
+		_mockClusterExecutor.reset();
+
+		_mockClusterExecutor.setNodeNumber(1);
+
+		logRecords = _captureHandler.resetLogLevel(Level.FINE);
+
+		_luceneHelperImpl.loadIndexesFromCluster(_COMPANY_ID);
+
+		Assert.assertEquals(1, logRecords.size());
+
+		_assertLogger(
+			logRecords.get(0),
+			"Do not load indexes because there is either one portal " +
+				"instance or no portal instances in the cluster",
+			null);
+	}
+
+	@Rule
+	public final AspectJNewEnvTestRule aspectJNewEnvTestRule =
+		AspectJNewEnvTestRule.INSTANCE;
 
 	@Aspect
 	public static class DisableClusterLinkAdvice {
 
 		@Around(
-			"set(* com.liferay.portal.util.PropsValues.CLUSTER_LINK_ENABLED)")
+			"set(* com.liferay.portal.util.PropsValues.CLUSTER_LINK_ENABLED)"
+		)
 		public Object disableClusterLink(
 				ProceedingJoinPoint proceedingJoinPoint)
 			throws Throwable {
@@ -543,7 +547,8 @@ public class LuceneHelperImplTest {
 	public static class DisableIndexOnStartUpAdvice {
 
 		@Around(
-			"set(* com.liferay.portal.util.PropsValues.INDEX_ON_STARTUP)")
+			"set(* com.liferay.portal.util.PropsValues.INDEX_ON_STARTUP)"
+		)
 		public Object disableIndexOnStartUp(
 				ProceedingJoinPoint proceedingJoinPoint)
 			throws Throwable {
@@ -557,7 +562,8 @@ public class LuceneHelperImplTest {
 	public static class EnableClusterLinkAdvice {
 
 		@Around(
-			"set(* com.liferay.portal.util.PropsValues.CLUSTER_LINK_ENABLED)")
+			"set(* com.liferay.portal.util.PropsValues.CLUSTER_LINK_ENABLED)"
+		)
 		public Object enableClusterLink(ProceedingJoinPoint proceedingJoinPoint)
 			throws Throwable {
 
@@ -570,13 +576,92 @@ public class LuceneHelperImplTest {
 	public static class EnableLuceneReplicateWriteAdvice {
 
 		@Around(
-			"set(* com.liferay.portal.util.PropsValues.LUCENE_REPLICATE_WRITE)")
+			"set(* com.liferay.portal.util.PropsValues.LUCENE_REPLICATE_WRITE)"
+		)
 		public Object enableLuceneReplicateWrite(
 				ProceedingJoinPoint proceedingJoinPoint)
 			throws Throwable {
 
 			return proceedingJoinPoint.proceed(new Object[] {Boolean.TRUE});
 		}
+
+	}
+
+	@Aspect
+	public static class LuceneClusterUtilAdvice {
+
+		public static long getCompanyId() {
+			long companyId = _companyId;
+
+			_companyId = Long.MAX_VALUE;
+
+			return companyId;
+		}
+
+		public static void setException(Exception exception) {
+			_exception = exception;
+		}
+
+		@Around(
+			"execution(* com.liferay.portal.search.lucene.cluster." +
+				"LuceneClusterUtil.loadIndexesFromCluster(long))"
+		)
+		public void loadIndexesFromCluster(
+				ProceedingJoinPoint proceedingJoinPoint)
+			throws Throwable {
+
+			if (_exception != null) {
+				throw _exception;
+			}
+
+			Object[] arguments = proceedingJoinPoint.getArgs();
+
+			_companyId = (long)arguments[0];
+		}
+
+		private static long _companyId;
+		private static Exception _exception;
+
+	}
+
+	@Aspect
+	public static class SkipGetBootupClusterNodeObjectValuePairAdvice {
+
+		public static void setURL(URL url) {
+			_url = url;
+		}
+
+		@Around(
+			"execution(* com.liferay.portal.search.lucene.LuceneHelperImpl." +
+				"_getBootupClusterNodeObjectValuePair(..))"
+		)
+		public Object _getBootupClusterNodeObjectValuePair() {
+			return new ObjectValuePair<>(StringPool.BLANK, _url);
+		}
+
+		private static URL _url;
+
+	}
+
+	@Aspect
+	public static class SkipGetLoadIndexesInputStreamFromClusterAdvice {
+
+		@Around(
+			"execution(* com.liferay.portal.search.lucene.LuceneHelperImpl." +
+				"getLoadIndexesInputStreamFromCluster(long, java.lang.String)" +
+					") && args(companyId, bootupClusterNodeId)"
+		)
+		public Object getLoadIndexesInputStreamFromCluster(
+			long companyId, String bootupClusterNodeId) {
+
+			_companyId = companyId;
+			_bootupClusterNodeId = bootupClusterNodeId;
+
+			return new UnsyncByteArrayInputStream(_RESPONSE_MESSAGE);
+		}
+
+		private static String _bootupClusterNodeId;
+		private static long _companyId;
 
 	}
 
@@ -609,8 +694,6 @@ public class LuceneHelperImplTest {
 		}
 	}
 
-	private static final String _CLUSER_NODE_ID = "12345";
-
 	private static final long _COMPANY_ID = 1;
 
 	private static final long _LAST_GENERATION = 1;
@@ -618,54 +701,39 @@ public class LuceneHelperImplTest {
 	private static final byte[] _RESPONSE_MESSAGE =
 		"Response Message".getBytes();
 
-	private ClusterNode _clusterNode;
+	private CaptureHandler _captureHandler;
 	private InetAddress _localhostInetAddress;
 	private LuceneHelperImpl _luceneHelperImpl;
 	private MockClusterExecutor _mockClusterExecutor;
 	private MockIndexAccessor _mockIndexAccessor;
 
-	private class MockAddress implements org.jgroups.Address {
+	private static class MockURLConnection extends URLConnection {
 
-		@Override
-		public int compareTo(org.jgroups.Address jGroupsAddress) {
-			return 0;
+		public MockURLConnection(URL url) {
+			super(url);
+		}
+
+		public void assertOutputContent(String outputContent) {
+			Assert.assertEquals(
+				outputContent, _unsyncByteArrayOutputStream.toString());
 		}
 
 		@Override
-		public void readExternal(ObjectInput objectInput) {
+		public void connect() {
 		}
 
 		@Override
-		public void readFrom(DataInput dataInput) {
+		public InputStream getInputStream() {
+			return new UnsyncByteArrayInputStream(_RESPONSE_MESSAGE);
 		}
 
 		@Override
-		public int size() {
-			return 0;
+		public OutputStream getOutputStream() {
+			return _unsyncByteArrayOutputStream;
 		}
 
-		@Override
-		public void writeExternal(ObjectOutput objectOutput) {
-		}
-
-		@Override
-		public void writeTo(DataOutput dataOutput) {
-		}
-
-	}
-
-	private class MockBlockingQueue<E> extends LinkedBlockingQueue<E> {
-
-		public MockBlockingQueue(BlockingQueue<E> blockingQueue) {
-			_blockingQueue = blockingQueue;
-		}
-
-		@Override
-		public E poll(long timeout, TimeUnit unit) throws InterruptedException {
-			return _blockingQueue.poll(1000, TimeUnit.MILLISECONDS);
-		}
-
-		private BlockingQueue<E> _blockingQueue;
+		private final UnsyncByteArrayOutputStream _unsyncByteArrayOutputStream =
+			new UnsyncByteArrayOutputStream();
 
 	}
 
@@ -680,101 +748,47 @@ public class LuceneHelperImplTest {
 
 		@Override
 		public void destroy() {
-			_addresses.clear();
+			_clusterNodes.clear();
 			_clusterEventListeners.clear();
 		}
 
 		@Override
 		public FutureClusterResponses execute(ClusterRequest clusterRequest) {
-			if (_throwException) {
-				throw new SystemException();
-			}
-
 			if (!_autoResponse) {
 				return new FutureClusterResponses(
-					Collections.<Address>emptyList());
+					Collections.<String>emptySet());
 			}
 
+			Set<String> clusterNodeIds = _clusterNodes.keySet();
+
 			FutureClusterResponses futureClusterResponses =
-				new FutureClusterResponses(_addresses);
+				new FutureClusterResponses(clusterNodeIds);
 
-			for (Address address : _addresses) {
-				ClusterNodeResponse clusterNodeResponse =
-					new ClusterNodeResponse();
-
-				clusterNodeResponse.setAddress(address);
-				clusterNodeResponse.setClusterMessageType(
-					ClusterMessageType.EXECUTE);
-				clusterNodeResponse.setMulticast(clusterRequest.isMulticast());
-				clusterNodeResponse.setUuid(clusterRequest.getUuid());
-
-				ClusterNode clusterNode = new ClusterNode(
-					String.valueOf(System.currentTimeMillis()),
-					_localhostInetAddress);
-
+			for (ClusterNode clusterNode : _clusterNodes.values()) {
 				try {
 					clusterNode.setPortalInetSocketAddress(
 						new InetSocketAddress(_portalInetAddress, _port));
+
+					clusterNode.setPortalProtocol(Http.HTTP);
 				}
 				catch (IllegalArgumentException iae) {
 				}
 
-				clusterNodeResponse.setClusterNode(clusterNode);
-
 				try {
-					clusterNodeResponse.setResult(
-						_invoke(clusterRequest.getMethodHandler()));
+					futureClusterResponses.addClusterNodeResponse(
+						ClusterNodeResponse.createResultClusterNodeResponse(
+							clusterNode, clusterRequest.getUuid(),
+							_invoke(
+								(MethodHandler)clusterRequest.getPayload())));
 				}
 				catch (Exception e) {
-					clusterNodeResponse.setException(e);
+					futureClusterResponses.addClusterNodeResponse(
+						ClusterNodeResponse.createExceptionClusterNodeResponse(
+							clusterNode, clusterRequest.getUuid(), e));
 				}
-
-				futureClusterResponses.addClusterNodeResponse(
-					clusterNodeResponse);
 			}
 
 			return futureClusterResponses;
-		}
-
-		@Override
-		public void execute(
-			ClusterRequest clusterRequest,
-			ClusterResponseCallback clusterResponseCallback) {
-
-			FutureClusterResponses futureClusterResponses = execute(
-				clusterRequest);
-
-			try {
-				BlockingQueue<ClusterNodeResponse> blockingQueue =
-					futureClusterResponses.get().getClusterResponses();
-
-				MockBlockingQueue<ClusterNodeResponse> mockBlockingQueue =
-					new MockBlockingQueue<ClusterNodeResponse>(blockingQueue);
-
-				clusterResponseCallback.callback(mockBlockingQueue);
-			}
-			catch (InterruptedException ie) {
-				throw new RuntimeException(ie);
-			}
-		}
-
-		@Override
-		public void execute(
-			ClusterRequest clusterRequest,
-			ClusterResponseCallback clusterResponseCallback, long timeout,
-			TimeUnit timeUnit) {
-
-			FutureClusterResponses futureClusterResponses = execute(
-				clusterRequest);
-
-			try {
-				clusterResponseCallback.callback(
-					futureClusterResponses.get(
-						timeout, timeUnit).getClusterResponses());
-			}
-			catch (Exception e) {
-				throw new RuntimeException(e);
-			}
 		}
 
 		@Override
@@ -782,24 +796,22 @@ public class LuceneHelperImplTest {
 			return Collections.unmodifiableList(_clusterEventListeners);
 		}
 
-		@Override
-		public List<Address> getClusterNodeAddresses() {
-			return Collections.unmodifiableList(_addresses);
+		public Set<String> getClusterNodeIds() {
+			return _clusterNodes.keySet();
 		}
 
 		@Override
 		public List<ClusterNode> getClusterNodes() {
-			return Collections.emptyList();
+			return new ArrayList<>(_clusterNodes.values());
 		}
 
 		@Override
 		public ClusterNode getLocalClusterNode() {
-			return null;
+			return _clusterNodes.get(_CLUSTER_NODE_ID_PREFIX + 0);
 		}
 
-		@Override
-		public Address getLocalClusterNodeAddress() {
-			return _addresses.get(0);
+		public String getLocalClusterNodeId() {
+			return _CLUSTER_NODE_ID_PREFIX + 0;
 		}
 
 		@Override
@@ -807,13 +819,8 @@ public class LuceneHelperImplTest {
 		}
 
 		@Override
-		public boolean isClusterNodeAlive(Address address) {
-			return _addresses.contains(address);
-		}
-
-		@Override
 		public boolean isClusterNodeAlive(String clusterNodeId) {
-			return false;
+			return _clusterNodes.containsKey(clusterNodeId);
 		}
 
 		@Override
@@ -828,6 +835,14 @@ public class LuceneHelperImplTest {
 			_clusterEventListeners.remove(clusterEventListener);
 		}
 
+		public void reset() {
+			_clusterNodes.clear();
+			_autoResponse = true;
+			_invokeMethodThrowException = false;
+			_port = -1;
+			_portalInetAddress = null;
+		}
+
 		public void setAutoResponse(boolean autoResponse) {
 			_autoResponse = autoResponse;
 		}
@@ -839,8 +854,14 @@ public class LuceneHelperImplTest {
 		}
 
 		public void setNodeNumber(int nodeNumber) {
+			_clusterNodes.clear();
+
 			for (int i = 0; i < nodeNumber; i++) {
-				_addresses.add(new AddressImpl(new MockAddress()));
+				String clusterNodeId = _CLUSTER_NODE_ID_PREFIX + i;
+
+				_clusterNodes.put(
+					clusterNodeId,
+					new ClusterNode(clusterNodeId, _localhostInetAddress));
 			}
 		}
 
@@ -850,10 +871,6 @@ public class LuceneHelperImplTest {
 
 		public void setPortalInetAddress(InetAddress portalInetAddress) {
 			_portalInetAddress = portalInetAddress;
-		}
-
-		public void setThrowException(boolean throwException) {
-			_throwException = throwException;
 		}
 
 		private Object _invoke(MethodHandler methodHandler) throws Exception {
@@ -875,18 +892,19 @@ public class LuceneHelperImplTest {
 			return null;
 		}
 
-		private List<Address> _addresses = new ArrayList<Address>();
+		private static final String _CLUSTER_NODE_ID_PREFIX = "CLUSTER_NODE_ID";
+
 		private boolean _autoResponse = true;
-		private List<ClusterEventListener> _clusterEventListeners =
-			new ArrayList<ClusterEventListener>();
-		private MethodKey _createTokenMethodKey = new MethodKey(
+		private final List<ClusterEventListener> _clusterEventListeners =
+			new ArrayList<>();
+		private final Map<String, ClusterNode> _clusterNodes = new HashMap<>();
+		private final MethodKey _createTokenMethodKey = new MethodKey(
 			TransientTokenUtil.class, "createToken", long.class);
-		private MethodKey _getLastGenerationMethodKey = new MethodKey(
+		private final MethodKey _getLastGenerationMethodKey = new MethodKey(
 			LuceneHelperUtil.class, "getLastGeneration", long.class);
 		private boolean _invokeMethodThrowException = false;
 		private int _port = -1;
 		private InetAddress _portalInetAddress;
-		private boolean _throwException = false;
 
 	}
 
@@ -963,71 +981,6 @@ public class LuceneHelperImplTest {
 		}
 
 		private byte[] _bytes;
-
-	}
-
-	private class MockServer extends Thread {
-
-		public MockServer() throws IOException {
-			ServerSocketChannel serverSocketChannel =
-				SocketUtil.createServerSocketChannel(
-					_localhostInetAddress, 1024, null);
-
-			_serverSocket = serverSocketChannel.socket();
-		}
-
-		public InetAddress getInetAddress() {
-			return _serverSocket.getInetAddress();
-		}
-
-		public int getPort() {
-			return _serverSocket.getLocalPort();
-		}
-
-		@Override
-		public void run() {
-			Socket socket = null;
-
-			try {
-				socket = _serverSocket.accept();
-
-				_serverSocket.close();
-
-				UnsyncBufferedReader reader = new UnsyncBufferedReader(
-					new InputStreamReader(socket.getInputStream()));
-
-				String request = reader.readLine();
-
-				if (!request.contains("/lucene/dump")) {
-					return;
-				}
-
-				StringBundler sb = new StringBundler(3);
-
-				sb.append("HTTP/1.0 200 OK\r\nServer: \r\nContent-length: ");
-				sb.append(_RESPONSE_MESSAGE.length);
-				sb.append("\r\nContent-type: text/plain\r\n\r\n");
-
-				OutputStream outputStream = socket.getOutputStream();
-
-				outputStream.write(sb.toString().getBytes());
-				outputStream.write(_RESPONSE_MESSAGE);
-			}
-			catch (IOException ioe) {
-				throw new RuntimeException(ioe);
-			}
-			finally {
-				if (socket != null) {
-					try {
-						socket.close();
-					}
-					catch (IOException ioe) {
-					}
-				}
-			}
-		}
-
-		private ServerSocket _serverSocket;
 
 	}
 

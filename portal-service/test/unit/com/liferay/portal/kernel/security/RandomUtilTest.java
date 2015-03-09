@@ -14,7 +14,7 @@
 
 package com.liferay.portal.kernel.security;
 
-import com.liferay.portal.kernel.test.CodeCoverageAssertor;
+import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 
 import java.util.Arrays;
 import java.util.Random;
@@ -29,8 +29,8 @@ import org.junit.Test;
 public class RandomUtilTest {
 
 	@ClassRule
-	public static CodeCoverageAssertor codeCoverageAssertor =
-		new CodeCoverageAssertor();
+	public static final CodeCoverageAssertor codeCoverageAssertor =
+		CodeCoverageAssertor.INSTANCE;
 
 	@Test
 	public void testConstructor() {
@@ -101,7 +101,7 @@ public class RandomUtilTest {
 		}
 
 		private int _index;
-		private int[] _values;
+		private final int[] _values;
 
 	}
 

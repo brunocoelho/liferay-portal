@@ -105,10 +105,7 @@ public class ExportLayoutsAction extends PortletAction {
 			if (!(e instanceof LARFileNameException)) {
 				_log.error(e, e);
 
-				String pagesRedirect = ParamUtil.getString(
-					actionRequest, "pagesRedirect");
-
-				sendRedirect(actionRequest, actionResponse, pagesRedirect);
+				sendRedirect(actionRequest, actionResponse);
 			}
 		}
 	}
@@ -159,7 +156,7 @@ public class ExportLayoutsAction extends PortletAction {
 	protected long[] getLayoutIds(PortletRequest portletRequest)
 		throws Exception {
 
-		Set<Layout> layouts = new LinkedHashSet<Layout>();
+		Set<Layout> layouts = new LinkedHashSet<>();
 
 		Map<Long, Boolean> layoutIdMap = ExportImportHelperUtil.getLayoutIdMap(
 			portletRequest);
@@ -183,6 +180,7 @@ public class ExportLayoutsAction extends PortletAction {
 			new ArrayList<Layout>(layouts));
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(ExportLayoutsAction.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		ExportLayoutsAction.class);
 
 }

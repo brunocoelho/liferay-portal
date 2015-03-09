@@ -90,18 +90,7 @@ public class JournalTemplateHandler extends BaseDDMTemplateHandler {
 		return _templateVariableCodeHandler;
 	}
 
-	@Override
-	protected TemplateVariableGroup getUtilTemplateVariableGroup() {
-		TemplateVariableGroup utilTemplateVariableGroup =
-			super.getUtilTemplateVariableGroup();
-
-		utilTemplateVariableGroup.addVariable(
-			"xml-request", String.class, "xmlRequest");
-
-		return utilTemplateVariableGroup;
-	}
-
-	private TemplateVariableCodeHandler _templateVariableCodeHandler =
+	private final TemplateVariableCodeHandler _templateVariableCodeHandler =
 		new DDMTemplateVariableCodeHandler(
 			"com/liferay/portlet/journal/dependencies/template/");
 

@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PwdGenerator;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.User;
@@ -40,7 +41,6 @@ import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.util.WebKeys;
 import com.liferay.portlet.ActionResponseImpl;
-import com.liferay.util.PwdGenerator;
 
 import java.net.URL;
 
@@ -355,8 +355,8 @@ public class OpenIdAction extends PortletAction {
 		long facebookId = 0;
 		Locale locale = themeDisplay.getLocale();
 		String middleName = StringPool.BLANK;
-		int prefixId = 0;
-		int suffixId = 0;
+		long prefixId = 0;
+		long suffixId = 0;
 		boolean male = true;
 		int birthdayMonth = Calendar.JANUARY;
 		int birthdayDay = 1;
@@ -501,6 +501,6 @@ public class OpenIdAction extends PortletAction {
 
 	private static final String _OPEN_ID_SREG_ATTR_FULLNAME = "fullname";
 
-	private static Log _log = LogFactoryUtil.getLog(OpenIdAction.class);
+	private static final Log _log = LogFactoryUtil.getLog(OpenIdAction.class);
 
 }

@@ -48,13 +48,11 @@ portletURL.setParameter("recordSetId", String.valueOf(recordSet.getRecordSetId()
 
 	DDMStructure ddmStructure = recordSet.getDDMStructure(formDDMTemplateId);
 
-	List<DDMFormField> ddmFormfields = ddmStructure.getDDMFormFields(false);
+	DDMForm ddmForm = ddmStructure.getFullHierarchyDDMForm();
+
+	List<DDMFormField> ddmFormfields = ddmForm.getDDMFormFields();
 
 	for (DDMFormField ddmFormField : ddmFormfields) {
-		if (ddmStructure.isFieldPrivate(ddmFormField.getName())) {
-			continue;
-		}
-
 		LocalizedValue label = ddmFormField.getLabel();
 
 		headerNames.add(label.getString(locale));
@@ -124,7 +122,9 @@ portletURL.setParameter("recordSetId", String.valueOf(recordSet.getRecordSetId()
 				recordVersion = record.getLatestRecordVersion();
 			}
 
-			Fields fieldsModel = StorageEngineUtil.getFields(recordVersion.getDDMStorageId());
+			DDMFormValues ddmFormValues = StorageEngineUtil.getDDMFormValues(recordVersion.getDDMStorageId());
+
+			Map<String, List<DDMFormFieldValue>> ddmFormFieldValuesMap = ddmFormValues.getDDMFormFieldValuesMap();
 
 			ResultRow row = new ResultRow(record, record.getRecordId(), i);
 
@@ -143,9 +143,6 @@ portletURL.setParameter("recordSetId", String.valueOf(recordSet.getRecordSetId()
 			// Columns
 
 			for (DDMFormField ddmFormField : ddmFormfields) {
-				if (ddmStructure.isFieldPrivate(ddmFormField.getName())) {
-					continue;
-				}
 			%>
 
 				<%@ include file="/html/portlet/dynamic_data_lists/record_row_value.jspf" %>

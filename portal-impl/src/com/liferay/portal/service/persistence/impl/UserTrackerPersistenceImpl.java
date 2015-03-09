@@ -57,7 +57,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see UserTrackerPersistence
- * @see UserTrackerUtil
+ * @see com.liferay.portal.service.persistence.UserTrackerUtil
  * @generated
  */
 @ProviderType
@@ -2266,7 +2266,7 @@ public class UserTrackerPersistenceImpl extends BasePersistenceImpl<UserTracker>
 		MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

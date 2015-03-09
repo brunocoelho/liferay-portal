@@ -16,6 +16,7 @@ package com.liferay.portlet.documentlibrary.trash;
 
 import com.liferay.portal.InvalidRepositoryException;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.repository.Repository;
 import com.liferay.portal.kernel.repository.capabilities.TrashCapability;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -35,6 +36,7 @@ import com.liferay.portlet.documentlibrary.model.DLFolderConstants;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * @author Zsolt Berentey
@@ -58,7 +60,7 @@ public abstract class DLBaseTrashHandler extends BaseTrashHandler {
 	}
 
 	@Override
-	public String getContainerModelName() {
+	public String getContainerModelName(long classPK) {
 		return "folder";
 	}
 
@@ -72,8 +74,7 @@ public abstract class DLBaseTrashHandler extends BaseTrashHandler {
 		List<Folder> folders = repository.getFolders(
 			parentContainerModelId, false, start, end, null);
 
-		List<ContainerModel> containerModels = new ArrayList<ContainerModel>(
-			folders.size());
+		List<ContainerModel> containerModels = new ArrayList<>(folders.size());
 
 		for (Folder folder : folders) {
 			containerModels.add((ContainerModel)folder.getModel());
@@ -96,7 +97,7 @@ public abstract class DLBaseTrashHandler extends BaseTrashHandler {
 	public List<ContainerModel> getParentContainerModels(long classPK)
 		throws PortalException {
 
-		List<ContainerModel> containerModels = new ArrayList<ContainerModel>();
+		List<ContainerModel> containerModels = new ArrayList<>();
 
 		ContainerModel containerModel = getParentContainerModel(classPK);
 
@@ -122,7 +123,14 @@ public abstract class DLBaseTrashHandler extends BaseTrashHandler {
 
 	@Override
 	public String getRootContainerModelName() {
-		return "home";
+		return "folder";
+	}
+
+	@Override
+	public String getRootContainerModelTitle(
+		long containerModelId, Locale locale) {
+
+		return LanguageUtil.get(locale, "home");
 	}
 
 	@Override
@@ -145,7 +153,7 @@ public abstract class DLBaseTrashHandler extends BaseTrashHandler {
 			long classPK, int start, int end)
 		throws PortalException {
 
-		List<TrashRenderer> trashRenderers = new ArrayList<TrashRenderer>();
+		List<TrashRenderer> trashRenderers = new ArrayList<>();
 
 		Repository repository = getRepository(classPK);
 
@@ -206,7 +214,7 @@ public abstract class DLBaseTrashHandler extends BaseTrashHandler {
 			long classPK, int start, int end)
 		throws PortalException {
 
-		List<TrashRenderer> trashRenderers = new ArrayList<TrashRenderer>();
+		List<TrashRenderer> trashRenderers = new ArrayList<>();
 
 		Repository repository = getRepository(classPK);
 

@@ -60,8 +60,8 @@ public interface ContactLocalService extends BaseLocalService,
 	public com.liferay.portal.model.Contact addContact(long userId,
 		java.lang.String className, long classPK,
 		java.lang.String emailAddress, java.lang.String firstName,
-		java.lang.String middleName, java.lang.String lastName, int prefixId,
-		int suffixId, boolean male, int birthdayMonth, int birthdayDay,
+		java.lang.String middleName, java.lang.String lastName, long prefixId,
+		long suffixId, boolean male, int birthdayMonth, int birthdayDay,
 		int birthdayYear, java.lang.String smsSn, java.lang.String aimSn,
 		java.lang.String facebookSn, java.lang.String icqSn,
 		java.lang.String jabberSn, java.lang.String msnSn,
@@ -153,20 +153,20 @@ public interface ContactLocalService extends BaseLocalService,
 		com.liferay.portal.kernel.util.OrderByComparator<T> orderByComparator);
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery);
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	public long dynamicQueryCount(
 		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,
@@ -253,8 +253,8 @@ public interface ContactLocalService extends BaseLocalService,
 	@com.liferay.portal.kernel.search.Indexable(type = IndexableType.REINDEX)
 	public com.liferay.portal.model.Contact updateContact(long contactId,
 		java.lang.String emailAddress, java.lang.String firstName,
-		java.lang.String middleName, java.lang.String lastName, int prefixId,
-		int suffixId, boolean male, int birthdayMonth, int birthdayDay,
+		java.lang.String middleName, java.lang.String lastName, long prefixId,
+		long suffixId, boolean male, int birthdayMonth, int birthdayDay,
 		int birthdayYear, java.lang.String smsSn, java.lang.String aimSn,
 		java.lang.String facebookSn, java.lang.String icqSn,
 		java.lang.String jabberSn, java.lang.String msnSn,

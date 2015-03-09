@@ -22,7 +22,6 @@ import java.util.Locale;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
 
 /**
  * @author Brian Wing Shun Chan
@@ -41,6 +40,15 @@ public class DummyIndexer implements Indexer {
 	public void delete(Object obj) {
 	}
 
+	@Override
+	public String getClassName() {
+		return StringPool.BLANK;
+	}
+
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #getSearchClassNames}
+	 */
+	@Deprecated
 	@Override
 	public String[] getClassNames() {
 		return new String[0];
@@ -73,9 +81,23 @@ public class DummyIndexer implements Indexer {
 		return new IndexerPostProcessor[0];
 	}
 
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #getClassName}
+	 */
+	@Deprecated
 	@Override
 	public String getPortletId() {
 		return StringPool.BLANK;
+	}
+
+	@Override
+	public String getQueryString(SearchContext searchContext, Query query) {
+		return StringPool.BLANK;
+	}
+
+	@Override
+	public String[] getSearchClassNames() {
+		return new String[0];
 	}
 
 	@Override
@@ -95,21 +117,20 @@ public class DummyIndexer implements Indexer {
 
 	/**
 	 * @deprecated As of 7.0.0, replaced by {@link #getSummary(Document, String,
-	 *             PortletURL, PortletRequest, PortletResponse)}
+	 *             PortletRequest, PortletResponse)}
 	 */
 	@Deprecated
 	@Override
 	public Summary getSummary(
-		Document document, Locale locale, String snippet,
-		PortletURL portletURL) {
+		Document document, Locale locale, String snippet) {
 
 		return null;
 	}
 
 	@Override
 	public Summary getSummary(
-		Document document, String snippet, PortletURL portletURL,
-		PortletRequest portletRequest, PortletResponse portletResponse) {
+		Document document, String snippet, PortletRequest portletRequest,
+		PortletResponse portletResponse) {
 
 		return null;
 	}

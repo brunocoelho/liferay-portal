@@ -21,7 +21,6 @@ import java.util.Locale;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
 
 /**
  * @author Brian Wing Shun Chan
@@ -39,6 +38,12 @@ public interface Indexer {
 
 	public void delete(Object obj) throws SearchException;
 
+	public String getClassName();
+
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #getSearchClassNames}
+	 */
+	@Deprecated
 	public String[] getClassNames();
 
 	public int getDatabaseCount() throws Exception;
@@ -54,7 +59,16 @@ public interface Indexer {
 
 	public IndexerPostProcessor[] getIndexerPostProcessors();
 
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #getClassName}
+	 */
+	@Deprecated
 	public String getPortletId();
+
+	public String getQueryString(SearchContext searchContext, Query query)
+		throws SearchException;
+
+	public String[] getSearchClassNames();
 
 	public String getSearchEngineId();
 
@@ -64,17 +78,15 @@ public interface Indexer {
 
 	/**
 	 * @deprecated As of 7.0.0, replaced by {@link #getSummary(Document, String,
-	 *             PortletURL, PortletRequest, PortletResponse)}
+	 *             PortletRequest, PortletResponse)}
 	 */
 	@Deprecated
-	public Summary getSummary(
-			Document document, Locale locale, String snippet,
-			PortletURL portletURL)
+	public Summary getSummary(Document document, Locale locale, String snippet)
 		throws SearchException;
 
 	public Summary getSummary(
-			Document document, String snippet, PortletURL portletURL,
-			PortletRequest portletRequest, PortletResponse portletResponse)
+			Document document, String snippet, PortletRequest portletRequest,
+			PortletResponse portletResponse)
 		throws SearchException;
 
 	public boolean hasPermission(

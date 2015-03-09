@@ -14,6 +14,7 @@
 
 package com.liferay.portal.kernel.process.local;
 
+import com.liferay.portal.kernel.concurrent.NoticeableFuture;
 import com.liferay.portal.kernel.concurrent.ThreadPoolExecutor;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.portal.kernel.log.Log;
@@ -29,9 +30,9 @@ import com.liferay.portal.kernel.process.local.LocalProcessLauncher.ProcessConte
 import com.liferay.portal.kernel.process.local.LocalProcessLauncher.ShutdownHook;
 import com.liferay.portal.kernel.process.log.ProcessOutputStream;
 import com.liferay.portal.kernel.test.CaptureHandler;
-import com.liferay.portal.kernel.test.CodeCoverageAssertor;
 import com.liferay.portal.kernel.test.JDKLoggerTestUtil;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.InetAddressUtil;
 import com.liferay.portal.kernel.util.SocketUtil;
@@ -53,6 +54,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.Serializable;
+import java.io.WriteAbortedException;
 
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.lang.reflect.Constructor;
@@ -96,7 +98,7 @@ import org.junit.Test;
 public class LocalProcessExecutorTest {
 
 	@ClassRule
-	public static CodeCoverageAssertor codeCoverageAssertor =
+	public static final CodeCoverageAssertor codeCoverageAssertor =
 		new CodeCoverageAssertor() {
 
 			@Override
@@ -135,9 +137,7 @@ public class LocalProcessExecutorTest {
 				InetAddressUtil.getLoopbackInetAddress(), 12342,
 				_serverSocketConfigurator);
 
-		ServerSocket serverSocket = serverSocketChannel.socket();
-
-		try {
+		try (ServerSocket serverSocket = serverSocketChannel.socket()) {
 			int port = serverSocket.getLocalPort();
 
 			_localProcessExecutor.execute(
@@ -169,9 +169,6 @@ public class LocalProcessExecutorTest {
 
 			ServerThread.exit(childSocket);
 		}
-		finally {
-			serverSocket.close();
-		}
 	}
 
 	@Test
@@ -184,9 +181,7 @@ public class LocalProcessExecutorTest {
 				InetAddressUtil.getLoopbackInetAddress(), 12342,
 				_serverSocketConfigurator);
 
-		ServerSocket serverSocket = serverSocketChannel.socket();
-
-		try {
+		try (ServerSocket serverSocket = serverSocketChannel.socket()) {
 			int port = serverSocket.getLocalPort();
 
 			_localProcessExecutor.execute(
@@ -227,9 +222,6 @@ public class LocalProcessExecutorTest {
 				}
 			}
 		}
-		finally {
-			serverSocket.close();
-		}
 	}
 
 	@Test
@@ -242,9 +234,7 @@ public class LocalProcessExecutorTest {
 				InetAddressUtil.getLoopbackInetAddress(), 12342,
 				_serverSocketConfigurator);
 
-		ServerSocket serverSocket = serverSocketChannel.socket();
-
-		try {
+		try (ServerSocket serverSocket = serverSocketChannel.socket()) {
 			int port = serverSocket.getLocalPort();
 
 			_localProcessExecutor.execute(
@@ -285,9 +275,6 @@ public class LocalProcessExecutorTest {
 				}
 			}
 		}
-		finally {
-			serverSocket.close();
-		}
 	}
 
 	@Test
@@ -300,9 +287,7 @@ public class LocalProcessExecutorTest {
 				InetAddressUtil.getLoopbackInetAddress(), 12342,
 				_serverSocketConfigurator);
 
-		ServerSocket serverSocket = serverSocketChannel.socket();
-
-		try {
+		try (ServerSocket serverSocket = serverSocketChannel.socket()) {
 			int port = serverSocket.getLocalPort();
 
 			_localProcessExecutor.execute(
@@ -326,9 +311,6 @@ public class LocalProcessExecutorTest {
 
 			ServerThread.exit(parentSocket);
 		}
-		finally {
-			serverSocket.close();
-		}
 	}
 
 	@Test
@@ -341,9 +323,7 @@ public class LocalProcessExecutorTest {
 				InetAddressUtil.getLoopbackInetAddress(), 12342,
 				_serverSocketConfigurator);
 
-		ServerSocket serverSocket = serverSocketChannel.socket();
-
-		try {
+		try (ServerSocket serverSocket = serverSocketChannel.socket()) {
 			int port = serverSocket.getLocalPort();
 
 			_localProcessExecutor.execute(
@@ -367,9 +347,6 @@ public class LocalProcessExecutorTest {
 
 			ServerThread.exit(parentSocket);
 		}
-		finally {
-			serverSocket.close();
-		}
 	}
 
 	@Test
@@ -382,9 +359,7 @@ public class LocalProcessExecutorTest {
 				InetAddressUtil.getLoopbackInetAddress(), 12342,
 				_serverSocketConfigurator);
 
-		ServerSocket serverSocket = serverSocketChannel.socket();
-
-		try {
+		try (ServerSocket serverSocket = serverSocketChannel.socket()) {
 			int port = serverSocket.getLocalPort();
 
 			_localProcessExecutor.execute(
@@ -429,17 +404,14 @@ public class LocalProcessExecutorTest {
 
 			ServerThread.exit(parentSocket);
 		}
-		finally {
-			serverSocket.close();
-		}
 	}
 
 	@Test
 	public void testBrokenPiping() throws Exception {
-		CaptureHandler captureHandler = JDKLoggerTestUtil.configureJDKLogger(
-			LocalProcessExecutor.class.getName(), Level.SEVERE);
+		try (CaptureHandler captureHandler =
+				JDKLoggerTestUtil.configureJDKLogger(
+					LocalProcessExecutor.class.getName(), Level.SEVERE)) {
 
-		try {
 			List<LogRecord> logRecords = captureHandler.getLogRecords();
 
 			BrokenPipingProcessCallable brokenPipingProcessCallable =
@@ -487,9 +459,6 @@ public class LocalProcessExecutorTest {
 
 			file.delete();
 		}
-		finally {
-			captureHandler.close();
-		}
 	}
 
 	@Test
@@ -497,10 +466,9 @@ public class LocalProcessExecutorTest {
 		ReturnWithoutExitProcessCallable returnWithoutExitProcessCallable =
 			new ReturnWithoutExitProcessCallable("");
 
-		ProcessChannel<String> processChannel =
-			_localProcessExecutor.execute(
-				_createJPDAProcessConfig(_JPDA_OPTIONS1),
-				returnWithoutExitProcessCallable);
+		ProcessChannel<String> processChannel = _localProcessExecutor.execute(
+			_createJPDAProcessConfig(_JPDA_OPTIONS1),
+			returnWithoutExitProcessCallable);
 
 		Future<String> future = processChannel.getProcessNoticeableFuture();
 
@@ -525,7 +493,7 @@ public class LocalProcessExecutorTest {
 	@Test
 	public void testConcurrentCreateExecutorService() throws Exception {
 		final AtomicReference<ExecutorService> atomicReference =
-			new AtomicReference<ExecutorService>();
+			new AtomicReference<>();
 
 		Thread thread = new Thread() {
 
@@ -566,10 +534,9 @@ public class LocalProcessExecutorTest {
 
 	@Test
 	public void testCrash() throws Exception {
-		CaptureHandler captureHandler = JDKLoggerTestUtil.configureJDKLogger(
-			LocalProcessExecutor.class.getName(), Level.OFF);
-
-		try {
+		try (CaptureHandler captureHandler =
+				JDKLoggerTestUtil.configureJDKLogger(
+					LocalProcessExecutor.class.getName(), Level.OFF)) {
 
 			// One crash
 
@@ -635,9 +602,6 @@ public class LocalProcessExecutorTest {
 
 				Assert.assertSame(EOFException.class, throwable.getClass());
 			}
-		}
-		finally {
-			captureHandler.close();
 		}
 	}
 
@@ -762,6 +726,75 @@ public class LocalProcessExecutorTest {
 
 			Throwable throwable = ee.getCause();
 
+			Assert.assertSame(ProcessException.class, throwable.getClass());
+			Assert.assertEquals(
+				DummyExceptionProcessCallable.class.getName(),
+				throwable.getMessage());
+		}
+
+		RuntimeExceptionProcessCallable runtimeExceptionProcessCallable =
+			new RuntimeExceptionProcessCallable();
+
+		processChannel = _localProcessExecutor.execute(
+			_createJPDAProcessConfig(_JPDA_OPTIONS1),
+			runtimeExceptionProcessCallable);
+
+		future = processChannel.getProcessNoticeableFuture();
+
+		try {
+			future.get();
+
+			Assert.fail();
+		}
+		catch (ExecutionException ee) {
+			Assert.assertFalse(future.isCancelled());
+			Assert.assertTrue(future.isDone());
+
+			Throwable throwable = ee.getCause();
+
+			Assert.assertSame(ProcessException.class, throwable.getClass());
+
+			throwable = throwable.getCause();
+
+			Assert.assertSame(RuntimeException.class, throwable.getClass());
+			Assert.assertEquals(
+				RuntimeExceptionProcessCallable.class.getName(),
+				throwable.getMessage());
+		}
+	}
+
+	@Test
+	public void testExceptionPipingBackProcessCallable() throws Exception {
+		ExceptionPipingBackProcessCallable exceptionPipingBackProcessCallable =
+			new ExceptionPipingBackProcessCallable();
+
+		try (CaptureHandler captureHandler =
+				JDKLoggerTestUtil.configureJDKLogger(
+					LocalProcessExecutor.class.getName(), Level.SEVERE)) {
+
+			ProcessChannel<Serializable> processChannel =
+				_localProcessExecutor.execute(
+					_createJPDAProcessConfig(_JPDA_OPTIONS1),
+					exceptionPipingBackProcessCallable);
+
+			NoticeableFuture<Serializable> noticeableFuture =
+				processChannel.getProcessNoticeableFuture();
+
+			Assert.assertNull(noticeableFuture.get());
+
+			List<LogRecord> logRecords = captureHandler.getLogRecords();
+
+			Assert.assertEquals(1, logRecords.size());
+
+			LogRecord logRecord = logRecords.get(0);
+
+			Assert.assertEquals(
+				"Unable to invoke generic process callable",
+				logRecord.getMessage());
+
+			Throwable throwable = logRecord.getThrown();
+
+			Assert.assertSame(ProcessException.class, throwable.getClass());
 			Assert.assertEquals(
 				DummyExceptionProcessCallable.class.getName(),
 				throwable.getMessage());
@@ -903,14 +936,11 @@ public class LocalProcessExecutorTest {
 
 	@Test
 	public void testLeadingLog() throws Exception {
-		CaptureHandler captureHandler = null;
-
-		try {
+		try (CaptureHandler captureHandler =
+				JDKLoggerTestUtil.configureJDKLogger(
+					LocalProcessExecutor.class.getName(), Level.WARNING)) {
 
 			// Warn level
-
-			captureHandler = JDKLoggerTestUtil.configureJDKLogger(
-				LocalProcessExecutor.class.getName(), Level.WARNING);
 
 			List<LogRecord> logRecords = captureHandler.getLogRecords();
 
@@ -994,11 +1024,6 @@ public class LocalProcessExecutorTest {
 
 			Assert.assertEquals(0, logRecords.size());
 		}
-		finally {
-			if (captureHandler != null) {
-				captureHandler.close();
-			}
-		}
 	}
 
 	@Test
@@ -1034,7 +1059,7 @@ public class LocalProcessExecutorTest {
 				new LoggingProcessCallable(logMessage, signalFile);
 
 			final AtomicReference<Exception> exceptionAtomicReference =
-				new AtomicReference<Exception>();
+				new AtomicReference<>();
 
 			Thread thread = new Thread() {
 
@@ -1235,10 +1260,10 @@ public class LocalProcessExecutorTest {
 			}
 		}
 
-		CaptureHandler captureHandler = JDKLoggerTestUtil.configureJDKLogger(
-			LocalProcessExecutor.class.getName(), Level.OFF);
+		try (CaptureHandler captureHandler =
+				JDKLoggerTestUtil.configureJDKLogger(
+					LocalProcessExecutor.class.getName(), Level.OFF)) {
 
-		try {
 			_localProcessExecutor.destroy();
 
 			try {
@@ -1251,8 +1276,51 @@ public class LocalProcessExecutorTest {
 				Assert.assertTrue(future.isDone());
 			}
 		}
-		finally {
-			captureHandler.close();
+	}
+
+	@Test
+	public void testUnserializablePipingBackProcessCallable() throws Exception {
+		UnserializablePipingBackProcessCallable
+			unserializablePipingBackProcessCallable =
+				new UnserializablePipingBackProcessCallable();
+
+		try (CaptureHandler captureHandler =
+				JDKLoggerTestUtil.configureJDKLogger(
+					LocalProcessExecutor.class.getName(), Level.SEVERE)) {
+
+			ProcessChannel<Serializable> processChannel =
+				_localProcessExecutor.execute(
+					_createJPDAProcessConfig(_JPDA_OPTIONS1),
+					unserializablePipingBackProcessCallable);
+
+			NoticeableFuture<Serializable> noticeableFuture =
+				processChannel.getProcessNoticeableFuture();
+
+			try {
+				noticeableFuture.get();
+
+				Assert.fail();
+			}
+			catch (ExecutionException ee) {
+				Throwable cause = ee.getCause();
+
+				List<LogRecord> logRecords = captureHandler.getLogRecords();
+
+				Assert.assertEquals(1, logRecords.size());
+
+				LogRecord logRecord = logRecords.get(0);
+
+				Assert.assertEquals(
+					"Abort subprocess piping", logRecord.getMessage());
+				Assert.assertSame(cause, logRecord.getThrown());
+				Assert.assertSame(
+					WriteAbortedException.class, cause.getClass());
+
+				cause = cause.getCause();
+
+				Assert.assertSame(
+					NotSerializableException.class, cause.getClass());
+			}
 		}
 	}
 
@@ -1295,16 +1363,14 @@ public class LocalProcessExecutorTest {
 	}
 
 	private static List<String> _createArguments(String jpdaOptions) {
-		List<String> arguments = new ArrayList<String>();
+		List<String> arguments = new ArrayList<>();
 
 		arguments.add(
 			"-D" + SystemProperties.SYSTEM_PROPERTIES_QUIET + "=true");
 
-		boolean coberturaParentDynamicallyInstrumented = Boolean.getBoolean(
-			"cobertura.parent.dynamically.instrumented");
-
-		if (coberturaParentDynamicallyInstrumented) {
-			arguments.add("-Dcobertura.parent.dynamically.instrumented=true");
+		if (Boolean.getBoolean("junit.debug")) {
+			arguments.add(jpdaOptions);
+			arguments.add("-Djunit.debug=true");
 		}
 
 		String agentLine = System.getProperty("junit.cobertura.agent");
@@ -1314,24 +1380,12 @@ public class LocalProcessExecutorTest {
 			arguments.add("-Djunit.cobertura.agent=" + agentLine);
 		}
 
-		boolean junitCodeCoverage = Boolean.getBoolean("junit.code.coverage");
-
-		if (junitCodeCoverage) {
+		if (Boolean.getBoolean("junit.code.coverage")) {
 			arguments.add("-Djunit.code.coverage=true");
 		}
 
-		boolean junitCodeCoverageDump = Boolean.getBoolean(
-			"junit.code.coverage.dump");
-
-		if (junitCodeCoverageDump) {
+		if (Boolean.getBoolean("junit.code.coverage.dump")) {
 			arguments.add("-Djunit.code.coverage.dump=true");
-		}
-
-		boolean junitDebug = Boolean.getBoolean("junit.debug");
-
-		if (junitDebug) {
-			arguments.add(jpdaOptions);
-			arguments.add("-Djunit.debug=true");
 		}
 
 		String fileName = System.getProperty(
@@ -1357,7 +1411,7 @@ public class LocalProcessExecutorTest {
 
 	private static Thread _getHeartbeatThread(boolean remove) {
 		AtomicReference<? extends Thread> heartbeatThreadReference =
-			(AtomicReference<? extends Thread>)ReflectionTestUtil.getFieldValue(
+			ReflectionTestUtil.getFieldValue(
 				ProcessContext.class, "_heartbeatThreadReference");
 
 		if (remove) {
@@ -1410,10 +1464,10 @@ public class LocalProcessExecutorTest {
 	private static final String _JPDA_OPTIONS2 =
 		"-agentlib:jdwp=transport=dt_socket,address=8002,server=y,suspend=y";
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		LocalProcessExecutorTest.class);
 
-	private static ServerSocketConfigurator _serverSocketConfigurator =
+	private static final ServerSocketConfigurator _serverSocketConfigurator =
 		new ServerSocketConfigurator() {
 
 		@Override
@@ -1425,7 +1479,7 @@ public class LocalProcessExecutorTest {
 
 	};
 
-	private LocalProcessExecutor _localProcessExecutor =
+	private final LocalProcessExecutor _localProcessExecutor =
 		new LocalProcessExecutor();
 
 	private static class AttachChildProcessCallable1
@@ -1755,7 +1809,7 @@ public class LocalProcessExecutorTest {
 
 		private static final long serialVersionUID = 1L;
 
-		private Class<ProcessCallable<?>> _processCallableClass;
+		private final Class<ProcessCallable<?>> _processCallableClass;
 		private int _serverPort;
 
 	}
@@ -1770,12 +1824,11 @@ public class LocalProcessExecutorTest {
 			UnsyncByteArrayOutputStream unsyncByteArrayOutputStream =
 				new UnsyncByteArrayOutputStream();
 
-			ObjectOutputStream objectOutputStream = new ObjectOutputStream(
-				unsyncByteArrayOutputStream);
+			try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(
+					unsyncByteArrayOutputStream)) {
 
-			objectOutputStream.writeObject(dummyReturnProcessCallable);
-
-			objectOutputStream.close();
+				objectOutputStream.writeObject(dummyReturnProcessCallable);
+			}
 
 			byte[] serializedData = unsyncByteArrayOutputStream.toByteArray();
 
@@ -1853,7 +1906,7 @@ public class LocalProcessExecutorTest {
 			_countDownLatch.await();
 		}
 
-		private CountDownLatch _countDownLatch;
+		private final CountDownLatch _countDownLatch;
 
 	}
 
@@ -1888,7 +1941,7 @@ public class LocalProcessExecutorTest {
 			return _payload;
 		}
 
-		private byte[] _payload;
+		private final byte[] _payload;
 
 	}
 
@@ -1929,6 +1982,29 @@ public class LocalProcessExecutorTest {
 
 			return sb.toString();
 		}
+
+	}
+
+	private static class ExceptionPipingBackProcessCallable
+		implements ProcessCallable<Serializable> {
+
+		@Override
+		public Serializable call() throws ProcessException {
+			ProcessOutputStream processOutputStream =
+				ProcessContext.getProcessOutputStream();
+
+			try {
+				processOutputStream.writeProcessCallable(
+					new DummyExceptionProcessCallable());
+			}
+			catch (IOException ioe) {
+				throw new ProcessException(ioe);
+			}
+
+			return null;
+		}
+
+		private static final long serialVersionUID = 1L;
 
 	}
 
@@ -1980,7 +2056,7 @@ public class LocalProcessExecutorTest {
 
 		private static final long serialVersionUID = 1L;
 
-		private int _exitCode;
+		private final int _exitCode;
 
 	}
 
@@ -2041,8 +2117,8 @@ public class LocalProcessExecutorTest {
 
 		private static final long serialVersionUID = 1L;
 
-		private String _bodyLog;
-		private String _leadingLog;
+		private final String _bodyLog;
+		private final String _leadingLog;
 
 	}
 
@@ -2097,8 +2173,8 @@ public class LocalProcessExecutorTest {
 
 		private static final long serialVersionUID = 1L;
 
-		private String _logMessage;
-		private File _signalFile;
+		private final String _logMessage;
+		private final File _signalFile;
 
 	}
 
@@ -2108,9 +2184,8 @@ public class LocalProcessExecutorTest {
 			ProcessOutputStream processOutputStream =
 				ProcessContext.getProcessOutputStream();
 
-			_oldObjectOutputStream =
-				(ObjectOutputStream)ReflectionTestUtil.getFieldValue(
-					processOutputStream, "_objectOutputStream");
+			_oldObjectOutputStream = ReflectionTestUtil.getFieldValue(
+				processOutputStream, "_objectOutputStream");
 
 			_thread = Thread.currentThread();
 		}
@@ -2134,7 +2209,7 @@ public class LocalProcessExecutorTest {
 			return true;
 		}
 
-		private ObjectOutputStream _oldObjectOutputStream;
+		private final ObjectOutputStream _oldObjectOutputStream;
 		private Thread _thread;
 
 	}
@@ -2169,7 +2244,7 @@ public class LocalProcessExecutorTest {
 
 		private static final long serialVersionUID = 1L;
 
-		private String _propertyKey;
+		private final String _propertyKey;
 
 	}
 
@@ -2218,11 +2293,30 @@ public class LocalProcessExecutorTest {
 			return sb.toString();
 		}
 
+		private static volatile Thread _thread;
 		private static final long serialVersionUID = 1L;
 
-		private static volatile Thread _thread;
+		private final String _returnValue;
 
-		private String _returnValue;
+	}
+
+	private static class RuntimeExceptionProcessCallable
+		implements ProcessCallable<Serializable> {
+
+		@Override
+		public Serializable call() {
+			throw new RuntimeException(
+				RuntimeExceptionProcessCallable.class.getName());
+		}
+
+		@Override
+		public String toString() {
+			Class<?> clazz = getClass();
+
+			return clazz.getSimpleName();
+		}
+
+		private static final long serialVersionUID = 1L;
 
 	}
 
@@ -2328,7 +2422,7 @@ public class LocalProcessExecutorTest {
 
 							break;
 
-						case  _CODE_INTERRUPT :
+						case _CODE_INTERRUPT :
 							Thread heartbeatThread = _getHeartbeatThread(false);
 
 							heartbeatThread.interrupt();
@@ -2371,8 +2465,8 @@ public class LocalProcessExecutorTest {
 
 		private static final int _CODE_NULL_OUT_OOS = 4;
 
-		private Thread _mainThread;
-		private Socket _socket;
+		private final Thread _mainThread;
+		private final Socket _socket;
 
 	}
 
@@ -2398,8 +2492,31 @@ public class LocalProcessExecutorTest {
 			return true;
 		}
 
-		private boolean _failToShutdown;
+		private final boolean _failToShutdown;
 		private Thread _thread;
+
+	}
+
+	private static class UnserializablePipingBackProcessCallable
+		implements ProcessCallable<Serializable> {
+
+		@Override
+		public Serializable call() throws ProcessException {
+			ProcessOutputStream processOutputStream =
+				ProcessContext.getProcessOutputStream();
+
+			try {
+				processOutputStream.writeProcessCallable(
+					new UnserializableProcessCallable());
+			}
+			catch (IOException ioe) {
+				throw new ProcessException(ioe);
+			}
+
+			return null;
+		}
+
+		private static final long serialVersionUID = 1L;
 
 	}
 

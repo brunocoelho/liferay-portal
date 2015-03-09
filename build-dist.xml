@@ -13,6 +13,20 @@
 		</else>
 	</if>
 
+	<macrodef name="download-dynamic-jars">
+		<attribute name="app.server.lib.portal.dir" />
+
+		<sequential>
+			<property file="${project.dir}/portal-impl/src/portal.properties" prefix="portal" />
+
+			<mirrors-get
+				dest="@{app.server.lib.portal.dir}/${portal.setup.liferay.pool.provider.jar.name[hikaricp]}"
+				skipexisting="true"
+				src="${portal.setup.liferay.pool.provider.jar.url[hikaricp]}"
+			/>
+		</sequential>
+	</macrodef>
+
 	<macrodef name="update-plugins-includes-plugin">
 		<attribute name="plugins.includes.plugin.bundle" />
 		<attribute name="plugins.includes.plugin.dependent-apps" />
@@ -57,6 +71,8 @@
 
 		<antcall target="deploy" inheritAll="false" />
 
+		<antcall target="resolve-dynamic-jars" inheritAll="false" />
+
 		<app-server-properties-reset />
 
 		<antcall target="deploy-plugins">
@@ -74,6 +90,8 @@
 		</app-server-properties-update>
 
 		<ant target="deploy" inheritAll="false" />
+
+		<antcall target="resolve-dynamic-jars" inheritAll="false" />
 
 		<app-server-properties-reset />
 
@@ -94,6 +112,8 @@
 		<delete dir="${project.dir}/portal-web/classes" />
 
 		<ant target="deploy" inheritAll="false" />
+
+		<antcall target="resolve-dynamic-jars" inheritAll="false" />
 
 		<app-server-properties-reset />
 
@@ -122,7 +142,7 @@
 			app.server.jboss.version=6.0.1
 			app.server.jboss.dir=${app.server.parent.dir}/jboss-eap-6.0
 			app.server.jboss.zip.name=jboss-eap-6.0.1.zip
-			app.server.jboss.zip.url=http://mirrors/www.jboss.org/jbossas/downloads/jboss-eap-6.0.1.zip
+			app.server.jboss.zip.url=http://www.jboss.org/jbossas/downloads/jboss-eap-6.0.1.zip
 		</app-server-properties-update>
 
 		<antcall target="unzip-jboss" inheritAll="false" />
@@ -130,6 +150,8 @@
 		<delete dir="${project.dir}/portal-web/classes" />
 
 		<ant target="deploy" inheritAll="false" />
+
+		<antcall target="resolve-dynamic-jars" inheritAll="false" />
 
 		<app-server-properties-reset />
 
@@ -146,7 +168,7 @@
 			app.server.jboss.version=6.1.0
 			app.server.jboss.dir=${app.server.parent.dir}/jboss-eap-6.1
 			app.server.jboss.zip.name=jboss-eap-6.1.0.zip
-			app.server.jboss.zip.url=http://mirrors/www.jboss.org/jbossas/downloads/jboss-eap-6.1.0.zip
+			app.server.jboss.zip.url=http://www.jboss.org/jbossas/downloads/jboss-eap-6.1.0.zip
 		</app-server-properties-update>
 
 		<antcall target="unzip-jboss" inheritAll="false" />
@@ -154,6 +176,8 @@
 		<delete dir="${project.dir}/portal-web/classes" />
 
 		<ant target="deploy" inheritAll="false" />
+
+		<antcall target="resolve-dynamic-jars" inheritAll="false" />
 
 		<app-server-properties-reset />
 
@@ -175,6 +199,8 @@
 
 		<ant target="deploy" inheritAll="false" />
 
+		<antcall target="resolve-dynamic-jars" inheritAll="false" />
+
 		<app-server-properties-reset />
 
 		<antcall target="deploy-plugins">
@@ -194,6 +220,8 @@
 		<delete dir="${project.dir}/portal-web/classes" />
 
 		<ant target="deploy" inheritAll="false" />
+
+		<antcall target="resolve-dynamic-jars" inheritAll="false" />
 
 		<app-server-properties-reset />
 
@@ -296,6 +324,8 @@
 
 		<ant target="deploy" inheritAll="false" />
 
+		<antcall target="resolve-dynamic-jars" inheritAll="false" />
+
 		<app-server-properties-reset />
 
 		<antcall target="deploy-plugins">
@@ -352,7 +382,7 @@
 			<then>
 				<mkdir dir="${app.server.parent.dir}" />
 
-				<get
+				<mirrors-get
 					dest="${app.server.parent.dir}/${app.server.tcat.zip.name}"
 					src="${app.server.tcat.zip.url}"
 					verbose="true"
@@ -497,9 +527,6 @@
 	</target>
 
 	<target name="build-dist-tcat-tomcat">
-		<mkdir dir="${app.server.tcat.dir}/admin/temp" />
-		<mkdir dir="${app.server.tcat.dir}/agent/temp" />
-
 		<mkdir dir="${app.server.tcat.dir}/tomcat" />
 
 		<copy todir="${app.server.tcat.dir}/tomcat">
@@ -533,6 +560,8 @@
 		<delete dir="${project.dir}/portal-web/classes" />
 
 		<antcall target="all" inheritAll="false" />
+
+		<antcall target="resolve-dynamic-jars" inheritAll="false" />
 
 		<app-server-properties-reset />
 
@@ -570,6 +599,8 @@
 				<app-server-properties-reset />
 			</then>
 		</if>
+
+		<antcall target="resolve-dynamic-jars" inheritAll="false" />
 
 		<antcall target="deploy-plugins">
 			<param name="deployer.dest.dir" value="${app.server.parent.dir}/tomcat-${app.server.tomcat.version}/webapps" />
@@ -954,6 +985,40 @@ release was successful.</echo>
 		<echo file="prepare-generated-files.tstamp">${prepare-generated-files.tstamp}</echo>
 	</target>
 
+	<target name="resolve-dynamic-jars">
+		<sequential>
+			<if>
+				<equals arg1="${app.server.type}" arg2="glassfish" />
+				<then>
+					<tstamp>
+						<format property="tstamp.value" pattern="yyyyMMddkkmmssSSS" />
+					</tstamp>
+
+					<unzip
+						dest="${app.server.glassfish.deploy.dir}/${tstamp.value}"
+						src="${app.server.glassfish.deploy.dir}/liferay-portal.war"
+					/>
+
+					<download-dynamic-jars
+						app.server.lib.portal.dir="${app.server.glassfish.deploy.dir}/${tstamp.value}/WEB-INF/lib"
+					/>
+
+					<zip
+						basedir="${app.server.glassfish.deploy.dir}/${tstamp.value}"
+						destfile="${app.server.glassfish.deploy.dir}/liferay-portal.war"
+					/>
+
+					<delete dir="${app.server.glassfish.deploy.dir}/${tstamp.value}" />
+				</then>
+				<else>
+					<download-dynamic-jars
+						app.server.lib.portal.dir="${app.server.lib.portal.dir}"
+					/>
+				</else>
+			</if>
+		</sequential>
+	</target>
+
 	<target name="update-java-security-tomcat">
 		<if>
 			<equals arg1="${java.security.manager.option}" arg2="" />
@@ -1011,7 +1076,7 @@ release was successful.</echo>
 			<then>
 				<mkdir dir="${app.server.parent.dir}" />
 
-				<get
+				<mirrors-get
 					dest="${app.server.parent.dir}/${app.server.geronimo.zip.name}"
 					src="${app.server.geronimo.zip.url}"
 					verbose="true"
@@ -1081,7 +1146,7 @@ release was successful.</echo>
 			<then>
 				<mkdir dir="${app.server.parent.dir}" />
 
-				<get
+				<mirrors-get
 					dest="${app.server.parent.dir}/${app.server.glassfish.zip.name}"
 					src="${app.server.glassfish.zip.url}"
 					verbose="true"
@@ -1184,7 +1249,7 @@ release was successful.</echo>
 					<then>
 						<trycatch>
 							<try>
-								<get
+								<mirrors-get
 									dest="${app.server.parent.dir}/${app.server.jboss.zip.name}"
 									src="${app.server.jboss.zip.url}"
 									verbose="true"
@@ -1202,7 +1267,7 @@ this task.
 						</trycatch>
 					</then>
 					<else>
-						<get
+						<mirrors-get
 							dest="${app.server.parent.dir}/${app.server.jboss.zip.name}"
 							src="${app.server.jboss.zip.url}"
 							verbose="true"
@@ -1574,7 +1639,7 @@ this task.
 			<then>
 				<mkdir dir="${app.server.parent.dir}" />
 
-				<get
+				<mirrors-get
 					dest="${app.server.parent.dir}/${app.server.jetty.zip.name}"
 					src="${app.server.jetty.zip.url}"
 					verbose="true"
@@ -1689,7 +1754,7 @@ this task.
 			<then>
 				<mkdir dir="${app.server.parent.dir}" />
 
-				<get
+				<mirrors-get
 					dest="${app.server.parent.dir}/${app.server.jonas.zip.name}"
 					src="${app.server.jonas.zip.url}"
 					verbose="true"
@@ -1855,7 +1920,7 @@ this task.
 			<then>
 				<mkdir dir="${app.server.parent.dir}" />
 
-				<get
+				<mirrors-get
 					dest="${app.server.parent.dir}/${app.server.resin.zip.name}"
 					src="${app.server.resin.zip.url}"
 					verbose="true"
@@ -1938,7 +2003,7 @@ this task.
 			<then>
 				<mkdir dir="${app.server.parent.dir}" />
 
-				<get
+				<mirrors-get
 					dest="${app.server.parent.dir}/${app.server.tcserver.zip.name}"
 					src="${app.server.tcserver.zip.url}"
 					verbose="true"
@@ -2030,7 +2095,7 @@ this task.
 			<then>
 				<mkdir dir="${app.server.parent.dir}" />
 
-				<get
+				<mirrors-get
 					dest="${app.server.parent.dir}/${app.server.tomcat.zip.name}"
 					src="${app.server.tomcat.zip.url}"
 					verbose="true"
@@ -2153,21 +2218,16 @@ this task.
 
 	<target name="unzip-weblogic-original">
 		<if>
-			<matches pattern="http://mirrors" string="${app.server.weblogic.zip.url}" />
+			<not>
+				<available file="${app.server.parent.dir}/${app.server.weblogic.zip.name}" />
+			</not>
 			<then>
-				<if>
-					<not>
-						<available file="${app.server.parent.dir}/${app.server.weblogic.zip.name}" />
-					</not>
-					<then>
-						<mkdir dir="${app.server.parent.dir}" />
+				<mkdir dir="${app.server.parent.dir}" />
 
-						<get
-							dest="${app.server.parent.dir}"
-							src="${app.server.weblogic.zip.url}"
-						/>
-					</then>
-				</if>
+				<mirrors-get
+					dest="${app.server.parent.dir}"
+					src="${app.server.weblogic.zip.url}"
+				/>
 			</then>
 		</if>
 

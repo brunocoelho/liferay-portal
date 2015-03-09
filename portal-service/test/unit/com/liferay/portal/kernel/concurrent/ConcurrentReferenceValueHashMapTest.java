@@ -15,8 +15,10 @@
 package com.liferay.portal.kernel.concurrent;
 
 import com.liferay.portal.kernel.memory.FinalizeManager;
-import com.liferay.portal.kernel.test.CodeCoverageAssertor;
-import com.liferay.portal.kernel.test.NewClassLoaderJUnitTestRunner;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
+import com.liferay.portal.kernel.test.rule.NewEnv;
+import com.liferay.portal.kernel.test.rule.NewEnvTestRule;
 import com.liferay.portal.kernel.util.StringPool;
 
 import java.lang.ref.Reference;
@@ -27,20 +29,22 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Shuyang Zhou
  */
-@RunWith(NewClassLoaderJUnitTestRunner.class)
 public class ConcurrentReferenceValueHashMapTest
 	extends BaseConcurrentReferenceHashMapTestCase {
 
 	@ClassRule
-	public static CodeCoverageAssertor codeCoverageAssertor =
-		new CodeCoverageAssertor();
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			CodeCoverageAssertor.INSTANCE, NewEnvTestRule.INSTANCE);
 
+	@NewEnv(type = NewEnv.Type.CLASSLOADER)
 	@Test
 	public void testAutoRemove() throws InterruptedException {
 		System.setProperty(
@@ -60,11 +64,11 @@ public class ConcurrentReferenceValueHashMapTest
 	@Test
 	public void testConstructor() {
 		ConcurrentMap<String, Reference<Object>> innerConcurrentMap =
-			new ConcurrentHashMap<String, Reference<Object>>();
+			new ConcurrentHashMap<>();
 
 		ConcurrentReferenceValueHashMap<String, Object>
 			concurrentReferenceValueHashMap =
-				new ConcurrentReferenceValueHashMap<String, Object>(
+				new ConcurrentReferenceValueHashMap<>(
 					innerConcurrentMap, FinalizeManager.WEAK_REFERENCE_FACTORY);
 
 		Assert.assertSame(
@@ -73,9 +77,8 @@ public class ConcurrentReferenceValueHashMapTest
 
 		Map<String, Object> dataMap = createDataMap();
 
-		concurrentReferenceValueHashMap =
-			new ConcurrentReferenceValueHashMap<String, Object>(
-				dataMap, FinalizeManager.WEAK_REFERENCE_FACTORY);
+		concurrentReferenceValueHashMap = new ConcurrentReferenceValueHashMap<>(
+			dataMap, FinalizeManager.WEAK_REFERENCE_FACTORY);
 
 		Assert.assertEquals(dataMap, concurrentReferenceValueHashMap);
 

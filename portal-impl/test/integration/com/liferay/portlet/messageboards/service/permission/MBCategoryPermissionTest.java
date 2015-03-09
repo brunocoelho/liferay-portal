@@ -14,25 +14,36 @@
 
 package com.liferay.portlet.messageboards.service.permission;
 
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.security.permission.ActionKeys;
-import com.liferay.portal.service.permission.BasePermissionTestCase;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
+import com.liferay.portal.service.ServiceContext;
+import com.liferay.portal.service.permission.test.BasePermissionTestCase;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portlet.messageboards.model.MBCategory;
-import com.liferay.portlet.messageboards.util.test.MBTestUtil;
+import com.liferay.portlet.messageboards.model.MBCategoryConstants;
+import com.liferay.portlet.messageboards.service.MBCategoryLocalServiceUtil;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Eric Chin
  * @author Shinn Lok
  */
-@ExecutionTestListeners(listeners = {MainServletExecutionTestListener.class})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 public class MBCategoryPermissionTest extends BasePermissionTestCase {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE);
 
 	@Test
 	public void testContains() throws Exception {
@@ -55,10 +66,18 @@ public class MBCategoryPermissionTest extends BasePermissionTestCase {
 
 	@Override
 	protected void doSetUp() throws Exception {
-		_category = MBTestUtil.addCategory(group.getGroupId());
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				group.getGroupId(), TestPropsValues.getUserId());
 
-		_subcategory = MBTestUtil.addCategory(
-			group.getGroupId(), _category.getCategoryId());
+		_category = MBCategoryLocalServiceUtil.addCategory(
+			TestPropsValues.getUserId(),
+			MBCategoryConstants.DEFAULT_PARENT_CATEGORY_ID,
+			RandomTestUtil.randomString(), StringPool.BLANK, serviceContext);
+
+		_subcategory = MBCategoryLocalServiceUtil.addCategory(
+			TestPropsValues.getUserId(), _category.getCategoryId(),
+			RandomTestUtil.randomString(), StringPool.BLANK, serviceContext);
 	}
 
 	@Override

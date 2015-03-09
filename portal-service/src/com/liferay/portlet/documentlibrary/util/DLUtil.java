@@ -209,6 +209,12 @@ public class DLUtil {
 		return getDL().getFileIconCssClass(extension);
 	}
 
+	public static String getFileName(
+		long groupId, long folderId, String tempFileName) {
+
+		return getDL().getFileName(groupId, folderId, tempFileName);
+	}
+
 	public static String getGenericName(String extension) {
 		return getDL().getGenericName(extension);
 	}
@@ -265,6 +271,10 @@ public class DLUtil {
 			orderByCol, orderByType);
 	}
 
+	public static String getSanitizedFileName(String title, String extension) {
+		return getDL().getSanitizedFileName(title, extension);
+	}
+
 	public static String getTempFileId(long id, String version) {
 		return getDL().getTempFileId(id, version);
 	}
@@ -275,6 +285,11 @@ public class DLUtil {
 		return getDL().getTempFileId(id, version, languageId);
 	}
 
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #getThumbnailSrc(FileEntry,
+	 *             ThemeDisplay)}
+	 */
+	@Deprecated
 	public static String getThumbnailSrc(
 			FileEntry fileEntry, DLFileShortcut dlFileShortcut,
 			ThemeDisplay themeDisplay)
@@ -283,6 +298,11 @@ public class DLUtil {
 		return getDL().getThumbnailSrc(fileEntry, dlFileShortcut, themeDisplay);
 	}
 
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #getThumbnailSrc(FileEntry,
+	 *             FileVersion, ThemeDisplay)}
+	 */
+	@Deprecated
 	public static String getThumbnailSrc(
 			FileEntry fileEntry, FileVersion fileVersion,
 			DLFileShortcut dlFileShortcut, ThemeDisplay themeDisplay)
@@ -290,6 +310,21 @@ public class DLUtil {
 
 		return getDL().getThumbnailSrc(
 			fileEntry, fileVersion, dlFileShortcut, themeDisplay);
+	}
+
+	public static String getThumbnailSrc(
+			FileEntry fileEntry, FileVersion fileVersion,
+			ThemeDisplay themeDisplay)
+		throws Exception {
+
+		return getDL().getThumbnailSrc(fileEntry, fileVersion, themeDisplay);
+	}
+
+	public static String getThumbnailSrc(
+			FileEntry fileEntry, ThemeDisplay themeDisplay)
+		throws Exception {
+
+		return getDL().getThumbnailSrc(fileEntry, themeDisplay);
 	}
 
 	public static String getThumbnailStyle() throws Exception {

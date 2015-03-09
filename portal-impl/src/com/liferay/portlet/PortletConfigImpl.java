@@ -49,21 +49,24 @@ import javax.xml.namespace.QName;
 public class PortletConfigImpl implements LiferayPortletConfig {
 
 	public PortletConfigImpl(Portlet portlet, PortletContext portletContext) {
-		_portletApp = portlet.getPortletApp();
 		_portlet = portlet;
-		_portletName = portlet.getRootPortletId();
-
-		int pos = _portletName.indexOf(PortletConstants.WAR_SEPARATOR);
-
-		if (pos != -1) {
-			_portletName = _portletName.substring(0, pos);
-		}
-
 		_portletContext = portletContext;
-		_resourceBundles = new ConcurrentHashMap<String, ResourceBundle>();
 
 		_copyRequestParameters = GetterUtil.getBoolean(
 			getInitParameter("copy-request-parameters"));
+		_portletApp = portlet.getPortletApp();
+
+		String portletName = portlet.getRootPortletId();
+
+		int pos = portletName.indexOf(PortletConstants.WAR_SEPARATOR);
+
+		if (pos != -1) {
+			portletName = portletName.substring(0, pos);
+		}
+
+		_portletName = portletName;
+
+		_resourceBundles = new ConcurrentHashMap<>();
 	}
 
 	@Override
@@ -118,7 +121,7 @@ public class PortletConfigImpl implements LiferayPortletConfig {
 
 	@Override
 	public Enumeration<String> getPublicRenderParameterNames() {
-		List<String> publicRenderParameterNames = new ArrayList<String>();
+		List<String> publicRenderParameterNames = new ArrayList<>();
 
 		for (PublicRenderParameter publicRenderParameter :
 				_portlet.getPublicRenderParameters()) {
@@ -193,7 +196,7 @@ public class PortletConfigImpl implements LiferayPortletConfig {
 
 	@Override
 	public Enumeration<Locale> getSupportedLocales() {
-		List<Locale> supportedLocales = new ArrayList<Locale>();
+		List<Locale> supportedLocales = new ArrayList<>();
 
 		for (String languageId : _portlet.getSupportedLocales()) {
 			supportedLocales.add(LocaleUtil.fromLanguageId(languageId));
@@ -215,7 +218,7 @@ public class PortletConfigImpl implements LiferayPortletConfig {
 	protected Set<javax.xml.namespace.QName> toJavaxQNames(
 		Set<com.liferay.portal.kernel.xml.QName> liferayQNames) {
 
-		Set<QName> javaxQNames = new HashSet<QName>(liferayQNames.size());
+		Set<QName> javaxQNames = new HashSet<>(liferayQNames.size());
 
 		for (com.liferay.portal.kernel.xml.QName liferayQName : liferayQNames) {
 			QName javaxQName = new QName(
@@ -228,11 +231,11 @@ public class PortletConfigImpl implements LiferayPortletConfig {
 		return javaxQNames;
 	}
 
-	private boolean _copyRequestParameters;
-	private Portlet _portlet;
-	private PortletApp _portletApp;
-	private PortletContext _portletContext;
-	private String _portletName;
-	private Map<String, ResourceBundle> _resourceBundles;
+	private final boolean _copyRequestParameters;
+	private final Portlet _portlet;
+	private final PortletApp _portletApp;
+	private final PortletContext _portletContext;
+	private final String _portletName;
+	private final Map<String, ResourceBundle> _resourceBundles;
 
 }

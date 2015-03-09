@@ -72,7 +72,7 @@ public class MBThreadTrashHandler extends BaseTrashHandler {
 	}
 
 	@Override
-	public String getContainerModelName() {
+	public String getContainerModelName(long classPK) {
 		return "category";
 	}
 
@@ -81,7 +81,7 @@ public class MBThreadTrashHandler extends BaseTrashHandler {
 			long classPK, long parentContainerModelId, int start, int end)
 		throws PortalException {
 
-		List<ContainerModel> containerModels = new ArrayList<ContainerModel>();
+		List<ContainerModel> containerModels = new ArrayList<>();
 
 		MBThread thread = MBThreadLocalServiceUtil.getThread(classPK);
 

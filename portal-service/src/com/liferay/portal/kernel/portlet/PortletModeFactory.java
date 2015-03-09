@@ -29,7 +29,7 @@ public class PortletModeFactory {
 	}
 
 	private PortletModeFactory() {
-		_portletModes = new HashMap<String, PortletMode>();
+		_portletModes = new HashMap<>();
 
 		_portletModes.put(_EDIT, LiferayPortletMode.EDIT);
 		_portletModes.put(_HELP, LiferayPortletMode.HELP);
@@ -73,8 +73,9 @@ public class PortletModeFactory {
 
 	private static final String _VIEW = PortletMode.VIEW.toString();
 
-	private static PortletModeFactory _instance = new PortletModeFactory();
+	private static final PortletModeFactory _instance =
+		new PortletModeFactory();
 
-	private Map<String, PortletMode> _portletModes;
+	private final Map<String, PortletMode> _portletModes;
 
 }

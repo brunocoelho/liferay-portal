@@ -14,17 +14,19 @@
 
 package com.liferay.portlet.dynamicdatamapping.service;
 
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.template.TemplateConstants;
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.Sync;
+import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.StringPool;
-import com.liferay.portal.test.Sync;
-import com.liferay.portal.test.SynchronousDestinationExecutionTestListener;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portal.util.PortalUtil;
-import com.liferay.portal.util.test.RandomTestUtil;
-import com.liferay.portal.util.test.ServiceContextTestUtil;
-import com.liferay.portal.util.test.TestPropsValues;
 import com.liferay.portlet.asset.model.AssetEntry;
 import com.liferay.portlet.dynamicdatamapping.RequiredTemplateException;
 import com.liferay.portlet.dynamicdatamapping.TemplateDuplicateTemplateKeyException;
@@ -33,26 +35,38 @@ import com.liferay.portlet.dynamicdatamapping.TemplateScriptException;
 import com.liferay.portlet.dynamicdatamapping.model.DDMStructure;
 import com.liferay.portlet.dynamicdatamapping.model.DDMTemplate;
 import com.liferay.portlet.dynamicdatamapping.model.DDMTemplateConstants;
+import com.liferay.portlet.dynamicdatamapping.util.comparator.TemplateIdComparator;
 import com.liferay.portlet.journal.model.JournalArticle;
 import com.liferay.portlet.journal.util.test.JournalTestUtil;
 
 import java.util.List;
 
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Eduardo Garcia
  */
-@ExecutionTestListeners(
-	listeners = {
-		MainServletExecutionTestListener.class,
-		SynchronousDestinationExecutionTestListener.class
-	})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 @Sync
 public class DDMTemplateServiceTest extends BaseDDMServiceTestCase {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE,
+			SynchronousDestinationTestRule.INSTANCE);
+
+	@Before
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+
+		_classNameId = PortalUtil.getClassNameId(AssetEntry.class);
+	}
 
 	@Test
 	public void testAddTemplateWithDuplicateKey() throws Exception {
@@ -185,70 +199,285 @@ public class DDMTemplateServiceTest extends BaseDDMServiceTestCase {
 	}
 
 	@Test
-	public void testSearch() throws Exception {
-		DDMTemplate template = addDisplayTemplate(
-			_classNameId, 0, "Test Template 1");
+	public void testSearchByDescription() throws Exception {
+		long resourceClassNameId = RandomTestUtil.randomLong();
 
-		addDisplayTemplate(_classNameId, 0, "Test Template 2");
+		addDisplayTemplate(
+			_classNameId, 0, resourceClassNameId, "Event", "Event");
+		addDisplayTemplate(
+			_classNameId, 0, resourceClassNameId, "Contact", "Contact");
+		addDisplayTemplate(
+			_classNameId, 0, resourceClassNameId, "Meeting", "Meeting");
 
 		List<DDMTemplate> templates = DDMTemplateLocalServiceUtil.search(
-			template.getCompanyId(), template.getGroupId(),
-			template.getClassNameId(), template.getClassPK(),
-			template.getName(), template.getDescription(), template.getType(),
-			template.getMode(), template.getLanguage(), false, 0, 1, null);
+			TestPropsValues.getCompanyId(), new long[] {group.getGroupId()},
+			null, null, resourceClassNameId, null, "Meeting", null, null, null,
+			true, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 
 		Assert.assertEquals(1, templates.size());
+
+		DDMTemplate template = templates.get(0);
+
+		Assert.assertEquals(
+			"Meeting", template.getDescription(group.getDefaultLanguageId()));
 	}
 
 	@Test
 	public void testSearchByKeywords() throws Exception {
-		DDMTemplate template = addDisplayTemplate(
-			_classNameId, 0, "Test Template 1");
-
-		addDisplayTemplate(_classNameId, 0, "Test Template 2");
+		addDisplayTemplate(_classNameId, 0, "Event Template");
+		addDisplayTemplate(_classNameId, 0, "Contact Template");
 
 		List<DDMTemplate> templates = DDMTemplateLocalServiceUtil.search(
-			template.getCompanyId(), template.getGroupId(),
-			template.getClassNameId(), template.getClassPK(), null,
-			template.getType(), template.getMode(), 0, 1, null);
+			TestPropsValues.getCompanyId(), new long[] {group.getGroupId()},
+			null, null, 0, "Event", null, null, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS, new TemplateIdComparator(true));
 
 		Assert.assertEquals(1, templates.size());
+		Assert.assertEquals(
+			"Event Template", getTemplateName(templates.get(0)));
+
+		templates = DDMTemplateLocalServiceUtil.search(
+			TestPropsValues.getCompanyId(), new long[] {group.getGroupId()},
+			null, null, 0, "Template", null, null, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS, new TemplateIdComparator(true));
+
+		Assert.assertEquals(
+			"Event Template", getTemplateName(templates.get(0)));
+		Assert.assertEquals(
+			"Contact Template", getTemplateName(templates.get(1)));
+	}
+
+	@Test
+	public void testSearchByName() throws Exception {
+		addDisplayTemplate(_classNameId, 0, "Event");
+		addDisplayTemplate(_classNameId, 0, "Contact");
+		addDisplayTemplate(_classNameId, 0, "Meeting");
+
+		List<DDMTemplate> templates = DDMTemplateLocalServiceUtil.search(
+			TestPropsValues.getCompanyId(), new long[] {group.getGroupId()},
+			null, null, 0, "Event", null, null, null, null, true,
+			QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+
+		Assert.assertEquals(1, templates.size());
+		Assert.assertEquals("Event", getTemplateName(templates.get(0)));
+	}
+
+	@Test
+	public void testSearchByNameAndDescription() throws Exception {
+		long resourceClassNameId = RandomTestUtil.randomLong();
+
+		addDisplayTemplate(
+			_classNameId, 0, resourceClassNameId, "Event", "Event");
+		addDisplayTemplate(
+			_classNameId, 0, resourceClassNameId, "Contact", "Contact");
+		addDisplayTemplate(
+			_classNameId, 0, resourceClassNameId, "Meeting", "Meeting");
+
+		List<DDMTemplate> templates = DDMTemplateLocalServiceUtil.search(
+			TestPropsValues.getCompanyId(), new long[] {group.getGroupId()},
+			null, null, 0, "Event", "Meeting", null, null, null, true,
+			QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+
+		Assert.assertEquals(0, templates.size());
+	}
+
+	@Test
+	public void testSearchByNameOrDescription() throws Exception {
+		long resourceClassNameId = RandomTestUtil.randomLong();
+
+		addDisplayTemplate(
+			_classNameId, 0, resourceClassNameId, "Event", "Event");
+		addDisplayTemplate(
+			_classNameId, 0, resourceClassNameId, "Contact", "Contact");
+		addDisplayTemplate(
+			_classNameId, 0, resourceClassNameId, "Meeting", "Meeting");
+
+		List<DDMTemplate> templates = DDMTemplateLocalServiceUtil.search(
+			TestPropsValues.getCompanyId(), new long[] {group.getGroupId()},
+			null, null, resourceClassNameId, "Event", "Meeting", null, null,
+			null, false, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+			new TemplateIdComparator(true));
+
+		Assert.assertEquals("Event", getTemplateName(templates.get(0)));
+		Assert.assertEquals("Meeting", getTemplateName(templates.get(1)));
 	}
 
 	@Test
 	public void testSearchCount() throws Exception {
 		int initialCount = DDMTemplateLocalServiceUtil.searchCount(
 			TestPropsValues.getCompanyId(), group.getGroupId(), _classNameId, 0,
-			"Test Template", null, null, null, null, false);
+			0, "Test Template", null, null, null, null, false);
 
 		addDisplayTemplate(_classNameId, 0, "Test Template");
 
 		int count = DDMTemplateLocalServiceUtil.searchCount(
 			TestPropsValues.getCompanyId(), group.getGroupId(), _classNameId, 0,
-			"Test Template", null, null, null, null, false);
+			0, "Test Template", null, null, null, null, false);
 
 		Assert.assertEquals(initialCount + 1, count);
+	}
+
+	@Test
+	public void testSearchCountByClassNameIdAndClassPK() throws Exception {
+		long classNameId1 = RandomTestUtil.randomLong();
+		long classPK1 = RandomTestUtil.randomLong();
+
+		addDisplayTemplate(classNameId1, classPK1, StringUtil.randomString());
+		addDisplayTemplate(
+			classNameId1, RandomTestUtil.randomLong(),
+			StringUtil.randomString());
+
+		long classNameId2 = RandomTestUtil.randomLong();
+
+		addDisplayTemplate(
+			classNameId2, RandomTestUtil.randomLong(),
+			StringUtil.randomString());
+
+		int count = DDMTemplateLocalServiceUtil.searchCount(
+			TestPropsValues.getCompanyId(), new long[] {group.getGroupId()},
+			new long[] {classNameId1}, new long[] {classPK1}, 0, null, null,
+			null);
+
+		Assert.assertEquals(1, count);
+
+		count = DDMTemplateLocalServiceUtil.searchCount(
+			TestPropsValues.getCompanyId(), new long[] {group.getGroupId()},
+			new long[] {classNameId2}, new long[] {classPK1}, 0, null, null,
+			null);
+
+		Assert.assertEquals(0, count);
+	}
+
+	@Test
+	public void testSearchCountByClassNameIds() throws Exception {
+		long classNameId1 = RandomTestUtil.randomLong();
+
+		addDisplayTemplate(classNameId1, 0, StringUtil.randomString());
+		addDisplayTemplate(classNameId1, 0, StringUtil.randomString());
+		addDisplayTemplate(classNameId1, 0, StringUtil.randomString());
+
+		long classNameId2 = RandomTestUtil.randomLong();
+
+		addDisplayTemplate(classNameId2, 0, StringUtil.randomString());
+		addDisplayTemplate(classNameId2, 0, StringUtil.randomString());
+
+		int count = DDMTemplateLocalServiceUtil.searchCount(
+			TestPropsValues.getCompanyId(), new long[] {group.getGroupId()},
+			new long[] {classNameId1}, null, 0, null, null, null);
+
+		Assert.assertEquals(3, count);
+
+		count = DDMTemplateLocalServiceUtil.searchCount(
+			TestPropsValues.getCompanyId(), new long[] {group.getGroupId()},
+			new long[] {classNameId1, classNameId2}, null, 0, null, null, null);
+
+		Assert.assertEquals(5, count);
+	}
+
+	@Test
+	public void testSearchCountByClassPKs() throws Exception {
+		long classPK1 = RandomTestUtil.randomLong();
+
+		addDisplayTemplate(_classNameId, classPK1, StringUtil.randomString());
+
+		long classPK2 = RandomTestUtil.randomLong();
+
+		addDisplayTemplate(_classNameId, classPK2, StringUtil.randomString());
+
+		long classPK3 = RandomTestUtil.randomLong();
+
+		addDisplayTemplate(_classNameId, classPK3, StringUtil.randomString());
+
+		int count = DDMTemplateLocalServiceUtil.searchCount(
+			TestPropsValues.getCompanyId(), new long[] {group.getGroupId()},
+			null, new long[] {classPK1, classPK2, classPK3}, 0, null, null,
+			null);
+
+		Assert.assertEquals(3, count);
 	}
 
 	@Test
 	public void testSearchCountByKeywords() throws Exception {
 		int initialCount = DDMTemplateLocalServiceUtil.searchCount(
 			TestPropsValues.getCompanyId(), group.getGroupId(), _classNameId, 0,
-			null, null, null);
+			0, null, null, null);
 
 		addDisplayTemplate(_classNameId, 0, "Test Template");
 
 		int count = DDMTemplateLocalServiceUtil.searchCount(
 			TestPropsValues.getCompanyId(), group.getGroupId(), _classNameId, 0,
-			null, null, null);
+			0, "Test", null, null);
 
 		Assert.assertEquals(initialCount + 1, count);
+	}
+
+	@Test
+	public void testSearchCountByLanguage() throws Exception {
+		String velocityLanguage = TemplateConstants.LANG_TYPE_VM;
+
+		addTemplate(
+			RandomTestUtil.randomLong(), RandomTestUtil.randomLong(),
+			StringUtil.randomString(), StringPool.BLANK, StringPool.BLANK,
+			velocityLanguage, getTestTemplateScript(velocityLanguage));
+
+		addTemplate(
+			RandomTestUtil.randomLong(), RandomTestUtil.randomLong(),
+			StringUtil.randomString(), StringPool.BLANK, StringPool.BLANK,
+			velocityLanguage, getTestTemplateScript(velocityLanguage));
+
+		String freeMarkerLanguage = TemplateConstants.LANG_TYPE_FTL;
+
+		addTemplate(
+			RandomTestUtil.randomLong(), RandomTestUtil.randomLong(),
+			StringUtil.randomString(), StringPool.BLANK, StringPool.BLANK,
+			freeMarkerLanguage, getTestTemplateScript(freeMarkerLanguage));
+
+		int count = DDMTemplateLocalServiceUtil.searchCount(
+			TestPropsValues.getCompanyId(), new long[] {group.getGroupId()},
+			null, null, 0, null, null, null, null,
+			TemplateConstants.LANG_TYPE_VM, true);
+
+		Assert.assertEquals(2, count);
+	}
+
+	@Test
+	public void testSearchCountByResourceClassNameId() throws Exception {
+		long resourceClassNameId1 = RandomTestUtil.randomLong();
+
+		addDisplayTemplate(
+			_classNameId, 0, resourceClassNameId1, StringUtil.randomString(),
+			StringUtil.randomString());
+		addDisplayTemplate(
+			_classNameId, 0, resourceClassNameId1, StringUtil.randomString(),
+			StringUtil.randomString());
+
+		long resourceClassNameId2 = RandomTestUtil.randomLong();
+
+		addDisplayTemplate(
+			_classNameId, 0, resourceClassNameId2, StringUtil.randomString(),
+			StringUtil.randomString());
+		addDisplayTemplate(
+			_classNameId, 0, resourceClassNameId2, StringUtil.randomString(),
+			StringUtil.randomString());
+		addDisplayTemplate(
+			_classNameId, 0, resourceClassNameId2, StringUtil.randomString(),
+			StringUtil.randomString());
+
+		int count = DDMTemplateLocalServiceUtil.searchCount(
+			TestPropsValues.getCompanyId(), new long[] {group.getGroupId()},
+			null, null, resourceClassNameId2, null, null, null);
+
+		Assert.assertEquals(3, count);
 	}
 
 	protected DDMTemplate copyTemplate(DDMTemplate template) throws Exception {
 		return DDMTemplateLocalServiceUtil.copyTemplate(
 			template.getUserId(), template.getTemplateId(),
 			ServiceContextTestUtil.getServiceContext(group.getGroupId()));
+	}
+
+	protected String getTemplateName(DDMTemplate template) {
+		return template.getName(group.getDefaultLanguageId());
 	}
 
 	protected DDMTemplate updateTemplate(DDMTemplate template)
@@ -263,6 +492,6 @@ public class DDMTemplateServiceTest extends BaseDDMServiceTestCase {
 			ServiceContextTestUtil.getServiceContext());
 	}
 
-	private long _classNameId = PortalUtil.getClassNameId(AssetEntry.class);
+	private long _classNameId;
 
 }

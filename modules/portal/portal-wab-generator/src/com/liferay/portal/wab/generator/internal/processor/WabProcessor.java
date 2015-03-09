@@ -123,10 +123,9 @@ public class WabProcessor {
 
 		File outputFile = new File(file, "output.zip");
 
-		JarOutputStream jarOutputStream = new JarOutputStream(
-			new FileOutputStream(outputFile));
+		try (JarOutputStream jarOutputStream = new JarOutputStream(
+				new FileOutputStream(outputFile))) {
 
-		try {
 			writeJarPath(
 				jarOutputStream, _ignoredResources, "META-INF/MANIFEST.MF",
 				getManifestFile());
@@ -134,9 +133,6 @@ public class WabProcessor {
 			writeJarPaths(
 				jarOutputStream, _ignoredResources, _pluginDir,
 				_pluginDir.toURI());
-		}
-		finally {
-			jarOutputStream.close();
 		}
 
 		if (PropsValues.MODULE_FRAMEWORK_WEB_GENERATOR_GENERATED_WABS_STORE) {
@@ -242,10 +238,9 @@ public class WabProcessor {
 
 		URI webInfClasesURI = uri.resolve("WEB-INF/classes");
 
-		ZipInputStream zipInputStream = new ZipInputStream(
-			new FileInputStream(zipFile));
+		try (ZipInputStream zipInputStream = new ZipInputStream(
+				new FileInputStream(zipFile))) {
 
-		try {
 			for (ZipEntry zipEntry;
 				(zipEntry = zipInputStream.getNextEntry()) != null;
 					zipInputStream.closeEntry()) {
@@ -266,18 +261,10 @@ public class WabProcessor {
 
 				parentFile.mkdirs();
 
-				OutputStream outputStream = new FileOutputStream(file);
-
-				try {
-					StreamUtil.transfer(zipInputStream, outputStream, false);
-				}
-				finally {
-					outputStream.close();
-				}
+				StreamUtil.transfer(
+					StreamUtil.uncloseable(zipInputStream),
+					new FileOutputStream(file));
 			}
-		}
-		finally {
-			zipInputStream.close();
 		}
 	}
 
@@ -301,13 +288,8 @@ public class WabProcessor {
 
 		Manifest manifest = new Manifest();
 
-		InputStream inputStream = new FileInputStream(manifestFile);
-
-		try {
+		try (InputStream inputStream = new FileInputStream(manifestFile)) {
 			manifest.read(inputStream);
-		}
-		finally {
-			inputStream.close();
 		}
 
 		return manifest;
@@ -386,7 +368,7 @@ public class WabProcessor {
 
 		// Class path order is critical
 
-		Map<String, File> classPath = new LinkedHashMap<String, File>();
+		Map<String, File> classPath = new LinkedHashMap<>();
 
 		classPath.put(
 			"ext/WEB-INF/classes", new File(_pluginDir, "ext/WEB-INF/classes"));
@@ -457,7 +439,7 @@ public class WabProcessor {
 			return Collections.emptySet();
 		}
 
-		Set<String> packageNames = new HashSet<String>();
+		Set<String> packageNames = new HashSet<>();
 
 		try {
 			ClassReader classReader = new ClassReader(inputStream);
@@ -541,7 +523,7 @@ public class WabProcessor {
 		processXMLDependencies(
 			"WEB-INF/web.xml",
 			new String[] {
-				"x:filter-class", "x:listener-class","x:servlet-class"
+				"x:filter-class", "x:listener-class", "x:servlet-class"
 			},
 			"x", "http://java.sun.com/xml/ns/j2ee");
 	}
@@ -704,7 +686,7 @@ public class WabProcessor {
 		int contentX = -1;
 		int contentY = content.length();
 
-		Set<String> packageNames = new HashSet<String>();
+		Set<String> packageNames = new HashSet<>();
 
 		while (true) {
 			contentX = content.lastIndexOf("<%@", contentY);
@@ -1145,22 +1127,6 @@ public class WabProcessor {
 			File file)
 		throws FileNotFoundException {
 
-		InputStream inputStream = null;
-
-		try {
-			inputStream = new FileInputStream(file);
-
-			writeJarPath(jarOutputStream, paths, path, inputStream);
-		}
-		finally {
-			StreamUtil.cleanUp(inputStream);
-		}
-	}
-
-	protected void writeJarPath(
-		JarOutputStream jarOutputStream, Set<String> paths, String path,
-		InputStream inputStream) {
-
 		if (paths.contains(path)) {
 			return;
 		}
@@ -1170,7 +1136,9 @@ public class WabProcessor {
 		try {
 			jarOutputStream.putNextEntry(new JarEntry(path));
 
-			StreamUtil.transfer(inputStream, jarOutputStream, false);
+			StreamUtil.transfer(
+				new FileInputStream(file),
+				StreamUtil.uncloseable(jarOutputStream));
 
 			jarOutputStream.closeEntry();
 		}
@@ -1220,34 +1188,29 @@ public class WabProcessor {
 	protected void writeManifest(Manifest manifest) throws IOException {
 		File file = getManifestFile();
 
-		OutputStream outputStream = new FileOutputStream(file);
-
-		try {
+		try (OutputStream outputStream = new FileOutputStream(file)) {
 			manifest.write(outputStream);
-		}
-		finally {
-			outputStream.close();
 		}
 	}
 
 	private static final String _SERVICE_BEAN_POST_PROCESSOR_SPRING_XML =
 		"/WEB-INF/classes/META-INF/service-bean-post-processor-spring.xml";
 
-	private static Log _log = LogFactoryUtil.getLog(WabProcessor.class);
+	private static final Log _log = LogFactoryUtil.getLog(WabProcessor.class);
 
 	private String _bundleVersion;
-	private ClassLoader _classLoader;
+	private final ClassLoader _classLoader;
 	private String _context;
-	private Set<String> _exportPackageNames = new HashSet<String>();
-	private File _file;
-	private Set<String> _ignoredResources = new HashSet<String>();
-	private Set<String> _importPackageNames = new HashSet<String>();
+	private final Set<String> _exportPackageNames = new HashSet<>();
+	private final File _file;
+	private final Set<String> _ignoredResources = new HashSet<>();
+	private final Set<String> _importPackageNames = new HashSet<>();
 	private File _manifestFile;
-	private Map<String, String[]> _parameters;
+	private final Map<String, String[]> _parameters;
 	private File _pluginDir;
 	private PluginPackage _pluginPackage;
 	private String _servicePackageName;
-	private Pattern _tldPackagesPattern = Pattern.compile(
+	private final Pattern _tldPackagesPattern = Pattern.compile(
 		"<[^>]+?-class>\\p{Space}*?(.*?)\\p{Space}*?</[^>]+?-class>");
 
 }

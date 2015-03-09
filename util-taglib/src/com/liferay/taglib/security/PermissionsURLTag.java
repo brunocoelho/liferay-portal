@@ -33,7 +33,6 @@ import javax.portlet.WindowState;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.JspWriter;
-import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.TagSupport;
 
 /**
@@ -41,15 +40,38 @@ import javax.servlet.jsp.tagext.TagSupport;
  */
 public class PermissionsURLTag extends TagSupport {
 
-	public static void doTag(
+	/**
+	 * Returns the URL for opening the resource's permissions configuration
+	 * dialog and for configuring the resource's permissions.
+	 *
+	 * @param  redirect the redirect. If the redirect is <code>null</code> or
+	 *         the dialog does not open as a pop-up, the current URL is obtained
+	 *         via {@link PortalUtil#getCurrentURL(HttpServletRequest)} and
+	 *         used.
+	 * @param  modelResource the resource's class for which to configure
+	 *         permissions
+	 * @param  modelResourceDescription the human-friendly description of the
+	 *         resource
+	 * @param  resourceGroupId the group ID to which the resource belongs. The
+	 *         ID can be a number, string containing a number, or substitution
+	 *         string. If the resource group ID is <code>null</code>, it is
+	 *         obtained via {@link ThemeDisplay#getScopeGroupId()}.
+	 * @param  resourcePrimKey the primary key of the resource
+	 * @param  windowState the window state to use when opening the permissions
+	 *         configuration dialog. For more information, see {@link
+	 *         LiferayWindowState}.
+	 * @param  roleTypes the role types
+	 * @param  request the current request
+	 * @return the URL for opening the resource's permissions configuration
+	 *         dialog and for configuring the resource's permissions
+	 * @throws Exception if an exception occurred
+	 */
+	public static String doTag(
 			String redirect, String modelResource,
 			String modelResourceDescription, Object resourceGroupId,
-			String resourcePrimKey, String windowState, String var,
-			int[] roleTypes, PageContext pageContext)
+			String resourcePrimKey, String windowState, int[] roleTypes,
+			HttpServletRequest request)
 		throws Exception {
-
-		HttpServletRequest request =
-			(HttpServletRequest)pageContext.getRequest();
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
 			WebKeys.THEME_DISPLAY);
@@ -122,25 +144,25 @@ public class PermissionsURLTag extends TagSupport {
 			portletURL.setParameter("roleTypes", StringUtil.merge(roleTypes));
 		}
 
-		String portletURLToString = portletURL.toString();
-
-		if (Validator.isNotNull(var)) {
-			pageContext.setAttribute(var, portletURLToString);
-		}
-		else {
-			JspWriter jspWriter = pageContext.getOut();
-
-			jspWriter.write(portletURLToString);
-		}
+		return portletURL.toString();
 	}
 
 	@Override
 	public int doEndTag() throws JspException {
 		try {
-			doTag(
+			String portletURLToString = doTag(
 				_redirect, _modelResource, _modelResourceDescription,
-				_resourceGroupId, _resourcePrimKey, _windowState, _var,
-				_roleTypes, pageContext);
+				_resourceGroupId, _resourcePrimKey, _windowState, _roleTypes,
+				(HttpServletRequest)pageContext.getRequest());
+
+			if (Validator.isNotNull(_var)) {
+				pageContext.setAttribute(_var, portletURLToString);
+			}
+			else {
+				JspWriter jspWriter = pageContext.getOut();
+
+				jspWriter.write(portletURLToString);
+			}
 		}
 		catch (Exception e) {
 			throw new JspException(e);

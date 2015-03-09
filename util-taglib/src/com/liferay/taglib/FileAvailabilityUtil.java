@@ -43,7 +43,10 @@ public class FileAvailabilityUtil {
 			return true;
 		}
 
-		Boolean available = _availabilities.get(path);
+		Map<String, Boolean> availabilities = _getAvailabilities(
+			servletContext);
+
+		Boolean available = availabilities.get(path);
 
 		if (available != null) {
 			return available;
@@ -65,17 +68,27 @@ public class FileAvailabilityUtil {
 			available = Boolean.TRUE;
 		}
 
-		_availabilities.put(path, available);
+		availabilities.put(path, available);
 
 		return available;
 	}
 
-	public static void reset() {
-		_availabilities.clear();
-	}
+	private static Map<String, Boolean> _getAvailabilities(
+		ServletContext servletContext) {
 
-	private static Map<String, Boolean> _availabilities =
-		new ConcurrentHashMap<String, Boolean>();
+		Map<String, Boolean> availabilities =
+			(Map<String, Boolean>)servletContext.getAttribute(
+				FileAvailabilityUtil.class.getName());
+
+		if (availabilities == null) {
+			availabilities = new ConcurrentHashMap<>();
+
+			servletContext.setAttribute(
+				FileAvailabilityUtil.class.getName(), availabilities);
+		}
+
+		return availabilities;
+	}
 
 	private static class ResourcePrivilegedExceptionAction
 		implements PrivilegedExceptionAction<URL> {
@@ -92,8 +105,8 @@ public class FileAvailabilityUtil {
 			return _servletContext.getResource(_path);
 		}
 
-		private String _path;
-		private ServletContext _servletContext;
+		private final String _path;
+		private final ServletContext _servletContext;
 
 	}
 

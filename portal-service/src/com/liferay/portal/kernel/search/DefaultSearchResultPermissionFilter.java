@@ -14,6 +14,7 @@
 
 package com.liferay.portal.kernel.search;
 
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -38,8 +39,8 @@ public class DefaultSearchResultPermissionFilter
 
 	@Override
 	protected void filterHits(Hits hits, SearchContext searchContext) {
-		List<Document> docs = new ArrayList<Document>();
-		List<Float> scores = new ArrayList<Float>();
+		List<Document> docs = new ArrayList<>();
+		List<Float> scores = new ArrayList<>();
 
 		Document[] documents = hits.getDocs();
 
@@ -81,7 +82,7 @@ public class DefaultSearchResultPermissionFilter
 		}
 
 		hits.setDocs(docs.toArray(new Document[docs.size()]));
-		hits.setScores(scores.toArray(new Float[scores.size()]));
+		hits.setScores(ArrayUtil.toFloatArray(scores));
 		hits.setSearchTime(
 			(float)(System.currentTimeMillis() - hits.getStart()) /
 				Time.SECOND);
@@ -93,7 +94,7 @@ public class DefaultSearchResultPermissionFilter
 		return _baseIndexer.doSearch(searchContext);
 	}
 
-	private BaseIndexer _baseIndexer;
-	private PermissionChecker _permissionChecker;
+	private final BaseIndexer _baseIndexer;
+	private final PermissionChecker _permissionChecker;
 
 }

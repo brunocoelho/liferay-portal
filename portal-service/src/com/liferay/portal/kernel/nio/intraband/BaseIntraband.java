@@ -528,17 +528,16 @@ public abstract class BaseIntraband implements Intraband {
 	protected static final EnumSet<CompletionType> REPLIED_ENUM_SET =
 		EnumSet.of(CompletionType.REPLIED);
 
-	protected final long defaultTimeout;
 	protected final AtomicReference<DatagramReceiveHandler[]>
-		datagramReceiveHandlersReference =
-			new AtomicReference<DatagramReceiveHandler[]>(
-				new DatagramReceiveHandler[256]);
+		datagramReceiveHandlersReference = new AtomicReference<>(
+			new DatagramReceiveHandler[256]);
+	protected final long defaultTimeout;
 	protected volatile boolean open = true;
 	protected final Map<Long, Datagram> responseWaitingMap =
-		new ConcurrentHashMap<Long, Datagram>();
+		new ConcurrentHashMap<>();
 	protected final AtomicLong sequenceIdGenerator = new AtomicLong();
 	protected final NavigableMap<Long, Long> timeoutMap =
-		new ConcurrentSkipListMap<Long, Long>();
+		new ConcurrentSkipListMap<>();
 
 	protected static class SendSyncDatagramCompletionHandler
 		implements CompletionHandler<Object> {
@@ -598,6 +597,6 @@ public abstract class BaseIntraband implements Intraband {
 
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(BaseIntraband.class);
+	private static final Log _log = LogFactoryUtil.getLog(BaseIntraband.class);
 
 }

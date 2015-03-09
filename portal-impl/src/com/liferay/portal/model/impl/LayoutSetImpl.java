@@ -23,35 +23,35 @@ import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.CacheField;
 import com.liferay.portal.model.ColorScheme;
+import com.liferay.portal.model.Company;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.model.LayoutSet;
 import com.liferay.portal.model.LayoutSetPrototype;
 import com.liferay.portal.model.Theme;
 import com.liferay.portal.model.VirtualHost;
+import com.liferay.portal.service.CompanyLocalServiceUtil;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.service.LayoutSetPrototypeLocalServiceUtil;
 import com.liferay.portal.service.ThemeLocalServiceUtil;
 import com.liferay.portal.service.VirtualHostLocalServiceUtil;
 import com.liferay.portal.util.PrefsPropsUtil;
+import com.liferay.portal.util.PropsValues;
 
 import java.io.IOException;
 
 /**
- * Represents a portal layout set, providing access to the layout set's color schemes,
- * groups, prototypes, themes, and more.
+ * Represents a portal layout set, providing access to the layout set's color
+ * schemes, groups, prototypes, themes, and more.
  *
  * <p>
- * Each {@link Group} in Liferay can have a public and a private layout set. This
- * keeps information common to all layouts (pages) in the layout set.
+ * Each {@link Group} in Liferay can have a public and a private layout set.
+ * This keeps information common to all layouts (pages) in the layout set.
  * </p>
  *
  * @author Brian Wing Shun Chan
  * @author Jorge Ferrer
  */
 public class LayoutSetImpl extends LayoutSetBaseImpl {
-
-	public LayoutSetImpl() {
-	}
 
 	/**
 	 * Returns the layout set's color scheme.
@@ -63,12 +63,40 @@ public class LayoutSetImpl extends LayoutSetBaseImpl {
 	 * </p>
 	 *
 	 * @return the layout set's color scheme
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public ColorScheme getColorScheme() {
 		return ThemeLocalServiceUtil.getColorScheme(
 			getCompanyId(), getTheme().getThemeId(), getColorSchemeId(), false);
+	}
+
+	@Override
+	public String getCompanyFallbackVirtualHostname() {
+		if (_companyFallbackVirtualHostname != null) {
+			return _companyFallbackVirtualHostname;
+		}
+
+		_companyFallbackVirtualHostname = StringPool.BLANK;
+
+		if (Validator.isNotNull(
+				PropsValues.VIRTUAL_HOSTS_DEFAULT_SITE_NAME) &&
+			!isPrivateLayout()) {
+
+			Group group = GroupLocalServiceUtil.fetchGroup(
+				getCompanyId(), PropsValues.VIRTUAL_HOSTS_DEFAULT_SITE_NAME);
+
+			if ((group != null) && (getGroupId() == group.getGroupId())) {
+				Company company = CompanyLocalServiceUtil.fetchCompany(
+					getCompanyId());
+
+				if (company != null) {
+					_companyFallbackVirtualHostname =
+						company.getVirtualHostname();
+				}
+			}
+		}
+
+		return _companyFallbackVirtualHostname;
 	}
 
 	/**
@@ -77,7 +105,6 @@ public class LayoutSetImpl extends LayoutSetBaseImpl {
 	 * @return the layout set's group
 	 * @throws PortalException if a group with the primary key could not be
 	 *         found
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public Group getGroup() throws PortalException {
@@ -85,18 +112,17 @@ public class LayoutSetImpl extends LayoutSetBaseImpl {
 	}
 
 	/**
-	 * Returns the layout set prototype's ID, or <code>0</code> if it has no layout
-	 * set prototype.
+	 * Returns the layout set prototype's ID, or <code>0</code> if it has no
+	 * layout set prototype.
 	 *
 	 * <p>
 	 * Prototype is Liferay's technical name for a site template.
 	 * </p>
 	 *
-	 * @return the layout set prototype's ID, or <code>0</code> if it has no layout
-	 *         set prototype
+	 * @return the layout set prototype's ID, or <code>0</code> if it has no
+	 *         layout set prototype
 	 * @throws PortalException if a matching layout set prototype could not be
 	 *         found
-	 * @throws SystemException if a system exception occurred
 	 */
 	@Override
 	public long getLayoutSetPrototypeId() throws PortalException {
@@ -219,8 +245,8 @@ public class LayoutSetImpl extends LayoutSetBaseImpl {
 	 * "/web/sitename" or "/group/sitename" can be omitted.
 	 * </p>
 	 *
-	 * @return the layout set's virtual host name, or an empty string if the layout
-	 *         set has no virtual host configured
+	 * @return the layout set's virtual host name, or an empty string if the
+	 *         layout set has no virtual host configured
 	 */
 	@Override
 	public String getVirtualHostname() {
@@ -228,20 +254,14 @@ public class LayoutSetImpl extends LayoutSetBaseImpl {
 			return _virtualHostname;
 		}
 
-		try {
-			VirtualHost virtualHost =
-				VirtualHostLocalServiceUtil.fetchVirtualHost(
-					getCompanyId(), getLayoutSetId());
+		VirtualHost virtualHost = VirtualHostLocalServiceUtil.fetchVirtualHost(
+			getCompanyId(), getLayoutSetId());
 
-			if (virtualHost == null) {
-				_virtualHostname = StringPool.BLANK;
-			}
-			else {
-				_virtualHostname = virtualHost.getHostname();
-			}
-		}
-		catch (Exception e) {
+		if (virtualHost == null) {
 			_virtualHostname = StringPool.BLANK;
+		}
+		else {
+			_virtualHostname = virtualHost.getHostname();
 		}
 
 		return _virtualHostname;
@@ -277,6 +297,13 @@ public class LayoutSetImpl extends LayoutSetBaseImpl {
 	}
 
 	@Override
+	public void setCompanyFallbackVirtualHostname(
+		String companyFallbackVirtualHostname) {
+
+		_companyFallbackVirtualHostname = companyFallbackVirtualHostname;
+	}
+
+	@Override
 	public void setSettings(String settings) {
 		_settingsProperties = null;
 
@@ -294,7 +321,7 @@ public class LayoutSetImpl extends LayoutSetBaseImpl {
 	 * Sets the name of the layout set's virtual host.
 	 *
 	 * @param virtualHostname the name of the layout set's virtual host
-	 * @see #getVirtualHostname()
+	 * @see   #getVirtualHostname()
 	 */
 	@Override
 	public void setVirtualHostname(String virtualHostname) {
@@ -328,7 +355,10 @@ public class LayoutSetImpl extends LayoutSetBaseImpl {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(LayoutSetImpl.class);
+	private static final Log _log = LogFactoryUtil.getLog(LayoutSetImpl.class);
+
+	@CacheField
+	private String _companyFallbackVirtualHostname;
 
 	private UnicodeProperties _settingsProperties;
 

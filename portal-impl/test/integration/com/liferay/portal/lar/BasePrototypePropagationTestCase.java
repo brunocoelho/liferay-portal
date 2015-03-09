@@ -15,6 +15,11 @@
 package com.liferay.portal.lar;
 
 import com.liferay.portal.kernel.staging.MergeLayoutPrototypesThreadLocal;
+import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.util.GroupTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.model.Company;
@@ -24,14 +29,10 @@ import com.liferay.portal.model.LayoutPrototype;
 import com.liferay.portal.service.LayoutLocalServiceUtil;
 import com.liferay.portal.service.ServiceContextThreadLocal;
 import com.liferay.portal.service.persistence.CompanyUtil;
-import com.liferay.portal.util.PortletKeys;
-import com.liferay.portal.util.test.GroupTestUtil;
 import com.liferay.portal.util.test.LayoutTestUtil;
-import com.liferay.portal.util.test.RandomTestUtil;
-import com.liferay.portal.util.test.ServiceContextTestUtil;
-import com.liferay.portal.util.test.TestPropsValues;
 import com.liferay.portlet.journal.model.JournalArticle;
 import com.liferay.portlet.journal.util.test.JournalTestUtil;
+import com.liferay.portlet.util.test.PortletKeys;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -103,12 +104,12 @@ public abstract class BasePrototypePropagationTestCase {
 		doTestPortletPreferencesPropagation(true);
 	}
 
-	protected String addJournalContentPortletToLayout(
+	protected String addPortletToLayout(
 			long userId, Layout layout, JournalArticle journalArticle,
 			String columnId)
 		throws Exception {
 
-		Map<String, String[]> parameterMap = new HashMap<String, String[]>();
+		Map<String, String[]> parameterMap = new HashMap<>();
 
 		parameterMap.put(
 			"articleId", new String[] {journalArticle.getArticleId()});
@@ -119,8 +120,7 @@ public abstract class BasePrototypePropagationTestCase {
 			"showAvailableLocales", new String[] {Boolean.TRUE.toString()});
 
 		return LayoutTestUtil.addPortletToLayout(
-			userId, layout, PortletKeys.JOURNAL_CONTENT, columnId,
-			parameterMap);
+			userId, layout, PortletKeys.TEST, columnId, parameterMap);
 	}
 
 	protected abstract void doSetUp() throws Exception;
@@ -138,7 +138,7 @@ public abstract class BasePrototypePropagationTestCase {
 		LayoutTestUtil.updateLayoutColumnCustomizable(
 			prototypeLayout, "column-1", true);
 
-		addJournalContentPortletToLayout(
+		addPortletToLayout(
 			TestPropsValues.getUserId(), prototypeLayout, globalJournalArticle,
 			"column-1");
 
@@ -198,8 +198,7 @@ public abstract class BasePrototypePropagationTestCase {
 
 		MergeLayoutPrototypesThreadLocal.clearMergeComplete();
 
-		Map<String, String> portletPreferencesMap =
-			new HashMap<String, String>();
+		Map<String, String> portletPreferencesMap = new HashMap<>();
 
 		portletPreferencesMap.put("articleId", StringPool.BLANK);
 		portletPreferencesMap.put(
@@ -211,13 +210,12 @@ public abstract class BasePrototypePropagationTestCase {
 		}
 
 		LayoutTestUtil.updateLayoutPortletPreferences(
-			prototypeLayout, journalContentPortletId, portletPreferencesMap);
+			prototypeLayout, portletId, portletPreferencesMap);
 
 		layout = propagateChanges(layout);
 
 		PortletPreferences portletPreferences =
-			LayoutTestUtil.getPortletPreferences(
-				layout, journalContentPortletId);
+			LayoutTestUtil.getPortletPreferences(layout, portletId);
 
 		if (linkEnabled) {
 			if (globalScope) {
@@ -266,14 +264,25 @@ public abstract class BasePrototypePropagationTestCase {
 	}
 
 	protected long globalGroupId;
+
+	@DeleteAfterTestRun
 	protected JournalArticle globalJournalArticle;
+
+	@DeleteAfterTestRun
 	protected Group group;
+
 	protected String initialLayoutTemplateId = "2_2_columns";
+
+	@DeleteAfterTestRun
 	protected JournalArticle journalArticle;
-	protected String journalContentPortletId;
+
 	protected Layout layout;
+
+	@DeleteAfterTestRun
 	protected LayoutPrototype layoutPrototype;
+
 	protected Layout layoutPrototypeLayout;
+	protected String portletId;
 	protected Layout prototypeLayout;
 
 }

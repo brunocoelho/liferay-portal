@@ -112,7 +112,12 @@ Group selGroup = layoutsAdminDisplayContext.getSelGroup();
 	<div class="lfr-app-column-view manage-view row">
 		<c:if test="<%= !group.isLayoutPrototype() %>">
 			<div class="col-md-3">
-				<c:if test="<%= layoutsAdminDisplayContext.getStagingGroup() != null %>">
+
+				<%
+				Group stagingGroup = layoutsAdminDisplayContext.getStagingGroup();
+				%>
+
+				<c:if test="<%= stagingGroup.isStaged() %>">
 
 					<%
 					long layoutSetBranchId = ParamUtil.getLong(request, "layoutSetBranchId");
@@ -177,6 +182,10 @@ Group selGroup = layoutsAdminDisplayContext.getSelGroup();
 							</aui:nav-bar>
 						</c:when>
 					</c:choose>
+
+					<%
+					request.setAttribute(WebKeys.PRIVATE_LAYOUT, layoutsAdminDisplayContext.isPrivateLayout());
+					%>
 
 					<liferay-staging:menu cssClass="manage-pages-branch-menu" extended="<%= true %>" icon="/common/tool.png" message="" selPlid="<%= layoutsAdminDisplayContext.getSelPlid() %>" showManageBranches="<%= true %>"  />
 				</c:if>

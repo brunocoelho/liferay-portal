@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.security.pacl.NotPrivileged;
 import com.liferay.portal.kernel.template.Template;
 import com.liferay.portal.kernel.template.TemplateManager;
 import com.liferay.portal.kernel.template.TemplateResource;
+import com.liferay.portal.kernel.template.TemplateResourceLoader;
 
 import java.security.AccessControlContext;
 import java.security.AccessController;
@@ -25,10 +26,49 @@ import java.security.PrivilegedAction;
 
 import java.util.Map;
 
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 /**
  * @author Raymond Augé
  */
 public abstract class BaseTemplateManager implements TemplateManager {
+
+	@Override
+	public void addStaticClassSupport(
+		Map<String, Object> contextObjects, String variableName,
+		Class<?> variableClass) {
+	}
+
+	@Override
+	public void addTaglibApplication(
+		Map<String, Object> contextObjects, String applicationName,
+		ServletContext servletContext) {
+	}
+
+	@Override
+	public void addTaglibFactory(
+		Map<String, Object> contextObjects, String taglibLiferayHash,
+		ServletContext servletContext) {
+	}
+
+	@Override
+	public void addTaglibRequest(
+		Map<String, Object> contextObjects, String applicationName,
+		HttpServletRequest request, HttpServletResponse response) {
+	}
+
+	@Override
+	public void addTaglibTheme(
+		Map<String, Object> contextObjects, String themeName,
+		HttpServletRequest request, HttpServletResponse response) {
+	}
+
+	@Override
+	public String[] getRestrictedVariables() {
+		return new String[0];
+	}
 
 	@NotPrivileged
 	@Override
@@ -81,12 +121,19 @@ public abstract class BaseTemplateManager implements TemplateManager {
 		this.templateContextHelper = templateContextHelper;
 	}
 
+	public void setTemplateResourceLoader(
+		TemplateResourceLoader templateResourceLoader) {
+
+		this.templateResourceLoader = templateResourceLoader;
+	}
+
 	protected abstract Template doGetTemplate(
 		TemplateResource templateResource,
 		TemplateResource errorTemplateResource, boolean restricted,
 		Map<String, Object> helperUtilities, boolean privileged);
 
 	protected TemplateContextHelper templateContextHelper;
+	protected TemplateResourceLoader templateResourceLoader;
 
 	private class DoGetHelperUtilitiesPrivilegedAction
 		implements PrivilegedAction<Map<String, Object>> {
@@ -106,9 +153,9 @@ public abstract class BaseTemplateManager implements TemplateManager {
 				_classLoader, _restricted);
 		}
 
-		private ClassLoader _classLoader;
+		private final ClassLoader _classLoader;
 		private boolean _restricted;
-		private TemplateContextHelper _templateContextHelper;
+		private final TemplateContextHelper _templateContextHelper;
 
 	}
 
@@ -133,10 +180,10 @@ public abstract class BaseTemplateManager implements TemplateManager {
 				_helperUtilities, true);
 		}
 
-		private TemplateResource _errorTemplateResource;
-		private Map<String, Object> _helperUtilities;
+		private final TemplateResource _errorTemplateResource;
+		private final Map<String, Object> _helperUtilities;
 		private boolean _restricted;
-		private TemplateResource _templateResource;
+		private final TemplateResource _templateResource;
 
 	}
 

@@ -18,7 +18,7 @@ import com.liferay.portal.kernel.diff.Diff;
 import com.liferay.portal.kernel.diff.DiffResult;
 import com.liferay.portal.kernel.diff.DiffUtil;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.io.Reader;
 
@@ -26,36 +26,41 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author Bruno Farache
  */
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 public class DiffImplTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayIntegrationTestRule liferayIntegrationTestRule =
+		new LiferayIntegrationTestRule();
 
 	@Test
 	public void testEight() {
 		Reader reader1 = new UnsyncStringReader("add\nbbb\nccc");
 		Reader reader2 = new UnsyncStringReader("bbb\nccc\naee");
 
-		List<DiffResult> expectedSource = new ArrayList<DiffResult>();
-		List<DiffResult> expectedTarget = new ArrayList<DiffResult>();
+		List<DiffResult> expectedSource = new ArrayList<>();
+		List<DiffResult> expectedTarget = new ArrayList<>();
 
 		expectedSource.add(
 			new DiffResult(0, Diff.OPEN_DEL + "add" + Diff.CLOSE_DEL));
 
 		expectedTarget.add(new DiffResult(0, Diff.CONTEXT_LINE));
 
-		List<String> changedLines = new ArrayList<String>();
+		List<String> changedLines = new ArrayList<>();
 
 		changedLines.add("bbb");
 		changedLines.add("ccc");
 		changedLines.add(Diff.CONTEXT_LINE);
 		expectedSource.add(new DiffResult(2, changedLines));
 
-		changedLines = new ArrayList<String>();
+		changedLines = new ArrayList<>();
 
 		changedLines.add("bbb");
 		changedLines.add("ccc");
@@ -73,8 +78,8 @@ public class DiffImplTest {
 		Reader reader1 = new UnsyncStringReader("aaa\nbbb\nfff");
 		Reader reader2 = new UnsyncStringReader("ccc\nada\nbeb");
 
-		List<DiffResult> expectedSource = new ArrayList<DiffResult>();
-		List<DiffResult> expectedTarget = new ArrayList<DiffResult>();
+		List<DiffResult> expectedSource = new ArrayList<>();
+		List<DiffResult> expectedTarget = new ArrayList<>();
 
 		expectedSource.add(new DiffResult(0, Diff.CONTEXT_LINE));
 
@@ -113,22 +118,22 @@ public class DiffImplTest {
 		Reader reader1 = new UnsyncStringReader("aaa\nbbb");
 		Reader reader2 = new UnsyncStringReader("ccc\naaa");
 
-		List<DiffResult> expectedSource = new ArrayList<DiffResult>();
-		List<DiffResult> expectedTarget = new ArrayList<DiffResult>();
+		List<DiffResult> expectedSource = new ArrayList<>();
+		List<DiffResult> expectedTarget = new ArrayList<>();
 
 		expectedSource.add(new DiffResult(0, Diff.CONTEXT_LINE));
 
 		expectedTarget.add(
 			new DiffResult(0, Diff.OPEN_INS + "ccc" + Diff.CLOSE_INS));
 
-		List<String> changedLines = new ArrayList<String>();
+		List<String> changedLines = new ArrayList<>();
 
 		changedLines.add("aaa");
 		changedLines.add(Diff.OPEN_DEL + "bbb" + Diff.CLOSE_DEL);
 
 		expectedSource.add(new DiffResult(1, changedLines));
 
-		changedLines = new ArrayList<String>();
+		changedLines = new ArrayList<>();
 
 		changedLines.add("aaa");
 		changedLines.add(Diff.CONTEXT_LINE);
@@ -146,8 +151,8 @@ public class DiffImplTest {
 		Reader reader1 = new UnsyncStringReader("rahab");
 		Reader reader2 = new UnsyncStringReader("boaz");
 
-		List<DiffResult> expectedSource = new ArrayList<DiffResult>();
-		List<DiffResult> expectedTarget = new ArrayList<DiffResult>();
+		List<DiffResult> expectedSource = new ArrayList<>();
+		List<DiffResult> expectedTarget = new ArrayList<>();
 
 		expectedSource.add(new DiffResult(0, Diff.CONTEXT_LINE));
 
@@ -170,8 +175,8 @@ public class DiffImplTest {
 		Reader reader1 = new UnsyncStringReader("abcd");
 		Reader reader2 = new UnsyncStringReader("abcdee");
 
-		List<DiffResult> expectedSource = new ArrayList<DiffResult>();
-		List<DiffResult> expectedTarget = new ArrayList<DiffResult>();
+		List<DiffResult> expectedSource = new ArrayList<>();
+		List<DiffResult> expectedTarget = new ArrayList<>();
 
 		expectedSource.add(new DiffResult(0, "abcd"));
 
@@ -189,8 +194,8 @@ public class DiffImplTest {
 		Reader reader1 = new UnsyncStringReader("liferay");
 		Reader reader2 = new UnsyncStringReader("liferay");
 
-		List<DiffResult> expectedSource = new ArrayList<DiffResult>();
-		List<DiffResult> expectedTarget = new ArrayList<DiffResult>();
+		List<DiffResult> expectedSource = new ArrayList<>();
+		List<DiffResult> expectedTarget = new ArrayList<>();
 
 		List<DiffResult>[] actual = DiffUtil.diff(reader1, reader2);
 
@@ -203,22 +208,22 @@ public class DiffImplTest {
 		Reader reader1 = new UnsyncStringReader("ccc\naaa\nbbe");
 		Reader reader2 = new UnsyncStringReader("aaa\nbbb");
 
-		List<DiffResult> expectedSource = new ArrayList<DiffResult>();
-		List<DiffResult> expectedTarget = new ArrayList<DiffResult>();
+		List<DiffResult> expectedSource = new ArrayList<>();
+		List<DiffResult> expectedTarget = new ArrayList<>();
 
-		List<String> changedLines = new ArrayList<String>();
+		List<String> changedLines = new ArrayList<>();
 
 		expectedSource.add(
 			new DiffResult(0, Diff.OPEN_DEL + "ccc" + Diff.CLOSE_DEL));
 
 		expectedTarget.add(new DiffResult(0, Diff.CONTEXT_LINE));
 
-		changedLines = new ArrayList<String>();
+		changedLines = new ArrayList<>();
 
 		changedLines.add("bb" + Diff.OPEN_DEL + "e" + Diff.CLOSE_DEL);
 		expectedSource.add(new DiffResult(2, changedLines));
 
-		changedLines = new ArrayList<String>();
+		changedLines = new ArrayList<>();
 
 		changedLines.add("bb" + Diff.OPEN_INS + "b" + Diff.CLOSE_INS);
 		expectedTarget.add(new DiffResult(1, changedLines));
@@ -234,22 +239,22 @@ public class DiffImplTest {
 		Reader reader1 = new UnsyncStringReader("ccc\naaa");
 		Reader reader2 = new UnsyncStringReader("aaa\nbbb");
 
-		List<DiffResult> expectedSource = new ArrayList<DiffResult>();
-		List<DiffResult> expectedTarget = new ArrayList<DiffResult>();
+		List<DiffResult> expectedSource = new ArrayList<>();
+		List<DiffResult> expectedTarget = new ArrayList<>();
 
 		expectedSource.add(
 			new DiffResult(0, Diff.OPEN_DEL + "ccc" + Diff.CLOSE_DEL));
 
 		expectedTarget.add(new DiffResult(0, Diff.CONTEXT_LINE));
 
-		List<String> changedLines = new ArrayList<String>();
+		List<String> changedLines = new ArrayList<>();
 
 		changedLines.add("aaa");
 		changedLines.add(Diff.CONTEXT_LINE);
 
 		expectedSource.add(new DiffResult(1, changedLines));
 
-		changedLines = new ArrayList<String>();
+		changedLines = new ArrayList<>();
 
 		changedLines.add("aaa");
 		changedLines.add(Diff.OPEN_INS + "bbb" + Diff.CLOSE_INS);
@@ -267,8 +272,8 @@ public class DiffImplTest {
 		Reader reader1 = new UnsyncStringReader("abcd");
 		Reader reader2 = new UnsyncStringReader("abcdeee");
 
-		List<DiffResult> expectedSource = new ArrayList<DiffResult>();
-		List<DiffResult> expectedTarget = new ArrayList<DiffResult>();
+		List<DiffResult> expectedSource = new ArrayList<>();
+		List<DiffResult> expectedTarget = new ArrayList<>();
 
 		expectedSource.add(new DiffResult(0, Diff.CONTEXT_LINE));
 
@@ -291,8 +296,8 @@ public class DiffImplTest {
 		Reader reader1 = new UnsyncStringReader("aaa");
 		Reader reader2 = new UnsyncStringReader("bbb");
 
-		List<DiffResult> expectedSource = new ArrayList<DiffResult>();
-		List<DiffResult> expectedTarget = new ArrayList<DiffResult>();
+		List<DiffResult> expectedSource = new ArrayList<>();
+		List<DiffResult> expectedTarget = new ArrayList<>();
 
 		expectedSource.add(new DiffResult(0, Diff.CONTEXT_LINE));
 
@@ -315,8 +320,8 @@ public class DiffImplTest {
 		Reader reader1 = new UnsyncStringReader("ada");
 		Reader reader2 = new UnsyncStringReader("aaa\nccc");
 
-		List<DiffResult> expectedSource = new ArrayList<DiffResult>();
-		List<DiffResult> expectedTarget = new ArrayList<DiffResult>();
+		List<DiffResult> expectedSource = new ArrayList<>();
+		List<DiffResult> expectedTarget = new ArrayList<>();
 
 		expectedSource.add(
 			new DiffResult(
@@ -342,10 +347,10 @@ public class DiffImplTest {
 		Reader reader1 = new UnsyncStringReader("liferay");
 		Reader reader2 = new UnsyncStringReader("LifeRay");
 
-		List<DiffResult> expectedSource = new ArrayList<DiffResult>();
-		List<DiffResult> expectedTarget = new ArrayList<DiffResult>();
+		List<DiffResult> expectedSource = new ArrayList<>();
+		List<DiffResult> expectedTarget = new ArrayList<>();
 
-		List<String> changedLines = new ArrayList<String>();
+		List<String> changedLines = new ArrayList<>();
 
 		changedLines.add(
 			Diff.OPEN_DEL + "l" + Diff.CLOSE_DEL + "ife" + Diff.OPEN_DEL + "r" +
@@ -353,7 +358,7 @@ public class DiffImplTest {
 
 		expectedSource.add(new DiffResult(0, changedLines));
 
-		changedLines = new ArrayList<String>();
+		changedLines = new ArrayList<>();
 
 		changedLines.add(
 			Diff.OPEN_INS + "L" + Diff.CLOSE_INS + "ife" + Diff.OPEN_INS + "R" +

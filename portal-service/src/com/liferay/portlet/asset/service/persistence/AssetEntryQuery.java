@@ -22,7 +22,6 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -59,8 +58,7 @@ public class AssetEntryQuery {
 	public static String checkOrderByCol(String orderByCol) {
 		if (ArrayUtil.contains(ORDER_BY_COLUMNS, orderByCol) ||
 			((orderByCol != null) &&
-			 orderByCol.startsWith(
-				DDMIndexer.DDM_FIELD_NAMESPACE + StringPool.FORWARD_SLASH))) {
+			 orderByCol.startsWith(DDMIndexer.DDM_FIELD_PREFIX))) {
 
 			return orderByCol;
 		}
@@ -89,6 +87,7 @@ public class AssetEntryQuery {
 	public AssetEntryQuery(AssetEntryQuery assetEntryQuery) {
 		setAllCategoryIds(assetEntryQuery.getAllCategoryIds());
 		setAllTagIdsArray(assetEntryQuery.getAllTagIdsArray());
+		setAndOperator(assetEntryQuery.isAndOperator());
 		setAnyCategoryIds(assetEntryQuery.getAnyCategoryIds());
 		setAnyTagIds(assetEntryQuery.getAnyTagIds());
 		setAttributes(assetEntryQuery.getAttributes());
@@ -103,6 +102,7 @@ public class AssetEntryQuery {
 		setKeywords(assetEntryQuery.getKeywords());
 		setLayout(assetEntryQuery.getLayout());
 		setLinkedAssetEntryId(assetEntryQuery.getLinkedAssetEntryId());
+		setListable(assetEntryQuery.isListable());
 		setNotAllCategoryIds(assetEntryQuery.getNotAllCategoryIds());
 		setNotAllTagIdsArray(assetEntryQuery.getNotAllTagIdsArray());
 		setNotAnyCategoryIds(assetEntryQuery.getNotAnyCategoryIds());
@@ -115,6 +115,7 @@ public class AssetEntryQuery {
 		setPublishDate(assetEntryQuery.getPublishDate());
 		setStart(assetEntryQuery.getStart());
 		setTitle(assetEntryQuery.getTitle());
+		setUserName(assetEntryQuery.getUserName());
 		setVisible(assetEntryQuery.isVisible());
 	}
 
@@ -316,12 +317,24 @@ public class AssetEntryQuery {
 		return _title;
 	}
 
+	public String getUserName() {
+		return _userName;
+	}
+
+	public boolean isAndOperator() {
+		return _andOperator;
+	}
+
 	public boolean isEnablePermissions() {
 		return _enablePermissions;
 	}
 
 	public boolean isExcludeZeroViewCount() {
 		return _excludeZeroViewCount;
+	}
+
+	public Boolean isListable() {
+		return _listable;
 	}
 
 	public Boolean isVisible() {
@@ -350,6 +363,10 @@ public class AssetEntryQuery {
 		_toString = null;
 	}
 
+	public void setAndOperator(boolean andOperator) {
+		_andOperator = andOperator;
+	}
+
 	public void setAnyCategoryIds(long[] anyCategoryIds) {
 		_anyCategoryIds = anyCategoryIds;
 
@@ -368,7 +385,7 @@ public class AssetEntryQuery {
 
 	public void setAttributes(Map<String, Serializable> attributes) {
 		if (_attributes == null) {
-			_attributes = new HashMap<String, Serializable>();
+			_attributes = new HashMap<>();
 		}
 		else {
 			_attributes = attributes;
@@ -441,6 +458,10 @@ public class AssetEntryQuery {
 		_linkedAssetEntryId = linkedAssetEntryId;
 
 		_toString = null;
+	}
+
+	public void setListable(boolean listable) {
+		_listable = listable;
 	}
 
 	public void setNotAllCategoryIds(long[] notAllCategoryIds) {
@@ -523,6 +544,10 @@ public class AssetEntryQuery {
 		_title = title;
 	}
 
+	public void setUserName(String userName) {
+		_userName = userName;
+	}
+
 	public void setVisible(Boolean visible) {
 		_visible = visible;
 
@@ -535,12 +560,14 @@ public class AssetEntryQuery {
 			return _toString;
 		}
 
-		StringBundler sb = new StringBundler(55);
+		StringBundler sb = new StringBundler(59);
 
 		sb.append("{allCategoryIds=");
 		sb.append(StringUtil.merge(_allCategoryIds));
 		sb.append(", allTagIds=");
 		sb.append(StringUtil.merge(_allTagIds));
+		sb.append(", andOperator=");
+		sb.append(_andOperator);
 		sb.append(", anyCategoryIds=");
 		sb.append(StringUtil.merge(_anyCategoryIds));
 		sb.append(", anyTagIds=");
@@ -569,6 +596,8 @@ public class AssetEntryQuery {
 		sb.append(_keywords);
 		sb.append(", linkedAssetEntryId=");
 		sb.append(_linkedAssetEntryId);
+		sb.append(", listable=");
+		sb.append(_listable);
 		sb.append(", notAllCategoryIds=");
 		sb.append(StringUtil.merge(_notAllCategoryIds));
 		sb.append(", notAllTagIds=");
@@ -593,6 +622,8 @@ public class AssetEntryQuery {
 		sb.append(_start);
 		sb.append(", title=");
 		sb.append(_title);
+		sb.append(", userName=");
+		sb.append(_userName);
 		sb.append(", visible=");
 		sb.append(_visible);
 		sb.append("}");
@@ -613,7 +644,7 @@ public class AssetEntryQuery {
 	}
 
 	private long[] _flattenTagIds(long[][] tagIdsArray) {
-		List<Long> tagIdsList = new ArrayList<Long>();
+		List<Long> tagIdsList = new ArrayList<>();
 
 		for (int i = 0; i < tagIdsArray.length; i++) {
 			long[] tagIds = tagIdsArray[i];
@@ -653,15 +684,16 @@ public class AssetEntryQuery {
 		return leftRightIds;
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(AssetEntryQuery.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		AssetEntryQuery.class);
 
 	private long[] _allCategoryIds = new long[0];
 	private long[] _allTagIds = new long[0];
 	private long[][] _allTagIdsArray = new long[0][];
+	private boolean _andOperator;
 	private long[] _anyCategoryIds = new long[0];
 	private long[] _anyTagIds = new long[0];
-	private Map<String, Serializable> _attributes =
-		new HashMap<String, Serializable>();
+	private Map<String, Serializable> _attributes = new HashMap<>();
 	private long[] _classNameIds = new long[0];
 	private long[] _classTypeIds = new long[0];
 	private String _description;
@@ -673,6 +705,7 @@ public class AssetEntryQuery {
 	private String _keywords;
 	private Layout _layout;
 	private long _linkedAssetEntryId = 0;
+	private boolean _listable = true;
 	private long[] _notAllCategoryIds = new long[0];
 	private long[] _notAllTagIds = new long[0];
 	private long[][] _notAllTagIdsArray = new long[0][];
@@ -687,6 +720,7 @@ public class AssetEntryQuery {
 	private int _start = QueryUtil.ALL_POS;
 	private String _title;
 	private String _toString;
+	private String _userName;
 	private Boolean _visible = Boolean.TRUE;
 
 }

@@ -239,10 +239,10 @@ public class ResourceBlockLocalServiceWrapper
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	@Override
 	public long dynamicQueryCount(
@@ -251,11 +251,11 @@ public class ResourceBlockLocalServiceWrapper
 	}
 
 	/**
-	* Returns the number of rows that match the dynamic query.
+	* Returns the number of rows matching the dynamic query.
 	*
 	* @param dynamicQuery the dynamic query
 	* @param projection the projection to apply to the query
-	* @return the number of rows that match the dynamic query
+	* @return the number of rows matching the dynamic query
 	*/
 	@Override
 	public long dynamicQueryCount(
@@ -401,6 +401,14 @@ public class ResourceBlockLocalServiceWrapper
 	@Override
 	public int getResourceBlocksCount() {
 		return _resourceBlockLocalService.getResourceBlocksCount();
+	}
+
+	@Override
+	public boolean[] hasIndividualPermissions(java.lang.String name,
+		long primKey, long[] roleIds, java.lang.String actionId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+		return _resourceBlockLocalService.hasIndividualPermissions(name,
+			primKey, roleIds, actionId);
 	}
 
 	@Override

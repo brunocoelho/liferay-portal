@@ -118,7 +118,7 @@ public interface PortletDataContext extends Serializable {
 
 	/**
 	 * @deprecated As of 6.2.0, replaced by {@link #addClassedModel(Element,
-	 *             ClassedModel, Class)}
+	 *             String, ClassedModel, Class)}
 	 */
 	@Deprecated
 	public void addClassedModel(
@@ -375,6 +375,8 @@ public interface PortletDataContext extends Serializable {
 
 	public Map<?, ?> getNewPrimaryKeysMap(String className);
 
+	public Map<String, Map<?, ?>> getNewPrimaryKeysMaps();
+
 	/**
 	 * @deprecated As of 7.0.0, with no direct replacement
 	 */
@@ -386,6 +388,8 @@ public interface PortletDataContext extends Serializable {
 	public Map<String, List<KeyValuePair>> getPermissions();
 
 	public long getPlid();
+
+	public String getPortletId();
 
 	/**
 	 * @deprecated As of 6.2.0, replaced by {@link
@@ -439,6 +443,9 @@ public interface PortletDataContext extends Serializable {
 	public Element getReferenceElement(
 		StagedModel parentStagedModel, Class<?> clazz, long classPK);
 
+	public Element getReferenceElement(
+		StagedModel parentStagedModel, String className, long classPK);
+
 	public List<Element> getReferenceElements(
 		StagedModel parentStagedModel, Class<?> clazz);
 
@@ -448,6 +455,8 @@ public interface PortletDataContext extends Serializable {
 	 */
 	@Deprecated
 	public String getRootPath();
+
+	public String getRootPortletId();
 
 	/**
 	 * @deprecated As of 7.0.0, with no direct replacement
@@ -659,8 +668,14 @@ public interface PortletDataContext extends Serializable {
 
 	public void setPlid(long plid);
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	public void setPortetDataContextListener(
 		PortletDataContextListener portletDataContextListener);
+
+	public void setPortletId(String portletId);
 
 	public void setPrivateLayout(boolean privateLayout);
 

@@ -14,37 +14,41 @@
 
 package com.liferay.portal.service;
 
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.util.GroupTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.model.Layout;
 import com.liferay.portal.model.LayoutFriendlyURL;
-import com.liferay.portal.test.DeleteAfterTestRun;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
-import com.liferay.portal.util.test.GroupTestUtil;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portal.util.test.LayoutTestUtil;
-import com.liferay.portal.util.test.RandomTestUtil;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import org.testng.Assert;
 
 /**
  * @author Sergio González
  */
-@ExecutionTestListeners(listeners = {MainServletExecutionTestListener.class})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 public class LayoutFriendlyURLServiceTest {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -59,7 +63,7 @@ public class LayoutFriendlyURLServiceTest {
 		_group = GroupTestUtil.updateDisplaySettings(
 			_group.getGroupId(), availableLocales, LocaleUtil.SPAIN);
 
-		Map<Locale, String> nameMap = new HashMap<Locale, String>();
+		Map<Locale, String> nameMap = new HashMap<>();
 
 		String name = RandomTestUtil.randomString();
 
@@ -67,7 +71,7 @@ public class LayoutFriendlyURLServiceTest {
 		nameMap.put(LocaleUtil.US, name);
 		nameMap.put(LocaleUtil.SPAIN, name);
 
-		Map<Locale, String> friendlyURLMap = new HashMap<Locale, String>();
+		Map<Locale, String> friendlyURLMap = new HashMap<>();
 
 		friendlyURLMap.put(LocaleUtil.GERMANY, "/germanurl");
 		friendlyURLMap.put(LocaleUtil.SPAIN, "/spanishurl");
@@ -104,14 +108,14 @@ public class LayoutFriendlyURLServiceTest {
 		_group = GroupTestUtil.updateDisplaySettings(
 			_group.getGroupId(), availableLocales, defaultLocale);
 
-		Map<Locale, String> nameMap = new HashMap<Locale, String>();
+		Map<Locale, String> nameMap = new HashMap<>();
 
 		String name = RandomTestUtil.randomString();
 
 		nameMap.put(LocaleUtil.SPAIN, name);
 		nameMap.put(LocaleUtil.US, name);
 
-		Map<Locale, String> friendlyURLMap = new HashMap<Locale, String>();
+		Map<Locale, String> friendlyURLMap = new HashMap<>();
 
 		friendlyURLMap.put(LocaleUtil.SPAIN, "/spanishurl");
 		friendlyURLMap.put(LocaleUtil.US, "/englishurl");

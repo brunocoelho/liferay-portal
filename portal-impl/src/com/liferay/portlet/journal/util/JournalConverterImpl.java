@@ -38,7 +38,6 @@ import com.liferay.portal.kernel.xml.XPath;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portlet.documentlibrary.service.DLAppLocalServiceUtil;
-import com.liferay.portlet.documentlibrary.util.DLUtil;
 import com.liferay.portlet.dynamicdatamapping.model.DDMStructure;
 import com.liferay.portlet.dynamicdatamapping.storage.Field;
 import com.liferay.portlet.dynamicdatamapping.storage.FieldConstants;
@@ -64,7 +63,7 @@ import java.util.Set;
 public class JournalConverterImpl implements JournalConverter {
 
 	public JournalConverterImpl() {
-		_ddmDataTypes = new HashMap<String, String>();
+		_ddmDataTypes = new HashMap<>();
 
 		_ddmDataTypes.put("boolean", "boolean");
 		_ddmDataTypes.put("document_library", "document-library");
@@ -76,13 +75,13 @@ public class JournalConverterImpl implements JournalConverter {
 		_ddmDataTypes.put("text_area", "html");
 		_ddmDataTypes.put("text_box", "string");
 
-		_ddmMetadataAttributes = new HashMap<String, String>();
+		_ddmMetadataAttributes = new HashMap<>();
 
 		_ddmMetadataAttributes.put("instructions", "tip");
 		_ddmMetadataAttributes.put("label", "label");
 		_ddmMetadataAttributes.put("predefinedValue", "predefinedValue");
 
-		_ddmTypesToJournalTypes = new HashMap<String, String>();
+		_ddmTypesToJournalTypes = new HashMap<>();
 
 		_ddmTypesToJournalTypes.put("checkbox", "boolean");
 		_ddmTypesToJournalTypes.put("ddm-documentlibrary", "document_library");
@@ -94,7 +93,7 @@ public class JournalConverterImpl implements JournalConverter {
 		_ddmTypesToJournalTypes.put("text", "text");
 		_ddmTypesToJournalTypes.put("textarea", "text_box");
 
-		_journalTypesToDDMTypes = new HashMap<String, String>();
+		_journalTypesToDDMTypes = new HashMap<>();
 
 		_journalTypesToDDMTypes.put("boolean", "checkbox");
 		_journalTypesToDDMTypes.put("document_library", "ddm-documentlibrary");
@@ -355,7 +354,7 @@ public class JournalConverterImpl implements JournalConverter {
 			int x = url.indexOf("/documents/");
 
 			if (x == -1) {
-				return null;
+				return StringPool.BLANK;
 			}
 
 			int y = url.indexOf(StringPool.QUESTION);
@@ -377,6 +376,7 @@ public class JournalConverterImpl implements JournalConverter {
 			JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
 
 			jsonObject.put("groupId", fileEntry.getGroupId());
+			jsonObject.put("title", fileEntry.getTitle());
 			jsonObject.put("uuid", fileEntry.getUuid());
 			jsonObject.put("version", fileEntry.getVersion());
 
@@ -388,7 +388,7 @@ public class JournalConverterImpl implements JournalConverter {
 			}
 		}
 
-		return null;
+		return StringPool.BLANK;
 	}
 
 	protected Field getField(
@@ -469,6 +469,10 @@ public class JournalConverterImpl implements JournalConverter {
 
 			jsonObject.put("alt", dynamicContentElement.attributeValue("alt"));
 			jsonObject.put("data", dynamicContentElement.getText());
+			jsonObject.put(
+				"name", dynamicContentElement.attributeValue("name"));
+			jsonObject.put(
+				"title", dynamicContentElement.attributeValue("title"));
 
 			serializable = jsonObject.toString();
 		}
@@ -757,25 +761,6 @@ public class JournalConverterImpl implements JournalConverter {
 
 			dynamicContentElement.addCDATA(fieldValue);
 		}
-		else if (DDMImpl.TYPE_DDM_DOCUMENTLIBRARY.equals(fieldType) &&
-				 Validator.isNotNull(fieldValue)) {
-
-			JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
-				fieldValue);
-
-			String uuid = jsonObject.getString("uuid");
-			long groupId = jsonObject.getLong("groupId");
-
-			FileEntry fileEntry =
-				DLAppLocalServiceUtil.getFileEntryByUuidAndGroupId(
-					uuid, groupId);
-
-			fieldValue = DLUtil.getPreviewURL(
-				fileEntry, fileEntry.getFileVersion(), null, StringPool.BLANK,
-				false, true);
-
-			dynamicContentElement.addCDATA(fieldValue);
-		}
 		else if (DDMImpl.TYPE_DDM_IMAGE.equals(fieldType) &&
 				 Validator.isNotNull(fieldValue)) {
 
@@ -784,7 +769,11 @@ public class JournalConverterImpl implements JournalConverter {
 
 			dynamicContentElement.addAttribute(
 				"alt", jsonObject.getString("alt"));
-			dynamicContentElement.addCDATA(jsonObject.getString("data"));
+			dynamicContentElement.addAttribute(
+				"name", jsonObject.getString("name"));
+			dynamicContentElement.addAttribute(
+				"title", jsonObject.getString("title"));
+			dynamicContentElement.addCDATA(fieldValue);
 		}
 		else if (DDMImpl.TYPE_DDM_LINK_TO_PAGE.equals(fieldType) &&
 				 Validator.isNotNull(fieldValue)) {
@@ -1008,11 +997,12 @@ public class JournalConverterImpl implements JournalConverter {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(JournalConverterImpl.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		JournalConverterImpl.class);
 
-	private Map<String, String> _ddmDataTypes;
-	private Map<String, String> _ddmMetadataAttributes;
-	private Map<String, String> _ddmTypesToJournalTypes;
-	private Map<String, String> _journalTypesToDDMTypes;
+	private final Map<String, String> _ddmDataTypes;
+	private final Map<String, String> _ddmMetadataAttributes;
+	private final Map<String, String> _ddmTypesToJournalTypes;
+	private final Map<String, String> _journalTypesToDDMTypes;
 
 }

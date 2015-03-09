@@ -32,6 +32,7 @@ long templateId = BeanParamUtil.getLong(template, request, "templateId");
 long groupId = BeanParamUtil.getLong(template, request, "groupId", scopeGroupId);
 long classNameId = BeanParamUtil.getLong(template, request, "classNameId");
 long classPK = BeanParamUtil.getLong(template, request, "classPK");
+long resourceClassNameId = BeanParamUtil.getLong(template, request, "resourceClassNameId");
 
 boolean cacheable = BeanParamUtil.getBoolean(template, request, "cacheable", true);
 boolean smallImage = BeanParamUtil.getBoolean(template, request, "smallImage");
@@ -66,6 +67,8 @@ String structureAvailableFields = ParamUtil.getString(request, "structureAvailab
 if (Validator.isNotNull(structureAvailableFields)) {
 	scopeAvailableFields = structureAvailableFields;
 }
+
+boolean showCacheableInput = ParamUtil.getBoolean(request, "showCacheableInput");
 %>
 
 <portlet:actionURL var="editTemplateURL">
@@ -82,6 +85,7 @@ if (Validator.isNotNull(structureAvailableFields)) {
 	<aui:input name="groupId" type="hidden" value="<%= groupId %>" />
 	<aui:input name="classNameId" type="hidden" value="<%= classNameId %>" />
 	<aui:input name="classPK" type="hidden" value="<%= classPK %>" />
+	<aui:input name="resourceClassNameId" type="hidden" value="<%= resourceClassNameId %>" />
 	<aui:input name="type" type="hidden" value="<%= type %>" />
 	<aui:input name="structureAvailableFields" type="hidden" value="<%= structureAvailableFields %>" />
 	<aui:input name="saveAndContinue" type="hidden" value="<%= false %>" />
@@ -149,7 +153,7 @@ if (Validator.isNotNull(structureAvailableFields)) {
 				</c:if>
 
 				<c:if test="<%= type.equals(DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY) %>">
-					<aui:select changesContext="<%= true %>" helpMessage='<%= (template == null) ? StringPool.BLANK : "changing-the-language-will-not-automatically-translate-the-existing-template-script" %>' label="language" name="language">
+					<aui:select changesContext="<%= true %>" helpMessage='<%= (template == null) ? StringPool.BLANK : "changing-the-language-does-not-automatically-translate-the-existing-template-script" %>' label="language" name="language">
 
 						<%
 						for (String curLangType : ddmDisplay.getTemplateLanguageTypes()) {
@@ -196,7 +200,7 @@ if (Validator.isNotNull(structureAvailableFields)) {
 						</aui:select>
 					</c:when>
 					<c:otherwise>
-						<c:if test="<%= Validator.equals(ddmDisplay.getPortletId(), PortletKeys.JOURNAL) || Validator.equals(ddmDisplay.getPortletId(), PortletKeys.JOURNAL_CONTENT) %>">
+						<c:if test="<%= showCacheableInput %>">
 							<aui:input helpMessage="journal-template-cacheable-help" name="cacheable" value="<%= cacheable %>" />
 						</c:if>
 
@@ -209,7 +213,7 @@ if (Validator.isNotNull(structureAvailableFields)) {
 								<aui:row>
 									<c:if test="<%= smallImage && (template != null) %>">
 										<aui:col width="<%= 50 %>">
-											<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="preview" />" class="lfr-ddm-small-image-preview" src='<%= Validator.isNotNull(template.getSmallImageURL()) ? HtmlUtil.escapeHREF(template.getSmallImageURL()) : themeDisplay.getPathImage() + "/template?img_id=" + template.getSmallImageId() + "&t=" + WebServerServletTokenUtil.getToken(template.getSmallImageId()) %>' />
+											<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="preview" />" class="lfr-ddm-small-image-preview" src="<%= HtmlUtil.escapeAttribute(template.getTemplateImageURL(themeDisplay)) %>" />
 										</aui:col>
 									</c:if>
 
@@ -323,7 +327,7 @@ if (Validator.isNotNull(structureAvailableFields)) {
 					title: '<%= UnicodeLanguageUtil.get(request, "structures") %>'
 				},
 				function(event) {
-					if (confirm('<%= UnicodeLanguageUtil.get(request, "selecting-a-new-structure-will-change-the-available-input-fields-and-available-templates") %>') && (document.<portlet:namespace />fm.<portlet:namespace />classPK.value != event.ddmstructureid)) {
+					if (confirm('<%= UnicodeLanguageUtil.get(request, "selecting-a-new-structure-changes-the-available-input-fields-and-available-templates") %>') && (document.<portlet:namespace />fm.<portlet:namespace />classPK.value != event.ddmstructureid)) {
 						document.<portlet:namespace />fm.<portlet:namespace />classPK.value = event.ddmstructureid;
 
 						Liferay.fire('<portlet:namespace />refreshEditor');

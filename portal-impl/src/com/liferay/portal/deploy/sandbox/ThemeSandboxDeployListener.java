@@ -42,7 +42,7 @@ public class ThemeSandboxDeployListener
 		themeTaglibDTD = portalWebDir + "/WEB-INF/tld/liferay-theme.tld";
 		utilTaglibDTD = portalWebDir + "/WEB-INF/tld/liferay-util.tld";
 
-		jars = new ArrayList<String>();
+		jars = new ArrayList<>();
 
 		String portalLibDir = PortalUtil.getPortalLibDir();
 
@@ -79,6 +79,6 @@ public class ThemeSandboxDeployListener
 		_sandboxHandler.undeploy(dir);
 	}
 
-	private SandboxHandler _sandboxHandler;
+	private final SandboxHandler _sandboxHandler;
 
 }

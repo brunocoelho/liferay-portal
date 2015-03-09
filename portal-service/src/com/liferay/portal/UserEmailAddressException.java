@@ -16,6 +16,7 @@ package com.liferay.portal;
 
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.util.ClassUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.model.User;
 import com.liferay.portal.security.auth.EmailAddressValidator;
 
@@ -28,13 +29,14 @@ public class UserEmailAddressException extends PortalException {
 	/**
 	 * @deprecated As of 7.0.0, replaced by the inner classes
 	 */
+	@Deprecated
 	public UserEmailAddressException() {
-		super();
 	}
 
 	/**
 	 * @deprecated As of 7.0.0, replaced by the inner classes
 	 */
+	@Deprecated
 	public UserEmailAddressException(String msg) {
 		super(msg);
 	}
@@ -42,10 +44,15 @@ public class UserEmailAddressException extends PortalException {
 	/**
 	 * @deprecated As of 7.0.0, replaced by the inner classes
 	 */
+	@Deprecated
 	public UserEmailAddressException(String msg, Throwable cause) {
 		super(msg, cause);
 	}
 
+	/**
+	 * @deprecated As of 7.0.0, replaced by the inner classes
+	 */
+	@Deprecated
 	public UserEmailAddressException(Throwable cause) {
 		super(cause);
 	}
@@ -57,30 +64,18 @@ public class UserEmailAddressException extends PortalException {
 
 			super(
 				String.format(
-					"Email address 1 %s and email address %2 for user %s " +
+					"Email address 1 %s and email address 2 %s for user %s " +
 						"must be equal",
 					emailAddress1, emailAddress2, user.getUserId()));
 
-			_user = user;
-			_emailAddress1 = emailAddress1;
-			_emailAddress2 = emailAddress2;
+			this.user = user;
+			this.emailAddress1 = emailAddress1;
+			this.emailAddress2 = emailAddress2;
 		}
 
-		public String getEmailAddress1() {
-			return _emailAddress1;
-		}
-
-		public String getEmailAddress2() {
-			return _emailAddress2;
-		}
-
-		public User getUser() {
-			return _user;
-		}
-
-		private String _emailAddress1;
-		private String _emailAddress2;
-		private User _user;
+		public final String emailAddress1;
+		public final String emailAddress2;
+		public final User user;
 
 	}
 
@@ -93,20 +88,12 @@ public class UserEmailAddressException extends PortalException {
 						"used by user %s",
 					emailAddress, userId));
 
-			_userId = userId;
-			_emailAddress = emailAddress;
+			this.userId = userId;
+			this.emailAddress = emailAddress;
 		}
 
-		public String getEmailAddress() {
-			return _emailAddress;
-		}
-
-		public long getUserId() {
-			return _userId;
-		}
-
-		private String _emailAddress;
-		private long _userId;
+		public String emailAddress;
+		public final long userId;
 
 	}
 
@@ -125,6 +112,57 @@ public class UserEmailAddressException extends PortalException {
 
 	}
 
+	public static class MustNotBePOP3User extends UserEmailAddressException {
+
+		public MustNotBePOP3User(String emailAddress) {
+			super(
+				String.format(
+					"Email address %s must not be the one used to connect to " +
+						"the POP3 server",
+					emailAddress));
+
+			this.emailAddress = emailAddress;
+		}
+
+		public final String emailAddress;
+
+	}
+
+	public static class MustNotBeReserved extends UserEmailAddressException {
+
+		public MustNotBeReserved(
+			String emailAddress, String[] reservedEmailAddresses) {
+
+			super(
+				String.format(
+					"Email address %s must not be a reserved one such as: %s",
+					emailAddress, StringUtil.merge(reservedEmailAddresses)));
+
+			this.emailAddress = emailAddress;
+			this.reservedEmailAddresses = reservedEmailAddresses;
+		}
+
+		public final String emailAddress;
+		public final String[] reservedEmailAddresses;
+
+	}
+
+	public static class MustNotUseCompanyMx extends UserEmailAddressException {
+
+		public MustNotUseCompanyMx(String emailAddress) {
+			super(
+				String.format(
+					"Email address %s must not use the MX of the company or " +
+						"one of the associated mail host names",
+					emailAddress));
+
+			this.emailAddress = emailAddress;
+		}
+
+		public final String emailAddress;
+
+	}
+
 	public static class MustValidate extends UserEmailAddressException {
 
 		public MustValidate(
@@ -135,20 +173,12 @@ public class UserEmailAddressException extends PortalException {
 					"Email name address %s must validate with %s", emailAddress,
 					ClassUtil.getClassName(emailAddressValidator)));
 
-			_emailAddress = emailAddress;
-			_emailAddressValidator = emailAddressValidator;
+			this.emailAddress = emailAddress;
+			this.emailAddressValidator = emailAddressValidator;
 		}
 
-		public String getEmailAddress() {
-			return _emailAddress;
-		}
-
-		public EmailAddressValidator getEmailAddressValidator() {
-			return _emailAddressValidator;
-		}
-
-		private String _emailAddress;
-		private EmailAddressValidator _emailAddressValidator;
+		public String emailAddress;
+		public final EmailAddressValidator emailAddressValidator;
 
 	}
 

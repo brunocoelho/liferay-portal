@@ -18,6 +18,7 @@
 
 <%
 String redirect = ParamUtil.getString(request, "redirect");
+
 String backURL = ParamUtil.getString(request, "backURL", redirect);
 
 Role role = (Role)request.getAttribute(WebKeys.ROLE);
@@ -77,7 +78,7 @@ String subtype = BeanParamUtil.getString(role, request, "subtype");
 		</c:choose>
 
 		<c:choose>
-			<c:when test="<%= (role != null) && PortalUtil.isSystemRole(role.getName()) %>">
+			<c:when test="<%= (role != null) && role.isSystem() %>">
 				<aui:input name="name" type="hidden" value="<%= role.getName() %>" />
 			</c:when>
 			<c:otherwise>

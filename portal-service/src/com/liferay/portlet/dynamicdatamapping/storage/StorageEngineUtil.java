@@ -15,13 +15,8 @@
 package com.liferay.portlet.dynamicdatamapping.storage;
 
 import com.liferay.portal.kernel.security.pacl.permission.PortalRuntimePermission;
-import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.service.ServiceContext;
 import com.liferay.portlet.dynamicdatamapping.StorageException;
-import com.liferay.portlet.dynamicdatamapping.storage.query.Condition;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * @author Eduardo Lundgren
@@ -29,12 +24,12 @@ import java.util.Map;
 public class StorageEngineUtil {
 
 	public static long create(
-			long companyId, long ddmStructureId, Fields fields,
+			long companyId, long ddmStructureId, DDMFormValues ddmFormValues,
 			ServiceContext serviceContext)
 		throws StorageException {
 
 		return getStorageEngine().create(
-			companyId, ddmStructureId, fields, serviceContext);
+			companyId, ddmStructureId, ddmFormValues, serviceContext);
 	}
 
 	public static void deleteByClass(long classPK) throws StorageException {
@@ -47,63 +42,10 @@ public class StorageEngineUtil {
 		getStorageEngine().deleteByDDMStructure(ddmStructureId);
 	}
 
-	public static Fields getFields(long classPK) throws StorageException {
-		return getStorageEngine().getFields(classPK);
-	}
-
-	public static Fields getFields(long classPK, List<String> fieldNames)
+	public static DDMFormValues getDDMFormValues(long classPK)
 		throws StorageException {
 
-		return getStorageEngine().getFields(classPK, fieldNames);
-	}
-
-	public static List<Fields> getFieldsList(
-			long ddmStructureId, List<String> fieldNames)
-		throws StorageException {
-
-		return getStorageEngine().getFieldsList(ddmStructureId, fieldNames);
-	}
-
-	public static List<Fields> getFieldsList(
-			long ddmStructureId, List<String> fieldNames,
-			OrderByComparator<Fields> orderByComparator)
-		throws StorageException {
-
-		return getStorageEngine().getFieldsList(
-			ddmStructureId, fieldNames, orderByComparator);
-	}
-
-	public static List<Fields> getFieldsList(
-			long ddmStructureId, long[] classPKs, List<String> fieldNames,
-			OrderByComparator<Fields> orderByComparator)
-		throws StorageException {
-
-		return getStorageEngine().getFieldsList(
-			ddmStructureId, classPKs, fieldNames, orderByComparator);
-	}
-
-	public static List<Fields> getFieldsList(
-			long ddmStructureId, long[] classPKs,
-			OrderByComparator<Fields> orderByComparator)
-		throws StorageException {
-
-		return getStorageEngine().getFieldsList(
-			ddmStructureId, classPKs, orderByComparator);
-	}
-
-	public static Map<Long, Fields> getFieldsMap(
-			long ddmStructureId, long[] classPKs)
-		throws StorageException {
-
-		return getStorageEngine().getFieldsMap(ddmStructureId, classPKs);
-	}
-
-	public static Map<Long, Fields> getFieldsMap(
-			long ddmStructureId, long[] classPKs, List<String> fieldNames)
-		throws StorageException {
-
-		return getStorageEngine().getFieldsMap(
-			ddmStructureId, classPKs, fieldNames);
+		return getStorageEngine().getDDMFormValues(classPK);
 	}
 
 	public static StorageEngine getStorageEngine() {
@@ -112,34 +54,12 @@ public class StorageEngineUtil {
 		return _storageEngine;
 	}
 
-	public static List<Fields> query(
-			long ddmStructureId, List<String> fieldNames, Condition condition,
-			OrderByComparator<Fields> orderByComparator)
-		throws StorageException {
-
-		return getStorageEngine().query(
-			ddmStructureId, fieldNames, condition, orderByComparator);
-	}
-
-	public static int queryCount(long ddmStructureId, Condition condition)
-		throws StorageException {
-
-		return getStorageEngine().queryCount(ddmStructureId, condition);
-	}
-
 	public static void update(
-			long classPK, Fields fields, boolean mergeFields,
+			long classPK, DDMFormValues ddmFormValues,
 			ServiceContext serviceContext)
 		throws StorageException {
 
-		getStorageEngine().update(classPK, fields, mergeFields, serviceContext);
-	}
-
-	public static void update(
-			long classPK, Fields fields, ServiceContext serviceContext)
-		throws StorageException {
-
-		getStorageEngine().update(classPK, fields, serviceContext);
+		getStorageEngine().update(classPK, ddmFormValues, serviceContext);
 	}
 
 	public void setStorageEngine(StorageEngine storageEngine) {

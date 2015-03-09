@@ -14,16 +14,19 @@
  */
 --%>
 
-<%@ taglib uri="/META-INF/aui.tld" prefix="aui" %>
-<%@ taglib uri="/META-INF/c.tld" prefix="c" %>
-<%@ taglib uri="/META-INF/liferay-portlet-ext.tld" prefix="liferay-portlet" %>
-<%@ taglib uri="/META-INF/liferay-portlet_2_0.tld" prefix="portlet" %>
-<%@ taglib uri="/META-INF/liferay-theme.tld" prefix="liferay-theme" %>
-<%@ taglib uri="/META-INF/liferay-ui.tld" prefix="liferay-ui" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+
+<%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
+
+<%@ taglib uri="http://liferay.com/tld/aui" prefix="aui" %>
+<%@ taglib uri="http://liferay.com/tld/portlet" prefix="liferay-portlet" %>
+<%@ taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %>
+<%@ taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 
 <%@ page contentType="text/html; charset=UTF-8" %>
 
-<%@ page import="com.liferay.amazon.rankings.web.model.AmazonRankings" %><%@
+<%@ page import="com.liferay.amazon.rankings.web.configuration.AmazonRankingsConfiguration" %><%@
+page import="com.liferay.amazon.rankings.web.model.AmazonRankings" %><%@
 page import="com.liferay.amazon.rankings.web.util.AmazonRankingsUtil" %><%@
 page import="com.liferay.portal.kernel.portlet.LiferayWindowState" %><%@
 page import="com.liferay.portal.kernel.util.CharPool" %><%@
@@ -48,10 +51,9 @@ page import="javax.portlet.WindowState" %>
 <%
 WindowState windowState = liferayPortletRequest.getWindowState();
 
-String amazonAccessKeyId = portletPreferences.getValue("amazon.access.key.id", "");
-String amazonAssociateTag = portletPreferences.getValue("amazon.associate.tag" , "");
-String amazonSecretAccessKey = portletPreferences.getValue("amazon.secret.access.key", "");
-String[] isbns = portletPreferences.getValues("isbns", new String[0]);
+AmazonRankingsConfiguration amazonRankingsConfiguration = (AmazonRankingsConfiguration)renderRequest.getAttribute(AmazonRankingsConfiguration.class.getName());
+
+String[] isbns = portletPreferences.getValues("isbns", amazonRankingsConfiguration.isbns());
 
 NumberFormat numberFormat = NumberFormat.getNumberInstance(locale);
 %>

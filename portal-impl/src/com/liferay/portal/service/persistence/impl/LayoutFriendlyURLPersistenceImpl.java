@@ -59,7 +59,7 @@ import java.util.Set;
  *
  * @author Brian Wing Shun Chan
  * @see LayoutFriendlyURLPersistence
- * @see LayoutFriendlyURLUtil
+ * @see com.liferay.portal.service.persistence.LayoutFriendlyURLUtil
  * @generated
  */
 @ProviderType
@@ -5635,7 +5635,7 @@ public class LayoutFriendlyURLPersistenceImpl extends BasePersistenceImpl<Layout
 		MVCCModel {
 		@Override
 		public long getMvccVersion() {
-			return 0;
+			return -1;
 		}
 
 		@Override

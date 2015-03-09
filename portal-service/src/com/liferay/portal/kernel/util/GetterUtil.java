@@ -17,8 +17,11 @@ package com.liferay.portal.kernel.util;
 import java.math.BigDecimal;
 
 import java.text.DateFormat;
+import java.text.NumberFormat;
+import java.text.ParsePosition;
 
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * @author Brian Wing Shun Chan
@@ -243,9 +246,8 @@ public class GetterUtil {
 			return defaultValue;
 		}
 
+		value = value.toLowerCase();
 		value = value.trim();
-
-		value = StringUtil.toLowerCase(value);
 
 		if (value.equals(BOOLEANS[0]) || value.equals(BOOLEANS[1]) ||
 			value.equals(BOOLEANS[2]) || value.equals(BOOLEANS[3]) ||
@@ -279,9 +281,34 @@ public class GetterUtil {
 	}
 
 	public static double get(String value, double defaultValue) {
-		if (value != null) {
+		return get(value, defaultValue, null);
+	}
+
+	public static double get(String value, double defaultValue, Locale locale) {
+		if (value == null) {
+			return defaultValue;
+		}
+
+		value = value.trim();
+
+		if (locale == null) {
 			try {
-				return Double.parseDouble(value.trim());
+				return Double.parseDouble(value);
+			}
+			catch (Exception e) {
+			}
+		}
+		else {
+			NumberFormat numberFormat = NumberFormat.getInstance(locale);
+
+			try {
+				ParsePosition parsePosition = new ParsePosition(0);
+
+				Number number = numberFormat.parse(value, parsePosition);
+
+				if (parsePosition.getIndex() == value.length()) {
+					return number.doubleValue();
+				}
 			}
 			catch (Exception e) {
 			}
@@ -336,8 +363,8 @@ public class GetterUtil {
 		value = value.trim();
 
 		if (value.indexOf(CharPool.RETURN) != -1) {
-			value = StringUtil.replace(
-				value, StringPool.RETURN_NEW_LINE, StringPool.NEW_LINE);
+			value = value.replaceAll(
+				StringPool.RETURN_NEW_LINE, StringPool.NEW_LINE);
 		}
 
 		return value;
@@ -469,6 +496,10 @@ public class GetterUtil {
 
 	public static double getDouble(String value, double defaultValue) {
 		return get(value, defaultValue);
+	}
+
+	public static double getDouble(String value, Locale locale) {
+		return get(value, DEFAULT_DOUBLE, locale);
 	}
 
 	public static double[] getDoubleValues(Object value) {

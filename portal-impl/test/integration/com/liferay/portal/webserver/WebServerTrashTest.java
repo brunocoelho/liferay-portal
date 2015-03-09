@@ -15,7 +15,14 @@
 package com.liferay.portal.webserver;
 
 import com.liferay.portal.kernel.repository.model.FileEntry;
-import com.liferay.portal.kernel.test.ExecutionTestListeners;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.RoleTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.webdav.methods.Method;
@@ -30,32 +37,34 @@ import com.liferay.portal.security.permission.PermissionChecker;
 import com.liferay.portal.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.security.permission.PermissionThreadLocal;
 import com.liferay.portal.service.RoleLocalServiceUtil;
-import com.liferay.portal.test.DeleteAfterTestRun;
-import com.liferay.portal.test.listeners.MainServletExecutionTestListener;
-import com.liferay.portal.test.runners.LiferayIntegrationJUnitTestRunner;
+import com.liferay.portal.service.ServiceContext;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.MainServletTestRule;
 import com.liferay.portal.util.PortletKeys;
-import com.liferay.portal.util.test.RoleTestUtil;
-import com.liferay.portal.util.test.TestPropsValues;
-import com.liferay.portal.util.test.UserTestUtil;
+import com.liferay.portlet.documentlibrary.service.DLAppLocalServiceUtil;
 import com.liferay.portlet.documentlibrary.service.DLAppServiceUtil;
 import com.liferay.portlet.documentlibrary.service.permission.DLPermission;
-import com.liferay.portlet.documentlibrary.util.test.DLAppTestUtil;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import org.springframework.mock.web.MockHttpServletResponse;
 
 /**
  * @author Eduardo Garcia
  */
-@ExecutionTestListeners(listeners = {MainServletExecutionTestListener.class})
-@RunWith(LiferayIntegrationJUnitTestRunner.class)
 public class WebServerTrashTest extends BaseWebServerTestCase {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), MainServletTestRule.INSTANCE);
 
 	@Override
 	public void setUp() throws Exception {
@@ -89,10 +98,17 @@ public class WebServerTrashTest extends BaseWebServerTestCase {
 
 	@Test
 	public void testRequestFileInTrash() throws Exception {
-		FileEntry fileEntry = DLAppTestUtil.addFileEntry(
-			group.getGroupId(), parentFolder.getFolderId(), "Test Trash.txt");
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				group.getGroupId(), TestPropsValues.getUserId());
 
-		MockHttpServletResponse mockHttpServletResponse =  testRequestFile(
+		FileEntry fileEntry = DLAppLocalServiceUtil.addFileEntry(
+			TestPropsValues.getUserId(), group.getGroupId(),
+			parentFolder.getFolderId(), "Test Trash.txt",
+			ContentTypes.TEXT_PLAIN, RandomTestUtil.randomBytes(),
+			serviceContext);
+
+		MockHttpServletResponse mockHttpServletResponse = testRequestFile(
 			fileEntry, _user, false);
 
 		Assert.assertEquals(
@@ -141,7 +157,7 @@ public class WebServerTrashTest extends BaseWebServerTestCase {
 
 		String path = sb.toString();
 
-		Map<String, String> params = new HashMap<String, String>();
+		Map<String, String> params = new HashMap<>();
 
 		if (statusInTrash) {
 			params.put(
